@@ -16,8 +16,11 @@ class ReportModel extends Model
     protected $fillable = [
         'user_id',
         'product_id',
+        'reason',
         'laporan',
-        'status'
+        'evidence_image',
+        'status',
+        'admin_notes'
     ];
 
     // Relasi ke User

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>User Management Overview | Halalytics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00bbc2",
+                        "background-light": "#f9fafb",
+                        "background-dark": "#1f2938",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .fill-icon { font-variation-settings: 'FILL' 1; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="flex min-h-screen">
+<!-- Sidebar Navigation -->
+<aside class="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col fixed h-full z-20">
+<div class="p-6">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-xl bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined fill-icon">qr_code_scanner</span>
+</div>
+<div>
+<h1 class="text-lg font-extrabold tracking-tight leading-none text-slate-900 dark:text-white">Halalytics</h1>
+<p class="text-xs text-primary font-bold uppercase tracking-widest">Admin Panel</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-semibold">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="text-sm font-semibold">Scan Activity</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 bg-primary/10 text-primary rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined fill-icon">group</span>
+<span class="text-sm font-bold">User Management</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-sm font-semibold">Product Database</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">summarize</span>
+<span class="text-sm font-semibold">Reports</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg cursor-pointer">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-semibold">Settings</span>
+</div>
+<div class="mt-4 flex items-center gap-3 px-3">
+<div class="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+<img alt="Admin" data-alt="Admin profile avatar headshot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAYveYMuBclEwfS61Zzje_zFfNBrWkJmiiljUU3OMYNUdHqd_oJI-ohExw9dbzzIQniOL-4Y6qNTKZIeP-L9Tw7SCimQM9ybx7Sf24C3c3iea8FgctvOPO2J_ZQYtWbf75YMYIcEFgcm8BP0zYDO1VzKsrZlH6i-8MNUsLe_TyDfrdbx9iibo4SWJtql8g9GRzm8Mn4dDxv8HaYLGSKSUdYvLL2KAyqK1789_bdEb140qbcP_gMAPH9ueUzxmS82qyoUoLYprzPEU"/>
+</div>
+<div class="flex-1 overflow-hidden">
+<p class="text-xs font-bold truncate">Zaid Al-Farsi</p>
+<p class="text-[10px] text-slate-500 uppercase font-bold">Super Admin</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-64 min-h-screen bg-background-light dark:bg-background-dark p-8">
+<!-- Breadcrumbs -->
+<div class="flex items-center gap-2 mb-6">
+<a class="text-slate-400 hover:text-primary text-sm font-medium transition-colors" href="#">Home</a>
+<span class="material-symbols-outlined text-slate-300 text-sm">chevron_right</span>
+<span class="text-slate-900 dark:text-white text-sm font-bold tracking-tight">User Management</span>
+</div>
+<!-- Page Heading & Actions -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+<div>
+<h2 class="text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-2">User Overview</h2>
+<p class="text-slate-500 dark:text-slate-400 max-w-lg">Monitor verified scan activity, manage account access, and review community contributions across the Halalytics ecosystem.</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-all shadow-sm">
+<span class="material-symbols-outlined text-lg">file_download</span>
+                        Export Data
+                    </button>
+<button class="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-extrabold hover:brightness-105 transition-all shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-lg">person_add</span>
+                        Add New User
+                    </button>
+</div>
+</div>
+<!-- Stats Overview -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined fill-icon">groups</span>
+</div>
+<span class="text-[10px] font-bold px-2 py-1 bg-green-100 text-green-700 rounded-full">+12% vs LY</span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Total Registered Users</p>
+<p class="text-3xl font-black text-slate-900 dark:text-white">24,812</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+<span class="material-symbols-outlined">bolt</span>
+</div>
+<span class="text-[10px] font-bold px-2 py-1 bg-blue-100 text-blue-700 rounded-full">Active Now</span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Daily Active Users</p>
+<p class="text-3xl font-black text-slate-900 dark:text-white">1,402</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-amber-500/10 rounded-lg text-amber-500">
+<span class="material-symbols-outlined">qr_code</span>
+</div>
+<span class="text-[10px] font-bold px-2 py-1 bg-amber-100 text-amber-700 rounded-full">New Scans</span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Total Products Scanned</p>
+<p class="text-3xl font-black text-slate-900 dark:text-white">186.4k</p>
+</div>
+</div>
+<!-- Search & Filters -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm mb-8">
+<div class="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap gap-4 items-center justify-between bg-slate-50/50 dark:bg-slate-800/20">
+<div class="flex-1 min-w-[300px]">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm outline-none" placeholder="Search by name, email, or UID..." type="text"/>
+</div>
+</div>
+<div class="flex gap-2">
+<select class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm px-4 py-2 focus:ring-primary/20 focus:border-primary outline-none font-medium">
+<option>Status: All</option>
+<option>Active</option>
+<option>Blocked</option>
+<option>Pending Verification</option>
+</select>
+<select class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm px-4 py-2 focus:ring-primary/20 focus:border-primary outline-none font-medium">
+<option>Sort by: Newest</option>
+<option>Most Active</option>
+<option>Alphabetical</option>
+</select>
+<button class="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Data Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-400 text-[11px] uppercase tracking-widest font-bold">
+<th class="px-6 py-4">User Details</th>
+<th class="px-6 py-4">Registration</th>
+<th class="px-6 py-4 text-center">Total Scans</th>
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<!-- Row 1 -->
+<tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="h-9 w-9 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden ring-2 ring-white dark:ring-slate-900 shadow-sm">
+<img alt="User" data-alt="User avatar male portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBeFDsKv-Efy31f9PpNos2FqAQgzVVSBPIELv6zGbnc4abHQU6phiyWzQniG-JHLEQzrd-n5599g8TVPGXBwIszG9zwYOW-Ie5H0csfe06BiM-KbM--QDMneHnT-ue1qecVSjnxvOe3q0hY8GB0mh4Z_Mi9HvtNTGv3g5wo9TGjJzChvx7qLxqnI1iGSCXbBL8qL3K8NxsXf8q-6EQ4XtYrPGapLfeKAqg5Fv9-ex5MDGn96zLRVtUCRN9AHC4Sr8Davy7r2iXzG2g"/>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white leading-none mb-1">Omar Siddiqui</p>
+<p class="text-xs text-slate-500 font-medium tracking-tight">omar.s@example.com • ID: 89021</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<p class="text-sm text-slate-700 dark:text-slate-300 font-medium">Oct 24, 2023</p>
+<p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">14:22 PM</p>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">1,248</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        Active
+                                    </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors">Details</button>
+<button class="p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined text-lg">more_horiz</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="h-9 w-9 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden ring-2 ring-white dark:ring-slate-900 shadow-sm">
+<img alt="User" data-alt="User avatar female portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1UluQvREDLPP6X5n-9mDLLHXQyaUtDTmCNnvhD0Sm7pfpfThV2CxjYTy5u_ousheoUONIaNtb-cn5pInekTJ5pQQYI56T-aaxVYxxxgVB-nsNkcq3MGWQIED39w3BSz1y_9K25Sg9c96KyQcdpbOrIi5SFw0KadP7OfeI4-3CA_7faWAWeCng6L8Gy_YlysUeqnPOkrBBJjQ1rVH3b3b2KCVlFBKnmIp5mJ8kWBrZaZr5qZNe6RNAdb2TS5ypf_45fYXJENvsZQs"/>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white leading-none mb-1">Fatima Nour</p>
+<p class="text-xs text-slate-500 font-medium tracking-tight">fatima.n@webmail.com • ID: 89012</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<p class="text-sm text-slate-700 dark:text-slate-300 font-medium">Oct 21, 2023</p>
+<p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">09:15 AM</p>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">421</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        Active
+                                    </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors">Details</button>
+<button class="p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined text-lg">more_horiz</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="h-9 w-9 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden ring-2 ring-white dark:ring-slate-900 shadow-sm">
+<img alt="User" data-alt="User avatar male profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBuLdpVGn550B26hhd18Fb539tJ1evCp2eSqcuWr_kIFcknlcAIUCLYeEFrF10wH0YEb5v8DehfbOVOu6z1MLwIEcWTGNa-uDTwcf3Kx03tO0owoJp2bcTnkCyFvKZBoIM2Je16_NII058IOZx_J25_JCSf54Oma1vQckADjuj8rswVIw_2da7hqX-gMK55-ouuaOapqJBaTLuQDzxndDncBppec9_-eOIbjeybQBFkMP5HeRh2-lQwWvFZH02DHeBjqlgWwH20kY"/>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white leading-none mb-1">Yusuf Chen</p>
+<p class="text-xs text-slate-500 font-medium tracking-tight">chen.yusuf@domain.com • ID: 88945</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<p class="text-sm text-slate-700 dark:text-slate-300 font-medium">Sep 30, 2023</p>
+<p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">18:40 PM</p>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">12</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-black uppercase tracking-wider bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200/50 dark:border-rose-800/50">
+<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                        Blocked
+                                    </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors">Details</button>
+<button class="p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined text-lg">more_horiz</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="h-9 w-9 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden ring-2 ring-white dark:ring-slate-900 shadow-sm">
+<img alt="User" data-alt="User avatar female headshot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBi0GIXBbc1SCI3wnYwvR-zHeQgkjy7xq8brheM941kNb_zi545aEFdp0Ye_e3MSda-I7i6B6uJDF1OD9o2H6YLqrGUZyuFTMGsz9Sy48IXz5245SRejqjw298NmJu1iiSBIogX69rgOCmYxckaHQrHqMlET14j6zmFvFVsCgixe_fQTvSpGsWPFvupCF6yuugd961epOJFxWrqoGTxaMKoehdSL1u5YcwH16GWG92T-WiTgGoSt2HDCY6sizgfCWx4tX7OjkahjV8"/>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white leading-none mb-1">Amira El-Sayed</p>
+<p class="text-xs text-slate-500 font-medium tracking-tight">amira.es@provider.net • ID: 88812</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<p class="text-sm text-slate-700 dark:text-slate-300 font-medium">Sep 28, 2023</p>
+<p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">11:05 AM</p>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">3,115</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        Active
+                                    </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors">Details</button>
+<button class="p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined text-lg">more_horiz</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="p-4 bg-slate-50/50 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+<p class="text-xs font-bold text-slate-500 uppercase tracking-widest">Showing 1-10 of 24,812 users</p>
+<div class="flex items-center gap-1">
+<button class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-400 hover:bg-white transition-colors disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-primary text-white text-xs font-black shadow-sm shadow-primary/20">1</button>
+<button class="w-8 h-8 rounded-lg text-slate-600 dark:text-slate-400 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">2</button>
+<button class="w-8 h-8 rounded-lg text-slate-600 dark:text-slate-400 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">3</button>
+<span class="px-2 text-slate-400 text-xs">...</span>
+<button class="w-8 h-8 rounded-lg text-slate-600 dark:text-slate-400 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">248</button>
+<button class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-400 hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Contextual Information Card -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-2xl text-white relative overflow-hidden shadow-xl shadow-slate-900/10">
+<div class="relative z-10 flex flex-col h-full justify-between">
+<div>
+<h3 class="text-xl font-black mb-2 tracking-tight">Community Verification Status</h3>
+<p class="text-slate-300 text-sm leading-relaxed mb-4">Halalytics relies on trusted contributors. Review the top 1% of users who have suggested verified halal certificates this month.</p>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-4 py-2 bg-primary rounded-lg text-sm font-black hover:brightness-110 transition-all">Review Contributors</button>
+<a class="text-sm font-bold text-slate-400 hover:text-white transition-colors" href="#">Learn about Tier System</a>
+</div>
+</div>
+<!-- Decorative Background Graphic -->
+<div class="absolute -right-12 -bottom-12 opacity-10">
+<span class="material-symbols-outlined text-[160px]">verified</span>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
+<h3 class="text-lg font-black text-slate-900 dark:text-white mb-4 tracking-tight">Recent Scan Trends</h3>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="text-sm font-bold text-slate-600 dark:text-slate-400">Dairy &amp; Poultry</span>
+</div>
+<span class="text-sm font-black text-slate-900 dark:text-white">42%</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 42%;"></div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-amber-400"></div>
+<span class="text-sm font-bold text-slate-600 dark:text-slate-400">Processed Snacks</span>
+</div>
+<span class="text-sm font-black text-slate-900 dark:text-white">28%</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+<div class="bg-amber-400 h-full rounded-full" style="width: 28%;"></div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-indigo-400"></div>
+<span class="text-sm font-bold text-slate-600 dark:text-slate-400">Beauty &amp; Cosmetics</span>
+</div>
+<span class="text-sm font-black text-slate-900 dark:text-white">15%</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+<div class="bg-indigo-400 h-full rounded-full" style="width: 15%;"></div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

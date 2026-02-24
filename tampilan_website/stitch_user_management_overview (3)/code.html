@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Scan Activity History | Halalytics Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00bbc2",
+                        "background-light": "#f9fafb",
+                        "background-dark": "#111827",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .status-pill {
+            @apply px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex">
+<!-- Sidebar Navigation -->
+<aside class="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col fixed h-full z-50">
+<div class="p-6 flex items-center gap-3">
+<div class="size-10 bg-primary rounded-xl flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-2xl">verified_user</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-slate-900 dark:text-white text-base font-bold leading-none">Halalytics</h1>
+<p class="text-primary text-xs font-medium mt-1 uppercase tracking-widest">Admin Panel</p>
+</div>
+</div>
+<nav class="flex-1 px-4 mt-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[22px] group-hover:text-primary">dashboard</span>
+<span class="text-sm font-semibold">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">history</span>
+<span class="text-sm font-bold tracking-tight">Scan History</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[22px] group-hover:text-primary">barcode_scanner</span>
+<span class="text-sm font-semibold">Products</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[22px] group-hover:text-primary">group</span>
+<span class="text-sm font-semibold">Users</span>
+</a>
+<div class="pt-4 pb-2 px-3">
+<p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Management</p>
+</div>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[22px] group-hover:text-primary">settings</span>
+<span class="text-sm font-semibold">Settings</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-800">
+<div class="size-8 rounded-full bg-cover bg-center" data-alt="Admin user profile avatar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC5M8gzOotCIZIkPLO1OnhdA8JxORtDkYcZswv6HDXhVNZGVTZTFW8uxoqKEf6oM9BKHbCvD7HiIkiq258MyqgN0xQLsmq8NRZhqDArnNj6S6IpYTlANg_ELXvK5I_5jovPILPi31MbrO8dPuNcMlk3pJo6w5wiYrwfqRnhMNoG_By1coJCD4uMUzanPZ0ilKBcmKowkPBxbgp--1ZhJLQr8Zmp1kFINB582ACP0_p7aBK1KPhwYVvk1zfEJW8Xo493SYDRqfZp1ec')"></div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold truncate">Zain Ul-Abidin</p>
+<p class="text-[10px] text-slate-500 truncate">Super Admin</p>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-sm">logout</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 p-8">
+<!-- Breadcrumbs & Header -->
+<div class="flex flex-col gap-2 mb-8">
+<nav class="flex items-center gap-2 text-xs font-medium text-slate-500 uppercase tracking-widest">
+<a class="hover:text-primary transition-colors" href="#">Home</a>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Analytics</a>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-slate-900 dark:text-white">Scan History</span>
+</nav>
+<div class="flex justify-between items-end mt-4">
+<div class="max-w-2xl">
+<h2 class="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Scan Activity History</h2>
+<p class="text-slate-500 dark:text-slate-400 mt-2 text-base">Monitor product verification logs in real-time across all active user sessions.</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2.5 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm">
+<span class="material-symbols-outlined text-[20px]">download</span>
+                        Export CSV
+                    </button>
+<button class="flex items-center gap-2 bg-primary px-4 py-2.5 rounded-lg text-sm font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-[20px]">refresh</span>
+                        Live Refresh
+                    </button>
+</div>
+</div>
+</div>
+<!-- Stats Overview -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-6xl text-primary">qr_code_scanner</span>
+</div>
+<p class="text-slate-500 text-sm font-semibold uppercase tracking-wider">Total Scans Today</p>
+<div class="flex items-baseline gap-3 mt-2">
+<p class="text-3xl font-black text-slate-900 dark:text-white">1,284</p>
+<span class="text-emerald-500 text-sm font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-xs">trending_up</span> 12.5%
+                    </span>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-6xl text-red-500">warning</span>
+</div>
+<p class="text-slate-500 text-sm font-semibold uppercase tracking-wider">Haram Flags</p>
+<div class="flex items-baseline gap-3 mt-2">
+<p class="text-3xl font-black text-slate-900 dark:text-white">12</p>
+<span class="text-red-500 text-sm font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-xs">trending_down</span> 2.1%
+                    </span>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-6xl text-blue-500">person</span>
+</div>
+<p class="text-slate-500 text-sm font-semibold uppercase tracking-wider">Active Users</p>
+<div class="flex items-baseline gap-3 mt-2">
+<p class="text-3xl font-black text-slate-900 dark:text-white">458</p>
+<span class="text-emerald-500 text-sm font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-xs">trending_up</span> 5.4%
+                    </span>
+</div>
+</div>
+</div>
+<!-- Filter & Toolbar -->
+<div class="bg-white dark:bg-slate-900 rounded-t-xl border-x border-t border-slate-200 dark:border-slate-800 p-4">
+<div class="flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-sm">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-slate-400" placeholder="Search products, users or barcodes..." type="text"/>
+</div>
+<div class="h-8 w-px bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
+<div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+<button class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-tight">All Scans</button>
+<button class="bg-slate-50 dark:bg-slate-800 text-slate-500 text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-tight hover:bg-emerald-100/50 hover:text-emerald-600 transition-colors">Halal</button>
+<button class="bg-slate-50 dark:bg-slate-800 text-slate-500 text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-tight hover:bg-amber-100/50 hover:text-amber-600 transition-colors">Syubhat</button>
+<button class="bg-slate-50 dark:bg-slate-800 text-slate-500 text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-tight hover:bg-red-100/50 hover:text-red-600 transition-colors">Haram</button>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-xl">calendar_today</span>
+<span class="text-xs font-bold px-1 whitespace-nowrap">Oct 20 - Oct 27</span>
+</button>
+<button class="flex items-center gap-2 p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary">
+<span class="material-symbols-outlined text-xl">filter_list</span>
+<span class="text-xs font-bold px-1">Filters</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Data Table -->
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">User</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Product Verification</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Barcode</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Time of Scan</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Result</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<img alt="" class="size-9 rounded-full object-cover grayscale group-hover:grayscale-0 transition-all" data-alt="User profile photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBh3dgMNctsh33SIVQ5nP3TKgcAaVfHoJIxOkuIbpD7eKTfBKOVcKOYoKx0nWUAGoOgT_LhkWJEp7AhZnsPVIcUHFqXNHD6izqzB9-vpeYniQcd8HqmvB4H7kTUEwQkFzi6ZnC9bJpZERhX_F7odYZ_GchnuE1_KBXm_AItSIXcfxlOo7ukhNR91IsgKwz4hj-bvi_GljdfKM3N7GSBQdTmJnHkEfZKKYmpr_zx_aHR_ZH9V8C__0jzmaynztRCXck-AQrF7ZGR2nQ"/>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Ahmad Fauzi</p>
+<p class="text-[11px] text-slate-400">fauzi.a@email.com</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
+<img alt="" class="w-full h-full object-cover" data-alt="Product thumbnail Indomie" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWAqQRcDFMLiOlzDCxFhP4NyizwhkCN4ey4sP6DhRkLL2Hh8Q47pjNC1IsWU4xPShbGb8rM3cLcBFzB9HZp68URNpPOEun87pZCBjRrfQLe6qm7sse_zspkYWnFnHcG-oL6AMGq796nEUHyBWhmX9biDwbZMCN8tz8zrRJBI7n47w2nHHGwKBncU1I5lCDOM9gQFMSV7WRfNwUyZMedoFuUmtfFdGdu1xqiuuAOaXCXvVNQbX5PXjWHijNW6-LAsJONvoKndvnxFs"/>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Indomie Goreng Special</p>
+<p class="text-[11px] text-slate-400">Category: Instant Noodles</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="text-xs font-mono font-medium text-slate-500 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded">8998866200216</span>
+</td>
+<td class="px-6 py-4">
+<div>
+<p class="text-sm font-medium text-slate-700 dark:text-slate-300">Oct 24, 2023</p>
+<p class="text-[11px] text-primary font-bold uppercase tracking-tight">14:20:45 PM</p>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<span class="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-200/50 dark:border-emerald-800/50">
+                                Halal
+                            </span>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<img alt="" class="size-9 rounded-full object-cover grayscale group-hover:grayscale-0 transition-all" data-alt="User profile photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAah8eMWaZPEEUKEh01dyzcqdIe14MuGoKeEXV4XfOFrgOnUsOS4gmgj9A4Tb03wc4VgEZmDQywqK-ejVV6ffvPAylkrMYyuXWnS5JJ_W2Lf3lN58lmAcbSNKuCE7K9YJkorQDhrM1NTBYiuP8tULtksTLzkva9CtqDaQwOo9lh6ekbkJTfmUVXeGabYZzBSM0QVDj9P4oXg9vMrklLOfFhgOZ8HXl7EdrSQbTVUCHQxt2YLTdkMahvsOceG2wQh-a8obVffyn4LSw"/>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Sarah Al-Mansour</p>
+<p class="text-[11px] text-slate-400">sarah.m@gmail.com</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
+<img alt="" class="w-full h-full object-cover" data-alt="Product thumbnail Gummies" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0UpFPSJHXMgdJaacYZfksE2CGYY3LaXhxczFN1HokRrsYaAeHcLEvzPvcMqZwCYrOQNph2lgoz5_cDszVrcL854wNSgYpTfGKDdxRfjA33B0DQTGv9hN-2SJaFsyQhnkNEFmmjnmSH87A9X5fZbNuxH3u4j1uKxuqB_p83iHZyb7qu4LkchnynS7m4hq1rUMRvZWp5J3OWpyzYwQOrG_pjZirXvigtgIlk1r4Op_7oztrFdQiHFHPFUjML6ODsiQnSSPUlEDBCxA"/>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Haribo Goldbears (Import)</p>
+<p class="text-[11px] text-slate-400">Category: Confectionary</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="text-xs font-mono font-medium text-slate-500 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded">4001686301524</span>
+</td>
+<td class="px-6 py-4">
+<div>
+<p class="text-sm font-medium text-slate-700 dark:text-slate-300">Oct 24, 2023</p>
+<p class="text-[11px] text-primary font-bold uppercase tracking-tight">13:58:12 PM</p>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<span class="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-red-200/50 dark:border-red-800/50">
+                                Haram
+                            </span>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<img alt="" class="size-9 rounded-full object-cover grayscale group-hover:grayscale-0 transition-all" data-alt="User profile photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB265klNHLNMd1d_xpTJxg1d7l-l1ao5w29vIrhSMjFHabj6ZOQ44ZUFI6dzy_32sP2zfSGOACA55wvud0StmMSA_74B8Xv6etgdUP4p1DmW26j1yTxcWCA7EgMX0TD7BjuEzOPjM598TXv-VGbzM--TtUfRuwkVzCaRkPFXrwIUSLpqy_BpY7HGcurX1Xlhrfqx_0bJl-mgjLb3xAN80dk8K7hEGvWEojsiV9vnjUlXJ_stTqzCN-GoWwFoVoFm9LOJDCM9fGl_Sg"/>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Omar Bakri</p>
+<p class="text-[11px] text-slate-400">o.bakri@outlook.com</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
+<img alt="" class="w-full h-full object-cover" data-alt="Product thumbnail Snack" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBUvD724mvqby_GpajcCqzuPZyCfP3AG45j582z4GUalr6w17yqtPW5fzVIhfjVuFQaPcBrjOxxBOBiiePoPl6cfx3gHz4inrVvNe016rQemKAcsTE2bly2vpBShzFYokltabqw959dfiI142aUlIA-FNMxl1W8O-WOqoYz5Bxk6EdG9XL9fofXGlkxMPmlt2oqih-dBXNyigSJPwRZhKYheKvbtAozpm56X6AwvUEoBStKCEEQdjxYqVrGnHgHOm9rjGmt-OpmV0"/>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Pringles BBQ (Local)</p>
+<p class="text-[11px] text-slate-400">Category: Snacks</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="text-xs font-mono font-medium text-slate-500 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded">8886467100017</span>
+</td>
+<td class="px-6 py-4">
+<div>
+<p class="text-sm font-medium text-slate-700 dark:text-slate-300">Oct 24, 2023</p>
+<p class="text-[11px] text-primary font-bold uppercase tracking-tight">13:45:00 PM</p>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<span class="bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-200/50 dark:border-amber-800/50">
+                                Syubhat
+                            </span>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-400 text-xs">UK</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Unknown User</p>
+<p class="text-[11px] text-slate-400">Guest Session #8821</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
+<img alt="" class="w-full h-full object-cover" data-alt="Product thumbnail Drink" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmWCVt84_f-Ap7zwIqnfXB_PnJQnZ_eImPWFUjL_fv8m3s8BQgOBo3xD9FFJ-yprhQAK-lVJcxDBisyU-3efKu-vlbgD7RruHv6aMzGXoefod1ym4QDOL4PE6Nr0idxH8S9PfeikKa8-23FS7Wiqcq2ugMZXoFR_YNdyrtzFCLhmPNF6QE3BJsQaXQjzDU8vymGdjdwTsnXSTWqYWHd9Z_rfvdKLaej_i7udAt-t70iytphJjBMueJtu7m11zua5Eq2fDdRS2hG0c"/>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Coca Cola Classic</p>
+<p class="text-[11px] text-slate-400">Category: Beverages</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="text-xs font-mono font-medium text-slate-500 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded">5449000000996</span>
+</td>
+<td class="px-6 py-4">
+<div>
+<p class="text-sm font-medium text-slate-700 dark:text-slate-300">Oct 24, 2023</p>
+<p class="text-[11px] text-primary font-bold uppercase tracking-tight">13:32:10 PM</p>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<span class="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-200/50 dark:border-emerald-800/50">
+                                Halal
+                            </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="bg-white dark:bg-slate-900 border-x border-b border-slate-200 dark:border-slate-800 px-6 py-4 rounded-b-xl flex items-center justify-between shadow-sm">
+<p class="text-xs font-bold text-slate-400 tracking-tight">Showing <span class="text-slate-900 dark:text-white">1 - 25</span> of <span class="text-slate-900 dark:text-white">1,284</span> scans</p>
+<div class="flex items-center gap-1">
+<button class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined text-xl">keyboard_arrow_left</span>
+</button>
+<button class="size-8 rounded-lg bg-primary text-white text-xs font-bold flex items-center justify-center">1</button>
+<button class="size-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold flex items-center justify-center">2</button>
+<button class="size-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold flex items-center justify-center">3</button>
+<span class="text-slate-300 px-1">...</span>
+<button class="size-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold flex items-center justify-center">52</button>
+<button class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
+<span class="material-symbols-outlined text-xl">keyboard_arrow_right</span>
+</button>
+</div>
+</div>
+</main>
+</body></html>

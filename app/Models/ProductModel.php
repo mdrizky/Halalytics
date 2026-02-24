@@ -18,8 +18,41 @@ class ProductModel extends Model
         'barcode',
         'komposisi',
         'status',
+        'active',
+        'source',
         'info_gizi',
-        'kategori_id'
+        'kategori_id',
+        'image',
+        'off_product_id',
+        'off_last_synced',
+        'is_imported_from_off',
+        'auto_imported_at',
+        'verification_status',
+        'data_completeness_score',
+        'data_completeness_score',
+        'needs_manual_review',
+
+        // Health & Approval
+        'caffeine_mg',
+        'sugar_g',
+        'volume_ml',
+        'calories',
+        'protein_g',
+        'fat_g',
+        'halal_certificate',
+        'approval_status',
+        'approved_by',
+        'approved_at',
+        'rejection_reason',
+        'halal_analysis'
+    ];
+
+    protected $casts = [
+        'halal_analysis' => 'array',
+        'off_last_synced' => 'datetime',
+        'auto_imported_at' => 'datetime',
+        'approved_at' => 'datetime',
+        'active' => 'boolean'
     ];
 
     // Relasi ke Kategori

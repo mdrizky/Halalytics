@@ -1,17 +1,25 @@
-@extends('master')
+@extends('admin.layouts.admin_layout')
 
-@section('title', 'Detail Scan')
+@section('title', 'Scan Detail - Halalytics Admin')
 
-@section('isi')
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detail Scan Produk - Halalytics</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+@section('breadcrumb')
+<span class="text-slate-400">Dashboard</span>
+<span class="material-icons-round text-slate-300 text-sm">chevron_right</span>
+<span class="text-slate-400">Activity</span>
+<span class="material-icons-round text-slate-300 text-sm">chevron_right</span>
+<span class="font-semibold text-slate-700 dark:text-slate-200">Scan Detail</span>
+@endsection
+
+@section('content')
+<div class="max-w-3xl mx-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white">Scan Record Details</h3>
+            <a href="{{ route('admin.scan.index') }}" class="text-sm font-medium text-primary hover:underline flex items-center">
+                <span class="material-icons-round text-sm mr-1">arrow_back</span>
+                Back to History
+            </a>
+        </div>
     <style>
         :root {
             --primary-color: #2E8B57;
@@ -423,25 +431,26 @@
                 </div>
             </div>
             
-            <div class="action-buttons">
-                <a href="{{ route('scan.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Kembali
-                </a>
-                <a href="{{ route('scan.edit', $scan->id_scan) }}" class="btn btn-primary">
-                    <i class="fas fa-edit"></i> Edit
-                </a>
-                <form action="{{ route('scan.destroy', $scan->id_scan) }}" method="POST" class="d-inline">
+            <div class="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <a href="{{ route('admin.scan.index') }}" class="px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-all text-sm font-medium">
+                        Back
+                    </a>
+                    <a href="{{ route('admin.scan.edit', $scan->id_scan) }}" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all text-sm font-bold flex items-center space-x-1">
+                        <span class="material-icons-round text-sm">edit</span>
+                        <span>Edit</span>
+                    </a>
+                </div>
+                <form action="{{ route('admin.scan.destroy', $scan->id_scan) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this scan record?')">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger" onclick="return confirm('Yakin hapus data ini?')">
-                        <i class="fas fa-trash"></i> Hapus
+                    <button type="submit" class="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all text-sm font-medium flex items-center space-x-1">
+                        <span class="material-icons-round text-sm">delete</span>
+                        <span>Delete</span>
                     </button>
                 </form>
             </div>
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+</div>
 @endsection

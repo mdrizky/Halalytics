@@ -8,10 +8,9 @@ use App\Models\User; // pastikan model User dipanggil
 
 class LoginController extends Controller
 {
-    // ✅ Tampilkan form login
     public function showLoginForm()
     {
-        return view('login'); // pastikan file login.blade.php ada di resources/views
+        return view('auth.login-new'); 
     }
 
     // ✅ Proses login
@@ -27,8 +26,16 @@ class LoginController extends Controller
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
-            // ✅ Cek status akun: admin selalu boleh login, user dicek active
-            if ($user->role !== 'admin' && !$user->active) {
+            // ✅ Cek role: Hanya admin yang boleh masuk ke dashboard admin
+            if ($user->role !== 'admin') {
+                Auth::logout();
+                return redirect()->route('login')->withErrors([
+                    'username' => 'Username atau password salah.',
+                ])->with('error', 'Username atau password salah.');
+            }
+
+            // ✅ Cek status akun
+            if (!$user->active) {
                 Auth::logout();
                 return redirect()->route('login')->withErrors([
                     'username' => 'Akun anda tidak aktif. Silakan hubungi admin.',
@@ -39,24 +46,12 @@ class LoginController extends Controller
             $user->last_login = now();
             $user->save();
 
-            // ✅ Cek role untuk redirect
-            if ($user->role === 'admin') {
-                return redirect()->route('admin.home');
-            } elseif ($user->role === 'user') {
-                return redirect()->route('user.home');
-            }
-
-            // ✅ Kalau role tidak dikenali
-            Auth::logout();
-            return redirect()->route('login')->withErrors([
-                'username' => 'Role tidak dikenali.',
-            ]);
+            // ✅ Redirect ke dashboard admin
+            return redirect()->route('admin.dashboard');
         }
 
         // ✅ Kalau gagal login
-        return redirect()->route('login')->withErrors([
-            'username' => 'Username atau password salah.',
-        ]);
+        return redirect()->route('login')->with('error', 'Username atau password salah.');
     }
 
     // ✅ Logout

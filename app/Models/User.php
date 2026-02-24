@@ -43,6 +43,21 @@ class User extends Authenticatable
         'notif_enabled',
         'dark_mode',
         'image',
+        'weight_kg',
+        'has_diabetes',
+        'emergency_contact',
+        'is_active',
+        'avatar_url',
+        'birth_date',
+        'gender',
+        'bio',
+        'dietary_preferences',
+        'allergies',
+        'notifications_enabled',
+        'total_scans',
+        'halal_products_count',
+        'profile_visibility',
+        'show_health_tips',
     ];
 
     protected $hidden = [
@@ -60,45 +75,37 @@ class User extends Authenticatable
         'notif_enabled' => 'boolean',
         'dark_mode' => 'boolean',
         'image' => 'string',
+        'birth_date' => 'date',
+        'dietary_preferences' => 'array',
+        'allergies' => 'array',
+        'notifications_enabled' => 'boolean',
+        'total_scans' => 'integer',
+        'halal_products_count' => 'integer',
+        'show_health_tips' => 'boolean',
     ];
 
-    /**
-     * 🔐 Hash password otomatis setiap kali diisi.
-     */
     public function setPasswordAttribute($value)
     {
-        if ($value && !Hash::needsRehash($value)) {
-            $this->attributes['password'] = Hash::make($value);
+        if ($value) {
+            $this->attributes['password'] = Hash::needsRehash($value) ? Hash::make($value) : $value;
         }
     }
 
-    /**
-     * 🔑 Override login pakai 'username' (bukan email).
-     */
     public function getAuthIdentifierName()
     {
         return 'username';
     }
 
-    /**
-     * 📊 Relasi ke aktivitas pengguna.
-     */
     public function activities()
     {
         return $this->hasMany(ActivityModel::class, 'id_user', 'id_user');
     }
 
-    /**
-     * 📷 Relasi ke hasil scan.
-     */
     public function scans()
     {
         return $this->hasMany(ScanModel::class, 'user_id', 'id_user');
     }
 
-    /**
-     * 🧾 Relasi ke laporan pengguna.
-     */
     public function reports()
     {
         return $this->hasMany(ReportModel::class, 'user_id', 'id_user');

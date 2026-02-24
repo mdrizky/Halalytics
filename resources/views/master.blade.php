@@ -544,6 +544,17 @@
                         <a href="{{ url('admin/reports') }}"><i class="bi bi-bar-chart menu-icon"></i><span class="nav-text">Laporan & Statistik</span></a>
                     </li>
                     
+                    <li class="nav-label mt-4">Website Promo</li>
+                    <li>
+                        <a href="{{ route('admin.promo.blog.index') }}"><i class="bi bi-journal-text menu-icon"></i><span class="nav-text">Kelola Artikel</span></a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.promo.messages.index') }}"><i class="bi bi-envelope menu-icon"></i><span class="nav-text">Pesan Masuk</span></a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.promo.settings.index') }}"><i class="bi bi-gear menu-icon"></i><span class="nav-text">Pengaturan Web</span></a>
+                    </li>
+                    
                     <!-- Logout Item di Bawah -->
                     <li class="nav-label logout-item">
                         <form action="{{ route('logout') }}" method="POST" class="d-inline">

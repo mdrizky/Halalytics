@@ -1,25 +1,27 @@
-@extends('master')
-@section('isi')
-<div class="container py-4">
-    <div class="card shadow-sm">
-        <div class="card-header d-flex align-items-center justify-content-between">
-            <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Edit Data Scan</h5>
-            <a href="{{ route('scan.index') }}" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Kembali
+@extends('admin.layouts.admin_layout')
+
+@section('title', 'Edit Scan - Halalytics Admin')
+
+@section('breadcrumb')
+<span class="text-slate-400">Dashboard</span>
+<span class="material-icons-round text-slate-300 text-sm">chevron_right</span>
+<span class="text-slate-400">Activity</span>
+<span class="material-icons-round text-slate-300 text-sm">chevron_right</span>
+<span class="font-semibold text-slate-700 dark:text-slate-200">Edit Scan</span>
+@endsection
+
+@section('content')
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white">Edit Scan Record</h3>
+            <a href="{{ route('admin.scan.index') }}" class="text-sm font-medium text-primary hover:underline flex items-center">
+                <span class="material-icons-round text-sm mr-1">arrow_back</span>
+                Back
             </a>
         </div>
-        <div class="card-body">
-            @if ($errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            <form action="{{ route('scan.update', $scan->id_scan) }}" method="POST">
+        <div class="p-6">
+            <form action="{{ route('admin.scan.update', $scan->id_scan) }}" method="POST">
                 @csrf
                 @method('PUT')
 
@@ -44,7 +46,7 @@
                     <select name="status_halal" class="form-select" required>
                         <option value="halal" {{ $sh === 'halal' ? 'selected' : '' }}>Halal</option>
                         <option value="tidak halal" {{ $sh === 'tidak halal' ? 'selected' : '' }}>Tidak Halal</option>
-                        <option value="diragukan" {{ $sh === 'diragukan' ? 'selected' : '' }}>Diragukan</option>
+                        <option value="syubhat" {{ $sh === 'syubhat' ? 'selected' : '' }}>Syubhat</option>
                     </select>
                 </div>
 
@@ -68,7 +70,7 @@
                 </div>
 
                 <div class="d-flex justify-content-end gap-2">
-                    <a href="{{ route('scan.index') }}" class="btn btn-outline-secondary">Batal</a>
+                    <a href="{{ route('admin.scan.index') }}" class="btn btn-outline-secondary">Batal</a>
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-save"></i> Simpan Perubahan
                     </button>

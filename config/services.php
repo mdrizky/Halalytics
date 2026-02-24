@@ -20,6 +20,10 @@ return [
         'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'),
     ],
 
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
@@ -28,6 +32,16 @@ return [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+    ],
+
+    'mui' => [
+        'api_url' => env('MUI_API_URL', 'https://api.halalmui.org'),
+        'api_key' => env('MUI_API_KEY'),
+    ],
+    
+    'jakim' => [
+        'api_url' => env('JAKIM_API_URL'),
+        'api_key' => env('JAKIM_API_KEY'),
     ],
 
 ];

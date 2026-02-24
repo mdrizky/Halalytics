@@ -1,492 +1,230 @@
-@extends('master')
-@section('isi')
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Produk - Halalytics</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #2E8B57;
-            --primary-light: #3A9D66;
-            --primary-dark: #1A5632;
-            --bg-dark: #121212;
-            --bg-card: #1E1E1E;
-            --bg-hover: #2A2A2A;
-            --text-light: #E0E0E0;
-            --text-muted: #A0A0A0;
-            --border-color: #333333;
-            --card-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-            --glow-effect: 0 0 10px rgba(46, 139, 87, 0.3);
-        }
+@extends('admin.layouts.admin_layout')
+
+@section('title', 'Edit Product - Halalytics Admin')
+
+@section('breadcrumb')
+<span class="text-slate-400">Dashboard</span>
+<span class="material-icons-round text-slate-300 text-sm">chevron_right</span>
+<span class="text-slate-400">Products</span>
+<span class="material-icons-round text-slate-300 text-sm">chevron_right</span>
+<span class="font-semibold text-slate-700 dark:text-slate-200">Edit Product</span>
+@endsection
+
+@section('content')
+<!-- Page Title -->
+<div class="flex items-center justify-between mb-8">
+    <div>
+        <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Edit Product</h2>
+        <p class="text-slate-500 text-sm mt-1">Update product information in the halal verification database.</p>
+    </div>
+    <a href="{{ route('admin.product.index') }}" class="flex items-center space-x-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+        <span class="material-icons-round text-lg">arrow_back</span>
+        <span class="text-sm font-medium">Back to Products</span>
+    </a>
+</div>
+
+<!-- Form Card -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <form action="{{ route('admin.product.update', $product->id_product) }}" method="POST" enctype="multipart/form-data">
+        @csrf
         
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-light);
-            min-height: 100vh;
-        }
-        
-        .page-container {
-            padding: 20px;
-        }
-        
-        .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: var(--card-shadow);
-            overflow: hidden;
-            background-color: var(--bg-card);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--card-shadow), var(--glow-effect);
-        }
-        
-        .card-header {
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-            color: white;
-            padding: 1.5rem 2rem;
-            border: none;
-            border-radius: 15px 15px 0 0 !important;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .card-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .card-header:hover::before {
-            left: 100%;
-        }
-        
-        .card-header h5 {
-            font-weight: 700;
-            margin: 0;
-            position: relative;
-            z-index: 1;
-            font-size: 1.5rem;
-        }
-        
-        .product-badge {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 0.35rem 0.75rem;
-            border-radius: 50px;
-            font-weight: 600;
-            position: relative;
-            z-index: 1;
-            backdrop-filter: blur(5px);
-            font-size: 0.9rem;
-        }
-        
-        .card-body {
-            padding: 2rem;
-        }
-        
-        .form-label {
-            font-weight: 600;
-            color: var(--text-light);
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .form-label i {
-            color: var(--primary-color);
-            font-size: 1.1rem;
-        }
-        
-        .form-control, .form-select {
-            background-color: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-color);
-            color: var(--text-light);
-            border-radius: 10px;
-            padding: 0.75rem 1rem;
-            transition: all 0.3s ease;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            background-color: rgba(0, 0, 0, 0.4);
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.2);
-            color: var(--text-light);
-        }
-        
-        .form-control::placeholder {
-            color: var(--text-muted);
-        }
-        
-        .form-select option {
-            background-color: var(--bg-card);
-            color: var(--text-light);
-        }
-        
-        textarea.form-control {
-            resize: vertical;
-            min-height: 100px;
-        }
-        
-        .btn {
-            border-radius: 10px;
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            transition: all 0.3s ease;
-            border: none;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .btn:hover::before {
-            left: 100%;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-            color: white;
-            box-shadow: 0 4px 15px rgba(46, 139, 87, 0.3);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(46, 139, 87, 0.4);
-            background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
-        }
-        
-        .btn-secondary {
-            background-color: var(--bg-hover);
-            color: var(--text-light);
-            border: 1px solid var(--border-color);
-        }
-        
-        .btn-secondary:hover {
-            background-color: var(--border-color);
-            color: white;
-            transform: translateY(-2px);
-        }
-        
-        .form-section {
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-        }
-        
-        .form-section-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--primary-light);
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 2px solid var(--primary-color);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .form-section-title i {
-            font-size: 1.3rem;
-        }
-        
-        .alert {
-            border-radius: 10px;
-            border: none;
-            padding: 1rem 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .alert-danger {
-            background-color: rgba(230, 57, 70, 0.15);
-            color: #e63946;
-            border-left: 4px solid #e63946;
-        }
-        
-        .invalid-feedback {
-            color: #e63946;
-            font-size: 0.875rem;
-            margin-top: 0.5rem;
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-        }
-        
-        .btn-group-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 1px solid var(--border-color);
-        }
-        
-        .header-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        
-        @media (max-width: 768px) {
-            .page-container {
-                padding: 15px;
-            }
-            
-            .card-body {
-                padding: 1.5rem;
-            }
-            
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .btn-group-actions {
-                flex-direction: column;
-            }
-            
-            .btn-group-actions .btn {
-                width: 100%;
-            }
-            
-            .header-info {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .card {
-            animation: fadeIn 0.5s ease-out;
-        }
-    </style>
-</head>
-<body>
-    <div class="page-container">
-        <div class="card">
-            <div class="card-header">
-                <div class="header-info">
-                    <h5><i class="fas fa-edit"></i> Edit Produk</h5>
-                    <span class="product-badge">ID: #{{ $product->id_product }}</span>
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-white">Product Information</h3>
+                    <p class="text-sm text-slate-500 mt-1">Update the details of this product.</p>
+                </div>
+                <div class="text-right">
+                    <span class="block text-xs text-slate-400">ID: {{ $product->id_product }}</span>
+                    <span class="block text-xs font-bold text-indigo-500 mt-1">Source: {{ $product->source ?? 'local' }}</span>
                 </div>
             </div>
-        <div class="card-body">
-                @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <strong><i class="fas fa-exclamation-triangle me-2"></i>Terjadi Kesalahan!</strong>
-                        <ul class="mb-0 mt-2">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
+        </div>
+        
+        <div class="p-6 space-y-6">
+            <!-- Product Image -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Product Image</label>
+                <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-6 text-center hover:border-primary transition-colors">
+                    <input type="file" name="image" accept="image/*" class="hidden" id="imageUpload" onchange="previewImage(event)">
+                    <label for="imageUpload" class="cursor-pointer">
+                        <div id="imagePreview" class="mb-4">
+                            @if($product->image)
+                                <img src="{{ asset($product->image) }}" class="w-32 h-32 object-cover rounded-lg mx-auto">
+                            @else
+                                <span class="material-icons-round text-4xl text-slate-400">image</span>
+                            @endif
+                        </div>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">Click to change product image</p>
+                        <p class="text-xs text-slate-400 mt-1">JPEG, PNG, JPG, GIF up to 5MB</p>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Product Name -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Product Name <span class="text-red-500">*</span></label>
+                <input type="text" name="nama_product" value="{{ old('nama_product', $product->nama_product) }}" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent @error('nama_product') border-red-500 @enderror" placeholder="Enter product name">
+                @error('nama_product')
+                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                @enderror
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Barcode -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Barcode <span class="text-red-500">*</span></label>
+                    <input type="text" name="barcode" value="{{ old('barcode', $product->barcode) }}" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent @error('barcode') border-red-500 @enderror" placeholder="e.g., 8992388116014">
+                    @error('barcode')
+                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+                
+                <!-- Category -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Category</label>
+                    <select name="kategori_id" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="">Select Category</option>
+                        @foreach($categories as $category)
+                        <option value="{{ $category->id_kategori }}" {{ old('kategori_id', $product->kategori_id) == $category->id_kategori ? 'selected' : '' }}>{{ $category->nama_kategori }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            
+            <!-- AI Halal Analysis (Read Only Context) -->
+            @if($product->halal_analysis)
+            <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-6 border border-indigo-100 dark:border-indigo-800/50 mb-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="material-icons-round text-indigo-500">auto_awesome</span>
+                    <h3 class="text-sm font-bold text-indigo-900 dark:text-indigo-100 uppercase tracking-wider">AI Halal Analysis Insights</h3>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="px-3 py-1 bg-indigo-500/10 text-indigo-500 rounded-full text-xs font-bold uppercase tracking-tighter">
+                            Status: {{ $product->halal_analysis['status'] ?? 'Unknown' }}
+                        </div>
+                        <div class="px-3 py-1 {{ ($product->halal_analysis['is_potentially_halal'] ?? false) ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500' }} rounded-full text-xs font-bold uppercase tracking-tighter">
+                            Confidence: {{ ($product->halal_analysis['is_potentially_halal'] ?? false) ? 'Potentially Halal' : 'Potentially Non-Halal' }}
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-indigo-800 dark:text-indigo-200 mb-1">AI Recommendation:</p>
+                        <p class="text-sm text-indigo-950 dark:text-indigo-50/80 italic leading-relaxed">
+                            "{{ $product->halal_analysis['recommendation'] ?? 'No specific recommendation provided.' }}"
+                        </p>
+                    </div>
+                    @if(!empty($product->halal_analysis['suspicious_ingredients']))
+                    <div>
+                        <p class="text-xs font-bold text-rose-600 dark:text-rose-400 mb-1">Suspicious Ingredients Flagged:</p>
+                        <ul class="flex flex-wrap gap-2">
+                            @foreach($product->halal_analysis['suspicious_ingredients'] as $ingredient)
+                            <li class="px-2 py-0.5 bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 rounded text-[10px] font-bold">{{ $ingredient }}</li>
                             @endforeach
                         </ul>
                     </div>
-                @endif
+                    @endif
+                </div>
+            </div>
+            @endif
 
-            <form action="{{ route('admin_product.update', $product->id_product) }}" method="POST">
-                @csrf
-                    @method('POST')
-                    
-                    <div class="form-section">
-                        <div class="form-section-title">
-                            <i class="fas fa-info-circle"></i>
-                            Informasi Produk
+            <!-- Halal Status -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Halal Status <span class="text-red-500">*</span></label>
+                <div class="grid grid-cols-3 gap-4">
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="status" value="halal" {{ old('status', $product->status) == 'halal' ? 'checked' : '' }} class="peer sr-only" required>
+                        <div class="p-4 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-center peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
+                            <span class="material-icons-round text-emerald-500 text-2xl mb-2">verified</span>
+                            <p class="text-sm font-bold text-slate-800 dark:text-white">Halal</p>
+                            <p class="text-xs text-slate-400">Certified halal</p>
                         </div>
-                        
-                        <div class="form-row">
-                <div class="mb-3">
-                                <label for="nama_product" class="form-label">
-                                    <i class="fas fa-tag"></i>
-                                    Nama Produk
-                                </label>
-                                <input type="text" 
-                                       name="nama_product" 
-                                       id="nama_product"
-                                       class="form-control @error('nama_product') is-invalid @enderror" 
-                                       value="{{ old('nama_product', $product->nama_product) }}"
-                                       placeholder="Masukkan nama produk"
-                                       required>
-                                @error('nama_product')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                </div>
-
-                <div class="mb-3">
-                                <label for="barcode" class="form-label">
-                                    <i class="fas fa-barcode"></i>
-                                    Barcode
-                                </label>
-                                <input type="text" 
-                                       name="barcode" 
-                                       id="barcode"
-                                       class="form-control @error('barcode') is-invalid @enderror" 
-                                       value="{{ old('barcode', $product->barcode) }}"
-                                       placeholder="Masukkan barcode produk"
-                                       required>
-                                @error('barcode')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                </div>
-
-                <div class="mb-3">
-                            <label for="kategori_id" class="form-label">
-                                <i class="fas fa-layer-group"></i>
-                                Kategori
-                            </label>
-                            <select name="kategori_id" 
-                                    id="kategori_id"
-                                    class="form-select @error('kategori_id') is-invalid @enderror">
-                                <option value="">Pilih Kategori</option>
-                                @if(isset($kategoris))
-                                    @foreach($kategoris as $kat)
-                                        <option value="{{ $kat->id_kategori }}" {{ old('kategori_id', $product->kategori_id) == $kat->id_kategori ? 'selected' : '' }}>
-                                            {{ $kat->nama_kategori }}
-                                        </option>
-                                    @endforeach
-                                @else
-                                    <option value="{{ $product->kategori_id }}" selected>Kategori ID: {{ $product->kategori_id }}</option>
-                                @endif
-                            </select>
-                            @error('kategori_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                    </label>
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="status" value="syubhat" {{ old('status', $product->status) == 'syubhat' ? 'checked' : '' }} class="peer sr-only">
+                        <div class="p-4 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-center peer-checked:border-amber-500 peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/20 transition-all">
+                            <span class="material-icons-round text-amber-500 text-2xl mb-2">help</span>
+                            <p class="text-sm font-bold text-slate-800 dark:text-white">Syubhat</p>
+                            <p class="text-xs text-slate-400">Needs verification</p>
                         </div>
-                    </div>
-
-                    <div class="form-section">
-                        <div class="form-section-title">
-                            <i class="fas fa-list"></i>
-                            Detail Produk
-                </div>
-
-                <div class="mb-3">
-                            <label for="komposisi" class="form-label">
-                                <i class="fas fa-flask"></i>
-                                Komposisi
-                            </label>
-                            <textarea name="komposisi" 
-                                      id="komposisi"
-                                      class="form-control @error('komposisi') is-invalid @enderror" 
-                                      rows="4"
-                                      placeholder="Masukkan komposisi produk">{{ old('komposisi', $product->komposisi) }}</textarea>
-                            @error('komposisi')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                </div>
-
-                <div class="mb-3">
-                            <label for="info_gizi" class="form-label">
-                                <i class="fas fa-chart-pie"></i>
-                                Info Gizi
-                            </label>
-                            <textarea name="info_gizi" 
-                                      id="info_gizi"
-                                      class="form-control @error('info_gizi') is-invalid @enderror" 
-                                      rows="4"
-                                      placeholder="Masukkan informasi gizi produk">{{ old('info_gizi', $product->info_gizi) }}</textarea>
-                            @error('info_gizi')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                    </label>
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="status" value="tidak halal" {{ old('status', $product->status) == 'tidak halal' ? 'checked' : '' }} class="peer sr-only">
+                        <div class="p-4 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-center peer-checked:border-red-500 peer-checked:bg-red-50 dark:peer-checked:bg-red-900/20 transition-all">
+                            <span class="material-icons-round text-red-500 text-2xl mb-2">cancel</span>
+                            <p class="text-sm font-bold text-slate-800 dark:text-white">Haram</p>
+                            <p class="text-xs text-slate-400">Not halal</p>
                         </div>
-                    </div>
-
-                    <div class="form-section">
-                        <div class="form-section-title">
-                            <i class="fas fa-shield-check"></i>
-                            Status Halal
+                    </label>
                 </div>
+                @error('status')
+                <p class="mt-2 text-xs text-red-500">{{ $message }}</p>
+                @enderror
+            </div>
 
-                <div class="mb-3">
-                            <label for="status" class="form-label">
-                                <i class="fas fa-certificate"></i>
-                                Status Halal
-                            </label>
-                            <select name="status" 
-                                    id="status"
-                                    class="form-select @error('status') is-invalid @enderror" 
-                                    required>
-                                <option value="halal" {{ old('status', $product->status) == 'halal' ? 'selected' : '' }}>Halal</option>
-                                <option value="haram" {{ old('status', $product->status) == 'haram' ? 'selected' : '' }}>Haram</option>
-                                <option value="syubhat" {{ old('status', $product->status) == 'syubhat' ? 'selected' : '' }}>Syubhat</option>
-                    </select>
-                            @error('status')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                </div>
-
-                    <div class="btn-group-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-2"></i>Update Produk
-                        </button>
-                        <a href="{{ route('admin_product') }}" class="btn btn-secondary">
-                            <i class="fas fa-times me-2"></i>Batal
-                        </a>
-                    </div>
-            </form>
+            <!-- Verification Status -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Verification Status</label>
+                <select name="verification_status" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <option value="needs_review" {{ old('verification_status', $product->verification_status) == 'needs_review' ? 'selected' : '' }}>Needs Review</option>
+                    <option value="verified" {{ old('verification_status', $product->verification_status) == 'verified' ? 'selected' : '' }}>Verified</option>
+                    <option value="rejected" {{ old('verification_status', $product->verification_status) == 'rejected' ? 'selected' : '' }}>Rejected</option>
+                </select>
+            </div>
+            
+            <!-- Composition -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Composition / Ingredients</label>
+                <textarea name="komposisi" rows="4" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="List the ingredients or composition of the product">{{ old('komposisi', $product->komposisi) }}</textarea>
+            </div>
+            
+            <!-- Nutrition Info -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nutrition Information</label>
+                <textarea name="info_gizi" rows="4" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter nutrition facts (optional)">{{ old('info_gizi', $product->info_gizi) }}</textarea>
+            </div>
         </div>
+        
+        <div class="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-end">
+            <div class="flex items-center space-x-3">
+                <a href="{{ route('admin.product.index') }}" class="px-6 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-all text-sm font-medium">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all text-sm font-bold flex items-center space-x-2">
+                    <span class="material-icons-round text-lg">save</span>
+                    <span>Save Changes</span>
+                </button>
+            </div>
+        </div>
+    </form>
+    
+    <!-- Delete Form (Outside main form to prevent conflicts) -->
+    <div class="p-6 pt-0 border-t-0 bg-slate-50 dark:bg-slate-800/50">
+        <form action="{{ route('admin.product.destroy', $product->id_product) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?')">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all text-sm font-medium flex items-center space-x-1">
+                <span class="material-icons-round text-lg">delete</span>
+                <span>Delete Product</span>
+            </button>
+        </form>
     </div>
 </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Auto-focus on first input
-        document.addEventListener('DOMContentLoaded', function() {
-            const firstInput = document.getElementById('nama_product');
-            if (firstInput) {
-                firstInput.focus();
-                firstInput.select();
-            }
-        });
-        
-        // Form validation
-        const form = document.querySelector('form');
-        form.addEventListener('submit', function(e) {
-            const status = document.getElementById('status').value;
-            if (!status) {
-                e.preventDefault();
-                alert('Silakan pilih status halal produk!');
-                return false;
-            }
-        });
-    </script>
-</body>
-</html>
 @endsection
+
+@push('scripts')
+<script>
+    function previewImage(event) {
+        const file = event.target.files[0];
+        const preview = document.getElementById('imagePreview');
+        
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" class="w-32 h-32 object-cover rounded-lg mx-auto">`;
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+</script>
+@endpush

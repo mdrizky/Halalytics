@@ -9,7 +9,7 @@ class ActivityModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'activity';
+    protected $table = 'activities';
     protected $primaryKey = 'id_activity';
     public $timestamps = true;
 

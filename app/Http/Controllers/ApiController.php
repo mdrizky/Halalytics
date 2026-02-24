@@ -11,9 +11,82 @@ use App\Models\ProductModel;
 use App\Models\KategoriModel;
 use App\Models\ScanModel;
 use App\Models\ReportModel;
+use App\Models\UmkmProduct;
+use App\Models\ProductVerificationRequest;
+use Illuminate\Support\Facades\DB;
 
 class ApiController extends Controller
 {
+    protected $universalService;
+
+    public function __construct(\App\Services\UniversalProductService $universalService)
+    {
+        $this->universalService = $universalService;
+    }
+
+    // ... (rest of methods) ...
+
+    public function scanProductByBarcode($barcode)
+    {
+        // Use Universal Service
+        $result = $this->universalService->findProduct($barcode);
+
+        if ($result['found']) {
+            $productData = $result['standardized'];
+            $source = $result['source'];
+
+            // Determine ID
+            $model = $result['data'];
+            $productId = 0;
+            if ($model instanceof \App\Models\BpomData) {
+                $productId = $model->id;
+            } elseif ($model instanceof \App\Models\ProductModel) {
+                $productId = $model->id_product;
+            }
+
+            // Construct Halal Info
+            $halalInfo = [
+                'halal_status' => $productData['status_halal'] ?? 'unknown',
+                'halal_certificate_number' => $productData['halal_certificate'],
+                'certification_body' => null,
+                'certificate_valid_until' => null,
+                'last_checked_at' => now(), // Mock
+                'source' => $source
+            ];
+
+            return response()->json([
+                'success' => true, // Standard format
+                'response_code' => 200, // Legacy support
+                'message' => 'Produk ditemukan',
+                'data' => [
+                    'product' => [
+                        'id' => $productId,
+                        'barcode' => $productData['barcode'],
+                        'name' => $productData['name'],
+                        'brand' => $productData['brand'],
+                        'image' => $productData['image_url'],
+                        'image_front_url' => $productData['image_url'],
+                        'ingredients_text' => $productData['ingredients_text'],
+                        'category' => $productData['category'],
+                        'nutriscore' => $productData['nutriscore'] ?? null,
+                        'additives' => $productData['additives'] ?? [],
+                        'allergens' => $productData['allergens'] ?? []
+                    ],
+                    'halal_info' => $halalInfo,
+                    'halal_source' => $source
+                ],
+                // Legacy content for older apps (optional, but good for safety)
+                'content' => $result['data'] 
+            ], 200);
+        }
+
+        return response()->json([
+            'success' => false,
+            'response_code' => 404,
+            'message' => 'Produk tidak ditemukan'
+        ], 404);
+    }
+
     // ==========================================================
     // 🔑 AUTENTIKASI (REGISTER, LOGIN, LOGOUT, PROFILE)
     // ==========================================================
@@ -24,7 +97,7 @@ class ApiController extends Controller
             'username' => 'required|string|unique:users,username',
             'full_name' => 'required|string|max:100',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:6',
         ]);
 
         if ($validator->fails()) {
@@ -58,6 +131,24 @@ class ApiController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->only('username', 'password');
+
+        // Check if user exists first
+        $user = \App\Models\User::where('username', $credentials['username'])->first();
+        
+        if (!$user) {
+            return response()->json([
+                'response_code' => 404,
+                'message' => 'User tidak ditemukan!'
+            ], 404);
+        }
+
+        // Check if user is active
+        if (!$user->active) {
+            return response()->json([
+                'response_code' => 403,
+                'message' => 'Akun tidak aktif!'
+            ], 403);
+        }
 
         if (!Auth::attempt($credentials)) {
             return response()->json([
@@ -114,7 +205,12 @@ class ApiController extends Controller
                 'user' => $user,
                 'stats' => [
                     'total_scans' => $totalScans,
-                    'recent_scans' => $recentScans
+                    'recent_scans' => $recentScans,
+                    'streak' => [
+                        'current' => $user->current_streak,
+                        'longest' => $user->longest_streak,
+                        'last_active' => $user->last_active_date
+                    ]
                 ]
             ]
         ], 200);
@@ -146,6 +242,17 @@ class ApiController extends Controller
             'notif_enabled' => 'nullable|boolean',
             'dark_mode' => 'nullable|boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            
+            // New profile fields
+            'avatar_url' => 'nullable|url',
+            'birth_date' => 'nullable|date',
+            'gender' => 'nullable|in:male,female,other',
+            'bio' => 'nullable|string|max:500',
+            'dietary_preferences' => 'nullable|array',
+            'allergies' => 'nullable|array',
+            'notifications_enabled' => 'nullable|boolean',
+            'profile_visibility' => 'nullable|in:public,private,friends',
+            'show_health_tips' => 'nullable|boolean',
         ];
 
         $request->validate($rules);
@@ -171,7 +278,9 @@ class ApiController extends Controller
         $user->fill($request->only([
             'full_name', 'email', 'phone', 'blood_type', 'allergy', 'medical_history',
             'goal', 'diet_preference', 'activity_level', 'address', 'language',
-            'age', 'height', 'weight', 'bmi', 'notif_enabled', 'dark_mode'
+            'age', 'height', 'weight', 'bmi', 'notif_enabled', 'dark_mode',
+            'avatar_url', 'birth_date', 'gender', 'bio', 'dietary_preferences',
+            'allergies', 'notifications_enabled', 'profile_visibility', 'show_health_tips'
         ]));
 
         $user->save();
@@ -221,7 +330,7 @@ class ApiController extends Controller
     public function storeScan(Request $request)
     {
         $request->validate([
-            'product_id' => 'required|exists:products,id_product',
+            'product_id' => 'nullable|integer|exists:products,id_product',
             'nama_produk' => 'required|string|max:255',
             'barcode' => 'nullable|string|max:255',
             'kategori' => 'nullable|string|max:255',
@@ -230,8 +339,8 @@ class ApiController extends Controller
         ]);
 
         $scan = ScanModel::create([
-            'user_id' => Auth::id(),
-            'product_id' => $request->product_id,
+            'user_id' => Auth::user()->id_user,
+            'product_id' => $request->product_id ?: null,
             'nama_produk' => $request->nama_produk,
             'barcode' => $request->barcode,
             'kategori' => $request->kategori,
@@ -239,6 +348,18 @@ class ApiController extends Controller
             'status_kesehatan' => $request->status_kesehatan ?? 'perlu_riset',
             'tanggal_scan' => now(),
         ]);
+
+        // Create Admin Notification for Real-time Visibility
+        try {
+            \App\Http\Controllers\Admin\AdminNotificationController::createNotification(
+                'scan',
+                'Scan Produk Baru (Legacy)',
+                "User " . Auth::user()->username . " melakukan scan produk: " . $request->nama_produk,
+                ['scan_id' => $scan->id, 'product_name' => $request->nama_produk]
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to create admin notification for legacy scan: ' . $e->getMessage());
+        }
 
         return response()->json([
             'response_code' => 201,
@@ -268,20 +389,57 @@ class ApiController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,id_product',
-            'laporan' => 'required|string',
+            'reason' => 'required|string',
+            'laporan' => 'nullable|string',
+            'evidence_image' => 'nullable|image|max:2048',
         ]);
+
+        $imagePath = null;
+        if ($request->hasFile('evidence_image')) {
+            $imagePath = $request->file('evidence_image')->store('reports', 'public');
+        }
 
         $report = ReportModel::create([
             'user_id' => Auth::id(),
             'product_id' => $request->product_id,
+            'reason' => $request->reason,
             'laporan' => $request->laporan,
+            'evidence_image' => $imagePath,
             'status' => 'pending',
         ]);
 
+        // Crowd-Sourced Safety Check
+        $pendingReportsCount = ReportModel::where('product_id', $request->product_id)
+            ->where('status', 'pending')
+            ->count();
+
+        if ($pendingReportsCount >= 5) {
+            $product = ProductModel::find($request->product_id);
+            if ($product && $product->verification_status != 'forgery_confirmed') {
+                $product->update([
+                    'verification_status' => 'suspicious',
+                    'needs_manual_review' => true
+                ]);
+            }
+        }
+
+        // Create Admin Notification
+        try {
+            \App\Http\Controllers\Admin\AdminNotificationController::createNotification(
+                'report',
+                'Laporan Kejanggalan Produk',
+                "User " . Auth::user()->username . " melaporkan kejanggalan pada produk ID " . $request->product_id . " (" . $request->reason . ")",
+                ['report_id' => $report->id_report, 'product_id' => $request->product_id]
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal membuat notifikasi admin: ' . $e->getMessage());
+        }
+
         return response()->json([
             'response_code' => 201,
-            'message' => 'Laporan berhasil dikirim',
-            'content' => $report
+            'message' => 'Laporan berhasil dikirim. Tim kami akan segera meninjau.',
+            'content' => $report,
+            'is_suspicious' => $pendingReportsCount >= 5
         ], 201);
     }
 
@@ -335,9 +493,8 @@ class ApiController extends Controller
             return response()->json(['response_code' => 400, 'message' => 'Parameter q wajib diisi.'], 400);
         }
 
-        $products = ProductModel::where('nama_product', 'like', "%$search%")
-            ->orWhere('barcode', 'like', "%$search%")
-            ->get();
+        // Hybrid Search (Local + BPOM + External)
+        $products = $this->universalService->search($search);
 
         return response()->json([
             'response_code' => 200,
@@ -346,20 +503,7 @@ class ApiController extends Controller
         ], 200);
     }
 
-    public function scanProductByBarcode($barcode)
-    {
-        $product = ProductModel::where('barcode', $barcode)->first();
 
-        if (!$product) {
-            return response()->json(['response_code' => 404, 'message' => 'Produk tidak ditemukan'], 404);
-        }
-
-        return response()->json([
-            'response_code' => 200,
-            'message' => 'Hasil scan barcode',
-            'content' => $product
-        ], 200);
-    }
 
     public function indexKategori()
     {
@@ -396,6 +540,84 @@ class ApiController extends Controller
         ], 200);
     }
 
+    /**
+     * Add new scan history
+     */
+    public function addScanHistory(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['response_code' => 401, 'message' => 'Unauthorized'], 401);
+        }
+
+        $validated = $request->validate([
+            'barcode' => 'nullable|string',
+            'product_name' => 'required|string',
+            'brand' => 'nullable|string',
+            'ingredients' => 'nullable|string',
+            'image_url' => 'nullable|url',
+            'scan_type' => 'required|in:camera,manual,search',
+            'halal_status' => 'required|in:halal,haram,syubhat,unknown',
+            'confidence_score' => 'nullable|integer|min:0|max:100',
+            'suspicious_ingredients' => 'nullable|array',
+            'calories' => 'nullable|integer',
+            'protein' => 'nullable|numeric',
+            'carbs' => 'nullable|numeric',
+            'fat' => 'nullable|numeric',
+            'sugar' => 'nullable|numeric',
+            'health_score' => 'nullable|integer|min:0|max:100',
+            'source' => 'nullable|string',
+            'raw_data' => 'nullable|array',
+        ]);
+
+        // Create scan history record
+        $scanHistory = ScanHistory::create([
+            'user_id' => $user->id_user,
+            'scannable_type' => 'App\\Models\\ProductModel', // Default to ProductModel
+            'scannable_id' => 0, // Will be updated if product exists
+            'product_name' => $validated['product_name'],
+            'product_image' => $validated['image_url'] ?? null,
+            'barcode' => $validated['barcode'],
+            'halal_status' => $validated['halal_status'],
+            'scan_method' => $validated['scan_type'],
+            'source' => $validated['source'] ?? 'open_food_facts',
+            'confidence_score' => $validated['confidence_score'],
+            'nutrition_snapshot' => [
+                'calories' => $validated['calories'],
+                'protein' => $validated['protein'],
+                'carbs' => $validated['carbs'],
+                'fat' => $validated['fat'],
+                'sugar' => $validated['sugar'],
+            ],
+            'suspicious_ingredients' => $validated['suspicious_ingredients'] ?? [],
+            'health_score' => $validated['health_score'],
+            'raw_data' => $validated['raw_data'] ?? [],
+        ]);
+
+        // Update user statistics
+        $user->increment('total_scans');
+        if ($validated['halal_status'] === 'halal') {
+            $user->increment('halal_products_count');
+        }
+
+        // Create Admin Notification for Real-time Visibility
+        try {
+            \App\Http\Controllers\Admin\AdminNotificationController::createNotification(
+                'scan',
+                'Scan Produk Baru (Manual/Search)',
+                "User " . $user->username . " melakukan scan/cek produk: " . $scanHistory->product_name,
+                ['scan_id' => $scanHistory->id, 'product_name' => $scanHistory->product_name]
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to create admin notification for manual scan: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'response_code' => 201,
+            'message' => 'Scan history added successfully',
+            'content' => $scanHistory
+        ], 201);
+    }
 
     // ==========================================================
     // Status Pengguna
@@ -432,6 +654,11 @@ class ApiController extends Controller
                 'syubhat_scans' => $syubhatScans,
                 'haram_scans' => $haramScans,
                 'total_reports' => $totalReports,
+                'streak' => [
+                    'current' => $user->current_streak,
+                    'longest' => $user->longest_streak,
+                    'last_active' => $user->last_active_date
+                ],
                 'user_data' => $user
             ]
         ], 200);
@@ -460,6 +687,145 @@ class ApiController extends Controller
             'response_code' => 200,
             'message' => 'Daftar notifikasi',
             'content' => $notifications
+        ], 200);
+    }
+    public function getBanners()
+    {
+        $banners = \App\Models\Banner::where('is_active', true)
+            ->orderBy('position', 'asc')
+            ->get();
+
+        return response()->json([
+            'response_code' => 200,
+            'message' => 'Daftar banner slider',
+            'content' => $banners
+        ], 200);
+    }
+
+    // ==========================================================
+    // 🛡️ PREMIUM FEATURES (ALLERGY, MAPS, STATS, SUBSTITUTION)
+    // ==========================================================
+
+    /**
+     * Update user allergies / medical history
+     */
+    public function updateAllergies(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) return response()->json(['response_code' => 401, 'message' => 'Unauthorized'], 401);
+
+        $user->update([
+            'allergy' => $request->allergy,
+            'medical_history' => $request->medical_history
+        ]);
+
+        return response()->json([
+            'response_code' => 200,
+            'message' => 'Data alergi diperbarui!',
+            'content' => $user
+        ], 200);
+    }
+
+    /**
+     * Get nearby UMKM products based on location
+     */
+    public function getNearbyUmkm(Request $request)
+    {
+        $lat = $request->lat;
+        $lng = $request->lng;
+        $radius = $request->radius ?? 5; // km
+
+        if (!$lat || !$lng) {
+            return response()->json(['response_code' => 400, 'message' => 'Lat & Lng required'], 400);
+        }
+
+        // Haversine formula
+        $umkms = UmkmProduct::select('*')
+            ->selectRaw("(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance", [$lat, $lng, $lat])
+            ->having('distance', '<', $radius)
+            ->orderBy('distance')
+            ->get();
+
+        return response()->json([
+            'response_code' => 200,
+            'message' => 'UMKM terdekat ditemukan',
+            'content' => $umkms
+        ], 200);
+    }
+
+    /**
+     * Submit request for product verification
+     */
+    public function requestVerification(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) return response()->json(['response_code' => 401, 'message' => 'Unauthorized'], 401);
+
+        $validator = Validator::make($request->all(), [
+            'barcode' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['response_code' => 422, 'message' => 'Barcode wajib diisi'], 422);
+        }
+
+        $verificationRequest = ProductVerificationRequest::create([
+            'barcode' => $request->barcode,
+            'product_name' => $request->product_name,
+            'user_id' => $user->id_user,
+            'notes' => $request->notes,
+            'status' => 'pending'
+        ]);
+
+        return response()->json([
+            'response_code' => 200,
+            'message' => 'Permintaan verifikasi dikirim!',
+            'content' => $verificationRequest
+        ], 200);
+    }
+
+    /**
+     * Get weekly scan statistics for current user
+     */
+    public function getWeeklyStats(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) return response()->json(['response_code' => 401, 'message' => 'Unauthorized'], 401);
+
+        $stats = ScanModel::where('user_id', $user->id_user)
+            ->where('tanggal_scan', '>=', now()->subDays(7))
+            ->selectRaw('DATE(tanggal_scan) as date, status, COUNT(*) as count')
+            ->groupBy('date', 'status')
+            ->get();
+
+        return response()->json([
+            'response_code' => 200,
+            'message' => 'Statistik mingguan',
+            'content' => $stats
+        ], 200);
+    }
+
+    /**
+     * Get halal alternatives for a specific product category
+     */
+    public function getRecommendations(Request $request)
+    {
+        $category = $request->category;
+        
+        if (!$category) {
+            return response()->json(['response_code' => 400, 'message' => 'Category required'], 400);
+        }
+
+        $recommendations = ProductModel::where('kategori', 'like', "%$category%")
+            ->where('status', 'halal')
+            ->where('is_verified', 1)
+            ->limit(5)
+            ->get();
+
+        return response()->json([
+            'response_code' => 200,
+            'message' => 'Rekomendasi produk halal',
+            'content' => $recommendations
         ], 200);
     }
 }

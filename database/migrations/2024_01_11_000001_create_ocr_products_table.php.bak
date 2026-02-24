@@ -1,0 +1,49 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('ocr_products', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('product_name');
+            $table->string('brand')->nullable();
+            $table->string('country')->nullable();
+            $table->string('barcode')->nullable();
+            $table->text('ingredients_raw');
+            $table->json('ingredients_parsed')->nullable();
+            $table->enum('halal_status', ['halal', 'haram', 'syubhat', 'unknown']);
+            $table->integer('confidence_level')->default(0);
+            $table->string('source')->default('ocr');
+            $table->enum('status', ['pending_admin_review', 'verified', 'rejected'])->default('pending_admin_review');
+            $table->string('ocr_text_hash')->unique();
+            $table->string('front_image_path')->nullable();
+            $table->string('back_image_path')->nullable();
+            $table->string('language')->default('en');
+            $table->foreignId('verified_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->timestamp('verified_at')->nullable();
+            $table->timestamps();
+
+            $table->index(['user_id', 'status']);
+            $table->index(['halal_status']);
+            $table->index(['ocr_text_hash']);
+            $table->index(['created_at']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('ocr_products');
+    }
+};
