@@ -175,6 +175,8 @@ class FirebaseRealtimeService
             'external_scan' => 'total_external_scans',
             'skincare_analysis' => 'total_skincare_analyses',
             'drug_interaction' => 'total_interaction_checks',
+            'health_risk_score' => 'total_risk_checks',
+            'drug_food_conflict' => 'total_drug_food_conflicts',
         ];
 
         $field = $map[$eventType] ?? null;
@@ -188,6 +190,10 @@ class FirebaseRealtimeService
                 $current['major_or_contra_count'] = (int)($current['major_or_contra_count'] ?? 0) + 1;
             }
             $current['last_severity'] = $severity;
+        }
+
+        if ($eventType === 'drug_food_conflict' && (bool)($payload['has_conflict'] ?? false)) {
+            $current['detected_drug_food_conflicts'] = (int)($current['detected_drug_food_conflicts'] ?? 0) + 1;
         }
 
         $current['last_event_type'] = $eventType;

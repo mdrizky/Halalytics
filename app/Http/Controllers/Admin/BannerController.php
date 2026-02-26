@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Storage;
 
 class BannerController extends Controller
 {
+    public function __construct(
+        private readonly \App\Services\AdminBroadcastNotificationService $notificationService
+    ) {}
+
     public function index()
     {
         $banners = Banner::orderBy('position', 'asc')->get();
@@ -34,7 +38,20 @@ class BannerController extends Controller
             $data['image'] = str_replace('public/', 'storage/', $path);
         }
 
-        Banner::create($data);
+        $banner = Banner::create($data);
+
+        if ($banner->is_active) {
+            $this->notificationService->broadcast(
+                'Poster baru tersedia',
+                'Lihat poster terbaru: ' . $banner->title,
+                'poster',
+                [
+                    'banner_id' => (string)$banner->id,
+                    'action_type' => 'open_home_banner',
+                    'action_value' => (string)$banner->id,
+                ]
+            );
+        }
 
         return redirect()->route('admin.banner')->with('success', 'Banner berhasil ditambahkan');
     }
@@ -62,6 +79,19 @@ class BannerController extends Controller
         }
 
         $banner->update($data);
+
+        if ($banner->is_active) {
+            $this->notificationService->broadcast(
+                'Poster diperbarui',
+                'Update poster: ' . $banner->title,
+                'poster',
+                [
+                    'banner_id' => (string)$banner->id,
+                    'action_type' => 'open_home_banner',
+                    'action_value' => (string)$banner->id,
+                ]
+            );
+        }
 
         return redirect()->route('admin.banner')->with('success', 'Banner berhasil diperbarui');
     }

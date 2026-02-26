@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\GeminiService;
+use App\Services\ActivityEventService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -14,10 +15,12 @@ use Carbon\Carbon;
 class AIAssistantController extends Controller
 {
     protected $geminiService;
+    protected $activityEventService;
 
-    public function __construct(GeminiService $geminiService)
+    public function __construct(GeminiService $geminiService, ActivityEventService $activityEventService)
     {
         $this->geminiService = $geminiService;
+        $this->activityEventService = $activityEventService;
     }
 
     /**
@@ -124,6 +127,109 @@ class AIAssistantController extends Controller
             'date' => $date,
             'totals' => $totals,
             'limits' => $limits
+        ]);
+    }
+
+    /**
+     * Personal Health Risk Score (daily aggregate sugar/sodium/fat).
+     */
+    public function getPersonalRiskScore(Request $request)
+    {
+        $user = Auth::user();
+        $date = $request->get('date', Carbon::now()->toDateString());
+
+        $logs = IntakeLog::where('user_id', $user->id_user)
+            ->where('logged_at', $date)
+            ->get();
+
+        $scanHistories = \App\Models\ScanHistory::where('user_id', $user->id_user)
+            ->whereDate('created_at', $date)
+            ->get(['nutrition_snapshot']);
+
+        $fatFromSnapshots = $scanHistories->sum(function ($scan) {
+            $snapshot = (array) ($scan->nutrition_snapshot ?? []);
+            foreach (['fat_g', 'fat', 'total_fat', 'fat_100g'] as $key) {
+                if (isset($snapshot[$key]) && is_numeric($snapshot[$key])) {
+                    return (float) $snapshot[$key];
+                }
+            }
+            return 0.0;
+        });
+
+        $totals = [
+            'sugar_g' => round((float) $logs->sum('sugar_g'), 2),
+            'sodium_mg' => round((float) $logs->sum('sodium_mg'), 2),
+            'fat_g' => round((float) $fatFromSnapshots, 2),
+            'calories' => (int) $logs->sum('calories'),
+            'items_count' => (int) $logs->count(),
+            'scan_items_count' => (int) $scanHistories->count(),
+        ];
+
+        $limits = [
+            'sugar_g' => 50.0,
+            'sodium_mg' => 2300.0,
+            'fat_g' => 67.0,
+            'calories' => 2000.0,
+        ];
+
+        $sugarPct = min(200, ($totals['sugar_g'] / $limits['sugar_g']) * 100);
+        $sodiumPct = min(200, ($totals['sodium_mg'] / $limits['sodium_mg']) * 100);
+        $fatPct = min(200, ($totals['fat_g'] / $limits['fat_g']) * 100);
+
+        $riskScore = (int) round(($sugarPct * 0.4) + ($sodiumPct * 0.35) + ($fatPct * 0.25));
+        $riskLevel = match (true) {
+            $riskScore >= 120 => 'high',
+            $riskScore >= 80 => 'moderate',
+            default => 'low',
+        };
+
+        $alerts = [];
+        if ($totals['sugar_g'] > $limits['sugar_g']) {
+            $alerts[] = 'Asupan gula harian melewati batas rekomendasi.';
+        }
+        if ($totals['sodium_mg'] > $limits['sodium_mg']) {
+            $alerts[] = 'Asupan sodium/garam harian melewati batas rekomendasi.';
+        }
+        if ($totals['fat_g'] > $limits['fat_g']) {
+            $alerts[] = 'Asupan lemak harian melewati batas rekomendasi.';
+        }
+        if (empty($alerts)) {
+            $alerts[] = 'Asupan hari ini masih dalam batas aman dasar.';
+        }
+
+        $recommendation = match ($riskLevel) {
+            'high' => 'Kurangi konsumsi makanan tinggi gula/garam/lemak hari ini dan pertimbangkan konsultasi tenaga kesehatan bila berulang.',
+            'moderate' => 'Jaga porsi makan berikutnya, pilih opsi rendah gula/garam/lemak untuk menurunkan risiko harian.',
+            default => 'Pertahankan pola makan saat ini dan tetap pantau asupan harian.',
+        };
+
+        $this->activityEventService->logEvent(
+            eventType: 'health_risk_score',
+            userId: $user->id_user ?? null,
+            username: $user->username ?? null,
+            entityRef: $date,
+            summary: "Personal risk score {$riskLevel} ({$riskScore})",
+            status: 'success',
+            payload: [
+                'date' => $date,
+                'risk_level' => $riskLevel,
+                'risk_score' => $riskScore,
+                'sugar_g' => $totals['sugar_g'],
+                'sodium_mg' => $totals['sodium_mg'],
+                'fat_g' => $totals['fat_g'],
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'date' => $date,
+            'totals' => $totals,
+            'limits' => $limits,
+            'risk_score' => $riskScore,
+            'risk_level' => $riskLevel,
+            'alerts' => $alerts,
+            'recommendation' => $recommendation,
+            'disclaimer' => 'Skor ini untuk edukasi dan pemantauan mandiri, bukan diagnosis medis.'
         ]);
     }
 

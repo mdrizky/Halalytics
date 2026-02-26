@@ -4,16 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PushNotification;
-use App\Services\FirebaseService;
+use App\Services\AdminBroadcastNotificationService;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
-    protected $firebaseService;
+    protected $notificationService;
 
-    public function __construct(FirebaseService $firebaseService)
+    public function __construct(AdminBroadcastNotificationService $notificationService)
     {
-        $this->firebaseService = $firebaseService;
+        $this->notificationService = $notificationService;
     }
 
     public function index()
@@ -32,7 +32,7 @@ class NotificationController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'body' => 'required|string',
-            'type' => 'required|in:ingredient_alert,product_reminder,general',
+            'type' => 'required|in:ingredient_alert,product_reminder,general,product,poster,news',
             'target_type' => 'required|in:all,specific_users',
             'scheduled_at' => 'nullable|date|after:now',
         ]);
@@ -50,32 +50,22 @@ class NotificationController extends Controller
 
     protected function sendNotification($notification)
     {
-        // 1. Send via Firebase
-        $result = $this->firebaseService->sendToAll(
+        // Send via service: inbox + realtime + fcm
+        $result = $this->notificationService->broadcast(
             $notification->title,
             $notification->body,
-            ['type' => $notification->type]
+            $notification->type,
+            [
+                'source' => 'admin_panel',
+                'target_type' => $notification->target_type,
+            ]
         );
 
         $notification->update([
-            'status' => $result['success'] ? 'sent' : 'failed',
+            'status' => ($result['success'] ?? false) ? 'sent' : 'failed',
             'sent_at' => now(),
             'sent_count' => $result['success_count'] ?? 0,
         ]);
-
-        // 2. Create Inbox Notification (For App History)
-        // If target is all, we create a broadcast notification (user_id = null)
-        // detailed logic for specific users can be added later if needed
-        if ($notification->target_type === 'all') {
-            \App\Models\Notification::create([
-                'user_id' => null, // Broadcast to all
-                'title' => $notification->title,
-                'message' => $notification->body,
-                'type' => $notification->type,
-                'is_read' => false,
-                'created_at' => now(),
-            ]);
-        }
     }
 
     public function destroy(PushNotification $notification)

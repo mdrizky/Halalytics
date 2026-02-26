@@ -10,10 +10,15 @@ use Illuminate\Support\Facades\Auth;
 class AdminProductController extends Controller
 {
     protected $universalService;
+    protected $notificationService;
 
-    public function __construct(\App\Services\UniversalProductService $universalService)
+    public function __construct(
+        \App\Services\UniversalProductService $universalService,
+        \App\Services\AdminBroadcastNotificationService $notificationService
+    )
     {
         $this->universalService = $universalService;
+        $this->notificationService = $notificationService;
     }
 
     /**
@@ -148,11 +153,23 @@ class AdminProductController extends Controller
             $data['image'] = '/storage/products/' . $filename;
         }
 
-        ProductModel::create(array_merge($data, [
+        $product = ProductModel::create(array_merge($data, [
         'source' => 'local',
         'active' => true,
         'verification_status' => 'verified'
     ]));
+
+        $this->notificationService->broadcast(
+            'Produk baru ditambahkan',
+            'Admin menambahkan produk: ' . $product->nama_product,
+            'product',
+            [
+                'product_id' => (string)$product->id_product,
+                'barcode' => (string)$product->barcode,
+                'action_type' => 'open_product',
+                'action_value' => (string)$product->barcode,
+            ]
+        );
 
         return redirect()->route('admin.product.index')->with('success', 'Produk berhasil ditambahkan!');
     }

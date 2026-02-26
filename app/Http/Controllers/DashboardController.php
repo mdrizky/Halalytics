@@ -13,6 +13,7 @@ use App\Models\ActivityModel;
 use App\Models\Medicine;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
@@ -105,34 +106,55 @@ class DashboardController extends Controller
             'openfda_medicines' => $openFdaMedicines,
         ];
 
+        $hasActivityEvents = Schema::hasTable('activity_events');
         $monitorStats = [
-            'total_external_scans' => DB::table('activity_events')->where('event_type', 'external_scan')->count(),
-            'total_skincare_analyses' => DB::table('activity_events')->where('event_type', 'skincare_analysis')->count(),
-            'total_interaction_checks' => DB::table('activity_events')->where('event_type', 'drug_interaction')->count(),
-            'major_or_contra_count' => DB::table('activity_events')
-                ->where('event_type', 'drug_interaction')
-                ->where(function ($q) {
-                    $q->whereJsonContains('payload_json->severity', 'major')
-                        ->orWhereJsonContains('payload_json->severity', 'contraindicated');
-                })
-                ->count(),
+            'total_external_scans' => 0,
+            'total_skincare_analyses' => 0,
+            'total_interaction_checks' => 0,
+            'major_or_contra_count' => 0,
+            'total_risk_checks' => 0,
+            'total_drug_food_conflicts' => 0,
         ];
+        $activityFeed = collect();
 
-        $activityFeed = DB::table('activity_events')
-            ->leftJoin('users', 'activity_events.user_id', '=', 'users.id_user')
-            ->select(
-                'activity_events.id',
-                'activity_events.event_type',
-                'activity_events.entity_ref',
-                'activity_events.summary',
-                'activity_events.status',
-                'activity_events.payload_json',
-                'activity_events.created_at',
-                DB::raw('COALESCE(activity_events.username, users.username, users.full_name, \'Guest\') as user_name')
-            )
-            ->orderByDesc('activity_events.created_at')
-            ->limit(15)
-            ->get();
+        if ($hasActivityEvents) {
+            $monitorStats = [
+                'total_external_scans' => DB::table('activity_events')->where('event_type', 'external_scan')->count(),
+                'total_skincare_analyses' => DB::table('activity_events')->where('event_type', 'skincare_analysis')->count(),
+                'total_interaction_checks' => DB::table('activity_events')->where('event_type', 'drug_interaction')->count(),
+                'major_or_contra_count' => DB::table('activity_events')
+                    ->where('event_type', 'drug_interaction')
+                    ->where(function ($q) {
+                        $q->whereJsonContains('payload_json->severity', 'major')
+                            ->orWhereJsonContains('payload_json->severity', 'contraindicated');
+                    })
+                    ->count(),
+                'total_risk_checks' => DB::table('activity_events')->where('event_type', 'health_risk_score')->count(),
+                'total_drug_food_conflicts' => DB::table('activity_events')
+                    ->where('event_type', 'drug_food_conflict')
+                    ->where(function ($q) {
+                        $q->whereJsonContains('payload_json->has_conflict', true)
+                            ->orWhere('status', 'warning');
+                    })
+                    ->count(),
+            ];
+
+            $activityFeed = DB::table('activity_events')
+                ->leftJoin('users', 'activity_events.user_id', '=', 'users.id_user')
+                ->select(
+                    'activity_events.id',
+                    'activity_events.event_type',
+                    'activity_events.entity_ref',
+                    'activity_events.summary',
+                    'activity_events.status',
+                    'activity_events.payload_json',
+                    'activity_events.created_at',
+                    DB::raw('COALESCE(activity_events.username, users.username, users.full_name, \'Guest\') as user_name')
+                )
+                ->orderByDesc('activity_events.created_at')
+                ->limit(15)
+                ->get();
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -395,6 +417,20 @@ class DashboardController extends Controller
 
     public function monitorStats()
     {
+        if (!Schema::hasTable('activity_events')) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'total_external_scans' => 0,
+                    'total_skincare_analyses' => 0,
+                    'total_interaction_checks' => 0,
+                    'major_or_contra_count' => 0,
+                    'total_risk_checks' => 0,
+                    'total_drug_food_conflicts' => 0,
+                ],
+            ]);
+        }
+
         $stats = [
             'total_external_scans' => DB::table('activity_events')->where('event_type', 'external_scan')->count(),
             'total_skincare_analyses' => DB::table('activity_events')->where('event_type', 'skincare_analysis')->count(),
@@ -406,6 +442,14 @@ class DashboardController extends Controller
                         ->orWhereJsonContains('payload_json->severity', 'contraindicated');
                 })
                 ->count(),
+            'total_risk_checks' => DB::table('activity_events')->where('event_type', 'health_risk_score')->count(),
+            'total_drug_food_conflicts' => DB::table('activity_events')
+                ->where('event_type', 'drug_food_conflict')
+                ->where(function ($q) {
+                    $q->whereJsonContains('payload_json->has_conflict', true)
+                        ->orWhere('status', 'warning');
+                })
+                ->count(),
         ];
 
         return response()->json(['success' => true, 'data' => $stats]);
@@ -413,6 +457,10 @@ class DashboardController extends Controller
 
     public function monitorFeed()
     {
+        if (!Schema::hasTable('activity_events')) {
+            return response()->json(['success' => true, 'data' => []]);
+        }
+
         $feed = DB::table('activity_events')
             ->leftJoin('users', 'activity_events.user_id', '=', 'users.id_user')
             ->select(

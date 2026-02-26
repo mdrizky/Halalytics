@@ -20,24 +20,34 @@ class BpomController extends Controller
     }
 
     /**
-     * Cari produk BPOM — cek database lokal dulu, kalau kosong tanya AI
+     * Cari produk BPOM.
+     * Default hanya data resmi/lokal (tanpa fallback AI).
+     * Kirim include_ai=true jika ingin fallback AI.
      */
     public function searchBpom(Request $request)
     {
-        $request->validate(['q' => 'required|string|min:2']);
+        $request->validate([
+            'q' => 'required|string|min:2',
+            'include_ai' => 'nullable|boolean',
+        ]);
         $query = $request->q;
+        $includeAi = $request->boolean('include_ai', false);
 
-        // 1. Cek database lokal dulu (termasuk hasil AI sebelumnya)
+        // 1. Cek database lokal resmi (exclude AI by default)
         $localResults = BpomData::where(function ($q) use ($query) {
                 $q->where('nama_produk', 'LIKE', "%{$query}%")
                   ->orWhere('nomor_reg', 'LIKE', "%{$query}%")
                   ->orWhere('merk', 'LIKE', "%{$query}%");
             })
+            ->where(function ($q) {
+                $q->whereNull('sumber_data')
+                    ->orWhere('sumber_data', '!=', 'ai');
+            })
             ->orderBy('nama_produk')
             ->limit(20)
             ->get();
 
-        if ($localResults->count() >= 5) {
+        if ($localResults->isNotEmpty() || !$includeAi) {
             return response()->json([
                 'success' => true,
                 'source' => 'database_lokal',
@@ -46,12 +56,14 @@ class BpomController extends Controller
                 'session_info' => [
                     'sumber' => 'Database Lokal Halalytics',
                     'referensi' => 'Data Publik BPOM RI',
-                    'disclaimer' => 'Untuk validitas hukum, periksa situs resmi cekbpom.pom.go.id'
+                    'disclaimer' => $localResults->isNotEmpty()
+                        ? 'Data BPOM ditampilkan dari database lokal terverifikasi.'
+                        : 'Data tidak ditemukan pada database BPOM lokal. Coba kata kunci atau nomor registrasi lain.'
                 ]
             ]);
         }
 
-        // 2. Kalau lokal kurang dari 5, tanya AI untuk data tambahan
+        // 2. Optional fallback AI (hanya jika include_ai=true)
         try {
             $aiResult = $this->gemini->analyzeBpomProduct($query);
 
@@ -104,18 +116,29 @@ class BpomController extends Controller
     }
 
     /**
-     * Verifikasi nomor registrasi BPOM (NA/MD/TR/SD/D)
+     * Verifikasi nomor registrasi BPOM (NA/MD/TR/SD/D).
+     * Default hanya data resmi/lokal (tanpa fallback AI).
+     * Kirim include_ai=true jika ingin fallback AI.
      */
     public function checkRegistration(Request $request)
     {
-        $request->validate(['code' => 'required|string|min:5']);
+        $request->validate([
+            'code' => 'required|string|min:5',
+            'include_ai' => 'nullable|boolean',
+        ]);
         $code = strtoupper(trim($request->code));
+        $includeAi = $request->boolean('include_ai', false);
 
         // Deteksi kategori dari pola kode
         $kategori = $this->detectKategoriFromCode($code);
 
-        // Cek database lokal
-        $existing = BpomData::where('nomor_reg', $code)->first();
+        // Cek database lokal resmi
+        $existing = BpomData::where('nomor_reg', $code)
+            ->where(function ($q) {
+                $q->whereNull('sumber_data')
+                    ->orWhere('sumber_data', '!=', 'ai');
+            })
+            ->first();
         if ($existing) {
             return response()->json([
                 'success' => true,
@@ -128,7 +151,19 @@ class BpomController extends Controller
             ]);
         }
 
-        // Tanya AI
+        if (!$includeAi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nomor registrasi tidak ditemukan dalam database BPOM lokal.',
+                'kategori_terdeteksi' => $kategori,
+                'session_info' => [
+                    'sumber' => 'Database Terverifikasi BPOM RI',
+                    'disclaimer' => 'Kirim include_ai=true jika ingin fallback analisis AI.',
+                ],
+            ], 404);
+        }
+
+        // Optional fallback AI
         try {
             $aiResult = $this->gemini->analyzeBpomProduct($code);
 

@@ -208,6 +208,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/ai/analyze', [AIAssistantController::class, 'analyzeIngredients']);
     Route::get('/ai/weekly-report', [AIAssistantController::class, 'generateWeeklyReport']);
     Route::get('/ai/daily-intake', [AIAssistantController::class, 'getDailyIntake']);
+    Route::get('/ai/personal-risk-score', [AIAssistantController::class, 'getPersonalRiskScore']);
 
     // CONTRIBUTIONS
     Route::prefix('contributions')->group(function () {
@@ -227,6 +228,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/check', [\App\Http\Controllers\Api\MedicineController::class, 'checkHalal']);
         Route::post('/schedule', [\App\Http\Controllers\Api\MedicineController::class, 'addToSchedule']);
         Route::post('/safe-schedule', [\App\Http\Controllers\Api\MedicineController::class, 'generateSafeSchedule']);
+        Route::post('/drug-food-conflict', [\App\Http\Controllers\Api\MedicineController::class, 'checkDrugFoodConflict']);
         Route::get('/my', [\App\Http\Controllers\Api\MedicineController::class, 'getUserMedicines']);
         
         // AI Health Assistant Routes

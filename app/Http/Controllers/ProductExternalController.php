@@ -48,9 +48,14 @@ class ProductExternalController extends Controller
             ], 200);
         }
 
+        $rawMessage = (string)($result['message'] ?? 'No products found');
+        $safeMessage = (str_contains(strtolower($rawMessage), 'curl error') || str_contains(strtolower($rawMessage), 'operation timed out'))
+            ? 'Layanan OpenFoodFacts sedang lambat. Coba ulang sebentar lagi.'
+            : $rawMessage;
+
         return response()->json([
             'response_code' => 404,
-            'message' => $result['message'] ?? 'No products found',
+            'message' => $safeMessage,
             'content' => ['products' => []]
         ], 404);
     }

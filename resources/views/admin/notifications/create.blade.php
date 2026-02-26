@@ -34,6 +34,9 @@
                                 <option value="general">Umum (Berita/Update)</option>
                                 <option value="ingredient_alert">Peringatan Bahan</option>
                                 <option value="product_reminder">Pengingat Produk</option>
+                                <option value="product">Produk Baru</option>
+                                <option value="poster">Poster/Promo</option>
+                                <option value="news">News/Artikel</option>
                             </select>
                         </div>
 

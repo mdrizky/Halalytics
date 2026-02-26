@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Storage;
 
 class PromoBlogController extends Controller
 {
+    public function __construct(
+        private readonly \App\Services\AdminBroadcastNotificationService $notificationService
+    ) {}
+
     public function index()
     {
         $blogs = PromoBlog::orderBy('created_at', 'desc')->paginate(10);
@@ -45,7 +49,7 @@ class PromoBlogController extends Controller
             $counter++;
         }
 
-        PromoBlog::create([
+        $blog = PromoBlog::create([
             'title' => $request->title,
             'slug' => $slug,
             'excerpt' => Str::limit(strip_tags($request->content), 150),
@@ -54,6 +58,20 @@ class PromoBlogController extends Controller
             'status' => $request->status,
             'image' => $imagePath,
         ]);
+
+        if ($blog->status === 'published') {
+            $this->notificationService->broadcast(
+                'News baru dari Halalytics',
+                $blog->title,
+                'news',
+                [
+                    'blog_id' => (string)$blog->id,
+                    'slug' => (string)$blog->slug,
+                    'action_type' => 'open_news',
+                    'action_value' => (string)$blog->slug,
+                ]
+            );
+        }
 
         return redirect()->route('admin.promo.blog.index')->with('success', 'Artikel berhasil dibuat');
     }
@@ -104,6 +122,20 @@ class PromoBlogController extends Controller
         }
 
         $blog->update($data);
+
+        if (($data['status'] ?? $blog->status) === 'published') {
+            $this->notificationService->broadcast(
+                'News diperbarui',
+                $blog->title,
+                'news',
+                [
+                    'blog_id' => (string)$blog->id,
+                    'slug' => (string)$blog->slug,
+                    'action_type' => 'open_news',
+                    'action_value' => (string)$blog->slug,
+                ]
+            );
+        }
 
         return redirect()->route('admin.promo.blog.index')->with('success', 'Artikel berhasil diperbarui');
     }

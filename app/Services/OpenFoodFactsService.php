@@ -8,6 +8,16 @@ use Illuminate\Support\Facades\Log;
 class OpenFoodFactsService
 {
     private const BASE_URL = 'https://world.openfoodfacts.org/api/v2';
+    private const REQUEST_TIMEOUT_SECONDS = 15;
+    private const CONNECT_TIMEOUT_SECONDS = 7;
+
+    private function offClient()
+    {
+        return Http::connectTimeout(self::CONNECT_TIMEOUT_SECONDS)
+            ->timeout(self::REQUEST_TIMEOUT_SECONDS)
+            ->retry(1, 250)
+            ->withUserAgent('Halalytics/1.0 (Android; +https://halalytics.app)');
+    }
     
     /**
      * Search product by barcode
@@ -15,9 +25,7 @@ class OpenFoodFactsService
     public function getProductByBarcode(string $barcode): array
     {
         try {
-            $response = Http::timeout(45)
-                ->withUserAgent('Halalytics/1.0 (Android; +https://halalytics.app)')
-                ->get(self::BASE_URL . "/product/{$barcode}.json");
+            $response = $this->offClient()->get(self::BASE_URL . "/product/{$barcode}.json");
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -33,7 +41,7 @@ class OpenFoodFactsService
             return ['success' => false, 'message' => 'Product not found'];
         } catch (\Exception $e) {
             Log::error("OpenFoodFacts API Error: " . $e->getMessage());
-            return ['success' => false, 'message' => $e->getMessage()];
+            return ['success' => false, 'message' => 'Layanan OpenFoodFacts sedang lambat. Silakan coba lagi.'];
         }
     }
 
@@ -45,9 +53,7 @@ class OpenFoodFactsService
         try {
             // Use the proper search endpoint with correct parameters
             $baseUrl = 'https://world.openfoodfacts.org';
-            $response = Http::timeout(45)
-                ->withUserAgent('Halalytics/1.0 (Android; +https://halalytics.app)')
-                ->get($baseUrl . '/cgi/search.pl', [
+            $response = $this->offClient()->get($baseUrl . '/cgi/search.pl', [
                     'search_terms' => $query,
                     'search_simple' => 1,
                     'action' => 'process',
@@ -74,7 +80,7 @@ class OpenFoodFactsService
             return ['success' => false, 'products' => [], 'count' => 0, 'message' => 'API search failed'];
         } catch (\Exception $e) {
             Log::error("OpenFoodFacts Search Error: " . $e->getMessage());
-            return ['success' => false, 'products' => [], 'count' => 0, 'message' => $e->getMessage()];
+            return ['success' => false, 'products' => [], 'count' => 0, 'message' => 'Pencarian ke OpenFoodFacts timeout. Coba ulang.'];
         }
     }
 
@@ -184,9 +190,7 @@ class OpenFoodFactsService
                 default => $label
             };
 
-            $response = Http::timeout(45)
-                ->withUserAgent('Halalytics/1.0 (Android; +https://halalytics.app)')
-                ->get(self::BASE_URL . "/tag/labels/{$tag}.json", $params);
+            $response = $this->offClient()->get(self::BASE_URL . "/tag/labels/{$tag}.json", $params);
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -212,9 +216,7 @@ class OpenFoodFactsService
     public function searchByBrand(string $brand, int $pageSize = 20, int $page = 1): array
     {
         try {
-            $response = Http::timeout(45)
-                ->withUserAgent('Halalytics/1.0 (Android; +https://halalytics.app)')
-                ->get(self::BASE_URL . "/brand/{$brand}.json", [
+            $response = $this->offClient()->get(self::BASE_URL . "/brand/{$brand}.json", [
                     'json' => true,
                     'page' => $page,
                     'page_size' => $pageSize,
@@ -244,9 +246,7 @@ class OpenFoodFactsService
     public function searchByCategory(string $category, int $pageSize = 20, int $page = 1): array
     {
         try {
-            $response = Http::timeout(45)
-                ->withUserAgent('Halalytics/1.0 (Android; +https://halalytics.app)')
-                ->get(self::BASE_URL . "/category/{$category}.json", [
+            $response = $this->offClient()->get(self::BASE_URL . "/category/{$category}.json", [
                     'json' => true,
                     'page' => $page,
                     'page_size' => $pageSize,

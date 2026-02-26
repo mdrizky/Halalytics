@@ -191,6 +191,7 @@ Berikan analisis dalam format JSON yang valid tanpa markdown formatting:
     \"recommended_ingredients\": [\"bahan aktif 1\", \"bahan aktif 2\"],
     \"severity\": \"mild/moderate/emergency\",
     \"emergency_warning\": \"null atau pesan jika gawat\",
+    \"possible_causes\": [\"kemungkinan penyebab 1\", \"kemungkinan penyebab 2\"],
     \"halal_check\": {
         \"status\": \"halal/syubhat/haram\",
         \"notes\": \"penjelasan singkat tentang kehalalan bahan aktif tersebut\"

@@ -8,17 +8,23 @@ use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
+    private function authUserId(Request $request): int
+    {
+        return (int)($request->user()->id_user ?? $request->user()->id ?? 0);
+    }
+
     /**
      * Get user notifications
      */
     public function index(Request $request)
     {
-        $notifications = Notification::forUser($request->user()->id)
+        $userId = $this->authUserId($request);
+        $notifications = Notification::forUser($userId)
             ->with(['relatedProduct', 'relatedUmkm'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        $unreadCount = Notification::forUser($request->user()->id)
+        $unreadCount = Notification::forUser($userId)
             ->unread()
             ->count();
 
@@ -34,7 +40,7 @@ class NotificationController extends Controller
      */
     public function markAsRead($id, Request $request)
     {
-        $notification = Notification::where('user_id', $request->user()->id)
+        $notification = Notification::where('user_id', $this->authUserId($request))
             ->findOrFail($id);
 
         $notification->markAsRead();
@@ -50,7 +56,7 @@ class NotificationController extends Controller
      */
     public function markAllAsRead(Request $request)
     {
-        Notification::forUser($request->user()->id)
+        Notification::forUser($this->authUserId($request))
             ->unread()
             ->update([
                 'is_read' => true,
@@ -68,7 +74,7 @@ class NotificationController extends Controller
      */
     public function unreadCount(Request $request)
     {
-        $count = Notification::forUser($request->user()->id)
+        $count = Notification::forUser($this->authUserId($request))
             ->unread()
             ->count();
 

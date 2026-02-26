@@ -115,7 +115,7 @@
 
 <!-- Realtime Monitor (User Compose -> Laravel Admin) -->
 <div class="mb-8">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
             <p class="text-[11px] font-bold text-slate-400 uppercase">External Scans</p>
             <p id="monitorExternalScans" class="text-2xl font-extrabold text-slate-800 dark:text-white">{{ number_format($monitor_stats['total_external_scans'] ?? 0) }}</p>
@@ -131,6 +131,14 @@
         <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
             <p class="text-[11px] font-bold text-slate-400 uppercase">Major/Contra</p>
             <p id="monitorMajorContra" class="text-2xl font-extrabold text-red-600">{{ number_format($monitor_stats['major_or_contra_count'] ?? 0) }}</p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+            <p class="text-[11px] font-bold text-slate-400 uppercase">Risk Checks</p>
+            <p id="monitorRiskChecks" class="text-2xl font-extrabold text-slate-800 dark:text-white">{{ number_format($monitor_stats['total_risk_checks'] ?? 0) }}</p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+            <p class="text-[11px] font-bold text-slate-400 uppercase">Drug-Food Conflicts</p>
+            <p id="monitorDrugFoodConflicts" class="text-2xl font-extrabold text-amber-600">{{ number_format($monitor_stats['total_drug_food_conflicts'] ?? 0) }}</p>
         </div>
     </div>
 </div>
@@ -421,6 +429,8 @@
         set('monitorSkincare', data.total_skincare_analyses);
         set('monitorInteractions', data.total_interaction_checks);
         set('monitorMajorContra', data.major_or_contra_count);
+        set('monitorRiskChecks', data.total_risk_checks);
+        set('monitorDrugFoodConflicts', data.total_drug_food_conflicts);
     };
 
     const poll = async () => {

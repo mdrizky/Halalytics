@@ -12,16 +12,23 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Services\GeminiService;
 use App\Services\ExternalApiService;
+use App\Services\ActivityEventService;
 
 class MedicineController extends Controller
 {
     private $geminiService;
     private $externalApiService;
+    private $activityEventService;
 
-    public function __construct(GeminiService $geminiService, ExternalApiService $externalApiService)
+    public function __construct(
+        GeminiService $geminiService,
+        ExternalApiService $externalApiService,
+        ActivityEventService $activityEventService
+    )
     {
         $this->geminiService = $geminiService;
         $this->externalApiService = $externalApiService;
+        $this->activityEventService = $activityEventService;
     }
 
     // AI Symptom-to-Medicine Mapping (Enhanced Phase 4)
@@ -47,6 +54,8 @@ class MedicineController extends Controller
 
             // Step 2: Find Medicines with Active Ingredients
             $medicines = $this->findMedicinesByIngredients($aiResult['recommended_ingredients'] ?? []);
+            $triage = $this->buildTriageAdvice($symptoms, $aiResult);
+            $possibleCauses = $this->buildPossibleCauses($symptoms, $aiResult);
 
             // Step 3: Halal Filter (Database level)
             $halalMedicines = $medicines->filter(function($medicine) {
@@ -61,6 +70,10 @@ class MedicineController extends Controller
                     'active_ingredients' => $aiResult['recommended_ingredients'] ?? [],
                     'severity' => $aiResult['severity'] ?? 'mild',
                     'emergency_warning' => $aiResult['emergency_warning'] ?? null,
+                    'possible_causes' => $possibleCauses,
+                    'triage_action' => $triage['action'],
+                    'doctor_recommendation' => $triage['doctor_recommendation'],
+                    'should_seek_doctor' => $triage['should_seek_doctor'],
                     'halal_check' => $aiResult['halal_check'] ?? ['status' => 'unknown', 'notes' => ''],
                     'usage_instructions' => $aiResult['usage_instructions'] ?? '',
                     'lifestyle_advice' => $aiResult['lifestyle_advice'] ?? '',
@@ -99,6 +112,230 @@ class MedicineController extends Controller
         }
 
         return $medicines->unique('id_medicine');
+    }
+
+    private function buildTriageAdvice(string $symptoms, array $aiResult): array
+    {
+        $severity = strtolower((string) ($aiResult['severity'] ?? 'mild'));
+        $symptomsLower = strtolower($symptoms);
+        $redFlags = [
+            'sesak napas',
+            'nyeri dada',
+            'pingsan',
+            'kejang',
+            'muntah darah',
+            'bab hitam',
+            'perdarahan',
+            'kelumpuhan',
+            'tidak sadar',
+        ];
+
+        $hasRedFlag = collect($redFlags)->contains(fn ($flag) => str_contains($symptomsLower, $flag));
+        $isEmergency = $hasRedFlag || $severity === 'emergency';
+
+        if ($isEmergency) {
+            return [
+                'action' => 'emergency',
+                'doctor_recommendation' => 'Keluhan berisiko tinggi. Segera ke IGD atau hubungi dokter sekarang.',
+                'should_seek_doctor' => true,
+            ];
+        }
+
+        if ($severity === 'moderate') {
+            return [
+                'action' => 'consult_doctor_soon',
+                'doctor_recommendation' => 'Disarankan konsultasi dokter dalam 24 jam, terutama jika gejala tidak membaik.',
+                'should_seek_doctor' => true,
+            ];
+        }
+
+        return [
+            'action' => 'self_care_with_monitoring',
+            'doctor_recommendation' => 'Boleh perawatan mandiri sementara. Jika gejala memburuk, segera konsultasi dokter.',
+            'should_seek_doctor' => false,
+        ];
+    }
+
+    private function buildPossibleCauses(string $symptoms, array $aiResult): array
+    {
+        $causes = [];
+        $s = strtolower($symptoms);
+
+        if (str_contains($s, 'pedas') || str_contains($s, 'asam') || str_contains($s, 'maag') || str_contains($s, 'ulu hati')) {
+            $causes[] = 'Iritasi asam lambung akibat pola makan atau makanan pemicu.';
+        }
+        if (str_contains($s, 'pusing') || str_contains($s, 'lemas') || str_contains($s, 'kurang tidur')) {
+            $causes[] = 'Kelelahan, dehidrasi, atau kurang tidur.';
+        }
+        if (str_contains($s, 'demam') || str_contains($s, 'batuk') || str_contains($s, 'pilek')) {
+            $causes[] = 'Kemungkinan infeksi virus atau saluran napas.';
+        }
+        if (empty($causes)) {
+            $causes[] = 'Kemungkinan dipicu kombinasi pola makan, aktivitas, dan kondisi tubuh saat ini.';
+        }
+
+        $condition = trim((string) ($aiResult['condition'] ?? ''));
+        if ($condition !== '') {
+            $causes[] = "Kondisi yang paling mungkin: {$condition}.";
+        }
+
+        return array_values(array_unique($causes));
+    }
+
+    /**
+     * Drug-Food Conflict Lite based on recent user intake/scan history.
+     */
+    public function checkDrugFoodConflict(Request $request)
+    {
+        $request->validate([
+            'medicine_name' => 'required_without:medicine_id|string',
+            'medicine_id' => 'required_without:medicine_name|nullable|integer|exists:medicines,id_medicine',
+            'lookback_minutes' => 'nullable|integer|min:10|max:720',
+        ]);
+
+        $user = auth()->user();
+        $lookbackMinutes = (int) $request->input('lookback_minutes', 180);
+        $cutoff = now()->subMinutes($lookbackMinutes);
+
+        $medicineName = $request->input('medicine_name');
+        if (!$medicineName && $request->filled('medicine_id')) {
+            $medicine = Medicine::where('id_medicine', (int) $request->input('medicine_id'))->first();
+            $medicineName = $medicine?->name ?? $medicine?->generic_name;
+        }
+        $medicineName = trim((string) $medicineName);
+        $medicineLower = strtolower($medicineName);
+
+        $recentScans = \App\Models\ScanHistory::where('user_id', $user->id_user)
+            ->where('created_at', '>=', $cutoff)
+            ->orderByDesc('created_at')
+            ->limit(20)
+            ->get(['product_name', 'created_at'])
+            ->map(fn ($row) => [
+                'name' => (string) $row->product_name,
+                'source' => 'scan_history',
+                'time' => optional($row->created_at)->toDateTimeString(),
+            ]);
+
+        $todayIntakes = \App\Models\IntakeLog::where('user_id', $user->id_user)
+            ->whereDate('logged_at', now()->toDateString())
+            ->limit(20)
+            ->get(['product_name', 'logged_at'])
+            ->map(fn ($row) => [
+                'name' => (string) $row->product_name,
+                'source' => 'intake_log',
+                'time' => (string) $row->logged_at,
+            ]);
+
+        $foods = $recentScans->merge($todayIntakes)
+            ->unique(fn ($row) => strtolower(($row['name'] ?? '') . '|' . ($row['time'] ?? '')))
+            ->values();
+
+        $rules = [
+            [
+                'drug_keywords' => ['ibuprofen', 'diclofenac', 'aspirin', 'mefenamic'],
+                'food_keywords' => ['coffee', 'kopi', 'alcohol', 'energi drink', 'energy drink'],
+                'severity' => 'moderate',
+                'reason' => 'Kopi/alkohol dapat meningkatkan iritasi lambung pada beberapa obat anti-nyeri.',
+            ],
+            [
+                'drug_keywords' => ['amoxicillin', 'doxycycline', 'ciprofloxacin', 'tetracycline'],
+                'food_keywords' => ['milk', 'susu', 'cheese', 'keju', 'yogurt', 'antacid'],
+                'severity' => 'major',
+                'reason' => 'Produk susu/antacid dapat menurunkan penyerapan beberapa antibiotik.',
+            ],
+            [
+                'drug_keywords' => ['metformin'],
+                'food_keywords' => ['alcohol', 'minuman keras', 'sirup', 'soda', 'sweet drink', 'teh manis'],
+                'severity' => 'moderate',
+                'reason' => 'Alkohol dan minuman sangat manis dapat memperburuk kontrol gula darah.',
+            ],
+            [
+                'drug_keywords' => ['simvastatin', 'atorvastatin'],
+                'food_keywords' => ['grapefruit', 'jeruk bali'],
+                'severity' => 'major',
+                'reason' => 'Jeruk bali dapat meningkatkan kadar statin dalam darah.',
+            ],
+            [
+                'drug_keywords' => ['warfarin'],
+                'food_keywords' => ['spinach', 'bayam', 'broccoli', 'brokoli', 'kale'],
+                'severity' => 'moderate',
+                'reason' => 'Asupan vitamin K tinggi dapat memengaruhi efek warfarin.',
+            ],
+            [
+                'drug_keywords' => ['ctm', 'chlorpheniramine', 'cetirizine', 'loratadine'],
+                'food_keywords' => ['alcohol', 'minuman keras'],
+                'severity' => 'major',
+                'reason' => 'Alkohol dapat memperkuat efek kantuk antihistamin.',
+            ],
+        ];
+
+        $matches = [];
+        foreach ($rules as $rule) {
+            $drugMatch = collect($rule['drug_keywords'])->first(fn ($kw) => str_contains($medicineLower, $kw));
+            if (!$drugMatch) {
+                continue;
+            }
+
+            foreach ($foods as $food) {
+                $foodName = strtolower((string) ($food['name'] ?? ''));
+                $foodKw = collect($rule['food_keywords'])->first(fn ($kw) => str_contains($foodName, $kw));
+                if ($foodKw) {
+                    $matches[] = [
+                        'food_name' => $food['name'],
+                        'matched_keyword' => $foodKw,
+                        'severity' => $rule['severity'],
+                        'reason' => $rule['reason'],
+                        'source' => $food['source'],
+                        'time' => $food['time'],
+                    ];
+                }
+            }
+        }
+
+        $severityOrder = ['minor' => 1, 'moderate' => 2, 'major' => 3, 'contraindicated' => 4];
+        $topSeverity = 'minor';
+        foreach ($matches as $m) {
+            if (($severityOrder[$m['severity']] ?? 0) > ($severityOrder[$topSeverity] ?? 0)) {
+                $topSeverity = $m['severity'];
+            }
+        }
+        $hasConflict = !empty($matches);
+
+        $recommendation = $hasConflict
+            ? match ($topSeverity) {
+                'major', 'contraindicated' => 'Tunda konsumsi obat ini dan segera konsultasikan ke dokter/apoteker.',
+                'moderate' => 'Beri jeda 2-4 jam dari makanan/minuman pemicu, lalu konsultasi jika ragu.',
+                default => 'Pantau gejala dan ikuti aturan pakai obat.',
+            }
+            : 'Tidak ada konflik utama yang terdeteksi dari riwayat terbaru, tetap ikuti aturan pakai obat.';
+
+        $this->activityEventService->logEvent(
+            eventType: 'drug_food_conflict',
+            userId: $user->id_user ?? null,
+            username: $user->username ?? null,
+            entityRef: $medicineName,
+            summary: "Drug-food check for {$medicineName}",
+            status: $hasConflict ? 'warning' : 'success',
+            payload: [
+                'has_conflict' => $hasConflict,
+                'severity' => $topSeverity,
+                'matches_count' => count($matches),
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'medicine_name' => $medicineName,
+                'has_conflict' => $hasConflict,
+                'severity' => $hasConflict ? $topSeverity : 'none',
+                'lookback_minutes' => $lookbackMinutes,
+                'matches' => $matches,
+                'recent_foods' => $foods->take(10)->values(),
+                'recommendation' => $recommendation,
+                'disclaimer' => 'Pemeriksaan ini adalah skrining otomatis berbasis riwayat data. Konfirmasi akhir tetap dengan dokter/apoteker.',
+            ],
+        ]);
     }
 
     // Hybrid Medicine Search (Local + International APIs)
