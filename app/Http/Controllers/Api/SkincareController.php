@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\BpomData;
+use App\Services\ActivityEventService;
 use App\Services\GeminiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,10 +13,12 @@ use Illuminate\Support\Facades\Log;
 class SkincareController extends Controller
 {
     protected $gemini;
+    protected $activityEventService;
 
-    public function __construct(GeminiService $gemini)
+    public function __construct(GeminiService $gemini, ActivityEventService $activityEventService)
     {
         $this->gemini = $gemini;
+        $this->activityEventService = $activityEventService;
     }
 
     /**
@@ -57,6 +60,12 @@ class SkincareController extends Controller
             $userContext = $this->resolveHealthContext($user, $familyId);
 
             $analysis = $this->gemini->analyzeSkincareIngredients($ingredientsText, $userContext);
+            $ingredientsDetected = $this->buildIngredientIndicators($ingredientsText);
+            $statusSafety = $analysis['status_keamanan'] ?? $this->deriveSafetyStatus($ingredientsDetected);
+            $statusHalal = $analysis['status_halal'] ?? $this->deriveHalalStatus($ingredientsDetected);
+            $scoreSafety = $analysis['skor_keamanan'] ?? $this->deriveSafetyScore($ingredientsDetected);
+            $summary = $analysis['ringkasan'] ?? 'Analisis selesai. Periksa detail bahan untuk keamanan dan status halal.';
+            $disclaimer = $analysis['disclaimer'] ?? 'Informasi ini bersifat referensi dan bukan pengganti konsultasi dokter/apoteker.';
 
             // Simpan ke database jika ada nama produk
             if ($request->product_name) {
@@ -66,9 +75,9 @@ class SkincareController extends Controller
                         'kategori' => 'kosmetik',
                         'ingredients_text' => $ingredientsText,
                         'analisis_kandungan' => json_encode($analysis),
-                        'status_keamanan' => $analysis['status_keamanan'] ?? 'aman',
-                        'skor_keamanan' => $analysis['skor_keamanan'] ?? null,
-                        'status_halal' => $analysis['status_halal'] ?? 'belum_diverifikasi',
+                        'status_keamanan' => $statusSafety,
+                        'skor_keamanan' => $scoreSafety,
+                        'status_halal' => $statusHalal,
                         'analisis_halal' => json_encode($analysis['bahan_syubhat'] ?? []),
                         'barcode' => $request->barcode,
                         'sumber_data' => 'ai',
@@ -76,10 +85,31 @@ class SkincareController extends Controller
                 );
             }
 
+            $this->activityEventService->logEvent(
+                eventType: 'skincare_analysis',
+                userId: $user?->id_user,
+                username: $user?->username,
+                entityRef: $request->barcode ?: $request->product_name,
+                summary: 'Skincare analysis completed: ' . ($request->product_name ?: 'manual_input'),
+                status: 'success',
+                payload: [
+                    'score_safety' => $scoreSafety,
+                    'status_safety' => $statusSafety,
+                    'status_halal' => $statusHalal,
+                    'ingredients_count' => count($ingredientsDetected),
+                ]
+            );
+
             return response()->json([
                 'success' => true,
                 'ingredients_text' => $ingredientsText,
                 'analysis' => $analysis,
+                'ingredients_detected' => $ingredientsDetected,
+                'score_safety' => $scoreSafety,
+                'status_safety' => $statusSafety,
+                'status_halal' => $statusHalal,
+                'summary' => $summary,
+                'disclaimer' => $disclaimer,
                 'session_info' => [
                     'sumber' => 'Analisis AI Halalytics',
                     'referensi' => 'Database Bahan Kosmetik Internasional (INCI) & Standar BPOM',
@@ -129,10 +159,20 @@ class SkincareController extends Controller
         }
 
         $status = empty($detected) ? 'aman' : 'bahaya';
+        $ingredientsDetected = array_map(function ($row) {
+            return [
+                'name' => $row['bahan'] ?? null,
+                'safety_level' => 'danger',
+                'halal_status' => 'unknown',
+                'reason' => $row['peringatan'] ?? null,
+                'color_code' => 'red',
+            ];
+        }, $detected);
 
         return response()->json([
             'success' => true,
             'status_keamanan' => $status,
+            'ingredients_detected' => $ingredientsDetected,
             'bahan_berbahaya_terdeteksi' => $detected,
             'jumlah_bahaya' => count($detected),
             'pesan' => empty($detected)
@@ -181,9 +221,20 @@ class SkincareController extends Controller
         if ($hasHaram) $overallStatus = 'haram';
         elseif ($hasSyubhat) $overallStatus = 'syubhat';
 
+        $ingredientsDetected = array_map(function ($item) {
+            return [
+                'name' => $item['bahan'] ?? null,
+                'safety_level' => 'warning',
+                'halal_status' => $item['status'] ?? 'unknown',
+                'reason' => $item['alasan'] ?? null,
+                'color_code' => ($item['status'] ?? '') === 'haram' ? 'red' : 'yellow',
+            ];
+        }, $detected);
+
         return response()->json([
             'success' => true,
             'status_halal' => $overallStatus,
+            'ingredients_detected' => $ingredientsDetected,
             'bahan_kritis' => $detected,
             'jumlah_kritis' => count($detected),
             'pesan' => match ($overallStatus) {
@@ -228,5 +279,115 @@ class SkincareController extends Controller
         }
 
         return [];
+    }
+
+    private function buildIngredientIndicators(string $ingredientsText): array
+    {
+        $dangerList = $this->bannedIngredients();
+        $halalList = $this->criticalIngredients();
+        $tokens = array_filter(array_map('trim', preg_split('/,|;|\\n/', strtolower($ingredientsText)) ?: []));
+
+        $result = [];
+        foreach ($tokens as $token) {
+            $matchedDanger = null;
+            foreach ($dangerList as $key => $warning) {
+                if (str_contains($token, $key)) {
+                    $matchedDanger = ['key' => $key, 'warning' => $warning];
+                    break;
+                }
+            }
+
+            $matchedHalal = null;
+            foreach ($halalList as $key => $rule) {
+                if (str_contains($token, $key)) {
+                    $matchedHalal = array_merge(['key' => $key], $rule);
+                    break;
+                }
+            }
+
+            $safetyLevel = $matchedDanger ? 'danger' : ($matchedHalal ? 'warning' : 'safe');
+            $halalStatus = $matchedHalal['status'] ?? 'halal';
+            $reason = $matchedDanger['warning'] ?? ($matchedHalal['alasan'] ?? 'Tidak ditemukan indikator risiko utama.');
+
+            $result[] = [
+                'name' => $token,
+                'safety_level' => $safetyLevel,
+                'halal_status' => $halalStatus,
+                'reason' => $reason,
+                'color_code' => match ($safetyLevel) {
+                    'danger' => 'red',
+                    'warning' => 'yellow',
+                    default => 'green',
+                },
+            ];
+        }
+
+        return array_slice($result, 0, 80);
+    }
+
+    private function deriveSafetyStatus(array $items): string
+    {
+        if (collect($items)->contains(fn ($i) => ($i['safety_level'] ?? '') === 'danger')) {
+            return 'bahaya';
+        }
+        if (collect($items)->contains(fn ($i) => ($i['safety_level'] ?? '') === 'warning')) {
+            return 'perlu_perhatian';
+        }
+        return 'aman';
+    }
+
+    private function deriveHalalStatus(array $items): string
+    {
+        if (collect($items)->contains(fn ($i) => ($i['halal_status'] ?? '') === 'haram')) {
+            return 'haram';
+        }
+        if (collect($items)->contains(fn ($i) => ($i['halal_status'] ?? '') === 'syubhat')) {
+            return 'syubhat';
+        }
+        return 'halal';
+    }
+
+    private function deriveSafetyScore(array $items): int
+    {
+        $score = 100;
+        foreach ($items as $item) {
+            $score -= match ($item['safety_level'] ?? 'safe') {
+                'danger' => 25,
+                'warning' => 10,
+                default => 0,
+            };
+        }
+        return max(0, $score);
+    }
+
+    private function bannedIngredients(): array
+    {
+        return [
+            'mercury' => 'Merkuri — Logam berat yang merusak ginjal dan sistem saraf',
+            'mercuric' => 'Senyawa Merkuri — Sangat beracun',
+            'hydroquinone' => 'Hydroquinone — Dilarang BPOM untuk kosmetik bebas (hanya resep dokter)',
+            'tretinoin' => 'Tretinoin — Hanya boleh dengan resep dokter',
+            'lead' => 'Timbal — Logam berat berbahaya',
+            'formaldehyde' => 'Formaldehida — Karsinogen (pemicu kanker)',
+            'asbestos' => 'Asbes — Karsinogen',
+            'rhodamine' => 'Rhodamine B — Pewarna tekstil berbahaya',
+        ];
+    }
+
+    private function criticalIngredients(): array
+    {
+        return [
+            'glycerin' => ['status' => 'syubhat', 'alasan' => 'Bisa dari nabati atau hewani — perlu konfirmasi sumber'],
+            'gelatin' => ['status' => 'syubhat', 'alasan' => 'Umumnya dari hewan — periksa apakah dari sumber halal'],
+            'collagen' => ['status' => 'syubhat', 'alasan' => 'Bisa dari ikan (halal) atau babi (haram)'],
+            'placenta' => ['status' => 'syubhat', 'alasan' => 'Ekstrak plasenta hewan — status halal perlu diperiksa'],
+            'stearic acid' => ['status' => 'syubhat', 'alasan' => 'Bisa dari lemak hewan atau nabati'],
+            'lard' => ['status' => 'haram', 'alasan' => 'Lemak babi — HARAM'],
+            'carmine' => ['status' => 'haram', 'alasan' => 'Pewarna dari serangga cochineal — mayoritas ulama mengharamkan'],
+            'keratin' => ['status' => 'syubhat', 'alasan' => 'Protein dari rambut/kuku hewan — perlu konfirmasi sumber'],
+            'squalene' => ['status' => 'syubhat', 'alasan' => 'Bisa dari hati ikan hiu atau zaitun'],
+            'lanolin' => ['status' => 'syubhat', 'alasan' => 'Dari lemak bulu domba — umumnya halal tapi perlu sertifikasi'],
+            'alcohol' => ['status' => 'syubhat', 'alasan' => 'Ethanol dalam kosmetik — pendapat ulama berbeda'],
+        ];
     }
 }

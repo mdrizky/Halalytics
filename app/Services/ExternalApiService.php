@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Medicine;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -104,9 +105,14 @@ class ExternalApiService
 
         return Cache::remember($cacheKey, 3600, function () use ($drugName) {
             try {
+                $normalizedQuery = trim($drugName);
+                if ($normalizedQuery === '') {
+                    return ['found' => false, 'source' => 'openfda'];
+                }
+
                 $response = Http::timeout(10)
                     ->get("https://api.fda.gov/drug/label.json", [
-                        'search' => "openfda.brand_name:\"{$drugName}\"",
+                        'search' => "openfda.brand_name:\"{$normalizedQuery}\" OR openfda.generic_name:\"{$normalizedQuery}\" OR openfda.substance_name:\"{$normalizedQuery}\"",
                         'limit' => 3,
                     ]);
 
@@ -114,17 +120,27 @@ class ExternalApiService
                     $data = $response->json();
                     if (isset($data['results']) && count($data['results']) > 0) {
                         $drug = $data['results'][0];
+                        $dosageText = $this->safeFirstText($drug['dosage_and_administration'] ?? null);
+                        $instructionsText = $this->safeFirstText($drug['information_for_patients'] ?? null);
+                        $combinedInstructions = trim($dosageText . ' ' . $instructionsText);
+
                         return [
                             'found' => true,
                             'source' => 'openfda',
-                            'nama_produk' => $drug['openfda']['brand_name'][0] ?? $drugName,
+                            'nama_produk' => $drug['openfda']['brand_name'][0] ?? $normalizedQuery,
                             'generic_name' => $drug['openfda']['generic_name'][0] ?? null,
+                            'brand_name' => $drug['openfda']['brand_name'][0] ?? null,
                             'manufacturer' => $drug['openfda']['manufacturer_name'][0] ?? null,
                             'route' => $drug['openfda']['route'][0] ?? null,
                             'dosage_form' => $drug['openfda']['dosage_form'][0] ?? null,
                             'active_ingredient' => $drug['active_ingredient'][0] ?? null,
-                            'warnings' => $drug['warnings'][0] ?? null,
-                            'indications' => $drug['indications_and_usage'][0] ?? null,
+                            'warnings' => $this->safeFirstText($drug['warnings'] ?? null),
+                            'indications' => $this->safeFirstText($drug['indications_and_usage'] ?? null),
+                            'contraindications' => $this->safeFirstText($drug['contraindications'] ?? null),
+                            'dosage_info' => $dosageText,
+                            'frequency_per_day' => $this->inferFrequencyPerDay($combinedInstructions),
+                            'meal_timing' => $this->inferMealTiming($combinedInstructions),
+                            'raw' => $drug,
                         ];
                     }
                 }
@@ -135,6 +151,50 @@ class ExternalApiService
                 return ['found' => false, 'source' => 'openfda', 'error' => $e->getMessage()];
             }
         });
+    }
+
+    /**
+     * Save / update OpenFDA medicine to local medicines table.
+     */
+    public function upsertMedicineFromOpenFDA(array $fdaData, ?string $fallbackName = null): ?Medicine
+    {
+        if (!($fdaData['found'] ?? false)) {
+            return null;
+        }
+
+        $name = $fdaData['nama_produk'] ?? $fallbackName;
+        if (!$name) {
+            return null;
+        }
+
+        $frequency = $fdaData['frequency_per_day'] ?? null;
+        $dosageInfo = trim(($fdaData['dosage_info'] ?? '') . ' ' . ($fdaData['meal_timing'] ?? ''));
+        $dosageInfo = trim($dosageInfo) ?: null;
+
+        $medicine = Medicine::updateOrCreate(
+            ['name' => $name],
+            [
+                'generic_name' => $fdaData['generic_name'] ?? null,
+                'brand_name' => $fdaData['brand_name'] ?? null,
+                'description' => 'Synced from OpenFDA label data',
+                'indications' => $fdaData['indications'] ?? null,
+                'ingredients' => $fdaData['active_ingredient'] ?? null,
+                'dosage_info' => $dosageInfo,
+                'frequency_per_day' => $frequency ? (string)$frequency : null,
+                'side_effects' => $fdaData['warnings'] ?? null,
+                'contraindications' => $fdaData['contraindications'] ?? null,
+                'route' => $fdaData['route'] ?? null,
+                'manufacturer' => $fdaData['manufacturer'] ?? null,
+                'dosage_form' => $fdaData['dosage_form'] ?? null,
+                'category' => 'obat',
+                'source' => 'openfda',
+                'halal_status' => 'syubhat',
+                'is_verified_by_admin' => false,
+                'active' => true,
+            ]
+        );
+
+        return $medicine;
     }
 
     /**
@@ -211,5 +271,60 @@ class ExternalApiService
             return 'kosmetik';
         }
         return 'kosmetik';
+    }
+
+    private function safeFirstText($value): ?string
+    {
+        if (is_array($value)) {
+            $text = trim((string)($value[0] ?? ''));
+            return $text !== '' ? $text : null;
+        }
+
+        if (is_string($value)) {
+            $text = trim($value);
+            return $text !== '' ? $text : null;
+        }
+
+        return null;
+    }
+
+    private function inferFrequencyPerDay(?string $text): ?int
+    {
+        if (!$text) {
+            return null;
+        }
+
+        $normalized = strtolower($text);
+        $patterns = [
+            1 => '/(once daily|once a day|1 time daily|1x daily|once every day)/',
+            2 => '/(twice daily|twice a day|2 times daily|2x daily|every 12 hours)/',
+            3 => '/(three times daily|3 times daily|3x daily|every 8 hours)/',
+            4 => '/(four times daily|4 times daily|4x daily|every 6 hours)/',
+        ];
+
+        foreach ($patterns as $frequency => $pattern) {
+            if (preg_match($pattern, $normalized)) {
+                return $frequency;
+            }
+        }
+
+        return null;
+    }
+
+    private function inferMealTiming(?string $text): ?string
+    {
+        if (!$text) {
+            return null;
+        }
+
+        $normalized = strtolower($text);
+        if (str_contains($normalized, 'empty stomach') || str_contains($normalized, 'before meal')) {
+            return 'Sebelum makan';
+        }
+        if (str_contains($normalized, 'with food') || str_contains($normalized, 'after meal') || str_contains($normalized, 'with meals')) {
+            return 'Sesudah makan';
+        }
+
+        return null;
     }
 }

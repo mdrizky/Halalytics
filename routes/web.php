@@ -56,6 +56,8 @@ Route::post('/admin/requests/{id}/reject', [App\Http\Controllers\Admin\AdminRequ
 // Dashboard API routes
 Route::prefix('admin/dashboard')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/stats', [DashboardController::class, 'getStats']);
+    Route::get('/monitor/stats', [DashboardController::class, 'monitorStats'])->name('admin.dashboard.monitor.stats');
+    Route::get('/monitor/feed', [DashboardController::class, 'monitorFeed'])->name('admin.dashboard.monitor.feed');
     Route::get('/health', [DashboardController::class, 'systemHealth']);
     Route::get('/trends', [DashboardController::class, 'getTrendIndicators']);
     Route::get('/export', [DashboardController::class, 'exportDashboard'])->name('admin.dashboard.export');

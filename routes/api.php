@@ -226,6 +226,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('medicines')->group(function () {
         Route::post('/check', [\App\Http\Controllers\Api\MedicineController::class, 'checkHalal']);
         Route::post('/schedule', [\App\Http\Controllers\Api\MedicineController::class, 'addToSchedule']);
+        Route::post('/safe-schedule', [\App\Http\Controllers\Api\MedicineController::class, 'generateSafeSchedule']);
         Route::get('/my', [\App\Http\Controllers\Api\MedicineController::class, 'getUserMedicines']);
         
         // AI Health Assistant Routes

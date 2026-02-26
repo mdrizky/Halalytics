@@ -2,17 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ActivityEventService;
 use App\Services\OpenFoodFactsService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
 
 class ProductExternalController extends Controller
 {
     protected $openFoodFactsService;
+    protected $activityEventService;
 
-    public function __construct(OpenFoodFactsService $openFoodFactsService)
+    public function __construct(
+        OpenFoodFactsService $openFoodFactsService,
+        ActivityEventService $activityEventService
+    )
     {
         $this->openFoodFactsService = $openFoodFactsService;
+        $this->activityEventService = $activityEventService;
     }
 
     /**
@@ -54,10 +61,16 @@ class ProductExternalController extends Controller
      */
     public function detail(string $barcode): JsonResponse
     {
+        $traceId = (string) Str::uuid();
+
         if (!is_numeric($barcode) || strlen($barcode) < 8) {
             return response()->json([
+                'success' => false,
+                'message' => 'Invalid barcode format',
+                'source_error' => 'INVALID_BARCODE',
+                'trace_id' => $traceId,
                 'response_code' => 400,
-                'message' => 'Invalid barcode format'
+                'content' => null,
             ], 400);
         }
 
@@ -72,14 +85,65 @@ class ProductExternalController extends Controller
                 $product['halal_analysis'] = $this->openFoodFactsService->analyzeIngredients($ingredients);
             }
 
+            $normalized = [
+                'source' => 'open_food_facts',
+                'barcode' => $product['barcode'] ?? $barcode,
+                'name' => $product['product_name'] ?? $product['product_name_en'] ?? 'Unknown Product',
+                'brands' => $product['brands'] ?? null,
+                'categories' => $product['categories'] ?? null,
+                'ingredients_text' => $product['ingredients_text'] ?? $product['ingredients_text_en'] ?? null,
+                'nutriments' => [
+                    'energy' => data_get($product, 'nutriments.energy-kcal_100g')
+                        ?? data_get($product, 'nutriments.energy-kcal')
+                        ?? data_get($product, 'nutriments.energy_100g'),
+                    'sugar' => data_get($product, 'nutriments.sugars_100g')
+                        ?? data_get($product, 'nutriments.sugars'),
+                    'fat' => data_get($product, 'nutriments.fat_100g')
+                        ?? data_get($product, 'nutriments.fat'),
+                    'salt' => data_get($product, 'nutriments.salt_100g')
+                        ?? data_get($product, 'nutriments.salt'),
+                ],
+                'nutriscore_grade' => $product['nutriscore_grade'] ?? null,
+                'labels' => $product['labels_tags'] ?? [],
+                'halal_analysis' => $product['halal_analysis'] ?? [
+                    'status' => 'unknown',
+                    'suspicious_ingredients' => [],
+                    'recommendation' => 'Tidak ada data ingredients untuk analisis.',
+                ],
+                'image_url' => $product['image_front_url'] ?? $product['image_url'] ?? null,
+                'synced_at' => now()->toIso8601String(),
+            ];
+
+            $user = auth('sanctum')->user();
+            $this->activityEventService->logEvent(
+                eventType: 'external_scan',
+                userId: $user?->id_user,
+                username: $user?->username,
+                entityRef: (string) ($normalized['barcode'] ?? $barcode),
+                summary: 'External product detail viewed: ' . ($normalized['name'] ?? $barcode),
+                status: 'success',
+                payload: [
+                    'source' => $normalized['source'],
+                    'name' => $normalized['name'],
+                    'nutriscore_grade' => $normalized['nutriscore_grade'],
+                ]
+            );
+
             return response()->json([
+                'success' => true,
+                'source' => $normalized['source'],
+                'trace_id' => $traceId,
+                'content' => $product,
+                'data' => $normalized,
                 'response_code' => 200,
                 'message' => 'Product found',
-                'content' => $product
             ], 200);
         }
 
         return response()->json([
+            'success' => false,
+            'source_error' => 'PRODUCT_NOT_FOUND',
+            'trace_id' => $traceId,
             'response_code' => 404,
             'message' => $result['message'] ?? 'Product not found',
             'content' => null

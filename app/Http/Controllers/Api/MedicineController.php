@@ -6,21 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Models\Medicine;
 use App\Models\MedicineReminder;
 use App\Models\HalalCriticalIngredient;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Services\GeminiService;
+use App\Services\ExternalApiService;
 
 class MedicineController extends Controller
 {
     private $geminiService;
-    private $rxNavUrl = 'https://rxnav.nlm.nih.gov/REST/drugs.json';
-    private $openFoodFactsUrl = 'https://world.openfoodfacts.org/api/v0/product';
+    private $externalApiService;
 
-    public function __construct(GeminiService $geminiService)
+    public function __construct(GeminiService $geminiService, ExternalApiService $externalApiService)
     {
         $this->geminiService = $geminiService;
+        $this->externalApiService = $externalApiService;
     }
 
     // AI Symptom-to-Medicine Mapping (Enhanced Phase 4)
@@ -153,29 +154,33 @@ class MedicineController extends Controller
     {
         $results = collect();
 
-        // Step 1: Try RxNav API directly
+        // OpenFDA is the primary external source for medicine labels and dosage guidance.
         try {
-            $rxResponse = Http::timeout(5)->get($this->rxNavUrl, ['name' => $query]);
-            if ($rxResponse->successful()) {
-                $rxData = $rxResponse->json();
-                $rxResults = $this->parseRxNavData($rxData);
-                if ($rxResults->isNotEmpty()) {
-                    $results = $results->merge($rxResults);
+            $fdaResult = $this->externalApiService->searchOpenFDA($query);
+            if ($fdaResult['found'] ?? false) {
+                $savedMedicine = $this->externalApiService->upsertMedicineFromOpenFDA($fdaResult, $query);
+                if ($savedMedicine) {
+                    $savedMedicine->source = 'openfda';
+                    $results->push($savedMedicine);
                 }
             }
         } catch (\Exception $e) {
-            Log::error('RxNav API failed: ' . $e->getMessage());
+            Log::error('OpenFDA API failed: ' . $e->getMessage());
         }
 
-        // Step 2: Fallback - if no results, use AI to find ingredients then search RxNav
+        // Fallback via AI extracted ingredients, then search each ingredient in OpenFDA.
         if ($results->isEmpty() && !is_numeric($query)) {
             try {
                 $ingredientsResult = $this->geminiService->generateText("Ekstrak daftar bahan aktif utama dari nama obat/keluhan ini: '{$query}'. Balas HANYA dengan list JSON: [\"bahan1\", \"bahan2\"]");
                 if (is_array($ingredientsResult)) {
                     foreach ($ingredientsResult as $ingredient) {
-                        $rxResponse = Http::timeout(5)->get($this->rxNavUrl, ['name' => $ingredient]);
-                        if ($rxResponse->successful()) {
-                            $results = $results->merge($this->parseRxNavData($rxResponse->json()));
+                        $fdaResult = $this->externalApiService->searchOpenFDA((string)$ingredient);
+                        if ($fdaResult['found'] ?? false) {
+                            $savedMedicine = $this->externalApiService->upsertMedicineFromOpenFDA($fdaResult, (string)$ingredient);
+                            if ($savedMedicine) {
+                                $savedMedicine->source = 'openfda';
+                                $results->push($savedMedicine);
+                            }
                         }
                     }
                 }
@@ -184,83 +189,9 @@ class MedicineController extends Controller
             }
         }
 
-        // Step 3: Try OpenFoodFacts (for barcode)
-        if (is_numeric($query)) {
-            try {
-                $offResponse = Http::timeout(5)->get("{$this->openFoodFactsUrl}/{$query}.json");
-                if ($offResponse->successful()) {
-                    $offData = $offResponse->json();
-                    $results = $results->merge($this->parseOpenFoodFactsData($offData));
-                }
-            } catch (\Exception $e) {
-                Log::error('OpenFoodFacts API failed: ' . $e->getMessage());
-            }
-        }
-
-        return $results->unique('name');
-    }
-
-    private function parseRxNavData($data)
-    {
-        $medicines = collect();
-
-        if (isset($data['drugGroup']['conceptGroup'])) {
-            foreach ($data['drugGroup']['conceptGroup'] as $group) {
-                if (isset($group['conceptProperties'])) {
-                    foreach ($group['conceptProperties'] as $concept) {
-                        $medicine = $this->createMedicineFromRxNav($concept);
-                        if ($medicine) {
-                            $medicines->push($medicine);
-                        }
-                    }
-                }
-            }
-        }
-
-        return $medicines;
-    }
-
-    private function createMedicineFromRxNav($concept)
-    {
-        try {
-            // Check halal critical ingredients
-            $halalStatus = $this->checkHalalStatus($concept['name'] ?? '');
-
-            return [
-                'id_medicine' => crc32($concept['name'] ?? 'unknown_rxnav'), // Synthetic ID
-                'name' => $concept['name'] ?? 'Unknown',
-                'generic_name' => $concept['synonym'] ?? '',
-                'source' => 'rxnav',
-                'halal_status' => $halalStatus,
-                'dosage_form' => $concept['doseForm'] ?? null,
-                'description' => 'Imported from RxNav database',
-                'active' => true
-            ];
-        } catch (\Exception $e) {
-            return null;
-        }
-    }
-
-    private function parseOpenFoodFactsData($data)
-    {
-        if (!isset($data['product'])) {
-            return collect();
-        }
-
-        $product = $data['product'];
-        $halalStatus = $this->checkHalalStatus($product['product_name'] ?? '');
-
-        return collect([[
-            'id_medicine' => crc32($product['product_name'] ?? 'unknown_off'), // Synthetic ID
-            'name' => $product['product_name'] ?? 'Unknown',
-            'generic_name' => '',
-            'barcode' => $product['code'] ?? null,
-            'source' => 'openfoodfacts',
-            'halal_status' => $halalStatus,
-            'ingredients' => $product['ingredients_text'] ?? null,
-            'description' => 'Imported from Open Food Facts',
-            'active' => true
-        ]]);
+        return $results->unique(function ($medicine) {
+            return strtolower(($medicine->name ?? '') . '|' . ($medicine->generic_name ?? ''));
+        })->values();
     }
 
     // Check halal status against critical ingredients
@@ -277,6 +208,117 @@ class MedicineController extends Controller
         }
 
         return 'syubhat'; // Default to syubhat for unknown
+    }
+
+    /**
+     * Generate safe medication schedule preview with mandatory medical disclaimer.
+     */
+    public function generateSafeSchedule(Request $request)
+    {
+        $request->validate([
+            'medicine_id' => 'nullable|exists:medicines,id_medicine',
+            'medicine_name' => 'nullable|string|max:255|required_without:medicine_id',
+            'frequency_per_day' => 'nullable|integer|min:1|max:6',
+            'dosage' => 'nullable|string|max:120',
+            'wake_time' => 'nullable|date_format:H:i',
+            'sleep_time' => 'nullable|date_format:H:i',
+            'meal_relation' => 'nullable|in:before_meal,after_meal,with_meal,any',
+            'start_date' => 'nullable|date',
+            'duration_days' => 'nullable|integer|min:1|max:30',
+        ]);
+
+        $medicine = null;
+        if ($request->filled('medicine_id')) {
+            $medicine = Medicine::active()->where('id_medicine', $request->medicine_id)->first();
+        } elseif ($request->filled('medicine_name')) {
+            $medicine = Medicine::active()
+                ->where('name', 'like', '%' . $request->medicine_name . '%')
+                ->orWhere('generic_name', 'like', '%' . $request->medicine_name . '%')
+                ->first();
+        }
+
+        $frequency = (int) ($request->input('frequency_per_day')
+            ?? ($medicine?->frequency_per_day ? (int)$medicine->frequency_per_day : 1));
+        $frequency = max(1, min(6, $frequency));
+
+        $wakeTime = $request->input('wake_time', '06:00');
+        $sleepTime = $request->input('sleep_time', '22:00');
+        $mealRelation = $request->input('meal_relation', 'any');
+        $startDate = Carbon::parse($request->input('start_date', now()->toDateString()));
+        $durationDays = (int) $request->input('duration_days', 7);
+
+        $scheduleTimes = $this->buildScheduleTimes($frequency, $wakeTime, $sleepTime, $mealRelation);
+        $dosage = $request->input('dosage') ?: ($medicine?->dosage_info ?? 'Ikuti etiket obat');
+
+        $mealInstruction = match ($mealRelation) {
+            'before_meal' => 'Minum 30 menit sebelum makan.',
+            'after_meal' => 'Minum 10-30 menit sesudah makan.',
+            'with_meal' => 'Minum bersamaan dengan makan.',
+            default => 'Ikuti petunjuk etiket atau resep dokter terkait waktu makan.',
+        };
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Jadwal minum obat berhasil dibuat (preview).',
+            'data' => [
+                'medicine' => [
+                    'id_medicine' => $medicine?->id_medicine,
+                    'name' => $medicine?->name ?? $request->input('medicine_name', 'Obat'),
+                    'generic_name' => $medicine?->generic_name,
+                    'source' => $medicine?->source ?? 'manual_input',
+                ],
+                'dosage' => $dosage,
+                'frequency_per_day' => $frequency,
+                'meal_relation' => $mealRelation,
+                'meal_instruction' => $mealInstruction,
+                'schedule_times' => $scheduleTimes,
+                'start_date' => $startDate->toDateString(),
+                'end_date' => $startDate->copy()->addDays($durationDays - 1)->toDateString(),
+                'duration_days' => $durationDays,
+                'disclaimer' => 'Jadwal ini hanya referensi edukasi. Ikuti etiket kemasan dan resep dokter/apoteker. Hentikan pemakaian dan cari bantuan medis jika muncul efek samping berat.',
+            ]
+        ]);
+    }
+
+    private function buildScheduleTimes(int $frequency, string $wakeTime, string $sleepTime, string $mealRelation): array
+    {
+        if (in_array($mealRelation, ['before_meal', 'after_meal', 'with_meal'], true) && $frequency <= 3) {
+            $baseMealSlots = ['08:00', '13:00', '19:00'];
+            $offsetMinutes = match ($mealRelation) {
+                'before_meal' => -30,
+                'after_meal' => 30,
+                default => 0,
+            };
+
+            return collect(array_slice($baseMealSlots, 0, $frequency))
+                ->map(function ($slot) use ($offsetMinutes) {
+                    return Carbon::createFromFormat('H:i', $slot)
+                        ->addMinutes($offsetMinutes)
+                        ->format('H:i');
+                })
+                ->values()
+                ->all();
+        }
+
+        $wake = Carbon::createFromFormat('H:i', $wakeTime);
+        $sleep = Carbon::createFromFormat('H:i', $sleepTime);
+        if ($sleep->lessThanOrEqualTo($wake)) {
+            $sleep->addDay();
+        }
+
+        if ($frequency === 1) {
+            return [$wake->copy()->addHours(2)->format('H:i')];
+        }
+
+        $windowMinutes = $wake->diffInMinutes($sleep);
+        $interval = (int) floor($windowMinutes / ($frequency - 1));
+
+        $times = [];
+        for ($i = 0; $i < $frequency; $i++) {
+            $times[] = $wake->copy()->addMinutes($interval * $i)->format('H:i');
+        }
+
+        return $times;
     }
 
     // Create Medicine Reminder

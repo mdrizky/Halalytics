@@ -3,16 +3,19 @@
 namespace App\Services;
 
 use App\Models\BpomData;
+use App\Models\Medicine;
 use App\Models\ProductModel;
 use Illuminate\Support\Facades\Http;
 
 class UniversalProductService
 {
     protected $safetyChecker;
+    protected $externalApiService;
 
-    public function __construct(SafetyCheckerService $safetyChecker)
+    public function __construct(SafetyCheckerService $safetyChecker, ExternalApiService $externalApiService)
     {
         $this->safetyChecker = $safetyChecker;
+        $this->externalApiService = $externalApiService;
     }
 
     /**
@@ -173,7 +176,21 @@ class UniversalProductService
             });
         $results = $results->merge($local);
 
-        // 3. External (OpenFoodFacts) - Only if we have few results
+        // 3. Local Medicines (for unified user/admin search)
+        $localMedicines = Medicine::active()
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('generic_name', 'like', "%{$query}%")
+                    ->orWhere('brand_name', 'like', "%{$query}%");
+            })
+            ->limit(5)
+            ->get()
+            ->map(function ($item) {
+                return $this->formatMedicineForSearch($item, $item->source ?? 'local_medicine');
+            });
+        $results = $results->merge($localMedicines);
+
+        // 4. External (OpenFoodFacts) - Only if we have few results
         if ($results->count() < 10) {
             try {
                 $url = "https://world.openfoodfacts.org/cgi/search.pl?search_terms=" . urlencode($query) . "&search_simple=1&action=process&json=1&page_size=5";
@@ -193,8 +210,29 @@ class UniversalProductService
             }
         }
 
+        // 5. OpenFDA (medicine)
+        if (!is_numeric($query) && $results->count() < 15) {
+            try {
+                $fdaResult = $this->externalApiService->searchOpenFDA($query);
+                if ($fdaResult['found'] ?? false) {
+                    $medicine = $this->externalApiService->upsertMedicineFromOpenFDA($fdaResult, $query);
+                    if ($medicine) {
+                        $results->push($this->formatMedicineForSearch($medicine, 'openfda'));
+                    }
+                }
+            } catch (\Exception $e) {
+                // Ignore external search errors
+            }
+        }
+
         // Unique by barcode to avoid duplicates
-        return $results->unique('barcode')->values();
+        return $results->unique(function ($item) {
+            $barcode = $item['barcode'] ?? null;
+            if ($barcode) {
+                return 'barcode:' . $barcode;
+            }
+            return 'name:' . strtolower($item['nama_product'] ?? '');
+        })->values();
     }
 
     private function formatForSearch($model, $source)
@@ -229,6 +267,24 @@ class UniversalProductService
             'kategori' => 'Internasional',
             'status' => 'syubhat',
             'source' => 'open_food_facts'
+        ];
+    }
+
+    private function formatMedicineForSearch($medicine, $source)
+    {
+        return [
+            'id_product' => 0,
+            'id_medicine' => $medicine->id_medicine,
+            'nama_product' => $medicine->name,
+            'barcode' => $medicine->barcode,
+            'image' => $medicine->image_url,
+            'kategori' => 'Obat',
+            'status' => $medicine->halal_status ?? 'syubhat',
+            'source' => $source,
+            'product_type' => 'medicine',
+            'generic_name' => $medicine->generic_name,
+            'dosage_info' => $medicine->dosage_info,
+            'frequency_per_day' => $medicine->frequency_per_day ? (int) $medicine->frequency_per_day : null,
         ];
     }
 }

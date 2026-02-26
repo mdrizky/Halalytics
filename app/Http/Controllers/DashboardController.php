@@ -10,6 +10,7 @@ use App\Models\ReportModel;
 use App\Models\KategoriModel;
 use App\Models\HalalProduct;
 use App\Models\ActivityModel;
+use App\Models\Medicine;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -26,6 +27,8 @@ class DashboardController extends Controller
         $totalProduk = ProductModel::count();
         $localProduk = ProductModel::where('source', 'local')->count();
         $offProduk = ProductModel::where('source', 'open_food_facts')->count();
+        $obfProduk = ProductModel::where('source', 'open_beauty_facts')->count();
+        $openFdaMedicines = Medicine::where('source', 'openfda')->count();
         $totalKategori = KategoriModel::count();
         $totalScan = ScanModel::count();
         $scanToday = ScanModel::whereDate('tanggal_scan', Carbon::today())->count();
@@ -96,7 +99,40 @@ class DashboardController extends Controller
             'halal_products' => ProductModel::where('status', 'halal')->count(),
             'syubhat_products' => ProductModel::where('status', 'diragukan')->count(),
             'non_halal_products' => ProductModel::where('status', 'tidak halal')->count(),
+            'local_products' => $localProduk,
+            'open_food_facts_products' => $offProduk,
+            'open_beauty_facts_products' => $obfProduk,
+            'openfda_medicines' => $openFdaMedicines,
         ];
+
+        $monitorStats = [
+            'total_external_scans' => DB::table('activity_events')->where('event_type', 'external_scan')->count(),
+            'total_skincare_analyses' => DB::table('activity_events')->where('event_type', 'skincare_analysis')->count(),
+            'total_interaction_checks' => DB::table('activity_events')->where('event_type', 'drug_interaction')->count(),
+            'major_or_contra_count' => DB::table('activity_events')
+                ->where('event_type', 'drug_interaction')
+                ->where(function ($q) {
+                    $q->whereJsonContains('payload_json->severity', 'major')
+                        ->orWhereJsonContains('payload_json->severity', 'contraindicated');
+                })
+                ->count(),
+        ];
+
+        $activityFeed = DB::table('activity_events')
+            ->leftJoin('users', 'activity_events.user_id', '=', 'users.id_user')
+            ->select(
+                'activity_events.id',
+                'activity_events.event_type',
+                'activity_events.entity_ref',
+                'activity_events.summary',
+                'activity_events.status',
+                'activity_events.payload_json',
+                'activity_events.created_at',
+                DB::raw('COALESCE(activity_events.username, users.username, users.full_name, \'Guest\') as user_name')
+            )
+            ->orderByDesc('activity_events.created_at')
+            ->limit(15)
+            ->get();
 
         /*
         |--------------------------------------------------------------------------
@@ -105,6 +141,8 @@ class DashboardController extends Controller
         */
         return view('admin.dashboard-new', [
             'stats' => $stats,
+            'monitor_stats' => $monitorStats,
+            'activity_feed' => $activityFeed,
             'top_products' => $topScannedProducts,
             'recent_scans' => $recentScans,
             'expiring_certificates' => $expiring_certificates,
@@ -353,6 +391,45 @@ class DashboardController extends Controller
             $product->trend = $this->calculateTrend($product->scan_count, $lastWeekCount);
             return $product;
         });
+    }
+
+    public function monitorStats()
+    {
+        $stats = [
+            'total_external_scans' => DB::table('activity_events')->where('event_type', 'external_scan')->count(),
+            'total_skincare_analyses' => DB::table('activity_events')->where('event_type', 'skincare_analysis')->count(),
+            'total_interaction_checks' => DB::table('activity_events')->where('event_type', 'drug_interaction')->count(),
+            'major_or_contra_count' => DB::table('activity_events')
+                ->where('event_type', 'drug_interaction')
+                ->where(function ($q) {
+                    $q->whereJsonContains('payload_json->severity', 'major')
+                        ->orWhereJsonContains('payload_json->severity', 'contraindicated');
+                })
+                ->count(),
+        ];
+
+        return response()->json(['success' => true, 'data' => $stats]);
+    }
+
+    public function monitorFeed()
+    {
+        $feed = DB::table('activity_events')
+            ->leftJoin('users', 'activity_events.user_id', '=', 'users.id_user')
+            ->select(
+                'activity_events.id',
+                'activity_events.event_type',
+                'activity_events.entity_ref',
+                'activity_events.summary',
+                'activity_events.status',
+                'activity_events.payload_json',
+                'activity_events.created_at',
+                DB::raw('COALESCE(activity_events.username, users.username, users.full_name, \'Guest\') as user_name')
+            )
+            ->orderByDesc('activity_events.created_at')
+            ->limit(20)
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $feed]);
     }
     
     /*

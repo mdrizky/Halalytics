@@ -87,6 +87,54 @@
     </div>
 </div>
 
+<!-- External Data Integration Status -->
+<div class="mb-8 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+    <div class="flex items-center justify-between mb-4">
+        <h4 class="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">External Data Sources</h4>
+        <span class="text-[11px] font-bold text-emerald-600">Realtime Sync Active</span>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3">
+            <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Local DB</p>
+            <p class="text-xl font-extrabold text-slate-800 dark:text-white">{{ number_format($stats['local_products'] ?? 0) }}</p>
+        </div>
+        <div class="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3">
+            <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Open Food Facts</p>
+            <p class="text-xl font-extrabold text-slate-800 dark:text-white">{{ number_format($stats['open_food_facts_products'] ?? 0) }}</p>
+        </div>
+        <div class="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3">
+            <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Open Beauty Facts</p>
+            <p class="text-xl font-extrabold text-slate-800 dark:text-white">{{ number_format($stats['open_beauty_facts_products'] ?? 0) }}</p>
+        </div>
+        <div class="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3">
+            <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">OpenFDA Medicines</p>
+            <p class="text-xl font-extrabold text-slate-800 dark:text-white">{{ number_format($stats['openfda_medicines'] ?? 0) }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Realtime Monitor (User Compose -> Laravel Admin) -->
+<div class="mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+            <p class="text-[11px] font-bold text-slate-400 uppercase">External Scans</p>
+            <p id="monitorExternalScans" class="text-2xl font-extrabold text-slate-800 dark:text-white">{{ number_format($monitor_stats['total_external_scans'] ?? 0) }}</p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+            <p class="text-[11px] font-bold text-slate-400 uppercase">Skincare Analyses</p>
+            <p id="monitorSkincare" class="text-2xl font-extrabold text-slate-800 dark:text-white">{{ number_format($monitor_stats['total_skincare_analyses'] ?? 0) }}</p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+            <p class="text-[11px] font-bold text-slate-400 uppercase">Interaction Checks</p>
+            <p id="monitorInteractions" class="text-2xl font-extrabold text-slate-800 dark:text-white">{{ number_format($monitor_stats['total_interaction_checks'] ?? 0) }}</p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+            <p class="text-[11px] font-bold text-slate-400 uppercase">Major/Contra</p>
+            <p id="monitorMajorContra" class="text-2xl font-extrabold text-red-600">{{ number_format($monitor_stats['major_or_contra_count'] ?? 0) }}</p>
+        </div>
+    </div>
+</div>
+
 <!-- Main Grid Section -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Left Column: Scan Activity Chart + Live Feed -->
@@ -208,6 +256,29 @@
                 </table>
             </div>
         </div>
+
+        <!-- Realtime Activity Feed -->
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div class="p-6 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+                <h4 class="text-lg font-bold text-slate-800 dark:text-white">Realtime Activity Feed</h4>
+                <span class="text-xs font-bold text-emerald-600">Live + Polling Fallback</span>
+            </div>
+            <div id="realtime-feed-list" class="divide-y divide-slate-100 dark:divide-slate-800">
+                @forelse($activity_feed ?? [] as $event)
+                <div class="px-6 py-4">
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-sm font-semibold text-slate-800 dark:text-white">{{ $event->summary ?? $event->event_type }}</p>
+                        <span class="text-[10px] font-bold uppercase {{ ($event->status ?? '') === 'success' ? 'text-emerald-600' : 'text-amber-600' }}">{{ $event->status ?? 'info' }}</span>
+                    </div>
+                    <p class="text-xs text-slate-500">
+                        {{ $event->user_name ?? 'Guest' }} · {{ $event->event_type ?? '-' }} · {{ \Carbon\Carbon::parse($event->created_at)->diffForHumans() }}
+                    </p>
+                </div>
+                @empty
+                <div class="px-6 py-8 text-center text-slate-400 text-sm">Belum ada activity event.</div>
+                @endforelse
+            </div>
+        </div>
     </div>
     
     <!-- Right Column: Top Scanned & Platform Status -->
@@ -309,3 +380,83 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(() => {
+    const statsUrl = "{{ route('admin.dashboard.monitor.stats') }}";
+    const feedUrl = "{{ route('admin.dashboard.monitor.feed') }}";
+    const feedRoot = document.getElementById('realtime-feed-list');
+
+    const renderFeed = (items = []) => {
+        if (!feedRoot) return;
+        if (!Array.isArray(items) || items.length === 0) {
+            feedRoot.innerHTML = '<div class="px-6 py-8 text-center text-slate-400 text-sm">Belum ada activity event.</div>';
+            return;
+        }
+        feedRoot.innerHTML = items.slice(0, 20).map(item => {
+            const statusClass = (item.status || '') === 'success' ? 'text-emerald-600' : 'text-amber-600';
+            const summary = item.summary || item.event_type || 'activity';
+            const user = item.user_name || 'Guest';
+            const type = item.event_type || '-';
+            const created = item.created_at || '-';
+            return `
+                <div class="px-6 py-4">
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-sm font-semibold text-slate-800 dark:text-white">${summary}</p>
+                        <span class="text-[10px] font-bold uppercase ${statusClass}">${item.status || 'info'}</span>
+                    </div>
+                    <p class="text-xs text-slate-500">${user} · ${type} · ${created}</p>
+                </div>
+            `;
+        }).join('');
+    };
+
+    const updateStats = (data = {}) => {
+        const set = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = Number(value || 0).toLocaleString();
+        };
+        set('monitorExternalScans', data.total_external_scans);
+        set('monitorSkincare', data.total_skincare_analyses);
+        set('monitorInteractions', data.total_interaction_checks);
+        set('monitorMajorContra', data.major_or_contra_count);
+    };
+
+    const poll = async () => {
+        try {
+            const [statsRes, feedRes] = await Promise.all([fetch(statsUrl), fetch(feedUrl)]);
+            const statsJson = await statsRes.json();
+            const feedJson = await feedRes.json();
+            if (statsJson?.success) updateStats(statsJson.data);
+            if (feedJson?.success) renderFeed(feedJson.data);
+        } catch (e) {
+            console.warn('Monitor polling failed', e);
+        }
+    };
+
+    // Try Firebase realtime listener first (if firebase SDK/config already loaded in layout)
+    try {
+        if (window.firebase && window.firebase.database && window.firebase.apps?.length) {
+            const db = window.firebase.database();
+            db.ref('admin/activity_feed/latest').on('value', snapshot => {
+                const latest = snapshot.val();
+                if (!latest) return;
+                // Fast refresh by polling once to keep ordering/format consistent
+                poll();
+            });
+            db.ref('admin/dashboard/stats').on('value', snapshot => {
+                const stats = snapshot.val();
+                if (stats) updateStats(stats);
+            });
+        }
+    } catch (e) {
+        console.warn('Firebase listener unavailable, using polling fallback', e);
+    }
+
+    // Polling fallback / default refresh
+    poll();
+    setInterval(poll, 12000);
+})();
+</script>
+@endpush

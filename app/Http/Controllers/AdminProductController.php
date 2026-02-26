@@ -6,10 +6,16 @@ use Illuminate\Http\Request;
 use App\Models\ProductModel;
 use App\Models\ScanModel;
 use App\Models\KategoriModel;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 class AdminProductController extends Controller
 {
+    protected $universalService;
+
+    public function __construct(\App\Services\UniversalProductService $universalService)
+    {
+        $this->universalService = $universalService;
+    }
+
     /**
      * AI-Assisted Batch Verification
      */
@@ -225,93 +231,40 @@ class AdminProductController extends Controller
     // Cari produk by barcode (lokal + internasional)
     public function searchByBarcode($barcode)
     {
-        // Cek dulu di database lokal
-        $product = ProductModel::where('barcode', $barcode)->first();
+        $result = $this->universalService->findProduct($barcode);
+        if (!$result['found']) {
+            return response()->json([
+                'status' => 'not_found',
+                'message' => 'Produk tidak ditemukan di database lokal maupun API eksternal'
+            ]);
+        }
 
-        if ($product) {
-            // Simpan scan otomatis
+        $source = $result['source'] ?? 'unknown';
+        $standardized = $result['standardized'] ?? [];
+        $model = $result['data'] ?? null;
+
+        // Save scan if product row exists.
+        $authUser = Auth::user();
+        $authUserId = $authUser->id_user ?? $authUser->id ?? null;
+
+        if ($model instanceof ProductModel && is_numeric($authUserId)) {
             ScanModel::create([
-                'user_id' => Auth::id(),
-                'product_id' => $product->id_product,
-                'nama_produk' => $product->nama_product,
-                'barcode' => $product->barcode,
-                'kategori' => $product->kategori_id ? $product->kategori_id : 'Tidak Ada',
-                'status_halal' => $product->status,
+                'user_id' => (int) $authUserId,
+                'product_id' => $model->id_product,
+                'nama_produk' => $model->nama_product,
+                'barcode' => $model->barcode,
+                'kategori' => $standardized['category'] ?? 'Tidak Ada',
+                'status_halal' => $model->status ?? 'syubhat',
                 'status_kesehatan' => 'syubhat',
                 'tanggal_scan' => now(),
             ]);
-
-            return response()->json([
-                'status' => 'local',
-                'data' => $product
-            ]);
-        }
-
-        // Kalau tidak ada → ambil dari API OpenFoodFacts
-        $url = "https://world.openfoodfacts.org/api/v0/product/{$barcode}.json";
-        $response = Http::get($url);
-
-        if ($response->successful()) {
-            $data = $response->json();
-
-            if (isset($data['status']) && $data['status'] == 1) {
-                $productData = $data['product'];
-
-                // Guess category
-                $guessName = ' ' . strtolower($productData['product_name'] ?? '') . ' ';
-                $kategoriId = null;
-                $rules = [
-                    12 => ['vitamin', 'suplemen', 'supplement', 'tablet', 'panadol', 'paracetamol'],
-                    11 => ['sabun', 'soap', 'shampoo', 'sampo', 'lotion', 'parfum', 'perfume', 'lulur'],
-                    2 => ['drink', 'minuman', 'teh', 'tea', 'kopi', 'coffee', 'jus', 'juice', 'soda', 'water', 'air mineral'],
-                    5 => ['susu', 'milk', 'cheese', 'keju', 'yogurt', 'butter', 'indomilk', 'frisian flag', 'ultra milk'],
-                    3 => ['snack', 'keripik', 'chips', 'wafer', 'biskuit', 'chiki', 'oreo', 'pringles', 'chocolate', 'cokelat'],
-                    4 => ['bumbu', 'seasoning', 'kecap', 'sauce', 'saus', 'garam', 'gula', 'sugar'],
-                    1 => ['mie', 'noodle', 'nasi', 'rice', 'roti', 'bread', 'sereal', 'indomie', 'pop mie'],
-                ];
-
-                foreach ($rules as $id => $keywords) {
-                    foreach ($keywords as $keyword) {
-                        if (strpos($guessName, $keyword) !== false) {
-                            $kategoriId = $id;
-                            break 2;
-                        }
-                    }
-                }
-
-                $newProduct = ProductModel::create([
-                    'nama_product' => $productData['product_name'] ?? 'Produk Tidak Dikenal',
-                    'barcode'      => $barcode,
-                    'komposisi'    => $productData['ingredients_text'] ?? null,
-                    'status'       => 'syubhat',
-                    'image'        => $productData['image_url'] ?? null,
-                    'info_gizi'    => isset($productData['nutriments']) ? json_encode($productData['nutriments']) : null,
-                    'kategori_id'  => $kategoriId,
-                    'source'       => 'OpenFoodFacts',
-                ]);
-
-                // Simpan scan internasional
-                ScanModel::create([
-                    'user_id' => Auth::id(),
-                    'product_id' => $newProduct->id_product,
-                    'nama_produk' => $newProduct->nama_product,
-                    'barcode' => $newProduct->barcode,
-                    'kategori' => 'Internasional',
-                    'status_halal' => 'syubhat',
-                    'status_kesehatan' => 'syubhat',
-                    'tanggal_scan' => now(),
-                ]);
-
-                return response()->json([
-                    'status' => 'international',
-                    'data' => $newProduct
-                ]);
-            }
         }
 
         return response()->json([
-            'status' => 'not_found',
-            'message' => 'Produk tidak ditemukan di database lokal maupun internasional'
+            'status' => $source === 'local' || $source === 'local_cache' ? 'local' : 'external',
+            'source' => $source,
+            'data' => $model,
+            'standardized' => $standardized,
         ]);
     }
 }
