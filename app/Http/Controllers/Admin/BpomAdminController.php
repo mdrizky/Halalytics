@@ -52,6 +52,7 @@ class BpomAdminController extends Controller
         $product = BpomData::findOrFail($id);
         $product->update([
             'verification_status' => 'verified',
+            'sumber_data' => 'bpom_resmi',
             'verified_at' => now()
         ]);
 

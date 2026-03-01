@@ -69,10 +69,20 @@ class DrugInteractionController extends Controller
             })->first();
 
             if ($existing) {
+                $existingData = [
+                    'has_interaction' => true,
+                    'severity' => $this->normalizeSeverity($existing->severity ?? 'moderate'),
+                    'description' => $existing->description ?? "Interaksi terdeteksi untuk {$drugA->name} dan {$drugB->name}.",
+                    'recommendation' => $existing->recommendation ?: $this->recommendationBySeverity($this->normalizeSeverity($existing->severity ?? 'moderate')),
+                    'scientific_basis' => 'Data interaksi tersimpan di basis data Halalytics.',
+                    'sources' => ['database'],
+                    'disclaimer' => 'Hasil ini referensi edukasi. Tetap konsultasikan dengan dokter/apoteker.',
+                ];
+
                 return response()->json([
                     'success' => true,
                     'source' => 'database',
-                    'data' => $existing
+                    'data' => $existingData
                 ]);
             }
         }

@@ -26,22 +26,22 @@ class BpomController extends Controller
      */
     public function searchBpom(Request $request)
     {
+        $this->normalizeIncludeAi($request);
+
         $request->validate([
             'q' => 'required|string|min:2',
             'include_ai' => 'nullable|boolean',
+            'include_a' => 'nullable|boolean',
         ]);
         $query = $request->q;
         $includeAi = $request->boolean('include_ai', false);
 
-        // 1. Cek database lokal resmi (exclude AI by default)
-        $localResults = BpomData::where(function ($q) use ($query) {
+        // 1. Cek database lokal resmi BPOM saja
+        $localResults = $this->officialBpomOnlyQuery()
+            ->where(function ($q) use ($query) {
                 $q->where('nama_produk', 'LIKE', "%{$query}%")
                   ->orWhere('nomor_reg', 'LIKE', "%{$query}%")
                   ->orWhere('merk', 'LIKE', "%{$query}%");
-            })
-            ->where(function ($q) {
-                $q->whereNull('sumber_data')
-                    ->orWhere('sumber_data', '!=', 'ai');
             })
             ->orderBy('nama_produk')
             ->limit(20)
@@ -58,7 +58,7 @@ class BpomController extends Controller
                     'referensi' => 'Data Publik BPOM RI',
                     'disclaimer' => $localResults->isNotEmpty()
                         ? 'Data BPOM ditampilkan dari database lokal terverifikasi.'
-                        : 'Data tidak ditemukan pada database BPOM lokal. Coba kata kunci atau nomor registrasi lain.'
+                        : 'Data BPOM resmi tidak ditemukan. Coba nama/nomor registrasi lain yang terdaftar resmi.'
                 ]
             ]);
         }
@@ -122,9 +122,12 @@ class BpomController extends Controller
      */
     public function checkRegistration(Request $request)
     {
+        $this->normalizeIncludeAi($request);
+
         $request->validate([
             'code' => 'required|string|min:5',
             'include_ai' => 'nullable|boolean',
+            'include_a' => 'nullable|boolean',
         ]);
         $code = strtoupper(trim($request->code));
         $includeAi = $request->boolean('include_ai', false);
@@ -132,12 +135,9 @@ class BpomController extends Controller
         // Deteksi kategori dari pola kode
         $kategori = $this->detectKategoriFromCode($code);
 
-        // Cek database lokal resmi
-        $existing = BpomData::where('nomor_reg', $code)
-            ->where(function ($q) {
-                $q->whereNull('sumber_data')
-                    ->orWhere('sumber_data', '!=', 'ai');
-            })
+        // Cek database lokal resmi BPOM saja
+        $existing = $this->officialBpomOnlyQuery()
+            ->where('nomor_reg', $code)
             ->first();
         if ($existing) {
             return response()->json([
@@ -154,7 +154,7 @@ class BpomController extends Controller
         if (!$includeAi) {
             return response()->json([
                 'success' => false,
-                'message' => 'Nomor registrasi tidak ditemukan dalam database BPOM lokal.',
+                'message' => 'Nomor registrasi tidak ditemukan dalam database BPOM resmi.',
                 'kategori_terdeteksi' => $kategori,
                 'session_info' => [
                     'sumber' => 'Database Terverifikasi BPOM RI',
@@ -270,6 +270,41 @@ class BpomController extends Controller
                 'message' => 'Gagal menganalisis produk: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Handle legacy/incorrect include_ai payload (e.g. include_a[], include_ai[]).
+     */
+    private function normalizeIncludeAi(Request $request): void
+    {
+        $includeAi = $request->input('include_ai');
+        $includeA = $request->input('include_a');
+
+        if (is_array($includeAi)) {
+            $includeAi = reset($includeAi);
+        }
+        if (is_array($includeA)) {
+            $includeA = reset($includeA);
+        }
+
+        if ($includeAi === null && $includeA !== null) {
+            $includeAi = $includeA;
+        }
+
+        if ($includeAi !== null) {
+            $normalized = filter_var($includeAi, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            $request->merge([
+                'include_ai' => $normalized ?? false,
+                'include_a' => $normalized ?? false,
+            ]);
+        }
+    }
+
+    private function officialBpomOnlyQuery()
+    {
+        return BpomData::query()
+            ->verified()
+            ->whereIn('sumber_data', ['bpom_resmi', 'bpom']);
     }
 
     /**

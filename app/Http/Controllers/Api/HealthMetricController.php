@@ -15,7 +15,7 @@ class HealthMetricController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'metric_type' => 'required|in:weight,blood_pressure,blood_sugar,cholesterol',
+            'metric_type' => 'required|in:weight,blood_pressure,blood_sugar,cholesterol,health_diary',
             'value' => 'required|string',
             'recorded_at' => 'required|date',
             'notes' => 'nullable|string'
@@ -51,7 +51,7 @@ class HealthMetricController extends Controller
     public function history(Request $request)
     {
         $request->validate([
-            'metric_type' => 'required|in:weight,blood_pressure,blood_sugar,cholesterol',
+            'metric_type' => 'required|in:weight,blood_pressure,blood_sugar,cholesterol,health_diary',
             'limit' => 'nullable|integer|max:100'
         ]);
 
@@ -68,11 +68,32 @@ class HealthMetricController extends Controller
     }
 
     /**
+     * Get dedicated health diary entries (latest first)
+     */
+    public function diary(Request $request)
+    {
+        $request->validate([
+            'limit' => 'nullable|integer|max:100'
+        ]);
+
+        $results = HealthTracking::where('id_user', auth()->user()->id_user)
+            ->where('metric_type', 'health_diary')
+            ->orderBy('recorded_at', 'desc')
+            ->take($request->input('limit', 30))
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $results
+        ]);
+    }
+
+    /**
      * Get summary of all metrics
      */
     public function summary()
     {
-        $metrics = ['weight', 'blood_pressure', 'blood_sugar', 'cholesterol'];
+        $metrics = ['weight', 'blood_pressure', 'blood_sugar', 'cholesterol', 'health_diary'];
         $summary = [];
 
         foreach ($metrics as $metric) {

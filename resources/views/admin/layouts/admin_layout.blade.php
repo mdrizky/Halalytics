@@ -152,7 +152,7 @@
                 <span class="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-bold border border-primary/20">VERIFY</span>
             </a>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.ingredients*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.ingredients.index') }}">
-                <span class="material-icons-round text-[20px]">menstrual_health</span>
+                <span class="material-icons-round text-[20px]">science</span>
                 <span class="text-sm flex-1">Ingredients</span>
                 <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200 dark:border-slate-700">NEW</span>
             </a>
@@ -160,6 +160,11 @@
                 <span class="material-icons-round text-[20px]">view_carousel</span>
                 <span class="text-sm flex-1">Banner Slider</span>
                 <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200 dark:border-slate-700">{{ number_format($global_banner_count) }}</span>
+            </a>
+            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.promo.blog*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.promo.blog.index') }}">
+                <span class="material-icons-round text-[20px]">article</span>
+                <span class="text-sm flex-1">Articles</span>
+                <span class="text-[10px] bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-md font-bold text-emerald-600 border border-emerald-200 dark:border-emerald-700">CMS</span>
             </a>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.street-foods*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.street-foods.index') }}">
                 <span class="material-icons-round text-[20px]">restaurant</span>
@@ -183,6 +188,11 @@
                 @if($global_report_count > 0)
                 <span class="text-[10px] bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded-md font-bold text-red-600 border border-red-200 dark:border-red-800/50 animate-pulse-slow">{{ number_format($global_report_count) }}</span>
                 @endif
+            </a>
+            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.users.*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.users.dashboard') }}">
+                <span class="material-icons-round text-[20px]">manage_accounts</span>
+                <span class="text-sm flex-1">User Control</span>
+                <span class="text-[10px] bg-indigo-100 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded-md font-bold text-indigo-600 border border-indigo-200 dark:border-indigo-700">ADMIN</span>
             </a>
         </nav>
         <div class="p-4 border-t border-slate-100 dark:border-slate-800">
@@ -421,14 +431,16 @@
                 let html = '';
                 data.data.forEach(notif => {
                     const isRead = notif.is_read;
+                    const detail = notif.detail ? `<div class="text-[11px] text-slate-500 mt-1">${notif.detail}</div>` : '';
                     html += `
-                        <div class="p-3 border-b border-slate-100 dark:border-slate-700 ${isRead ? 'opacity-60' : ''} hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer" onclick="markAsRead(${notif.id})">
+                        <div class="p-3 border-b border-slate-100 dark:border-slate-700 ${isRead ? 'opacity-60' : ''} hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer" onclick="openNotification(${notif.id}, '${notif.target_url || '/admin'}')">
                             <div class="flex items-start space-x-3">
                                 <span class="material-icons-round text-${notif.color || 'primary'}-500">${notif.icon || 'notifications'}</span>
                                 <div class="flex-1 min-w-0">
                                     <div class="text-sm font-medium ${isRead ? '' : 'font-bold'}">${notif.title}</div>
-                                    <div class="text-xs text-slate-400 truncate">${notif.message}</div>
-                                    <div class="text-[10px] text-slate-300 mt-1">${formatTime(notif.created_at)}</div>
+                                    <div class="text-xs text-slate-400">${notif.message}</div>
+                                    ${detail}
+                                    <div class="text-[10px] text-slate-300 mt-1">${notif.relative_time || formatTime(notif.created_at)}</div>
                                 </div>
                                 ${!isRead ? '<span class="w-2 h-2 bg-primary rounded-full flex-shrink-0"></span>' : ''}
                             </div>
@@ -458,6 +470,13 @@
             fetchNotifications();
         } catch (error) {
             console.error('Error marking as read:', error);
+        }
+    }
+
+    async function openNotification(id, targetUrl) {
+        await markAsRead(id);
+        if (targetUrl) {
+            window.location.href = targetUrl;
         }
     }
     

@@ -1,91 +1,70 @@
-@extends('master')
+@extends('admin.layouts.admin_layout')
 
-@section('isi')
-<div class="row page-titles mx-0">
-    <div class="col-sm-6 p-md-0">
-        <div class="welcome-text">
-            <h4>Edit Artikel</h4>
-        </div>
-    </div>
-    <div class="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('admin.promo.blog.index') }}">Blog</a></li>
-            <li class="breadcrumb-item active"><a href="javascript:void(0)">Edit</a></li>
-        </ol>
-    </div>
+@section('title', 'Edit Article - Halalytics Admin')
+@section('breadcrumb-parent', 'Content')
+@section('breadcrumb-current', 'Edit Article')
+
+@section('content')
+<div class="mb-6">
+    <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Edit Artikel</h2>
+    <p class="text-slate-500 text-sm mt-1">Perbarui konten artikel agar tetap relevan.</p>
 </div>
 
-<div class="row">
-    <div class="col-lg-12">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="card-title">Form Artikel Edukasi</h4>
-            </div>
-            <div class="card-body">
-                @if ($errors->any())
-                <div class="alert alert-danger solid alert-dismissible fade show">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span><i class="mdi mdi-close"></i></span></button>
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                @endif
+@if ($errors->any())
+<div class="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+    <ul class="list-disc pl-5 space-y-1">
+        @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
 
-                <form action="{{ route('admin.promo.blog.update', $blog->id) }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    @method('PUT')
-                    
-                    <div class="row">
-                        <div class="col-lg-8">
-                            <div class="form-group">
-                                <label>Judul Artikel <span class="text-danger">*</span></label>
-                                <input type="text" name="title" class="form-control" value="{{ old('title', $blog->title) }}" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>Konten <span class="text-danger">*</span></label>
-                                <textarea name="content" class="form-control" rows="15" required>{{ old('content', $blog->content) }}</textarea>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-4">
-                            <div class="form-group">
-                                <label>Kategori</label>
-                                <input type="text" name="category" class="form-control" value="{{ old('category', $blog->category) }}">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>Status <span class="text-danger">*</span></label>
-                                <select name="status" class="form-control">
-                                    <option value="draft" {{ old('status', $blog->status) == 'draft' ? 'selected' : '' }}>Draft</option>
-                                    <option value="published" {{ old('status', $blog->status) == 'published' ? 'selected' : '' }}>Published</option>
-                                </select>
-                            </div>
-                            
-                            @if($blog->image)
-                            <div class="form-group">
-                                <label>Gambar Saat Ini</label><br>
-                                <img src="{{ $blog->image_url }}" alt="Current Image" class="img-fluid rounded mb-2" style="max-height: 150px;">
-                            </div>
-                            @endif
-                            
-                            <div class="form-group">
-                                <label>Ganti Gambar Sampul (Kosongkan bila tidak ingin diganti)</label>
-                                <input type="file" name="image" class="form-control-file" accept="image/*">
-                            </div>
-                            
-                            <div class="form-group mt-5">
-                                <button type="submit" class="btn btn-primary btn-block">Simpan Perubahan</button>
-                                <a href="{{ route('admin.promo.blog.index') }}" class="btn btn-light btn-block mt-2">Batal</a>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
+    <form action="{{ route('admin.promo.blog.update', $blog->id) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+        @csrf
+        @method('PUT')
+
+        <div>
+            <label class="block text-sm font-semibold mb-1">Judul Artikel</label>
+            <input type="text" name="title" value="{{ old('title', $blog->title) }}" required class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800">
         </div>
-    </div>
+
+        <div>
+            <label class="block text-sm font-semibold mb-1">Kategori</label>
+            <input type="text" name="category" value="{{ old('category', $blog->category) }}" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800">
+        </div>
+
+        <div>
+            <label class="block text-sm font-semibold mb-1">Status</label>
+            <select name="status" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <option value="draft" {{ old('status', $blog->status) == 'draft' ? 'selected' : '' }}>Draft</option>
+                <option value="published" {{ old('status', $blog->status) == 'published' ? 'selected' : '' }}>Published</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-sm font-semibold mb-1">Konten Artikel</label>
+            <textarea name="content" rows="12" required class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800">{{ old('content', $blog->content) }}</textarea>
+        </div>
+
+        @if($blog->image)
+        <div>
+            <label class="block text-sm font-semibold mb-2">Gambar Saat Ini</label>
+            <img src="{{ $blog->image_url }}" alt="Current image" class="w-40 h-28 rounded-lg object-cover border border-slate-200 dark:border-slate-700">
+        </div>
+        @endif
+
+        <div>
+            <label class="block text-sm font-semibold mb-1">Ganti Gambar Sampul</label>
+            <input type="file" name="image" accept="image/*" class="w-full text-sm">
+            <p class="text-xs text-slate-500 mt-1">Kosongkan jika tidak ingin mengganti gambar.</p>
+        </div>
+
+        <div class="flex items-center gap-3 pt-2">
+            <button type="submit" class="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition">Simpan Perubahan</button>
+            <a href="{{ route('admin.promo.blog.index') }}" class="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold">Batal</a>
+        </div>
+    </form>
 </div>
 @endsection

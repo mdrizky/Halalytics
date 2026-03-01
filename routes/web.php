@@ -92,6 +92,7 @@ Route::middleware('auth')->group(function () {
 
 // Admin dashboard
 Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard')->middleware(['auth', 'role:admin']);
+Route::get('/admin/home', [DashboardController::class, 'index'])->name('admin.home')->middleware(['auth', 'role:admin']);
 Route::get('/admin/stats', [DashboardController::class, 'getStats'])->name('admin.dashboard.stats')->middleware(['auth', 'role:admin']);
 
 // ================== OCR MANAGEMENT ==================

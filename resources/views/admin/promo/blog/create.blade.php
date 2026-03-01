@@ -1,84 +1,61 @@
-@extends('master')
+@extends('admin.layouts.admin_layout')
 
-@section('isi')
-<div class="row page-titles mx-0">
-    <div class="col-sm-6 p-md-0">
-        <div class="welcome-text">
-            <h4>Tulis Artikel Baru</h4>
-        </div>
-    </div>
-    <div class="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('admin.promo.blog.index') }}">Blog</a></li>
-            <li class="breadcrumb-item active"><a href="javascript:void(0)">Buat</a></li>
-        </ol>
-    </div>
+@section('title', 'Create Article - Halalytics Admin')
+@section('breadcrumb-parent', 'Content')
+@section('breadcrumb-current', 'Create Article')
+
+@section('content')
+<div class="mb-6">
+    <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Tulis Artikel Baru</h2>
+    <p class="text-slate-500 text-sm mt-1">Buat artikel edukasi kesehatan untuk user aplikasi.</p>
 </div>
 
-<div class="row">
-    <div class="col-lg-12">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="card-title">Form Artikel Edukasi</h4>
-            </div>
-            <div class="card-body">
-                @if ($errors->any())
-                <div class="alert alert-danger solid alert-dismissible fade show">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span><i class="mdi mdi-close"></i></span></button>
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                @endif
+@if ($errors->any())
+<div class="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+    <ul class="list-disc pl-5 space-y-1">
+        @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
 
-                <form action="{{ route('admin.promo.blog.store') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    
-                    <div class="row">
-                        <div class="col-lg-8">
-                            <div class="form-group">
-                                <label>Judul Artikel <span class="text-danger">*</span></label>
-                                <input type="text" name="title" class="form-control" value="{{ old('title') }}" required placeholder="Contoh: 5 Bahaya Gula Buatan Pada Minuman Kemasan">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>Konten <span class="text-danger">*</span> (Gunakan HTML jika perlu format khusus. Sebentar lagi kami tambahkan editor WYSIWYG)</label>
-                                <textarea name="content" class="form-control" rows="15" required placeholder="Tulis artikel di sini...">{{ old('content') }}</textarea>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-4">
-                            <div class="form-group">
-                                <label>Kategori</label>
-                                <input type="text" name="category" class="form-control" value="{{ old('category', 'Edukasi Halal') }}" placeholder="Edukasi, Update, Tips, dll">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>Status <span class="text-danger">*</span></label>
-                                <select name="status" class="form-control">
-                                    <option value="draft" {{ old('status') == 'draft' ? 'selected' : '' }}>Draft (Simpan saja)</option>
-                                    <option value="published" {{ old('status') == 'published' ? 'selected' : '' }}>Published (Langsung tayang)</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>Gambar Sampul</label>
-                                <input type="file" name="image" class="form-control-file" accept="image/*">
-                                <small class="text-muted">Format: JPG, PNG, WEBP. Maks: 2MB</small>
-                            </div>
-                            
-                            <div class="form-group mt-5">
-                                <button type="submit" class="btn btn-primary btn-block">Simpan Artikel</button>
-                                <a href="{{ route('admin.promo.blog.index') }}" class="btn btn-light btn-block mt-2">Batal</a>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
+    <form action="{{ route('admin.promo.blog.store') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+        @csrf
+        <div>
+            <label class="block text-sm font-semibold mb-1">Judul Artikel</label>
+            <input type="text" name="title" value="{{ old('title') }}" required class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800" placeholder="Contoh: 5 Bahaya Gula Buatan Pada Minuman Kemasan">
         </div>
-    </div>
+
+        <div>
+            <label class="block text-sm font-semibold mb-1">Kategori</label>
+            <input type="text" name="category" value="{{ old('category', 'Edukasi Halal') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800" placeholder="Edukasi, Update, Tips">
+        </div>
+
+        <div>
+            <label class="block text-sm font-semibold mb-1">Status</label>
+            <select name="status" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <option value="draft" {{ old('status') == 'draft' ? 'selected' : '' }}>Draft</option>
+                <option value="published" {{ old('status') == 'published' ? 'selected' : '' }}>Published</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-sm font-semibold mb-1">Konten Artikel</label>
+            <textarea name="content" rows="12" required class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800" placeholder="Tulis isi artikel di sini...">{{ old('content') }}</textarea>
+        </div>
+
+        <div>
+            <label class="block text-sm font-semibold mb-1">Gambar Sampul</label>
+            <input type="file" name="image" accept="image/*" class="w-full text-sm">
+            <p class="text-xs text-slate-500 mt-1">Format: JPG/PNG/WEBP (max 2MB)</p>
+        </div>
+
+        <div class="flex items-center gap-3 pt-2">
+            <button type="submit" class="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition">Simpan Artikel</button>
+            <a href="{{ route('admin.promo.blog.index') }}" class="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold">Batal</a>
+        </div>
+    </form>
 </div>
 @endsection

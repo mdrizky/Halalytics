@@ -79,6 +79,27 @@ class ScanHistoryController extends Controller
     }
 
     /**
+     * Get single scan history detail
+     */
+    public function show($id, Request $request)
+    {
+        if (!Schema::hasTable('scan_histories')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fitur riwayat scan belum siap: tabel scan_histories belum tersedia.',
+            ], 503);
+        }
+
+        $scanHistory = ScanHistory::byUser($request->user()->id_user)
+            ->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $scanHistory,
+        ]);
+    }
+
+    /**
      * Record a scan (called after successful product scan)
      */
     public function recordScan(Request $request)

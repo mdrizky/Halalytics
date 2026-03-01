@@ -28,6 +28,19 @@ class BannerController extends Controller
                 if (empty($banner->image)) {
                     $banner->image = $fallbackImages[$banner->position] ?? $fallbackImages[1];
                 }
+
+                // Provide action mapping for Android user app.
+                // Frontend can route by this pair without hardcoded assumptions.
+                if ((int) $banner->position === 1) {
+                    $banner->action_type = 'open_bpom';
+                    $banner->action_value = 'bpom_scanner';
+                } elseif ((int) $banner->position === 2) {
+                    $banner->action_type = 'open_health_suite';
+                    $banner->action_value = 'health_suite_hub';
+                } else {
+                    $banner->action_type = 'open_search';
+                    $banner->action_value = 'search_external';
+                }
                 return $banner;
             })->values();
 

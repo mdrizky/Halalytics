@@ -1,111 +1,106 @@
-@extends('master')
+@extends('admin.layouts.admin_layout')
 
-@section('isi')
-<div class="row page-titles mx-0">
-    <div class="col-sm-6 p-md-0">
-        <div class="welcome-text">
-            <h4>Manajemen Blog Promo</h4>
-            <p class="mb-0">Kelola artikel edukasi dan promosi aplikasi</p>
-        </div>
+@section('title', 'Articles - Halalytics Admin')
+@section('breadcrumb-parent', 'Content')
+@section('breadcrumb-current', 'Articles')
+
+@section('content')
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Article Management</h2>
+        <p class="text-slate-500 text-sm mt-1">Kelola artikel edukasi kesehatan dan update aplikasi.</p>
     </div>
-    <div class="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item active"><a href="javascript:void(0)">Blog</a></li>
-        </ol>
-    </div>
+    <a href="{{ route('admin.promo.blog.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition">
+        <span class="material-icons-round text-lg">add</span>
+        Artikel Baru
+    </a>
 </div>
 
-<div class="row">
-    <div class="col-lg-12">
-        @if(session('success'))
-        <div class="alert alert-success solid alert-dismissible fade show">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span><i class="mdi mdi-close"></i></span></button>
-            <strong>Sukses!</strong> {{ session('success') }}
-        </div>
-        @endif
+@if(session('success'))
+<div class="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium">
+    {{ session('success') }}
+</div>
+@endif
 
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="card-title">Daftar Artikel</h4>
-                <a href="{{ route('admin.promo.blog.create') }}" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Artikel Baru</a>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-responsive-sm text-center">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Sampul</th>
-                                <th class="text-left">Judul</th>
-                                <th>Kategori</th>
-                                <th>Views</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($blogs as $key => $blog)
-                            <tr>
-                                <th>{{ $blogs->firstItem() + $key }}</th>
-                                <td>
-                                    @if($blog->image)
-                                    <img src="{{ $blog->image_url }}" alt="..." class="rounded-lg" width="50" height="50" style="object-fit: cover;">
-                                    @else
-                                    <div class="bg-light rounded-lg d-flex align-items-center justify-content-center" style="width:50px; height:50px; margin: 0 auto;">
-                                        <i class="fa fa-image text-muted"></i>
-                                    </div>
-                                    @endif
-                                </td>
-                                <td class="text-left">
-                                    <strong>{{ Str::limit($blog->title, 40) }}</strong><br>
-                                    <small class="text-muted">{{ $blog->formatted_date }}</small>
-                                </td>
-                                <td>
-                                    <span class="badge badge-light">{{ $blog->category ?? '-' }}</span>
-                                </td>
-                                <td>{{ $blog->views }}</td>
-                                <td>
-                                    @if($blog->status == 'published')
-                                    <span class="badge badge-success">Terbit</span>
-                                    @else
-                                    <span class="badge badge-warning">Draft</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="d-flex justify-content-center">
-                                        <a href="{{ route('blog.show', $blog->slug) }}" target="_blank" class="btn btn-info shadow btn-xs sharp mr-1" title="Lihat"><i class="fa fa-eye"></i></a>
-                                        <a href="{{ route('admin.promo.blog.edit', $blog->id) }}" class="btn btn-primary shadow btn-xs sharp mr-1" title="Edit"><i class="fa fa-pencil"></i></a>
-                                        
-                                        <form action="{{ route('admin.promo.blog.toggle', $blog->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            <button type="submit" class="btn btn-warning shadow btn-xs sharp mr-1" title="Toggle Status">
-                                                <i class="fa fa-refresh"></i>
-                                            </button>
-                                        </form>
-
-                                        <form action="{{ route('admin.promo.blog.destroy', $blog->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus artikel ini?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger shadow btn-xs sharp" title="Hapus"><i class="fa fa-trash"></i></button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="7">Belum ada artikel edukasi.</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="mt-4">
-                    {{ $blogs->links('pagination::bootstrap-4') }}
-                </div>
-            </div>
-        </div>
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-slate-50 dark:bg-slate-800/30 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    <th class="px-5 py-4 w-16">#</th>
+                    <th class="px-5 py-4">Artikel</th>
+                    <th class="px-5 py-4">Kategori</th>
+                    <th class="px-5 py-4">Views</th>
+                    <th class="px-5 py-4">Status</th>
+                    <th class="px-5 py-4 text-right">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                @forelse($blogs as $key => $blog)
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                    <td class="px-5 py-4 text-sm text-slate-500">{{ $blogs->firstItem() + $key }}</td>
+                    <td class="px-5 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-14 h-14 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden flex items-center justify-center">
+                                @if($blog->image)
+                                    <img src="{{ $blog->image_url }}" alt="{{ $blog->title }}" class="w-full h-full object-cover">
+                                @else
+                                    <span class="material-icons-round text-slate-400">article</span>
+                                @endif
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-sm font-bold text-slate-800 dark:text-white truncate">{{ Str::limit($blog->title, 72) }}</div>
+                                <div class="text-xs text-slate-500">{{ $blog->formatted_date }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-5 py-4">
+                        <span class="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300">{{ $blog->category ?: '-' }}</span>
+                    </td>
+                    <td class="px-5 py-4 text-sm text-slate-700 dark:text-slate-300">{{ number_format($blog->views) }}</td>
+                    <td class="px-5 py-4">
+                        @if($blog->status == 'published')
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600">TERBIT</span>
+                        @else
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-600">DRAFT</span>
+                        @endif
+                    </td>
+                    <td class="px-5 py-4">
+                        <div class="flex items-center justify-end gap-2">
+                            <a href="{{ route('blog.show', $blog->slug) }}" target="_blank" class="p-2 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800" title="Lihat">
+                                <span class="material-icons-round text-lg">visibility</span>
+                            </a>
+                            <a href="{{ route('admin.promo.blog.edit', $blog->id) }}" class="p-2 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800" title="Edit">
+                                <span class="material-icons-round text-lg">edit</span>
+                            </a>
+                            <form action="{{ route('admin.promo.blog.toggle', $blog->id) }}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit" class="p-2 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20" title="Toggle Status">
+                                    <span class="material-icons-round text-lg">sync</span>
+                                </button>
+                            </form>
+                            <form action="{{ route('admin.promo.blog.destroy', $blog->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus artikel ini?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="p-2 rounded-lg text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" title="Hapus">
+                                    <span class="material-icons-round text-lg">delete</span>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="6" class="px-5 py-16 text-center">
+                        <div class="text-slate-400 text-sm">Belum ada artikel. Klik <strong>Artikel Baru</strong> untuk menambah konten.</div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <div class="px-5 py-4 border-t border-slate-100 dark:border-slate-800">
+        {{ $blogs->links() }}
     </div>
 </div>
 @endsection

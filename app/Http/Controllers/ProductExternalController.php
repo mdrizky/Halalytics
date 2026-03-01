@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ProductModel;
 use App\Services\ActivityEventService;
 use App\Services\OpenFoodFactsService;
 use Illuminate\Http\Request;
@@ -52,6 +53,61 @@ class ProductExternalController extends Controller
         $safeMessage = (str_contains(strtolower($rawMessage), 'curl error') || str_contains(strtolower($rawMessage), 'operation timed out'))
             ? 'Layanan OpenFoodFacts sedang lambat. Coba ulang sebentar lagi.'
             : $rawMessage;
+
+        // Fallback: tampilkan data lokal ketika OpenFoodFacts timeout/tidak tersedia.
+        $localProducts = ProductModel::query()
+            ->where(function ($q) use ($query) {
+                $q->where('nama_product', 'like', "%{$query}%")
+                    ->orWhere('barcode', 'like', "%{$query}%");
+            })
+            ->where(function ($q) {
+                $q->whereNull('active')->orWhere('active', true);
+            })
+            ->limit($pageSize)
+            ->get();
+
+        if ($localProducts->isNotEmpty()) {
+            $mappedLocal = $localProducts->map(function (ProductModel $product) {
+                return [
+                    '_id' => (string) $product->id_product,
+                    'id' => (string) $product->id_product,
+                    'code' => $product->barcode,
+                    'barcode' => $product->barcode,
+                    'product_name' => $product->nama_product,
+                    'product_name_en' => $product->nama_product,
+                    'nama_product' => $product->nama_product,
+                    'image_url' => $product->image ? asset('storage/' . ltrim($product->image, '/')) : null,
+                    'image_front_url' => $product->image ? asset('storage/' . ltrim($product->image, '/')) : null,
+                    'brands' => null,
+                    'categories' => optional($product->kategori)->nama_kategori,
+                    'ingredients_text' => $product->komposisi,
+                    'nutriments' => [
+                        'energy-kcal_100g' => $product->calories,
+                        'sugars_100g' => $product->sugar_g,
+                        'fat_100g' => $product->fat_g,
+                        'proteins_100g' => $product->protein_g,
+                    ],
+                    'halal_analysis' => $product->halal_analysis ?: [
+                        'status' => $product->status ?: 'unknown',
+                        'recommendation' => 'Analisis halal berasal dari database lokal.',
+                    ],
+                    'source' => 'local_database',
+                ];
+            })->values();
+
+            return response()->json([
+                'response_code' => 200,
+                'message' => 'OpenFoodFacts tidak tersedia, menampilkan data lokal.',
+                'content' => [
+                    'success' => true,
+                    'products' => $mappedLocal,
+                    'count' => $mappedLocal->count(),
+                    'page' => $page,
+                    'page_count' => 1,
+                    'source' => 'local_fallback'
+                ]
+            ], 200);
+        }
 
         return response()->json([
             'response_code' => 404,

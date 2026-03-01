@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\LabAnalysisController;
 use App\Http\Controllers\Api\MedicationReminderController;
 use App\Http\Controllers\Api\HalalAlternativeController;
 use App\Http\Controllers\Api\HealthMetricController;
+use App\Http\Controllers\Api\HealthArticleController;
 
 
 /*
@@ -54,6 +55,10 @@ Route::post('/forgot-password', [\App\Http\Controllers\Api\AuthController::class
 
 // BANNERS
 Route::get('/banners', [\App\Http\Controllers\Api\BannerController::class, 'index']);
+
+// HEALTH ARTICLES (public)
+Route::get('/articles', [HealthArticleController::class, 'index']);
+Route::get('/articles/{slug}', [HealthArticleController::class, 'show']);
 
 // LOCAL PRODUCTS (from database)
 Route::prefix('local')->group(function () {
@@ -189,6 +194,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // ========== SCAN HISTORY ==========
     Route::prefix('scan-history')->group(function () {
         Route::get('/', [ScanHistoryController::class, 'index']);
+        Route::get('/{id}', [ScanHistoryController::class, 'show']);
         Route::post('/', [ScanHistoryController::class, 'recordScan']);
         Route::delete('/{id}', [ScanHistoryController::class, 'destroy']);
     });
@@ -281,6 +287,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/metrics', [HealthMetricController::class, 'store']);
         Route::get('/metrics/history', [HealthMetricController::class, 'history']);
         Route::get('/metrics/summary', [HealthMetricController::class, 'summary']);
+        Route::get('/diary', [HealthMetricController::class, 'diary']);
         Route::post('/analyze', [HealthMetricController::class, 'analyze']);
     });
 

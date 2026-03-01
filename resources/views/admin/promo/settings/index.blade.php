@@ -1,75 +1,63 @@
-@extends('master')
+@extends('admin.layouts.admin_layout')
 
-@section('isi')
-<div class="row page-titles mx-0">
-    <div class="col-sm-6 p-md-0">
-        <div class="welcome-text">
-            <h4>Pengaturan Website Promo</h4>
-            <p class="mb-0">Kelola identitas dan konten utama website pendaratan (landing page)</p>
-        </div>
-    </div>
+@section('title', 'Promo Settings - Halalytics Admin')
+@section('breadcrumb-parent', 'Content')
+@section('breadcrumb-current', 'Promo Settings')
+
+@section('content')
+<div class="mb-6">
+    <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Pengaturan Website Promo</h2>
+    <p class="text-slate-500 text-sm mt-1">Kelola identitas dan konten landing page Halalytics.</p>
 </div>
 
-<div class="row">
-    <div class="col-lg-12">
-        @if(session('success'))
-        <div class="alert alert-success solid alert-dismissible fade show">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span><i class="mdi mdi-close"></i></span></button>
-            <strong>Sukses!</strong> {{ session('success') }}
-        </div>
-        @endif
+@if(session('success'))
+<div class="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium">{{ session('success') }}</div>
+@endif
 
-        <div class="card">
-            <div class="card-header">
-                <h4 class="card-title">Konfigurasi Landing Page</h4>
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
+    <form action="{{ route('admin.promo.settings.update') }}" method="POST" class="space-y-5">
+        @csrf
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-semibold mb-1">Nama Situs</label>
+                <input type="text" name="site_name" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800" value="{{ $settings['site_name'] ?? 'HalalScan AI' }}">
             </div>
-            <div class="card-body">
-                <form action="{{ route('admin.promo.settings.update') }}" method="POST">
-                    @csrf
-                    
-                    <h5 class="mb-3 text-primary border-bottom pb-2">Identitas Dasar</h5>
-                    <div class="row">
-                        <div class="col-md-6 form-group">
-                            <label>Nama Situs</label>
-                            <input type="text" name="site_name" class="form-control" value="{{ $settings['site_name'] ?? 'HalalScan AI' }}">
-                        </div>
-                        <div class="col-md-6 form-group">
-                            <label>Versi Aplikasi Saat Ini</label>
-                            <input type="text" name="app_version" class="form-control" value="{{ $settings['app_version'] ?? '1.0.0' }}">
-                        </div>
-                        <div class="col-md-12 form-group">
-                            <label>Deskripsi Singkat (SEO & Meta)</label>
-                            <textarea name="site_description" class="form-control" rows="2">{{ $settings['site_description'] ?? 'AI-powered halal & health product intelligence platform.' }}</textarea>
-                        </div>
-                    </div>
-
-                    <h5 class="mb-3 mt-4 text-primary border-bottom pb-2">Konten Hero (Beranda Atas)</h5>
-                    <div class="form-group">
-                        <label>Headline Utama (H1)</label>
-                        <input type="text" name="hero_headline" class="form-control" value="{{ $settings['hero_headline'] ?? 'Scan. Analyze. Stay Safe.' }}">
-                    </div>
-                    <div class="form-group">
-                        <label>Sub-Headline</label>
-                        <textarea name="hero_subheadline" class="form-control" rows="2">{{ $settings['hero_subheadline'] ?? 'AI-powered halal & health analyzer. Instantly detect ingredients, drug interactions, and health scores from any product barcode.' }}</textarea>
-                    </div>
-
-                    <h5 class="mb-3 mt-4 text-primary border-bottom pb-2">Tautan Eksternal</h5>
-                    <div class="form-group">
-                        <label>URL Google Play Store</label>
-                        <input type="url" name="playstore_url" class="form-control" value="{{ $settings['playstore_url'] ?? '#' }}" placeholder="https://play.google.com/store/apps/details?id=...">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Email Kontak Utama</label>
-                        <input type="email" name="contact_email" class="form-control" value="{{ $settings['contact_email'] ?? 'support@halalscanapp.com' }}">
-                    </div>
-
-                    <div class="mt-5">
-                        <button type="submit" class="btn btn-primary btn-lg"><i class="fa fa-save"></i> Simpan Pengaturan</button>
-                    </div>
-                </form>
+            <div>
+                <label class="block text-sm font-semibold mb-1">Versi Aplikasi</label>
+                <input type="text" name="app_version" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800" value="{{ $settings['app_version'] ?? '1.0.0' }}">
             </div>
         </div>
-    </div>
+
+        <div>
+            <label class="block text-sm font-semibold mb-1">Deskripsi Singkat</label>
+            <textarea name="site_description" rows="2" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800">{{ $settings['site_description'] ?? 'AI-powered halal & health product intelligence platform.' }}</textarea>
+        </div>
+
+        <div>
+            <label class="block text-sm font-semibold mb-1">Headline Hero</label>
+            <input type="text" name="hero_headline" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800" value="{{ $settings['hero_headline'] ?? 'Scan. Analyze. Stay Safe.' }}">
+        </div>
+
+        <div>
+            <label class="block text-sm font-semibold mb-1">Subheadline Hero</label>
+            <textarea name="hero_subheadline" rows="2" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800">{{ $settings['hero_subheadline'] ?? 'AI-powered halal & health analyzer. Instantly detect ingredients, drug interactions, and health scores from any product barcode.' }}</textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-semibold mb-1">URL Play Store</label>
+                <input type="url" name="playstore_url" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800" value="{{ $settings['playstore_url'] ?? '#' }}">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-1">Email Kontak</label>
+                <input type="email" name="contact_email" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800" value="{{ $settings['contact_email'] ?? 'support@halalscanapp.com' }}">
+            </div>
+        </div>
+
+        <div class="pt-2">
+            <button type="submit" class="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition">Simpan Pengaturan</button>
+        </div>
+    </form>
 </div>
 @endsection

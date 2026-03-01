@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\BpomData;
 use App\Models\StreetFood;
 use App\Models\FoodVariant;
 use Illuminate\Http\Request;
@@ -12,6 +13,36 @@ class StreetFoodController extends Controller
 {
     public function index()
     {
+        // Auto-seed awal dari data BPOM pangan jika tabel street foods masih kosong.
+        if (StreetFood::count() === 0) {
+            $seedCandidates = BpomData::query()
+                ->whereIn('kategori', ['pangan', 'makanan', 'food'])
+                ->whereNotNull('nama_produk')
+                ->limit(20)
+                ->get();
+
+            foreach ($seedCandidates as $item) {
+                StreetFood::firstOrCreate(
+                    ['name' => $item->nama_produk],
+                    [
+                        'category' => 'produk-bpom',
+                        'description' => $item->merk ? "Produk BPOM: {$item->merk}" : 'Produk referensi BPOM',
+                        'calories_min' => 150,
+                        'calories_max' => 300,
+                        'calories_typical' => 200,
+                        'protein' => 5,
+                        'carbs' => 25,
+                        'fat' => 8,
+                        'fiber' => 2,
+                        'sugar' => 5,
+                        'sodium' => 200,
+                        'halal_status' => 'halal_umum',
+                        'halal_notes' => 'Auto-seed dari referensi BPOM, mohon lengkapi data nutrisi detail.'
+                    ]
+                );
+            }
+        }
+
         $foods = StreetFood::withCount('variants')->paginate(10);
         return view('admin.street-foods.index', compact('foods'));
     }
