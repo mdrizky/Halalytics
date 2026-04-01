@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\MedicationReminderController;
 use App\Http\Controllers\Api\HalalAlternativeController;
 use App\Http\Controllers\Api\HealthMetricController;
 use App\Http\Controllers\Api\HealthArticleController;
+use App\Http\Controllers\Api\UserHealthInsightController;
 
 
 /*
@@ -55,6 +56,9 @@ Route::post('/forgot-password', [\App\Http\Controllers\Api\AuthController::class
 
 // BANNERS
 Route::get('/banners', [\App\Http\Controllers\Api\BannerController::class, 'index']);
+
+Route::get('/health-encyclopedia', [\App\Http\Controllers\Api\HealthEncyclopediaController::class, 'index']);
+Route::get('/health-encyclopedia/{id}', [\App\Http\Controllers\Api\HealthEncyclopediaController::class, 'show']);
 
 // HEALTH ARTICLES (public)
 Route::get('/articles', [HealthArticleController::class, 'index']);
@@ -111,6 +115,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/products/pending', [\App\Http\Controllers\Api\AdminController::class, 'getPendingProducts']);
         Route::put('/products/{id}/approve', [\App\Http\Controllers\Api\AdminController::class, 'approveProduct']);
         Route::put('/products/{id}/reject', [\App\Http\Controllers\Api\AdminController::class, 'rejectProduct']);
+        Route::post('/export', [\App\Http\Controllers\Api\AdminController::class, 'exportData']);
     });
 
     // USER ROUTES (Health & Scan)
@@ -136,6 +141,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/stats', [ApiController::class, 'getUserStats']);
         Route::get('/stats/weekly', [ApiController::class, 'getWeeklyStats']);
         Route::post('/logout', [ApiController::class, 'logout']);
+        Route::post('/sync', [\App\Http\Controllers\Api\AuthController::class, 'syncUser']);
         
         // NEW PROFILE FEATURES
         Route::get('/achievements', [\App\Http\Controllers\Api\ProfileFeatureController::class, 'getAchievements']);
@@ -172,6 +178,22 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // FCM TOKEN REGISTRATION
     Route::post('/fcm/register', [\App\Http\Controllers\Api\FcmController::class, 'register']);
+    Route::delete('/fcm/register', [\App\Http\Controllers\Api\FcmController::class, 'destroy']);
+    Route::post('/fcm-token', [\App\Http\Controllers\Api\FcmController::class, 'store']);
+    Route::delete('/fcm-token', [\App\Http\Controllers\Api\FcmController::class, 'destroy']);
+
+    // OFFLINE BATCH SYNC
+    Route::post('/sync/scan-logs', [\App\Http\Controllers\Api\SyncController::class, 'syncScanLogs']);
+    Route::post('/sync/health-logs', [\App\Http\Controllers\Api\SyncController::class, 'syncHealthLogs']);
+
+    // SPECIALIST CHAT
+    Route::prefix('consultations')->group(function () {
+        Route::get('/specialists', [\App\Http\Controllers\Api\ChatController::class, 'specialists']);
+        Route::post('/sessions', [\App\Http\Controllers\Api\ChatController::class, 'startSession']);
+        Route::get('/sessions/{session}/messages', [\App\Http\Controllers\Api\ChatController::class, 'getMessages']);
+        Route::post('/sessions/{session}/messages', [\App\Http\Controllers\Api\ChatController::class, 'sendMessage']);
+        Route::post('/sessions/{session}/end', [\App\Http\Controllers\Api\ChatController::class, 'endSession']);
+    });
 
     // UMKM SCAN
     Route::post('/umkm/scan-qr', [\App\Http\Controllers\Api\UmkmScanController::class, 'scanQR']);
@@ -231,6 +253,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // MEDICINE REMINDER & CHECKER
     Route::prefix('medicines')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\MedicineController::class, 'index']);
         Route::post('/check', [\App\Http\Controllers\Api\MedicineController::class, 'checkHalal']);
         Route::post('/schedule', [\App\Http\Controllers\Api\MedicineController::class, 'addToSchedule']);
         Route::post('/safe-schedule', [\App\Http\Controllers\Api\MedicineController::class, 'generateSafeSchedule']);
@@ -280,10 +303,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/reminders/{id}', [MedicationReminderController::class, 'destroy']);
         Route::get('/halal-alternatives', [HalalAlternativeController::class, 'getAlternatives']);
         Route::post('/compare', [\App\Http\Controllers\Api\ComparisonController::class, 'compare']);
+        Route::get('/daily-insight', [UserHealthInsightController::class, 'getDailyInsight']);
     });
 
     // HEALTH TRACKING (Health Journey)
     Route::prefix('health')->group(function () {
+        Route::get('/score', [UserHealthInsightController::class, 'getHealthScore']);
         Route::post('/metrics', [HealthMetricController::class, 'store']);
         Route::get('/metrics/history', [HealthMetricController::class, 'history']);
         Route::get('/metrics/summary', [HealthMetricController::class, 'summary']);
@@ -291,10 +316,34 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/analyze', [HealthMetricController::class, 'analyze']);
     });
 
+    // ═══ HEALTH EXPANSION (Halodoc-Style) ═══
+
+    // Medical Profile (informasi medis user)
+    Route::prefix('medical-profile')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\MedicalProfileController::class, 'show']);
+        Route::post('/', [\App\Http\Controllers\Api\MedicalProfileController::class, 'store']);
+        Route::post('/bmi', [\App\Http\Controllers\Api\MedicalProfileController::class, 'calculateBmi']);
+    });
+
+    // Mental Health
+    Route::prefix('mental-health')->group(function () {
+        Route::post('/quiz', [\App\Http\Controllers\Api\MentalHealthController::class, 'submitQuiz']);
+        Route::get('/quiz/history', [\App\Http\Controllers\Api\MentalHealthController::class, 'history']);
+        Route::get('/quiz/{type}/questions', [\App\Http\Controllers\Api\MentalHealthController::class, 'getQuestions']);
+    });
+
+    // Help Center
+    Route::prefix('help')->group(function () {
+        Route::get('/faq', [\App\Http\Controllers\Api\HelpCenterController::class, 'faq']);
+        Route::post('/request', [\App\Http\Controllers\Api\HelpCenterController::class, 'submitRequest']);
+        Route::get('/requests', [\App\Http\Controllers\Api\HelpCenterController::class, 'myRequests']);
+    });
+
     // ========== BPOM VERIFICATION ==========
     Route::prefix('bpom')->group(function () {
         Route::get('/search', [\App\Http\Controllers\Api\BpomController::class, 'searchBpom']);
         Route::post('/check', [\App\Http\Controllers\Api\BpomController::class, 'checkRegistration']);
+        Route::post('/sync', [\App\Http\Controllers\Api\BpomController::class, 'sync'])->middleware('role:admin');
         Route::post('/analyze', [\App\Http\Controllers\Api\BpomController::class, 'analyzeProduct']);
     });
 
@@ -303,6 +352,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/analyze', [\App\Http\Controllers\Api\SkincareController::class, 'analyzeIngredients']);
         Route::post('/safety', [\App\Http\Controllers\Api\SkincareController::class, 'checkSafety']);
         Route::post('/halal', [\App\Http\Controllers\Api\SkincareController::class, 'getHalalStatus']);
+    });
+
+    // ========== COSMETICS ==========
+    Route::prefix('cosmetics')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\BpomController::class, 'indexCosmetics']);
+        Route::get('/{id}', [\App\Http\Controllers\Api\BpomController::class, 'showCosmetics']);
     });
 });
 
@@ -324,11 +379,38 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(functi
     Route::get('/stats/scans', [MobileSyncController::class, 'getScanStats']);
 });
 
+// ==========================================================
+// 🏆 GAMIFICATION — Points & Leaderboard
+// ==========================================================
+Route::get('/leaderboard', [\App\Http\Controllers\Api\LeaderboardController::class, 'index']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user/points', [\App\Http\Controllers\Api\PointsController::class, 'myPoints']);
+    Route::get('/user/points/history', [\App\Http\Controllers\Api\PointsController::class, 'history']);
+    Route::get('/user/rank', [\App\Http\Controllers\Api\LeaderboardController::class, 'myRank']);
+});
+
+// ==========================================================
+// 📜 HALAL CERTIFICATE VERIFICATION
+// ==========================================================
+Route::post('/certificate/verify', [\App\Http\Controllers\Api\CertificateController::class, 'verify']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/certificate/history', [\App\Http\Controllers\Api\CertificateController::class, 'history']);
+});
+
+// ==========================================================
+// 🔔 NOTIFICATION PREFERENCES
+// ==========================================================
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user/notification-preferences', [\App\Http\Controllers\Api\NotifPrefController::class, 'get']);
+    Route::put('/user/notification-preferences', [\App\Http\Controllers\Api\NotifPrefController::class, 'update']);
+});
+
 Route::get('/health', function () {
     return response()->json([
         'status' => 'ok',
         'message' => 'Halalytics API is running',
         'timestamp' => now()->toIso8601String(),
-        'version' => '1.0.0'
+        'version' => '2.0.0'
     ]);
 });

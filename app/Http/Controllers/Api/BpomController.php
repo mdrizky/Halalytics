@@ -4,18 +4,20 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\BpomData;
+use App\Services\BpomService;
 use App\Services\GeminiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class BpomController extends Controller
 {
+    protected $bpomService;
     protected $gemini;
 
-    public function __construct(GeminiService $gemini)
+    public function __construct(BpomService $bpomService, GeminiService $gemini)
     {
+        $this->bpomService = $bpomService;
         $this->gemini = $gemini;
     }
 
@@ -26,93 +28,33 @@ class BpomController extends Controller
      */
     public function searchBpom(Request $request)
     {
-        $this->normalizeIncludeAi($request);
-
         $request->validate([
-            'q' => 'required|string|min:2',
-            'include_ai' => 'nullable|boolean',
-            'include_a' => 'nullable|boolean',
+            'q' => 'required|string|min:1',
+            'kategori' => 'nullable|string',
         ]);
-        $query = $request->q;
-        $includeAi = $request->boolean('include_ai', false);
 
-        // 1. Cek database lokal resmi BPOM saja
-        $localResults = $this->officialBpomOnlyQuery()
-            ->where(function ($q) use ($query) {
-                $q->where('nama_produk', 'LIKE', "%{$query}%")
-                  ->orWhere('nomor_reg', 'LIKE', "%{$query}%")
-                  ->orWhere('merk', 'LIKE', "%{$query}%");
-            })
-            ->orderBy('nama_produk')
-            ->limit(20)
-            ->get();
+        $result = $this->bpomService->search(
+            $request->input('q'),
+            $request->input('kategori')
+        );
 
-        if ($localResults->isNotEmpty() || !$includeAi) {
-            return response()->json([
-                'success' => true,
-                'source' => 'database_lokal',
-                'total' => $localResults->count(),
-                'data' => $localResults,
-                'session_info' => [
-                    'sumber' => 'Database Lokal Halalytics',
-                    'referensi' => 'Data Publik BPOM RI',
-                    'disclaimer' => $localResults->isNotEmpty()
-                        ? 'Data BPOM ditampilkan dari database lokal terverifikasi.'
-                        : 'Data BPOM resmi tidak ditemukan. Coba nama/nomor registrasi lain yang terdaftar resmi.'
-                ]
-            ]);
-        }
-
-        // 2. Optional fallback AI (hanya jika include_ai=true)
-        try {
-            $aiResult = $this->gemini->analyzeBpomProduct($query);
-
-            // Simpan hasil AI ke database lokal (auto-populate)
-            if (isset($aiResult['found']) && $aiResult['found']) {
-                $saved = BpomData::updateOrCreate(
-                    ['nomor_reg' => $aiResult['nomor_reg'] ?? null, 'nama_produk' => $aiResult['nama_produk'] ?? $query],
-                    [
-                        'kategori' => $aiResult['kategori'] ?? 'umum',
-                        'nama_produk' => $aiResult['nama_produk'] ?? $query,
-                        'merk' => $aiResult['merk'] ?? null,
-                        'pendaftar' => $aiResult['pendaftar'] ?? null,
-                        'alamat_produsen' => $aiResult['alamat_produsen'] ?? null,
-                        'bentuk_sediaan' => $aiResult['bentuk_sediaan'] ?? null,
-                        'status_keamanan' => $aiResult['status_keamanan'] ?? 'aman',
-                        'status_halal' => 'belum_diverifikasi',
-                        'analisis_halal' => json_encode($aiResult['analisis_halal'] ?? null),
-                        'sumber_data' => 'ai',
-                    ]
-                );
-
-                $localResults = $localResults->push($saved);
-            }
-
-            return response()->json([
-                'success' => true,
-                'source' => 'hybrid_ai',
-                'total' => $localResults->count(),
-                'data' => $localResults,
-                'ai_analysis' => $aiResult,
-                'session_info' => [
-                    'sumber' => 'Analisis AI + Database Publik BPOM RI',
-                    'referensi' => 'Metadata Publik BPOM',
-                    'disclaimer' => 'Data ditampilkan berdasarkan informasi publik. Untuk validitas hukum, periksa situs resmi BPOM.'
-                ]
-            ]);
-        } catch (\Exception $e) {
-            Log::error('BPOM AI Search Error: ' . $e->getMessage());
-            return response()->json([
-                'success' => true,
-                'source' => 'database_lokal',
-                'total' => $localResults->count(),
-                'data' => $localResults,
-                'session_info' => [
-                    'sumber' => 'Database Lokal',
-                    'disclaimer' => 'AI sedang tidak tersedia, menampilkan data lokal.'
-                ]
-            ]);
-        }
+        return response()->json([
+            'success' => true,
+            'source' => $result['source'],
+            'total' => $result['total'],
+            'data' => $result['results'],
+            'message' => $result['message'] ?? 'Pencarian BPOM selesai.',
+            'session_info' => [
+                'sumber' => match ($result['source']) {
+                    'database_lokal' => 'Database Lokal Halalytics',
+                    'bpom_public_api' => 'BPOM Public API',
+                    'bpom_scraping' => 'Situs Resmi BPOM',
+                    default => 'Fallback Halalytics',
+                },
+                'referensi' => 'BPOM RI',
+                'disclaimer' => $result['message'] ?? 'Data BPOM ditampilkan dari sumber terbaik yang tersedia saat ini.',
+            ],
+        ]);
     }
 
     /**
@@ -122,93 +64,41 @@ class BpomController extends Controller
      */
     public function checkRegistration(Request $request)
     {
-        $this->normalizeIncludeAi($request);
-
         $request->validate([
             'code' => 'required|string|min:5',
-            'include_ai' => 'nullable|boolean',
-            'include_a' => 'nullable|boolean',
         ]);
-        $code = strtoupper(trim($request->code));
-        $includeAi = $request->boolean('include_ai', false);
+        $result = $this->bpomService->checkRegistration($request->input('code'));
 
-        // Deteksi kategori dari pola kode
-        $kategori = $this->detectKategoriFromCode($code);
+        return response()->json([
+            'success' => $result['found'],
+            'source' => $result['source'],
+            'data' => $result['data'],
+            'message' => $result['message'] ?? 'Verifikasi BPOM selesai.',
+            'session_info' => [
+                'sumber' => match ($result['source']) {
+                    'database_lokal' => 'Database Lokal Halalytics',
+                    'bpom_public_api' => 'BPOM Public API',
+                    'bpom_scraping' => 'Situs Resmi BPOM',
+                    default => 'Fallback Halalytics',
+                },
+                'disclaimer' => $result['message'] ?? 'Data BPOM ditampilkan dari sumber terbaik yang tersedia saat ini.',
+            ],
+        ], $result['found'] ? 200 : 404);
+    }
 
-        // Cek database lokal resmi BPOM saja
-        $existing = $this->officialBpomOnlyQuery()
-            ->where('nomor_reg', $code)
-            ->first();
-        if ($existing) {
-            return response()->json([
-                'success' => true,
-                'source' => 'database_lokal',
-                'data' => $existing,
-                'session_info' => [
-                    'sumber' => 'Database Terverifikasi BPOM RI',
-                    'status' => 'Data ditemukan di database lokal',
-                ]
-            ]);
-        }
+    public function sync(Request $request)
+    {
+        $request->validate([
+            'limit' => 'nullable|integer|min:1|max:250',
+        ]);
 
-        if (!$includeAi) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Nomor registrasi tidak ditemukan dalam database BPOM resmi.',
-                'kategori_terdeteksi' => $kategori,
-                'session_info' => [
-                    'sumber' => 'Database Terverifikasi BPOM RI',
-                    'disclaimer' => 'Kirim include_ai=true jika ingin fallback analisis AI.',
-                ],
-            ], 404);
-        }
+        $result = $this->bpomService->syncLatest((int) $request->input('limit', 100));
 
-        // Optional fallback AI
-        try {
-            $aiResult = $this->gemini->analyzeBpomProduct($code);
-
-            if (isset($aiResult['found']) && $aiResult['found']) {
-                $nomorReg = $aiResult['nomor_reg'] ?? $code;
-                $saved = BpomData::updateOrCreate(
-                    ['nomor_reg' => $nomorReg],
-                    [
-                        'kategori' => $aiResult['kategori'] ?? $kategori,
-                        'nama_produk' => $aiResult['nama_produk'] ?? 'Tidak diketahui',
-                        'merk' => $aiResult['merk'] ?? null,
-                        'pendaftar' => $aiResult['pendaftar'] ?? null,
-                        'alamat_produsen' => $aiResult['alamat_produsen'] ?? null,
-                        'bentuk_sediaan' => $aiResult['bentuk_sediaan'] ?? null,
-                        'status_keamanan' => $aiResult['status_keamanan'] ?? 'aman',
-                        'analisis_halal' => json_encode($aiResult['analisis_halal'] ?? null),
-                        'sumber_data' => 'ai',
-                    ]
-                );
-
-                return response()->json([
-                    'success' => true,
-                    'source' => 'hybrid_ai',
-                    'data' => $saved,
-                    'ai_analysis' => $aiResult,
-                    'session_info' => [
-                        'sumber' => 'Analisis AI (Referensi BPOM RI)',
-                        'disclaimer' => $aiResult['disclaimer'] ?? 'Data berdasarkan informasi publik.',
-                    ]
-                ]);
-            }
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Nomor registrasi tidak ditemukan dalam database BPOM.',
-                'kategori_terdeteksi' => $kategori,
-                'ai_analysis' => $aiResult,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('BPOM Check Registration Error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal memverifikasi nomor registrasi. Silakan coba lagi.',
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Sinkronisasi BPOM selesai.',
+            'data' => $result,
+        ]);
     }
 
     /**
@@ -303,7 +193,7 @@ class BpomController extends Controller
     private function officialBpomOnlyQuery()
     {
         return BpomData::query()
-            ->verified()
+            ->whereIn('verification_status', ['verified', 'pending'])
             ->whereIn('sumber_data', ['bpom_resmi', 'bpom']);
     }
 
@@ -357,6 +247,102 @@ class BpomController extends Controller
             'medical_history' => $user->medical_history,
             'allergies' => $user->allergy,
             'diabetes' => $user->has_diabetes
+        ];
+    }
+
+    public function indexCosmetics(Request $request)
+    {
+        $limit = min(max((int) $request->query('limit', 20), 1), 50);
+        $search = $request->query('search');
+
+        $query = BpomData::where('kategori', 'kosmetik');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('nama_produk', 'like', "%{$search}%")
+                  ->orWhere('merk', 'like', "%{$search}%")
+                  ->orWhere('barcode', 'like', "%{$search}%");
+            });
+        }
+
+        $cosmetics = $query->latest()->paginate($limit);
+
+        if ($cosmetics->total() === 0 && empty($search)) {
+            $fallbackItems = collect($this->fallbackCosmetics())->take($limit)->values();
+            return response()->json([
+                'success' => true,
+                'message' => 'Daftar kosmetik fallback dimuat',
+                'data' => $fallbackItems,
+                'meta' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'total' => $fallbackItems->count(),
+                    'fallback_mode' => true,
+                ]
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar kosmetik berhasil dimuat',
+            'data' => $cosmetics->items(),
+            'meta' => [
+                'current_page' => $cosmetics->currentPage(),
+                'last_page' => $cosmetics->lastPage(),
+                'total' => $cosmetics->total(),
+                'fallback_mode' => false,
+            ]
+        ]);
+    }
+
+    public function showCosmetics($id)
+    {
+        $cosmetic = BpomData::where('kategori', 'kosmetik')->find($id);
+
+        if (!$cosmetic) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kosmetik tidak ditemukan'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail kosmetik',
+            'data' => $cosmetic
+        ]);
+    }
+
+    private function fallbackCosmetics(): array
+    {
+        return [
+            [
+                'id' => null,
+                'nama_produk' => 'Hydrating Face Wash',
+                'merk' => 'Sample Beauty',
+                'kategori' => 'kosmetik',
+                'status_keamanan' => 'aman',
+                'verification_status' => 'pending',
+                'sumber_data' => 'fallback_seed',
+            ],
+            [
+                'id' => null,
+                'nama_produk' => 'Daily Sunscreen SPF 50',
+                'merk' => 'Sample Beauty',
+                'kategori' => 'kosmetik',
+                'status_keamanan' => 'aman',
+                'verification_status' => 'pending',
+                'sumber_data' => 'fallback_seed',
+            ],
+            [
+                'id' => null,
+                'nama_produk' => 'Vitamin C Serum',
+                'merk' => 'Sample Beauty',
+                'kategori' => 'kosmetik',
+                'status_keamanan' => 'waspada',
+                'verification_status' => 'pending',
+                'sumber_data' => 'fallback_seed',
+            ],
         ];
     }
 }

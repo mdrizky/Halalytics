@@ -96,23 +96,67 @@ class ExternalApiService
     }
 
     /**
-     * Cari data obat di OpenFDA
+     * Cari data obat di OpenFDA with retry + RxNorm backup
      * API: https://api.fda.gov/drug/
+     * Backup: https://rxnav.nlm.nih.gov/REST/drugs
      */
     public function searchOpenFDA($drugName)
     {
         $cacheKey = "fda_drug_" . md5($drugName);
 
-        return Cache::remember($cacheKey, 3600, function () use ($drugName) {
-            try {
-                $normalizedQuery = trim($drugName);
-                if ($normalizedQuery === '') {
-                    return ['found' => false, 'source' => 'openfda'];
-                }
+        // Cache 24 hours (upgraded from 1h)
+        return Cache::remember($cacheKey, 86400, function () use ($drugName) {
+            $normalizedQuery = trim($drugName);
+            if ($normalizedQuery === '') {
+                return ['found' => false, 'source' => 'openfda'];
+            }
 
-                $response = Http::timeout(10)
+            // Strategy 1: OpenFDA with retry 2x
+            $fdaResult = $this->queryOpenFDAWithRetry($normalizedQuery);
+            if ($fdaResult['found']) {
+                return $fdaResult;
+            }
+
+            // Strategy 2: RxNorm API as backup
+            $rxResult = $this->queryRxNorm($normalizedQuery);
+            if ($rxResult['found']) {
+                return $rxResult;
+            }
+
+            // Strategy 3: Search local database
+            $localMedicine = Medicine::where('name', 'LIKE', "%{$normalizedQuery}%")
+                ->orWhere('generic_name', 'LIKE', "%{$normalizedQuery}%")
+                ->first();
+
+            if ($localMedicine) {
+                return [
+                    'found' => true,
+                    'source' => 'database_lokal',
+                    'nama_produk' => $localMedicine->name,
+                    'generic_name' => $localMedicine->generic_name,
+                    'brand_name' => $localMedicine->name,
+                    'manufacturer' => $localMedicine->manufacturer,
+                    'dosage_form' => $localMedicine->dosage_form,
+                    'active_ingredient' => $localMedicine->active_ingredient,
+                    'indications' => $localMedicine->indications,
+                    'warnings' => $localMedicine->warnings,
+                ];
+            }
+
+            return ['found' => false, 'source' => 'openfda'];
+        });
+    }
+
+    /**
+     * Query OpenFDA with retry logic (2 attempts, exponential backoff).
+     */
+    private function queryOpenFDAWithRetry(string $query): array
+    {
+        for ($attempt = 1; $attempt <= 2; $attempt++) {
+            try {
+                $response = Http::timeout(15)
                     ->get("https://api.fda.gov/drug/label.json", [
-                        'search' => "openfda.brand_name:\"{$normalizedQuery}\" OR openfda.generic_name:\"{$normalizedQuery}\" OR openfda.substance_name:\"{$normalizedQuery}\"",
+                        'search' => "openfda.brand_name:\"{$query}\" OR openfda.generic_name:\"{$query}\" OR openfda.substance_name:\"{$query}\"",
                         'limit' => 3,
                     ]);
 
@@ -127,7 +171,7 @@ class ExternalApiService
                         return [
                             'found' => true,
                             'source' => 'openfda',
-                            'nama_produk' => $drug['openfda']['brand_name'][0] ?? $normalizedQuery,
+                            'nama_produk' => $drug['openfda']['brand_name'][0] ?? $query,
                             'generic_name' => $drug['openfda']['generic_name'][0] ?? null,
                             'brand_name' => $drug['openfda']['brand_name'][0] ?? null,
                             'manufacturer' => $drug['openfda']['manufacturer_name'][0] ?? null,
@@ -140,17 +184,66 @@ class ExternalApiService
                             'dosage_info' => $dosageText,
                             'frequency_per_day' => $this->inferFrequencyPerDay($combinedInstructions),
                             'meal_timing' => $this->inferMealTiming($combinedInstructions),
+                            'is_imported_from_fda' => true,
                             'raw' => $drug,
                         ];
                     }
                 }
 
+                // 429 Too Many Requests — wait and retry
+                if ($response->status() === 429 && $attempt < 2) {
+                    usleep(2000 * 1000); // 2 second backoff
+                    continue;
+                }
+
                 return ['found' => false, 'source' => 'openfda'];
             } catch (\Exception $e) {
-                Log::error('OpenFDA Error: ' . $e->getMessage());
-                return ['found' => false, 'source' => 'openfda', 'error' => $e->getMessage()];
+                Log::warning("OpenFDA attempt {$attempt} failed: " . $e->getMessage());
+                if ($attempt < 2) {
+                    usleep($attempt * 1000 * 1000); // 1s, 2s backoff
+                }
             }
-        });
+        }
+
+        return ['found' => false, 'source' => 'openfda'];
+    }
+
+    /**
+     * Query RxNorm API as backup for drug search.
+     */
+    private function queryRxNorm(string $query): array
+    {
+        try {
+            $response = Http::timeout(10)
+                ->get("https://rxnav.nlm.nih.gov/REST/drugs.json", [
+                    'name' => $query,
+                ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $groups = $data['drugGroup']['conceptGroup'] ?? [];
+
+                foreach ($groups as $group) {
+                    $properties = $group['conceptProperties'] ?? [];
+                    if (!empty($properties)) {
+                        $drug = $properties[0];
+                        return [
+                            'found' => true,
+                            'source' => 'rxnorm',
+                            'nama_produk' => $drug['name'] ?? $query,
+                            'generic_name' => $drug['name'] ?? null,
+                            'rxcui' => $drug['rxcui'] ?? null,
+                            'tty' => $drug['tty'] ?? null,
+                            'is_imported_from_fda' => true,
+                        ];
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('RxNorm API failed: ' . $e->getMessage());
+        }
+
+        return ['found' => false, 'source' => 'rxnorm'];
     }
 
     /**

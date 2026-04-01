@@ -11,6 +11,14 @@ class IngredientManagementController extends Controller
 {
     public function index(Request $request)
     {
+        if (
+            !$request->filled('search') &&
+            (!$request->filled('status') || $request->status === 'all') &&
+            Ingredient::count() === 0
+        ) {
+            $this->seedFallbackIngredients();
+        }
+
         $query = Ingredient::query();
 
         if ($request->has('search')) {
@@ -33,6 +41,33 @@ class IngredientManagementController extends Controller
         ];
 
         return view('admin.ingredients.index', compact('ingredients', 'stats'));
+    }
+
+    private function seedFallbackIngredients(): void
+    {
+        $items = [
+            ['name' => 'Gelatin (Porcine)', 'e_number' => null, 'halal_status' => 'haram', 'health_risk' => 'high_risk', 'description' => 'Gelatin sumber babi, tidak halal.'],
+            ['name' => 'Carmine', 'e_number' => 'E120', 'halal_status' => 'syubhat', 'health_risk' => 'low_risk', 'description' => 'Pewarna dari serangga cochineal.'],
+            ['name' => 'Monosodium Glutamate', 'e_number' => 'E621', 'halal_status' => 'halal', 'health_risk' => 'safe', 'description' => 'Penguat rasa umum pada makanan olahan.'],
+            ['name' => 'Sodium Benzoate', 'e_number' => 'E211', 'halal_status' => 'halal', 'health_risk' => 'low_risk', 'description' => 'Pengawet makanan dan minuman.'],
+            ['name' => 'Polysorbate 80', 'e_number' => 'E433', 'halal_status' => 'syubhat', 'health_risk' => 'low_risk', 'description' => 'Emulsifier, perlu verifikasi sumber.'],
+            ['name' => 'Lard', 'e_number' => null, 'halal_status' => 'haram', 'health_risk' => 'dangerous', 'description' => 'Lemak babi, tidak halal.'],
+            ['name' => 'Carrageenan', 'e_number' => 'E407', 'halal_status' => 'halal', 'health_risk' => 'safe', 'description' => 'Pengental dari rumput laut.'],
+            ['name' => 'Tartrazine', 'e_number' => 'E102', 'halal_status' => 'halal', 'health_risk' => 'low_risk', 'description' => 'Pewarna sintetis kuning.'],
+            ['name' => 'Rennet', 'e_number' => null, 'halal_status' => 'syubhat', 'health_risk' => 'low_risk', 'description' => 'Enzim untuk keju, sumber hewani perlu dicek.'],
+            ['name' => 'Titanium Dioxide', 'e_number' => 'E171', 'halal_status' => 'halal', 'health_risk' => 'high_risk', 'description' => 'Pewarna putih, dibatasi di beberapa negara.'],
+        ];
+
+        foreach ($items as $item) {
+            Ingredient::firstOrCreate(
+                ['name' => $item['name']],
+                array_merge($item, [
+                    'sources' => 'Demo Seeder',
+                    'notes' => 'Data uji admin',
+                    'active' => true,
+                ])
+            );
+        }
     }
 
     public function create()

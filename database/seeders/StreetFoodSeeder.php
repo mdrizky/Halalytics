@@ -15,6 +15,12 @@ class StreetFoodSeeder extends Seeder
      */
     public function run(): void
     {
+        // Avoid duplicate demo data when seeder is executed multiple times.
+        if (StreetFood::query()->exists()) {
+            $this->command?->info('Street foods already seeded, skipping.');
+            return;
+        }
+
         // ========== NASI GORENG ==========
         $nasiGoreng = StreetFood::create([
             'name' => 'Nasi Goreng',

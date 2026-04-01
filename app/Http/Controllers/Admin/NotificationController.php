@@ -34,10 +34,32 @@ class NotificationController extends Controller
             'body' => 'required|string',
             'type' => 'required|in:ingredient_alert,product_reminder,general,product,poster,news',
             'target_type' => 'required|in:all,specific_users',
+            'user_ids' => 'nullable|string',
             'scheduled_at' => 'nullable|date|after:now',
         ]);
 
-        $notification = PushNotification::create($validated);
+        $userIds = collect(explode(',', (string) ($validated['user_ids'] ?? '')))
+            ->map(fn ($id) => trim($id))
+            ->filter(fn ($id) => $id !== '')
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->values()
+            ->all();
+
+        if (($validated['target_type'] ?? 'all') === 'specific_users' && empty($userIds)) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['user_ids' => 'Isi minimal satu User ID untuk target pengguna tertentu.']);
+        }
+
+        $notification = PushNotification::create([
+            'title' => $validated['title'],
+            'body' => $validated['body'],
+            'type' => $validated['type'],
+            'target_type' => $validated['target_type'],
+            'target_data' => ['user_ids' => $userIds],
+            'scheduled_at' => $validated['scheduled_at'] ?? null,
+        ]);
 
         // Send immediately if not scheduled
         if (!$request->scheduled_at) {
@@ -50,16 +72,34 @@ class NotificationController extends Controller
 
     protected function sendNotification($notification)
     {
-        // Send via service: inbox + realtime + fcm
-        $result = $this->notificationService->broadcast(
-            $notification->title,
-            $notification->body,
-            $notification->type,
-            [
-                'source' => 'admin_panel',
-                'target_type' => $notification->target_type,
-            ]
-        );
+        $extraData = [
+            'source' => 'admin_panel',
+            'target_type' => $notification->target_type,
+        ];
+
+        if ($notification->target_type === 'specific_users') {
+            $userIds = collect((array) ($notification->target_data['user_ids'] ?? []))
+                ->map(fn ($id) => (int) $id)
+                ->filter(fn ($id) => $id > 0)
+                ->values()
+                ->all();
+
+            $result = $this->notificationService->broadcastToUsers(
+                $userIds,
+                $notification->title,
+                $notification->body,
+                $notification->type,
+                $extraData
+            );
+        } else {
+            // Send via service: inbox + realtime + fcm
+            $result = $this->notificationService->broadcast(
+                $notification->title,
+                $notification->body,
+                $notification->type,
+                $extraData
+            );
+        }
 
         $notification->update([
             'status' => ($result['success'] ?? false) ? 'sent' : 'failed',

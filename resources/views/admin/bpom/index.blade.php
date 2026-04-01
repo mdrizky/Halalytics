@@ -24,6 +24,21 @@
     </div>
 </div>
 
+<!-- Sync External Data Button -->
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">BPOM Data Management</h2>
+        <p class="text-slate-500 text-sm mt-1">Kelola dan verifikasi data produk dari berbagai sumber.</p>
+    </div>
+    <form action="{{ route('admin.bpom.sync') }}" method="POST" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button span:last-child').textContent='Syncing...';">
+        @csrf
+        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 dark:shadow-none">
+            <span class="material-icons-round text-lg">cloud_sync</span>
+            <span>Sync Data Eksternal</span>
+        </button>
+    </form>
+</div>
+
 <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 mb-6">
     <form action="{{ route('admin.bpom.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-3">
         <div class="md:col-span-5">
@@ -57,8 +72,7 @@
         <table class="w-full text-left">
             <thead>
                 <tr class="bg-slate-50 dark:bg-slate-800/30 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th class="px-5 py-4">No. Registrasi</th>
-                    <th class="px-5 py-4">Nama Produk</th>
+                    <th class="px-5 py-4">Produk</th>
                     <th class="px-5 py-4">Kategori</th>
                     <th class="px-5 py-4">Merk</th>
                     <th class="px-5 py-4">Status</th>
@@ -69,8 +83,24 @@
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                 @forelse($bpom_data as $data)
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                    <td class="px-5 py-4 text-xs font-mono font-semibold text-slate-700 dark:text-slate-300">{{ $data->nomor_reg }}</td>
-                    <td class="px-5 py-4 text-sm text-slate-700 dark:text-slate-300">{{ $data->nama_produk }}</td>
+                    <td class="px-5 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                                @if($data->image_url)
+                                    <img src="{{ $data->image_url }}" alt="{{ $data->nama_produk }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <span class="material-icons-round text-slate-400 text-xl" style="display:none">inventory_2</span>
+                                @else
+                                    <span class="material-icons-round text-slate-400 text-xl">inventory_2</span>
+                                @endif
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-slate-800 dark:text-white">{{ Str::limit($data->nama_produk, 40) }}</div>
+                                @if($data->nomor_reg)
+                                <div class="text-[11px] text-slate-400 font-mono">{{ $data->nomor_reg }}</div>
+                                @endif
+                            </div>
+                        </div>
+                    </td>
                     <td class="px-5 py-4 text-xs">
                         <span class="inline-flex px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold">{{ strtoupper($data->kategori) }}</span>
                     </td>
@@ -87,6 +117,12 @@
                     <td class="px-5 py-4 text-xs font-semibold">
                         @if($data->sumber_data == 'ai')
                             <span class="inline-flex px-2 py-1 rounded-md bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600">AI</span>
+                        @elseif($data->sumber_data == 'open_food_facts')
+                            <span class="inline-flex px-2 py-1 rounded-md bg-green-100 dark:bg-green-900/30 text-green-600">OFF</span>
+                        @elseif($data->sumber_data == 'open_beauty_facts')
+                            <span class="inline-flex px-2 py-1 rounded-md bg-pink-100 dark:bg-pink-900/30 text-pink-600">OBF</span>
+                        @elseif($data->sumber_data == 'user_contribution')
+                            <span class="inline-flex px-2 py-1 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-600">USER</span>
                         @else
                             <span class="inline-flex px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">SISTEM</span>
                         @endif
@@ -116,8 +152,11 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-5 py-16 text-center">
-                        <div class="text-slate-400 text-sm">Data BPOM belum tersedia. Tambahkan data atau sync dari sumber eksternal.</div>
+                    <td colspan="6" class="px-5 py-16 text-center">
+                        <div class="text-slate-400 text-sm">
+                            <span class="material-icons-round text-4xl mb-2 block">cloud_sync</span>
+                            Data BPOM belum tersedia. Klik <strong>Sync Data Eksternal</strong> untuk mengambil data dari OpenFoodFacts dan OpenBeautyFacts.
+                        </div>
                     </td>
                 </tr>
                 @endforelse
@@ -127,11 +166,3 @@
     <div class="px-5 py-4 border-t border-slate-100 dark:border-slate-800">{{ $bpom_data->links() }}</div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    setInterval(() => {
-        window.location.reload();
-    }, 60000);
-</script>
-@endpush

@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\OCRProduct;
 use App\Models\ScanHistory;
+use App\Models\ScanModel;
 use App\Models\User;
 use App\Models\ProductModel;
 use App\Models\FavoriteProduct;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class AdminController extends Controller
 {
@@ -27,24 +29,27 @@ class AdminController extends Controller
      */
     public function getDashboardStats()
     {
-        // Count products (ProductModel)
-        $totalProducts = ProductModel::where('approval_status', 'approved')->count();
-        $pendingProducts = ProductModel::where('approval_status', 'pending')->count();
+        $totalProducts = ProductModel::count();
+        $pendingProducts = ProductModel::where(function ($query) {
+            $query->where('approval_status', 'pending')
+                ->orWhere('verification_status', 'pending')
+                ->orWhere('verification_status', 'needs_review');
+        })
+            ->count();
+        $useRealtimeScanTable = Schema::hasTable('scan_histories');
         
         $stats = [
             'total_products' => $totalProducts,
             'pending_approval' => $pendingProducts,
             'total_users' => User::where('role', 'user')->count(),
-            'total_scans_today' => ScanHistory::whereDate('created_at', today())->count(),
+            'total_scans_today' => $useRealtimeScanTable
+                ? ScanHistory::whereDate('created_at', today())->count()
+                : ScanModel::whereDate('tanggal_scan', today())->count(),
             
-            // Legacy/OCR stats
             'total_ocr_products' => OCRProduct::count(),
             'pending_review' => OCRProduct::where('status', 'pending_admin_review')->count(),
             
-            'recent_scans' => ScanHistory::with(['user'])
-                ->orderBy('created_at', 'desc')
-                ->take(10)
-                ->get(),
+            'recent_scans' => $this->getRecentScans(10),
         ];
 
         return response()->json([
@@ -58,7 +63,11 @@ class AdminController extends Controller
      */
     public function getPendingProducts()
     {
-        $products = ProductModel::where('approval_status', 'pending')
+        $products = ProductModel::where(function ($query) {
+                $query->where('approval_status', 'pending')
+                    ->orWhere('verification_status', 'pending')
+                    ->orWhere('verification_status', 'needs_review');
+            })
             ->orderBy('created_at', 'desc')
             ->get();
         
@@ -269,35 +278,72 @@ class AdminController extends Controller
      */
     public function getScanHistory(Request $request)
     {
-        $query = ScanHistory::with(['user']);
+        if (Schema::hasTable('scan_histories')) {
+            $query = ScanHistory::with(['user']);
 
-        // Filters
-        if ($request->product_type) {
-            $query->where('product_type', $request->product_type);
+            if ($request->product_type) {
+                $query->where('scannable_type', 'like', '%' . $request->product_type . '%');
+            }
+
+            if ($request->status) {
+                $query->where('halal_status', $request->status);
+            }
+
+            if ($request->user_id) {
+                $query->where('user_id', $request->user_id);
+            }
+
+            if ($request->date_from) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            }
+
+            if ($request->date_to) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            }
+
+            $scans = $query->orderBy('created_at', 'desc')
+                ->paginate($request->per_page ?? 50);
+
+            return response()->json([
+                'success' => true,
+                'data' => $scans
+            ]);
         }
+
+        $legacyQuery = ScanModel::with(['user']);
 
         if ($request->status) {
-            $query->where('status', $request->status);
+            $legacyQuery->where('status_halal', $request->status);
         }
-
         if ($request->user_id) {
-            $query->where('user_id', $request->user_id);
+            $legacyQuery->where('user_id', $request->user_id);
         }
-
         if ($request->date_from) {
-            $query->whereDate('scanned_at', '>=', $request->date_from);
+            $legacyQuery->whereDate('tanggal_scan', '>=', $request->date_from);
         }
-
         if ($request->date_to) {
-            $query->whereDate('scanned_at', '<=', $request->date_to);
+            $legacyQuery->whereDate('tanggal_scan', '<=', $request->date_to);
         }
 
-        $scans = $query->orderBy('scanned_at', 'desc')
-            ->paginate($request->per_page ?? 50);
+        $scans = $legacyQuery->orderByDesc('tanggal_scan')->paginate($request->per_page ?? 50);
+        $scans->getCollection()->transform(function (ScanModel $scan) {
+            return [
+                'id' => $scan->id_scan,
+                'user_id' => $scan->user_id,
+                'product_name' => $scan->nama_produk,
+                'barcode' => $scan->barcode,
+                'halal_status' => $scan->status_halal,
+                'source' => 'local',
+                'scan_method' => 'legacy',
+                'created_at' => optional($scan->tanggal_scan ?: $scan->created_at)?->toDateTimeString(),
+                'user' => $scan->user,
+            ];
+        });
 
         return response()->json([
             'success' => true,
-            'data' => $scans
+            'data' => $scans,
+            'message' => 'Menampilkan riwayat scan dari tabel legacy.'
         ]);
     }
 
@@ -306,11 +352,20 @@ class AdminController extends Controller
      */
     public function getUsers(Request $request)
     {
-        $query = User::withCount(['scanHistories', 'favorites']);
+        $query = User::query()->withCount('scans');
+
+        if (Schema::hasTable('favorite_products')) {
+            $query->addSelect([
+                'favorites_count' => FavoriteProduct::query()
+                    ->selectRaw('COUNT(*)')
+                    ->whereColumn('favorite_products.user_id', 'users.id_user')
+            ]);
+        }
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
+                $q->where('username', 'like', '%' . $request->search . '%')
+                  ->orWhere('full_name', 'like', '%' . $request->search . '%')
                   ->orWhere('email', 'like', '%' . $request->search . '%');
             });
         }
@@ -329,14 +384,10 @@ class AdminController extends Controller
      */
     public function getUserDetail($id)
     {
-        $user = User::with([
-            'scanHistories' => function ($query) {
-                $query->orderBy('scanned_at', 'desc')->take(20);
-            },
-            'favorites' => function ($query) {
-                $query->with(['ocrProduct', 'product'])->orderBy('created_at', 'desc');
-            }
-        ])->find($id);
+        $user = User::query()
+            ->where('id_user', $id)
+            ->orWhere('id', $id)
+            ->first();
 
         if (!$user) {
             return response()->json([
@@ -345,9 +396,42 @@ class AdminController extends Controller
             ], 404);
         }
 
+        $recentScans = Schema::hasTable('scan_histories')
+            ? ScanHistory::query()
+                ->where('user_id', $user->id_user)
+                ->orderByDesc('created_at')
+                ->limit(20)
+                ->get()
+            : ScanModel::query()
+                ->where('user_id', $user->id_user)
+                ->orderByDesc('tanggal_scan')
+                ->limit(20)
+                ->get()
+                ->map(function (ScanModel $scan) {
+                    return [
+                        'id' => $scan->id_scan,
+                        'product_name' => $scan->nama_produk,
+                        'barcode' => $scan->barcode,
+                        'halal_status' => $scan->status_halal,
+                        'created_at' => optional($scan->tanggal_scan ?: $scan->created_at)?->toDateTimeString(),
+                    ];
+                });
+
+        $favorites = Schema::hasTable('favorite_products')
+            ? FavoriteProduct::query()
+                ->where('user_id', $user->id_user)
+                ->orderByDesc('created_at')
+                ->limit(20)
+                ->get()
+            : collect();
+
         return response()->json([
             'success' => true,
-            'data' => $user
+            'data' => [
+                'user' => $user,
+                'recent_scans' => $recentScans,
+                'favorites' => $favorites,
+            ]
         ]);
     }
 
@@ -356,36 +440,76 @@ class AdminController extends Controller
      */
     public function getSystemStats()
     {
-        $stats = [
-            'products_by_status' => OCRProduct::selectRaw('status, COUNT(*) as count')
+        $productsByStatus = Schema::hasTable('ocr_products')
+            ? OCRProduct::selectRaw('status, COUNT(*) as count')
                 ->groupBy('status')
-                ->pluck('count', 'status'),
-            
-            'products_by_halal_status' => OCRProduct::selectRaw('halal_status, COUNT(*) as count')
+                ->pluck('count', 'status')
+            : ProductModel::selectRaw('verification_status as status, COUNT(*) as count')
+                ->groupBy('verification_status')
+                ->pluck('count', 'status');
+
+        $productsByHalalStatus = Schema::hasTable('ocr_products')
+            ? OCRProduct::selectRaw('halal_status, COUNT(*) as count')
                 ->groupBy('halal_status')
-                ->pluck('count', 'halal_status'),
-            
-            'scans_by_month' => ScanHistory::selectRaw('DATE_FORMAT(scanned_at, "%Y-%m") as month, COUNT(*) as count')
+                ->pluck('count', 'halal_status')
+            : ProductModel::selectRaw('status, COUNT(*) as count')
+                ->groupBy('status')
+                ->pluck('count', 'status');
+
+        $scansByMonth = Schema::hasTable('scan_histories')
+            ? ScanHistory::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as count')
                 ->groupBy('month')
                 ->orderBy('month', 'desc')
                 ->take(12)
-                ->pluck('count', 'month'),
-            
-            'top_scanners' => User::withCount(['scanHistories'])
-                ->orderBy('scan_histories_count', 'desc')
+                ->pluck('count', 'month')
+            : ScanModel::selectRaw('DATE_FORMAT(COALESCE(tanggal_scan, created_at), "%Y-%m") as month, COUNT(*) as count')
+                ->groupBy('month')
+                ->orderBy('month', 'desc')
+                ->take(12)
+                ->pluck('count', 'month');
+
+        $stats = [
+            'products_by_status' => $productsByStatus,
+            'products_by_halal_status' => $productsByHalalStatus,
+            'scans_by_month' => $scansByMonth,
+            'top_scanners' => User::withCount('scans')
+                ->orderBy('scans_count', 'desc')
                 ->take(10)
-                ->get(['id', 'name', 'email', 'scan_histories_count']),
-            
-            'recent_activity' => ScanHistory::with(['user'])
-                ->orderBy('scanned_at', 'desc')
-                ->take(20)
-                ->get()
+                ->get(['id_user', 'username', 'full_name', 'email']),
+            'recent_activity' => $this->getRecentScans(20),
         ];
 
         return response()->json([
             'success' => true,
             'data' => $stats
         ]);
+    }
+
+    private function getRecentScans(int $limit = 10)
+    {
+        if (Schema::hasTable('scan_histories')) {
+            return ScanHistory::with('user')
+                ->orderByDesc('created_at')
+                ->limit($limit)
+                ->get();
+        }
+
+        return ScanModel::with('user')
+            ->orderByDesc('tanggal_scan')
+            ->limit($limit)
+            ->get()
+            ->map(function (ScanModel $scan) {
+                return [
+                    'id' => $scan->id_scan,
+                    'product_name' => $scan->nama_produk,
+                    'barcode' => $scan->barcode,
+                    'halal_status' => $scan->status_halal,
+                    'scan_method' => 'legacy',
+                    'source' => 'local',
+                    'created_at' => optional($scan->tanggal_scan ?: $scan->created_at)?->toDateTimeString(),
+                    'user' => $scan->user,
+                ];
+            });
     }
 
     /**
@@ -399,10 +523,132 @@ class AdminController extends Controller
             'filters' => 'nullable|array'
         ]);
 
-        // TODO: Implement export functionality
-        return response()->json([
-            'success' => false,
-            'message' => 'Export feature coming soon'
-        ]);
+        if ($request->format !== 'csv') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Format xlsx belum tersedia. Gunakan csv.'
+            ], 422);
+        }
+
+        $type = (string) $request->type;
+        $filters = (array) $request->input('filters', []);
+        $now = now()->format('Ymd_His');
+        $fileName = "{$type}_{$now}.csv";
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+        ];
+
+        $callback = function () use ($type, $filters) {
+            $out = fopen('php://output', 'w');
+            // UTF-8 BOM for Excel compatibility
+            fwrite($out, "\xEF\xBB\xBF");
+
+            if ($type === 'ocr_products') {
+                fputcsv($out, ['id', 'product_name', 'brand', 'country', 'halal_status', 'status', 'created_at']);
+                $query = OCRProduct::query();
+                if (!empty($filters['status'])) {
+                    $query->where('status', $filters['status']);
+                }
+                if (!empty($filters['halal_status'])) {
+                    $query->where('halal_status', $filters['halal_status']);
+                }
+                $query->orderByDesc('created_at')
+                    ->chunk(500, function ($rows) use ($out) {
+                        foreach ($rows as $row) {
+                            fputcsv($out, [
+                                $row->id,
+                                $row->product_name,
+                                $row->brand,
+                                $row->country,
+                                $row->halal_status,
+                                $row->status,
+                                optional($row->created_at)?->toDateTimeString(),
+                            ]);
+                        }
+                    });
+            } elseif ($type === 'users') {
+                fputcsv($out, ['id_user', 'username', 'full_name', 'email', 'role', 'active', 'created_at']);
+                $query = User::query();
+                if (!empty($filters['role'])) {
+                    $query->where('role', $filters['role']);
+                }
+                if (array_key_exists('active', $filters)) {
+                    $query->where('active', (bool) $filters['active']);
+                }
+                $query->orderByDesc('created_at')
+                    ->chunk(500, function ($rows) use ($out) {
+                        foreach ($rows as $row) {
+                            fputcsv($out, [
+                                $row->id_user ?? $row->id,
+                                $row->username,
+                                $row->full_name ?? $row->name,
+                                $row->email,
+                                $row->role,
+                                (int) ($row->active ?? $row->is_active ?? 0),
+                                optional($row->created_at)?->toDateTimeString(),
+                            ]);
+                        }
+                    });
+            } else {
+                fputcsv($out, ['id', 'user_id', 'product_name', 'barcode', 'halal_status', 'source', 'scan_method', 'created_at']);
+                $isRealtimeTable = Schema::hasTable('scan_histories');
+                if ($isRealtimeTable) {
+                    $query = ScanHistory::query();
+                    if (!empty($filters['user_id'])) {
+                        $query->where('user_id', (int) $filters['user_id']);
+                    }
+                    if (!empty($filters['halal_status'])) {
+                        $query->where('halal_status', $filters['halal_status']);
+                    }
+                    if (!empty($filters['source'])) {
+                        $query->where('source', $filters['source']);
+                    }
+                    $query->orderByDesc('created_at')
+                        ->chunk(500, function ($rows) use ($out) {
+                            foreach ($rows as $row) {
+                                fputcsv($out, [
+                                    $row->id,
+                                    $row->user_id,
+                                    $row->product_name,
+                                    $row->barcode,
+                                    $row->halal_status,
+                                    $row->source,
+                                    $row->scan_method,
+                                    optional($row->created_at)?->toDateTimeString(),
+                                ]);
+                            }
+                        });
+                } else {
+                    $query = ScanModel::query();
+                    if (!empty($filters['user_id'])) {
+                        $query->where('user_id', (int) $filters['user_id']);
+                    }
+                    if (!empty($filters['halal_status'])) {
+                        $query->where('status_halal', $filters['halal_status']);
+                    }
+                    $query->orderByDesc('created_at')
+                        ->chunk(500, function ($rows) use ($out) {
+                            foreach ($rows as $row) {
+                                fputcsv($out, [
+                                    $row->id_scan,
+                                    $row->user_id,
+                                    $row->nama_produk,
+                                    $row->barcode,
+                                    $row->status_halal,
+                                    'local',
+                                    'legacy',
+                                    optional($row->tanggal_scan ?: $row->created_at)?->toDateTimeString(),
+                                ]);
+                            }
+                        });
+                }
+            }
+
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

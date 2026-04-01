@@ -94,9 +94,14 @@
                             <div class="flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-1 shadow-inner">
                                     @if($product->image)
-                                    <img src="{{ asset($product->image) }}" alt="{{ $product->nama_product }}" class="w-full h-full object-contain">
+                                    @php
+                                        $localImage = str_starts_with((string) $product->image, 'http')
+                                            ? $product->image
+                                            : asset($product->image);
+                                    @endphp
+                                    <img src="{{ $localImage }}" alt="{{ $product->nama_product }}" class="w-full h-full object-contain" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
                                     @else
-                                    <span class="material-icons-round text-slate-400">inventory_2</span>
+                                    <img src="{{ asset('images/placeholders/product-placeholder.svg') }}" alt="No product image" class="w-full h-full object-contain">
                                     @endif
                                 </div>
                                 <div>
@@ -184,7 +189,12 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-1 overflow-hidden shadow-inner transform transition-transform group-hover:scale-110">
-                                    <img src="{{ $product->image }}" alt="" class="w-full h-full object-contain" onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($product->nama_product) }}&background=6366f1&color=fff'">
+                                    @php
+                                        $externalImage = $product->image
+                                            ? (str_starts_with((string) $product->image, 'http') ? $product->image : asset($product->image))
+                                            : asset('images/placeholders/product-placeholder.svg');
+                                    @endphp
+                                    <img src="{{ $externalImage }}" alt="" class="w-full h-full object-contain" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
                                 </div>
                                 <div>
                                     <p class="font-bold text-slate-900 dark:text-white">{{ Str::limit($product->nama_product, 25) }}</p>

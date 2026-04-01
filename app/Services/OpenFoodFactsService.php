@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -24,25 +25,27 @@ class OpenFoodFactsService
      */
     public function getProductByBarcode(string $barcode): array
     {
-        try {
-            $response = $this->offClient()->get(self::BASE_URL . "/product/{$barcode}.json");
+        return Cache::remember("off_barcode_{$barcode}", 86400, function () use ($barcode) {
+            try {
+                $response = $this->offClient()->get(self::BASE_URL . "/product/{$barcode}.json");
 
-            if ($response->successful()) {
-                $data = $response->json();
-                
-                if (isset($data['status']) && $data['status'] == 1) {
-                    return [
-                        'success' => true,
-                        'product' => $this->normalizeProduct($data['product'])
-                    ];
+                if ($response->successful()) {
+                    $data = $response->json();
+                    
+                    if (isset($data['status']) && $data['status'] == 1) {
+                        return [
+                            'success' => true,
+                            'product' => $this->normalizeProduct($data['product'])
+                        ];
+                    }
                 }
-            }
 
-            return ['success' => false, 'message' => 'Product not found'];
-        } catch (\Exception $e) {
-            Log::error("OpenFoodFacts API Error: " . $e->getMessage());
-            return ['success' => false, 'message' => 'Layanan OpenFoodFacts sedang lambat. Silakan coba lagi.'];
-        }
+                return ['success' => false, 'message' => 'Produk tidak ditemukan di OpenFoodFacts.'];
+            } catch (\Exception $e) {
+                Log::error("OpenFoodFacts API Error: " . $e->getMessage());
+                return ['success' => false, 'message' => 'Layanan OpenFoodFacts sedang lambat. Silakan coba lagi.'];
+            }
+        });
     }
 
     /**
@@ -50,38 +53,41 @@ class OpenFoodFactsService
      */
     public function searchProducts(string $query, int $pageSize = 20, int $page = 1): array
     {
-        try {
-            // Use the proper search endpoint with correct parameters
-            $baseUrl = 'https://world.openfoodfacts.org';
-            $response = $this->offClient()->get($baseUrl . '/cgi/search.pl', [
-                    'search_terms' => $query,
-                    'search_simple' => 1,
-                    'action' => 'process',
-                    'page' => $page,
-                    'page_size' => $pageSize,
-                    'json' => 1
-                ]);
+        $cacheKey = 'off_search_' . md5(strtolower($query) . "|{$pageSize}|{$page}");
 
-            if ($response->successful()) {
-                $data = $response->json();
-                
-                return [
-                    'success' => true,
-                    'products' => array_map(
-                        fn($product) => $this->normalizeProduct($product),
-                        $data['products'] ?? []
-                    ),
-                    'count' => $data['count'] ?? 0,
-                    'page' => $data['page'] ?? 1,
-                    'page_count' => $data['page_count'] ?? 1
-                ];
+        return Cache::remember($cacheKey, 86400, function () use ($query, $pageSize, $page) {
+            try {
+                $baseUrl = 'https://world.openfoodfacts.org';
+                $response = $this->offClient()->get($baseUrl . '/cgi/search.pl', [
+                        'search_terms' => $query,
+                        'search_simple' => 1,
+                        'action' => 'process',
+                        'page' => $page,
+                        'page_size' => $pageSize,
+                        'json' => 1
+                    ]);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    
+                    return [
+                        'success' => true,
+                        'products' => array_map(
+                            fn($product) => $this->normalizeProduct($product),
+                            $data['products'] ?? []
+                        ),
+                        'count' => $data['count'] ?? 0,
+                        'page' => $data['page'] ?? 1,
+                        'page_count' => $data['page_count'] ?? 1
+                    ];
+                }
+
+                return ['success' => false, 'products' => [], 'count' => 0, 'message' => 'OpenFoodFacts tidak merespons dengan data yang valid.'];
+            } catch (\Exception $e) {
+                Log::error("OpenFoodFacts Search Error: " . $e->getMessage());
+                return ['success' => false, 'products' => [], 'count' => 0, 'message' => 'Pencarian ke OpenFoodFacts timeout. Coba ulang.'];
             }
-
-            return ['success' => false, 'products' => [], 'count' => 0, 'message' => 'API search failed'];
-        } catch (\Exception $e) {
-            Log::error("OpenFoodFacts Search Error: " . $e->getMessage());
-            return ['success' => false, 'products' => [], 'count' => 0, 'message' => 'Pencarian ke OpenFoodFacts timeout. Coba ulang.'];
-        }
+        });
     }
 
     /**

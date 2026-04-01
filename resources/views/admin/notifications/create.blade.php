@@ -42,11 +42,26 @@
 
                         <div class="space-y-2">
                             <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Target Pengguna *</label>
-                            <select name="target_type" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary">
+                            <select id="targetType" name="target_type" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary">
                                 <option value="all">Semua Pengguna</option>
-                                <option value="specific_users">Pengguna Tertentu (Coming Soon)</option>
+                                <option value="specific_users">Pengguna Tertentu</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div id="specificUsersField" class="space-y-2 hidden">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">User ID Target</label>
+                        <input
+                            type="text"
+                            name="user_ids"
+                            value="{{ old('user_ids') }}"
+                            class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                            placeholder="Contoh: 12, 45, 91"
+                        >
+                        @error('user_ids')
+                            <p class="text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                        <p class="text-[10px] text-slate-400">Pisahkan beberapa User ID dengan koma.</p>
                     </div>
 
                     <div class="space-y-2">
@@ -68,3 +83,19 @@
     </form>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    const targetType = document.getElementById('targetType');
+    const specificUsersField = document.getElementById('specificUsersField');
+
+    function toggleSpecificUsersField() {
+        if (!targetType || !specificUsersField) return;
+        const isSpecific = targetType.value === 'specific_users';
+        specificUsersField.classList.toggle('hidden', !isSpecific);
+    }
+
+    targetType?.addEventListener('change', toggleSpecificUsersField);
+    toggleSpecificUsersField();
+</script>
+@endpush

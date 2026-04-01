@@ -44,13 +44,27 @@
                     <td class="px-5 py-4">
                         <div class="flex items-center gap-2">
                             @if($request->image_front)
-                                <a href="{{ asset('storage/' . $request->image_front) }}" target="_blank" class="block w-12 h-12 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
-                                    <img src="{{ asset('storage/' . $request->image_front) }}" alt="Front" class="w-full h-full object-cover">
+                                @php
+                                    $frontImage = str_starts_with((string) $request->image_front, 'http')
+                                        ? $request->image_front
+                                        : (str_starts_with((string) $request->image_front, 'images/')
+                                            ? asset($request->image_front)
+                                            : asset('storage/' . $request->image_front));
+                                @endphp
+                                <a href="{{ $frontImage }}" target="_blank" class="block w-12 h-12 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+                                    <img src="{{ $frontImage }}" alt="Front" class="w-full h-full object-cover">
                                 </a>
                             @endif
                             @if($request->image_back)
-                                <a href="{{ asset('storage/' . $request->image_back) }}" target="_blank" class="block w-12 h-12 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
-                                    <img src="{{ asset('storage/' . $request->image_back) }}" alt="Back" class="w-full h-full object-cover">
+                                @php
+                                    $backImage = str_starts_with((string) $request->image_back, 'http')
+                                        ? $request->image_back
+                                        : (str_starts_with((string) $request->image_back, 'images/')
+                                            ? asset($request->image_back)
+                                            : asset('storage/' . $request->image_back));
+                                @endphp
+                                <a href="{{ $backImage }}" target="_blank" class="block w-12 h-12 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+                                    <img src="{{ $backImage }}" alt="Back" class="w-full h-full object-cover">
                                 </a>
                             @endif
                         </div>

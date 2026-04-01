@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 use Carbon\Carbon;
 
 class AuthController extends Controller
@@ -139,13 +140,56 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // In production, you'd generate a token and send email here.
-        // For now, we return a success message to unblock the Android flow.
-        // TODO: Integrate with Laravel's Password Broker or Mail facade.
+        $status = Password::sendResetLink([
+            'email' => (string) $request->email,
+        ]);
+
+        if ($status === Password::RESET_LINK_SENT) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Instruksi reset password telah dikirim ke email Anda.'
+            ]);
+        }
         
         return response()->json([
+            'success' => false,
+            'message' => __($status),
+        ], 500);
+    }
+    
+    // SYNC USER (FROM FIREBASE)
+    public function syncUser(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        // Validate request
+        $validator = Validator::make($request->all(), [
+            'firebase_uid' => 'required|string',
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        // Update user properties
+        if ($request->has('fcm_token') && !empty($request->fcm_token)) {
+            $user->fcm_token = $request->fcm_token;
+        }
+        
+        // Save the firebase UID if we decide to store it
+        // $user->firebase_uid = $request->firebase_uid; 
+        
+        $user->save();
+
+        return response()->json([
             'success' => true,
-            'message' => 'Instruksi reset password telah dikirim ke email Anda.'
+            'message' => 'User synced successfully',
+            'user' => $user
         ]);
     }
 }

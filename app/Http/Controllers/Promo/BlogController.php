@@ -15,12 +15,12 @@ class BlogController extends Controller
         
         $query = PromoBlog::where('status', 'published');
         
-        if ($request->has('category')) {
+        if ($request->filled('category')) {
             $query->where('category', $request->category);
         }
         
         // simple search
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
@@ -29,7 +29,7 @@ class BlogController extends Controller
             });
         }
         
-        $blogs = $query->orderBy('created_at', 'desc')->paginate(9);
+        $blogs = $query->orderBy('created_at', 'desc')->paginate(9)->withQueryString();
         $categories = PromoBlog::where('status', 'published')->select('category')->distinct()->pluck('category');
         
         return view('promo.blog', compact('settings', 'blogs', 'categories'));

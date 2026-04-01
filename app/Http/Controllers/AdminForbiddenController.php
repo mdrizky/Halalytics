@@ -9,6 +9,10 @@ class AdminForbiddenController extends Controller
 {
     public function index(Request $request)
     {
+        if (!ForbiddenIngredient::query()->exists() && !$request->filled('search')) {
+            $this->seedFallbackForbidden();
+        }
+
         $query = ForbiddenIngredient::query();
 
         if ($request->has('search')) {
@@ -80,5 +84,30 @@ class AdminForbiddenController extends Controller
     {
         ForbiddenIngredient::findOrFail($id)->delete();
         return redirect()->route('admin.forbidden.index')->with('success', 'Ingredient deleted successfully');
+    }
+
+    private function seedFallbackForbidden(): void
+    {
+        $items = [
+            ['name' => 'Lard', 'code' => null, 'type' => 'halal_haram', 'risk_level' => 'high', 'reason' => 'Turunan lemak babi.'],
+            ['name' => 'Gelatin Porcine', 'code' => null, 'type' => 'halal_haram', 'risk_level' => 'high', 'reason' => 'Gelatin dari babi.'],
+            ['name' => 'Boric Acid', 'code' => 'E284', 'type' => 'health_hazard', 'risk_level' => 'high', 'reason' => 'Bahan berisiko kesehatan.'],
+            ['name' => 'Sudan Dye', 'code' => null, 'type' => 'health_hazard', 'risk_level' => 'high', 'reason' => 'Pewarna tekstil berbahaya.'],
+            ['name' => 'Carmine', 'code' => 'E120', 'type' => 'allergen', 'risk_level' => 'medium', 'reason' => 'Bisa memicu alergi dan isu halal.'],
+            ['name' => 'Cyclamate', 'code' => 'E952', 'type' => 'health_hazard', 'risk_level' => 'medium', 'reason' => 'Pemanis sintetis perlu batas aman.'],
+            ['name' => 'Sodium Nitrite', 'code' => 'E250', 'type' => 'health_hazard', 'risk_level' => 'medium', 'reason' => 'Pengawet daging berisiko jika berlebih.'],
+        ];
+
+        foreach ($items as $item) {
+            ForbiddenIngredient::firstOrCreate(
+                ['name' => $item['name']],
+                array_merge($item, [
+                    'aliases' => [],
+                    'description' => 'Data uji admin untuk pengujian dashboard.',
+                    'source' => 'Seeder',
+                    'is_active' => true,
+                ])
+            );
+        }
     }
 }

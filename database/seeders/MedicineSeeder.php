@@ -11,6 +11,40 @@ class MedicineSeeder extends Seeder
     {
         $medicines = [
             [
+                'name' => 'Bodrex Extra',
+                'generic_name' => 'Paracetamol, Caffeine',
+                'brand_name' => 'Bodrex',
+                'barcode' => '8999908000101',
+                'image_url' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2022/7/3/2a5ebbf1-3a4f-429e-b3b4-40fb3e0cf7ec.jpg',
+                'description' => 'Pereda sakit kepala dengan kombinasi analgesik dan kafein.',
+                'indications' => 'Sakit kepala, nyeri ringan sampai sedang.',
+                'ingredients' => ['Paracetamol 500mg', 'Caffeine 50mg'],
+                'dosage_info' => 'Dewasa: 1 tablet, dapat diulang tiap 4-6 jam jika perlu.',
+                'side_effects' => 'Mual ringan, sulit tidur jika dikonsumsi malam hari.',
+                'halal_status' => 'halal',
+                'manufacturer' => 'Tempo Scan Pacific',
+                'dosage_form' => 'Tablet',
+                'category' => 'Analgesik',
+                'active' => true
+            ],
+            [
+                'name' => 'Bodrex Migra',
+                'generic_name' => 'Paracetamol, Propyphenazone, Caffeine',
+                'brand_name' => 'Bodrex',
+                'barcode' => '8999908000102',
+                'image_url' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/2/20/234403d8-fbe4-418c-a5e0-66d3de7f6cd4.jpg',
+                'description' => 'Obat sakit kepala tegang dengan kombinasi analgesik.',
+                'indications' => 'Meredakan sakit kepala sebelah atau tegang.',
+                'ingredients' => ['Paracetamol 350mg', 'Propyphenazone 150mg', 'Caffeine 50mg'],
+                'dosage_info' => 'Dewasa: 1 tablet, maksimal 3 kali sehari setelah makan.',
+                'side_effects' => 'Mual, berdebar, gangguan lambung.',
+                'halal_status' => 'halal',
+                'manufacturer' => 'Tempo Scan Pacific',
+                'dosage_form' => 'Tablet',
+                'category' => 'Analgesik',
+                'active' => true
+            ],
+            [
                 'name' => 'Paracetamol 500mg',
                 'generic_name' => 'Paracetamol',
                 'brand_name' => 'Generic',

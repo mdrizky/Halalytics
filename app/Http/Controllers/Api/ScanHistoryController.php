@@ -8,6 +8,7 @@ use App\Models\ScanModel;
 use App\Models\Notification;
 use App\Services\FirebaseRealtimeService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class ScanHistoryController extends Controller
@@ -25,16 +26,48 @@ class ScanHistoryController extends Controller
     public function index(Request $request)
     {
         if (!Schema::hasTable('scan_histories')) {
+            $legacyQuery = ScanModel::query()
+                ->where('user_id', $request->user()->id_user)
+                ->orderByDesc(DB::raw('COALESCE(tanggal_scan, created_at)'));
+
+            if ($request->filled('period')) {
+                switch ($request->period) {
+                    case 'today':
+                        $legacyQuery->whereDate('created_at', today());
+                        break;
+                    case 'week':
+                        $legacyQuery->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                        break;
+                    case 'month':
+                        $legacyQuery->whereMonth('created_at', now()->month);
+                        break;
+                }
+            }
+
+            // Legacy scans are local/manual. For unsupported source filters, return empty set.
+            if ($request->filled('source')) {
+                $source = strtolower((string) $request->source);
+                if (!in_array($source, ['local', 'manual', 'unknown', 'bpom'], true)) {
+                    $legacyQuery->whereRaw('1 = 0');
+                }
+            }
+
+            $legacy = $legacyQuery->paginate(20);
+            $legacy->getCollection()->transform(function (ScanModel $scan) {
+                return $this->transformLegacyScan($scan);
+            });
+
+            $baseStatsQuery = ScanModel::query()->where('user_id', $request->user()->id_user);
             return response()->json([
                 'success' => true,
-                'data' => ['data' => []],
+                'data' => $legacy,
                 'stats' => [
-                    'total_scans' => 0,
-                    'today_scans' => 0,
-                    'week_scans' => 0,
-                    'halal_count' => 0,
+                    'total_scans' => (clone $baseStatsQuery)->count(),
+                    'today_scans' => (clone $baseStatsQuery)->whereDate('created_at', today())->count(),
+                    'week_scans' => (clone $baseStatsQuery)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+                    'halal_count' => (clone $baseStatsQuery)->where('status_halal', 'halal')->count(),
                 ],
-                'message' => 'Riwayat scan belum siap (tabel scan_histories belum tersedia).',
+                'message' => 'Menampilkan riwayat scan dari tabel legacy.',
             ]);
         }
 
@@ -84,10 +117,23 @@ class ScanHistoryController extends Controller
     public function show($id, Request $request)
     {
         if (!Schema::hasTable('scan_histories')) {
+            $legacy = ScanModel::query()
+                ->where('user_id', $request->user()->id_user)
+                ->where('id_scan', $id)
+                ->first();
+
+            if (!$legacy) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Riwayat scan tidak ditemukan.',
+                ], 404);
+            }
+
             return response()->json([
-                'success' => false,
-                'message' => 'Fitur riwayat scan belum siap: tabel scan_histories belum tersedia.',
-            ], 503);
+                'success' => true,
+                'data' => $this->transformLegacyScan($legacy),
+                'message' => 'Detail riwayat scan dari tabel legacy.',
+            ]);
         }
 
         $scanHistory = ScanHistory::byUser($request->user()->id_user)
@@ -105,10 +151,29 @@ class ScanHistoryController extends Controller
     public function recordScan(Request $request)
     {
         if (!Schema::hasTable('scan_histories')) {
+            $legacyValidated = $request->validate([
+                'product_name' => 'required|string',
+                'barcode' => 'nullable|string',
+                'halal_status' => 'required|string',
+                'nutrition_snapshot' => 'nullable|array',
+            ]);
+
+            $scan = ScanModel::create([
+                'user_id' => $request->user()->id_user,
+                'product_id' => null,
+                'nama_produk' => $legacyValidated['product_name'],
+                'barcode' => $legacyValidated['barcode'] ?? null,
+                'kategori' => $legacyValidated['halal_status'],
+                'status_halal' => $legacyValidated['halal_status'],
+                'status_kesehatan' => 'sehat',
+                'tanggal_scan' => now(),
+            ]);
+
             return response()->json([
-                'success' => false,
-                'message' => 'Fitur riwayat scan belum siap: tabel scan_histories belum tersedia.',
-            ], 503);
+                'success' => true,
+                'message' => 'Scan recorded successfully (legacy)',
+                'data' => $this->transformLegacyScan($scan),
+            ]);
         }
 
         $validated = $request->validate([
@@ -184,6 +249,19 @@ class ScanHistoryController extends Controller
      */
     public function destroy($id, Request $request)
     {
+        if (!Schema::hasTable('scan_histories')) {
+            $legacy = ScanModel::query()
+                ->where('user_id', $request->user()->id_user)
+                ->where('id_scan', $id)
+                ->firstOrFail();
+            $legacy->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'History deleted (legacy)'
+            ]);
+        }
+
         $scanHistory = ScanHistory::byUser($request->user()->id_user)->findOrFail($id);
         $scanHistory->delete();
 
@@ -213,5 +291,19 @@ class ScanHistoryController extends Controller
             'manual', 'bpom' => 'local',
             default => $source,
         };
+    }
+
+    private function transformLegacyScan(ScanModel $scan): array
+    {
+        return [
+            'id' => (int) $scan->id_scan,
+            'product_name' => $scan->nama_produk,
+            'product_image' => null,
+            'barcode' => $scan->barcode,
+            'halal_status' => $scan->status_halal ?: 'unknown',
+            'source' => 'local',
+            'scan_method' => 'legacy',
+            'created_at' => optional($scan->tanggal_scan ?: $scan->created_at)?->toIso8601String(),
+        ];
     }
 }

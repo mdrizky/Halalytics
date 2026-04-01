@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\ActivityModel;
 use App\Models\ScanModel;
 use App\Models\ReportModel;
+use App\Models\ScanHistory;
+use App\Models\Favorite;
 
 class User extends Authenticatable
 {
@@ -104,6 +106,16 @@ class User extends Authenticatable
     public function scans()
     {
         return $this->hasMany(ScanModel::class, 'user_id', 'id_user');
+    }
+
+    public function scanHistories()
+    {
+        return $this->hasMany(ScanHistory::class, 'user_id', 'id_user');
+    }
+
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class, 'user_id', 'id_user');
     }
 
     public function reports()

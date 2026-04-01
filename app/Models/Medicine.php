@@ -19,10 +19,12 @@ class Medicine extends Model
         'description',
         'indications',
         'ingredients',
+        'active_ingredient',
         'dosage_info',
         'frequency_per_day',
         'max_daily_dose',
         'side_effects',
+        'warnings',
         'contraindications',
         'route',
         'halal_status',
@@ -32,6 +34,9 @@ class Medicine extends Model
         'dosage_form',
         'category',
         'source',
+        'is_imported_from_fda',
+        'external_reference',
+        'external_payload',
         'is_prescription_required',
         'is_verified_by_admin',
         'active'
@@ -39,6 +44,8 @@ class Medicine extends Model
 
     protected $casts = [
         'ingredients' => 'array',
+        'external_payload' => 'array',
+        'is_imported_from_fda' => 'boolean',
         'is_prescription_required' => 'boolean',
         'is_verified_by_admin' => 'boolean',
         'active' => 'boolean'

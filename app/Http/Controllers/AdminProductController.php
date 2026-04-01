@@ -102,6 +102,10 @@ class AdminProductController extends Controller
             $baseQuery->where('status', $request->halal_status);
         }
 
+        if ($request->filled('active')) {
+            $baseQuery->where('active', (int) $request->active === 1);
+        }
+
         // Clone for Local Products
         $localQuery = (clone $baseQuery)->where('source', 'local');
         $localProducts = $localQuery->orderBy('id_product', 'desc')->paginate(10, ['*'], 'local_page')->withQueryString();

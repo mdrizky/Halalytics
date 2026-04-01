@@ -92,11 +92,16 @@
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg flex-shrink-0 flex items-center justify-center p-1 overflow-hidden">
-                                @if($report->product && $report->product->gambar)
-                                    <img src="{{ asset('storage/' . $report->product->gambar) }}" alt="Product" class="w-full h-full object-cover">
+                                <div class="w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg flex-shrink-0 flex items-center justify-center p-1 overflow-hidden">
+                                @if($report->product && $report->product->image)
+                                    @php
+                                        $reportImage = str_starts_with((string) $report->product->image, 'http')
+                                            ? $report->product->image
+                                            : asset($report->product->image);
+                                    @endphp
+                                    <img src="{{ $reportImage }}" alt="Product" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
                                 @else
-                                    <span class="material-icons-round text-slate-400">inventory_2</span>
+                                    <img src="{{ asset('images/placeholders/product-placeholder.svg') }}" alt="No product image" class="w-full h-full object-cover">
                                 @endif
                             </div>
                             <div>
@@ -234,6 +239,36 @@
             <p class="text-sm text-slate-500 dark:text-slate-400">Our AI has pre-screened {{ $stats['pending_reports'] ?? 0 }} of the pending reports.</p>
         </div>
     </div>
-    <button class="whitespace-nowrap px-6 py-2.5 bg-primary text-white font-black text-sm rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Run Batch Verification</button>
+    <button id="runBatchVerify" class="whitespace-nowrap px-6 py-2.5 bg-primary text-white font-black text-sm rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Run Batch Verification</button>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.getElementById('runBatchVerify')?.addEventListener('click', async function () {
+    if (!confirm('Jalankan Smart Verification Assistant untuk semua laporan pending?')) return;
+    const btn = this;
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Processing...';
+
+    try {
+        const response = await fetch('{{ route("admin.report.batch_verify") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+        const result = await response.json();
+        alert(result.message || 'Batch verification finished.');
+        window.location.reload();
+    } catch (error) {
+        alert('Gagal menjalankan batch verification.');
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+});
+</script>
+@endpush

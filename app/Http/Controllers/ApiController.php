@@ -599,6 +599,7 @@ class ApiController extends Controller
         if ($validated['halal_status'] === 'halal') {
             $user->increment('halal_products_count');
         }
+        $user->save(); // Ensure persistent update
 
         // Create Admin Notification for Real-time Visibility
         try {
@@ -625,22 +626,25 @@ class ApiController extends Controller
     public function getUserStats()
     {
         $user = Auth::user();
+        $userId = $user->id_user;
         
-        // Hitung total scan
-        $totalScans = ScanModel::where('user_id', $user->id_user)->count();
+        // Unify Statistics: Combine Legacy (ScanModel) and Realtime (ScanHistory)
+        $legacyScans = ScanModel::where('user_id', $userId)->count();
+        $realtimeScans = \App\Models\ScanHistory::where('user_id', $userId)->count();
+        $totalScans = $legacyScans + $realtimeScans;
         
         // Hitung scan berdasarkan status halal
-        $halalScans = ScanModel::where('user_id', $user->id_user)
-            ->where('status_halal', 'halal')
-            ->count();
+        $legacyHalal = ScanModel::where('user_id', $userId)->where('status_halal', 'halal')->count();
+        $realtimeHalal = \App\Models\ScanHistory::where('user_id', $userId)->where('halal_status', 'halal')->count();
+        $halalScans = $legacyHalal + $realtimeHalal;
             
-        $syubhatScans = ScanModel::where('user_id', $user->id_user)
-            ->where('status_halal', 'syubhat')
-            ->count();
+        $legacySyubhat = ScanModel::where('user_id', $userId)->where('status_halal', 'syubhat')->count();
+        $realtimeSyubhat = \App\Models\ScanHistory::where('user_id', $userId)->where('halal_status', 'syubhat')->count();
+        $syubhatScans = $legacySyubhat + $realtimeSyubhat;
             
-        $haramScans = ScanModel::where('user_id', $user->id_user)
-            ->where('status_halal', 'haram')
-            ->count();
+        $legacyHaram = ScanModel::where('user_id', $userId)->where('status_halal', 'haram')->count();
+        $realtimeHaram = \App\Models\ScanHistory::where('user_id', $userId)->where('halal_status', 'haram')->count();
+        $haramScans = $legacyHaram + $realtimeHaram;
         
         // Hitung total laporan
         $totalReports = ReportModel::where('user_id', $user->id_user)->count();

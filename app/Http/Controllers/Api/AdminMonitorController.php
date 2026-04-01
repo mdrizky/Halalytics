@@ -3,43 +3,56 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Medicine;
+use App\Models\MedicineReminder;
+use App\Models\Notification;
+use App\Models\ScanModel;
+use App\Services\FirebaseRealtimeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class AdminMonitorController extends Controller
 {
+    public function __construct(
+        private readonly FirebaseRealtimeService $firebaseRealtimeService
+    ) {
+    }
+
     // Real-time stats for Admin Dashboard
     public function getDashboardStats()
     {
+        $scanHistoryTable = Schema::hasTable('scan_histories') ? 'scan_histories' : (Schema::hasTable('scan_history') ? 'scan_history' : null);
+        $mealLogsTable = Schema::hasTable('meal_logs');
+        $activityLogsTable = Schema::hasTable('activity_logs');
+        $today = now()->format('Y-m-d');
+
         if (!Schema::hasTable('activity_events')) {
             return response()->json([
                 'success' => true,
                 'data' => [
                     'total_users' => DB::table('users')->where('role', 'user')->count(),
-                    'scans_today' => 0,
-                    'meals_analyzed' => 0,
-                    'risky_activities' => 0,
+                    'scans_today' => $scanHistoryTable ? DB::table($scanHistoryTable)->whereDate('created_at', $today)->count() : ScanModel::whereDate('tanggal_scan', $today)->count(),
+                    'meals_analyzed' => $mealLogsTable ? DB::table('meal_logs')->whereDate('created_at', $today)->count() : 0,
+                    'risky_activities' => $activityLogsTable
+                        ? DB::table('activity_logs')->whereDate('created_at', $today)->where('is_risk_detected', true)->count()
+                        : 0,
                     'total_external_scans' => 0,
                     'total_skincare_analyses' => 0,
                     'total_interaction_checks' => 0,
                     'major_or_contra_count' => 0,
                     'total_risk_checks' => 0,
                     'total_drug_food_conflicts' => 0,
+                    'fallback_mode' => true,
                 ],
             ]);
         }
 
-        $today = now()->format('Y-m-d');
         $todayEvents = DB::table('activity_events')->whereDate('created_at', $today);
-
-        $scanHistoryTable = Schema::hasTable('scan_histories') ? 'scan_histories' : (Schema::hasTable('scan_history') ? 'scan_history' : null);
-        $mealLogsTable = Schema::hasTable('meal_logs');
-        $activityLogsTable = Schema::hasTable('activity_logs');
 
         $stats = [
             'total_users' => DB::table('users')->where('role', 'user')->count(),
-            'scans_today' => $scanHistoryTable ? DB::table($scanHistoryTable)->whereDate('created_at', $today)->count() : 0,
+            'scans_today' => $scanHistoryTable ? DB::table($scanHistoryTable)->whereDate('created_at', $today)->count() : ScanModel::whereDate('tanggal_scan', $today)->count(),
             'meals_analyzed' => $mealLogsTable ? DB::table('meal_logs')->whereDate('created_at', $today)->count() : 0,
             'risky_activities' => $activityLogsTable
                 ? DB::table('activity_logs')
@@ -74,7 +87,26 @@ class AdminMonitorController extends Controller
     public function getActivityFeed()
     {
         if (!Schema::hasTable('activity_events')) {
-            return response()->json(['success' => true, 'data' => []]);
+            $fallbackFeed = ScanModel::query()
+                ->with('user')
+                ->orderByDesc('tanggal_scan')
+                ->limit(20)
+                ->get()
+                ->map(function (ScanModel $scan) {
+                    return [
+                        'id' => 'legacy_scan_' . $scan->id_scan,
+                        'event_type' => 'legacy_scan',
+                        'entity_ref' => $scan->barcode,
+                        'summary' => 'Scan produk: ' . ($scan->nama_produk ?: 'Unknown product'),
+                        'status' => in_array(strtolower((string) $scan->status_halal), ['halal'], true) ? 'success' : 'warning',
+                        'payload_json' => null,
+                        'created_at' => optional($scan->tanggal_scan ?: $scan->created_at)?->toDateTimeString(),
+                        'user_name' => $scan->user->username ?? $scan->user->full_name ?? 'Guest',
+                    ];
+                })
+                ->values();
+
+            return response()->json(['success' => true, 'data' => $fallbackFeed, 'fallback_mode' => true]);
         }
 
         $logs = DB::table('activity_events')
@@ -93,6 +125,26 @@ class AdminMonitorController extends Controller
             ->limit(20)
             ->get();
 
+        if ($logs->isEmpty()) {
+            $logs = ScanModel::query()
+                ->with('user')
+                ->orderByDesc('tanggal_scan')
+                ->limit(20)
+                ->get()
+                ->map(function (ScanModel $scan) {
+                    return (object) [
+                        'id' => 'legacy_scan_' . $scan->id_scan,
+                        'event_type' => 'legacy_scan',
+                        'entity_ref' => $scan->barcode,
+                        'summary' => 'Scan produk: ' . ($scan->nama_produk ?: 'Unknown product'),
+                        'status' => in_array(strtolower((string) $scan->status_halal), ['halal'], true) ? 'success' : 'warning',
+                        'payload_json' => null,
+                        'created_at' => optional($scan->tanggal_scan ?: $scan->created_at)?->toDateTimeString(),
+                        'user_name' => $scan->user->username ?? $scan->user->full_name ?? 'Guest',
+                    ];
+                });
+        }
+
         return response()->json(['success' => true, 'data' => $logs]);
     }
     
@@ -100,15 +152,79 @@ class AdminMonitorController extends Controller
     public function updateMedicineStatus(Request $request, $id)
     {
         $request->validate(['halal_status' => 'required|in:halal,haram,syubhat']);
-        
-        DB::table('medicines')->where('id', $id)->update([
+
+        if (!Schema::hasTable('medicines')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tabel medicines tidak tersedia.'
+            ], 503);
+        }
+
+        $medicine = Medicine::query()
+            ->where('id_medicine', $id)
+            ->orWhere('id', $id)
+            ->first();
+
+        if (!$medicine) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Medicine not found'
+            ], 404);
+        }
+
+        $medicine->update([
             'halal_status' => $request->halal_status,
             'is_verified_by_admin' => true,
             'updated_at' => now()
         ]);
-        
-        // TODO: Trigger Notification to users using this med
-        
-        return response()->json(['success' => true, 'message' => 'Status updated']);
+
+        $affectedUserIds = [];
+        if (Schema::hasTable('medicine_reminders')) {
+            $affectedUserIds = MedicineReminder::query()
+                ->where('id_medicine', $medicine->id_medicine)
+                ->where('is_active', true)
+                ->pluck('id_user')
+                ->filter(fn ($idUser) => !empty($idUser))
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        $statusLabel = match ($request->halal_status) {
+            'halal' => 'HALAL',
+            'haram' => 'HARAM',
+            default => 'SYUBHAT',
+        };
+        $productName = $medicine->name ?: $medicine->generic_name ?: 'Obat';
+
+        $notified = 0;
+        foreach ($affectedUserIds as $userId) {
+            $notification = Notification::create([
+                'user_id' => (int) $userId,
+                'title' => 'Update Status Obat',
+                'message' => "Status {$productName} diperbarui menjadi {$statusLabel} oleh admin.",
+                'type' => 'medicine',
+                'action_type' => 'open_health_suite',
+                'action_value' => 'health_suite_hub',
+                'extra_data' => [
+                    'medicine_id' => (int) $medicine->id_medicine,
+                    'medicine_name' => $productName,
+                    'halal_status' => $request->halal_status,
+                ],
+                'is_read' => false,
+            ]);
+            $this->firebaseRealtimeService->syncNotification($notification);
+            $notified++;
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status updated',
+            'data' => [
+                'medicine_id' => (int) $medicine->id_medicine,
+                'halal_status' => $medicine->halal_status,
+                'notified_users' => $notified,
+            ],
+        ]);
     }
 }

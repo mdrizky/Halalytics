@@ -3,22 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{{ $settings['site_description'] ?? 'AI-Powered Halal & Health Scanner App' }}">
-    <title>@yield('title', $settings['site_name'] ?? 'HalalScan AI')</title>
+    @php
+        $siteName = $settings['site_name'] ?? 'HalalScan AI';
+        $defaultDescription = $settings['site_description'] ?? 'AI-Powered Halal & Health Scanner App';
+        $metaDescription = trim((string) $__env->yieldContent('description', $defaultDescription));
+        $metaKeywords = trim((string) $__env->yieldContent('keywords', 'halal scanner, cek halal, interaksi obat, health score, BPOM'));
+        $canonicalUrl = trim((string) $__env->yieldContent('canonical', url()->current()));
+        $defaultOgImage = asset('images/logo.png');
+        $ogImage = trim((string) $__env->yieldContent('og_image', $defaultOgImage));
+        $pageTitle = trim((string) $__env->yieldContent('title', $siteName));
+    @endphp
+
+    <meta name="description" content="{{ $metaDescription }}">
+    <meta name="keywords" content="{{ $metaKeywords }}">
+    <meta name="robots" content="index,follow,max-image-preview:large">
+    <link rel="canonical" href="{{ $canonicalUrl }}">
+    <title>{{ $pageTitle }}</title>
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ $siteName }}">
+    <meta property="og:title" content="{{ $pageTitle }}">
+    <meta property="og:description" content="{{ $metaDescription }}">
+    <meta property="og:url" content="{{ $canonicalUrl }}">
+    <meta property="og:image" content="{{ $ogImage }}">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $pageTitle }}">
+    <meta name="twitter:description" content="{{ $metaDescription }}">
+    <meta name="twitter:image" content="{{ $ogImage }}">
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        :root {
+            --promo-green: #0ea56b;
+            --promo-green-deep: #08734a;
+            --promo-blue: #1f4fd6;
+            --promo-ink: #0f172a;
+        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3, h4, .font-brand { font-family: 'Space Grotesk', sans-serif; }
         .gradient-bg { background: linear-gradient(135deg, #065f46 0%, #1d4ed8 100%); }
         .gradient-text { background: linear-gradient(135deg, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
         .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.12); }
     </style>
+    @stack('head')
     @yield('styles')
 </head>
 <body class="bg-white text-gray-800">
@@ -33,7 +67,7 @@
                     <div class="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center">
                         <span class="text-white font-bold text-sm">H</span>
                     </div>
-                    <span class="font-bold text-xl text-gray-900">
+                    <span class="font-brand font-bold text-xl text-gray-900">
                         {{ $settings['site_name'] ?? 'HalalScan AI' }}
                     </span>
                 </a>
@@ -159,6 +193,11 @@
             menu.classList.toggle('hidden');
         });
     </script>
+    @hasSection('schema')
+    <script type="application/ld+json">
+{!! trim($__env->yieldContent('schema')) !!}
+    </script>
+    @endif
     @yield('scripts')
 </body>
 </html>

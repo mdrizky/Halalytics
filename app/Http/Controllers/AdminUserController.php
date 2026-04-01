@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\ScanModel;
+use App\Models\ScanHistory;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class AdminUserController extends Controller
 {
@@ -16,6 +18,9 @@ class AdminUserController extends Controller
         $totalUsers = User::count();
         $activeUsers = User::where('active', 1)->count();
         $totalScans = ScanModel::count();
+        if (Schema::hasTable('scan_histories')) {
+            $totalScans += ScanHistory::count();
+        }
         
         // Calculate user growth
         $usersLastMonth = User::where('created_at', '>=', Carbon::now()->subMonth())->count();
@@ -30,7 +35,7 @@ class AdminUserController extends Controller
         ];
         
         // Users with scan count
-        $query = User::withCount('scans');
+        $query = User::withCount('scans')->withCount('scanHistories');
         
         // Search
         if ($request->has('search') && $request->search) {
@@ -55,12 +60,23 @@ class AdminUserController extends Controller
         // Sort
         $sortBy = $request->get('sort', 'created_at');
         $sortOrder = $request->get('order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $allowedSort = ['created_at', 'username', 'scans_count'];
+        if (!in_array($sortBy, $allowedSort, true)) {
+            $sortBy = 'created_at';
+        }
+        if (!in_array(strtolower($sortOrder), ['asc', 'desc'], true)) {
+            $sortOrder = 'desc';
+        }
+        if ($sortBy === 'scans_count') {
+            $query->orderByRaw('(COALESCE(scans_count,0) + COALESCE(scan_histories_count,0)) ' . $sortOrder);
+        } else {
+            $query->orderBy($sortBy, $sortOrder);
+        }
         
         $users = $query->paginate(10)->withQueryString();
         
         // Scan trends by category
-        $scanTrends = ScanModel::selectRaw("
+        $scanTrendsRaw = ScanModel::selectRaw("
             CASE 
                 WHEN kategori LIKE '%dairy%' OR kategori LIKE '%susu%' THEN 'Dairy & Poultry'
                 WHEN kategori LIKE '%snack%' THEN 'Processed Snacks'
@@ -74,7 +90,31 @@ class AdminUserController extends Controller
         ->limit(4)
         ->get();
 
-        return view('admin.user-new', compact('users', 'stats', 'scanTrends'));
+        $totalTrendScans = max(1, (int) $scanTrendsRaw->sum('count'));
+        $colors = ['#00bbc2', '#f59e0b', '#6366f1', '#10b981'];
+        $scanTrends = $scanTrendsRaw->values()->map(function ($row, $index) use ($totalTrendScans, $colors) {
+            return [
+                'category' => $row->category,
+                'count' => (int) $row->count,
+                'percentage' => (int) round(($row->count / $totalTrendScans) * 100),
+                'color' => $colors[$index % count($colors)],
+            ];
+        })->toArray();
+
+        $topContributors = User::query()
+            ->withCount('scans')
+            ->withCount('scanHistories')
+            ->orderByRaw('(COALESCE(scans_count,0) + COALESCE(scan_histories_count,0)) DESC')
+            ->limit(3)
+            ->get();
+
+        return view('admin.user-new', [
+            'users' => $users,
+            'stats' => $stats,
+            'scanTrends' => $scanTrends,
+            'scan_trends' => $scanTrends,
+            'topContributors' => $topContributors,
+        ]);
     }
 
     // Edit user form

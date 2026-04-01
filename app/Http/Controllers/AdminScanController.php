@@ -98,13 +98,24 @@ class AdminScanController extends Controller
     {
         // Handle JSON request from scanner
         if ($request->expectsJson()) {
-            $request->validate([
+            $validated = $request->validate([
                 'barcode' => 'required|string',
-                'user_id' => 'required|exists:users,id',
+                'user_id' => 'required|integer',
             ]);
 
+            $user = User::query()
+                ->where('id_user', $validated['user_id'])
+                ->orWhere('id', $validated['user_id'])
+                ->first();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User tidak ditemukan'
+                ], 422);
+            }
+
             // Find product by barcode
-            $product = ProductModel::where('barcode', $request->barcode)->first();
+            $product = ProductModel::where('barcode', $validated['barcode'])->first();
             
             if (!$product) {
                 return response()->json([
@@ -115,14 +126,14 @@ class AdminScanController extends Controller
 
             // Create scan record
             $scan = ScanModel::create([
-                'user_id' => $request->user_id,
+                'user_id' => $user->id_user,
                 'product_id' => $product->id_product,
                 'nama_produk' => $product->nama_produk,
-                'barcode' => $request->barcode,
-                'kategori' => $product->kategori,
-                'status_halal' => strtolower($product->status_halal),
-                'status_kesehatan' => strtolower($product->status_kesehatan),
-                'tanggal_expired' => $product->tanggal_expired,
+                'barcode' => $validated['barcode'],
+                'kategori' => optional($product->kategori)->nama_kategori ?? null,
+                'status_halal' => strtolower((string) ($product->status ?? 'syubhat')),
+                'status_kesehatan' => 'sehat',
+                'tanggal_expired' => null,
                 'tanggal_scan' => Carbon::now(),
             ]);
 

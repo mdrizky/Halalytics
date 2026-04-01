@@ -4,16 +4,442 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
 
 class GeminiService
 {
     private $apiKey;
+    private $model;
+    private $maxTokens;
+    private $temperature;
     private $baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
+    private $maxRetries = 3;
+    private $timeoutSeconds = 30;
 
     public function __construct()
     {
         $this->apiKey = config('services.gemini.key');
+        $this->model = config('services.gemini.model', 'gemini-2.0-flash');
+        $this->maxTokens = (int) config('services.gemini.max_tokens', 2048);
+        $this->temperature = (float) config('services.gemini.temperature', 0.7);
     }
+
+    // ================================================================
+    // CORE METHODS — Retry + Fallback + Cache + Rate Limit
+    // ================================================================
+
+    /**
+     * Core text generation with retry, cache, and rate limiting.
+     */
+    public function generateText($prompt)
+    {
+        $cacheKey = 'gemini_text_' . md5($prompt);
+
+        // Return cached response if available (24 hours)
+        $cached = Cache::get($cacheKey);
+        if ($cached !== null) {
+            $this->geminiLog('info', 'Cache hit for prompt', ['key' => $cacheKey]);
+            return $cached;
+        }
+
+        // Rate limiting: 10 requests per minute per user
+        $rateLimitKey = 'gemini_rate_' . (auth()->id() ?? 'guest');
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 10)) {
+            $seconds = RateLimiter::availableIn($rateLimitKey);
+            $this->geminiLog('warning', 'Rate limit exceeded', ['wait_seconds' => $seconds]);
+            return $this->fallbackResponse('rate_limited', [
+                'error' => "Terlalu banyak permintaan. Coba lagi dalam {$seconds} detik.",
+                'retry_after' => $seconds,
+            ]);
+        }
+        RateLimiter::hit($rateLimitKey, 60);
+
+        $prompt = $this->prependLocaleInstruction($prompt, false);
+
+        // Retry loop with exponential backoff
+        $lastError = null;
+        for ($attempt = 1; $attempt <= $this->maxRetries; $attempt++) {
+            try {
+                $response = Http::timeout($this->timeoutSeconds)->post(
+                    "{$this->baseUrl}/models/{$this->model}:generateContent?key={$this->apiKey}",
+                    [
+                        'contents' => [
+                            ['parts' => [['text' => $prompt]]]
+                        ],
+                        'generationConfig' => [
+                            'maxOutputTokens' => $this->maxTokens,
+                            'temperature' => $this->temperature,
+                        ],
+                    ]
+                );
+
+                if ($response->successful()) {
+                    $text = $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                    $result = $this->decodeJson($text);
+
+                    // Cache successful response for 24 hours
+                    if (!isset($result['error'])) {
+                        Cache::put($cacheKey, $result, now()->addHours(24));
+                    }
+
+                    return $result;
+                }
+
+                $lastError = $this->handleApiError($response, $attempt);
+
+            } catch (\Illuminate\Http\Client\ConnectionException $e) {
+                $lastError = 'Connection timeout: ' . $e->getMessage();
+                $this->geminiLog('error', "Attempt {$attempt} timeout", ['error' => $lastError]);
+            } catch (\Exception $e) {
+                $lastError = $e->getMessage();
+                $this->geminiLog('error', "Attempt {$attempt} exception", ['error' => $lastError]);
+            }
+
+            // Exponential backoff: 1s, 2s, 4s
+            if ($attempt < $this->maxRetries) {
+                $backoffMs = pow(2, $attempt - 1) * 1000;
+                usleep($backoffMs * 1000);
+            }
+        }
+
+        // All retries failed — return fallback
+        $this->geminiLog('error', 'All retries exhausted, returning fallback', ['last_error' => $lastError]);
+        return $this->fallbackResponse('text_generation_failed', ['error' => $lastError]);
+    }
+
+    /**
+     * Core vision generation with retry, cache, and rate limiting.
+     */
+    public function generateWithImage($prompt, $imageBase64)
+    {
+        // For vision, cache key includes first 100 chars of image to avoid huge keys
+        $cacheKey = 'gemini_vision_' . md5($prompt . substr($imageBase64, 0, 100));
+
+        $cached = Cache::get($cacheKey);
+        if ($cached !== null) {
+            $this->geminiLog('info', 'Vision cache hit', ['key' => $cacheKey]);
+            return $cached;
+        }
+
+        // Rate limiting
+        $rateLimitKey = 'gemini_rate_' . (auth()->id() ?? 'guest');
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 10)) {
+            $seconds = RateLimiter::availableIn($rateLimitKey);
+            return $this->fallbackResponse('rate_limited', [
+                'error' => "Terlalu banyak permintaan. Coba lagi dalam {$seconds} detik.",
+                'retry_after' => $seconds,
+            ]);
+        }
+        RateLimiter::hit($rateLimitKey, 60);
+
+        $prompt = $this->prependLocaleInstruction($prompt, true);
+        $imageBase64 = preg_replace('/^data:image\/\w+;base64,/', '', $imageBase64);
+
+        $lastError = null;
+        for ($attempt = 1; $attempt <= $this->maxRetries; $attempt++) {
+            try {
+                $response = Http::timeout($this->timeoutSeconds + 30)->post(
+                    "{$this->baseUrl}/models/{$this->model}:generateContent?key={$this->apiKey}",
+                    [
+                        'contents' => [
+                            [
+                                'parts' => [
+                                    ['text' => $prompt],
+                                    [
+                                        'inline_data' => [
+                                            'mime_type' => 'image/jpeg',
+                                            'data' => $imageBase64,
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        'generationConfig' => [
+                            'maxOutputTokens' => $this->maxTokens,
+                            'temperature' => $this->temperature,
+                        ],
+                    ]
+                );
+
+                if ($response->successful()) {
+                    $text = $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                    $result = $this->decodeJson($text);
+
+                    if (!isset($result['error'])) {
+                        Cache::put($cacheKey, $result, now()->addHours(24));
+                    }
+                    return $result;
+                }
+
+                $lastError = $this->handleApiError($response, $attempt);
+
+            } catch (\Illuminate\Http\Client\ConnectionException $e) {
+                $lastError = 'Vision timeout: ' . $e->getMessage();
+                $this->geminiLog('error', "Vision attempt {$attempt} timeout", ['error' => $lastError]);
+            } catch (\Exception $e) {
+                $lastError = $e->getMessage();
+                $this->geminiLog('error', "Vision attempt {$attempt} exception", ['error' => $lastError]);
+            }
+
+            if ($attempt < $this->maxRetries) {
+                usleep(pow(2, $attempt - 1) * 1000 * 1000);
+            }
+        }
+
+        $this->geminiLog('error', 'Vision retries exhausted', ['last_error' => $lastError]);
+        return $this->fallbackResponse('vision_generation_failed', ['error' => $lastError]);
+    }
+
+    // ================================================================
+    // ERROR + FALLBACK HANDLING
+    // ================================================================
+
+    /**
+     * Handle specific Gemini API error codes and log them.
+     */
+    private function handleApiError($response, $attempt): string
+    {
+        $status = $response->status();
+        $body = $response->body();
+        $errorMsg = "HTTP {$status}: {$body}";
+
+        // Parse error details from Gemini response
+        $errorData = $response->json();
+        $errorCode = $errorData['error']['code'] ?? $status;
+        $errorMessage = $errorData['error']['message'] ?? $body;
+
+        $this->geminiLog('error', "API error on attempt {$attempt}", [
+            'status' => $status,
+            'code' => $errorCode,
+            'message' => substr($errorMessage, 0, 200),
+        ]);
+
+        // Don't retry on non-retryable errors
+        if (in_array($status, [400, 401, 403, 404])) {
+            // INVALID_ARGUMENT, PERMISSION_DENIED, NOT_FOUND — skip retry
+            $this->geminiLog('error', 'Non-retryable error, skipping remaining retries');
+        }
+
+        return $errorMsg;
+    }
+
+    /**
+     * Provides meaningful fallback responses when AI is unavailable.
+     */
+    private function fallbackResponse(string $type, array $context = []): array
+    {
+        $this->geminiLog('warning', "Returning fallback response", ['type' => $type, 'context' => $context]);
+
+        $base = [
+            '_fallback' => true,
+            '_fallback_reason' => $context['error'] ?? 'AI tidak tersedia saat ini',
+        ];
+
+        return match ($type) {
+            'rate_limited' => array_merge($base, $context),
+
+            'text_generation_failed' => array_merge($base, [
+                'status_halal' => 'belum_diverifikasi',
+                'skor_kesehatan' => 50,
+                'ringkasan' => 'Analisis AI tidak tersedia saat ini. Silakan coba lagi nanti atau periksa langsung di situs resmi BPOM/MUI.',
+                'ingredients' => [],
+                'recommendation' => 'Silakan coba lagi dalam beberapa saat.',
+            ]),
+
+            'vision_generation_failed' => array_merge($base, [
+                'status_halal' => 'belum_diverifikasi',
+                'ringkasan' => 'Analisis gambar tidak tersedia saat ini. Pastikan gambar jelas dan coba lagi nanti.',
+                'detected_tests' => [],
+                'possible_drugs' => [],
+                'ingredients' => [],
+            ]),
+
+            default => array_merge($base, [
+                'message' => 'Layanan AI sedang tidak tersedia. Silakan coba lagi nanti.',
+            ]),
+        };
+    }
+
+    private function shouldUseFeatureFallback(array $result): bool
+    {
+        return isset($result['_fallback']) || isset($result['error']);
+    }
+
+    private function estimateHalalStatusFromText(?string $text): string
+    {
+        $normalized = strtolower((string) $text);
+
+        if ($normalized === '') {
+            return 'belum_diverifikasi';
+        }
+
+        if (str_contains($normalized, 'pork') || str_contains($normalized, 'lard') || str_contains($normalized, 'babi')) {
+            return 'haram';
+        }
+
+        if (
+            str_contains($normalized, 'gelatin') ||
+            str_contains($normalized, 'glycerin') ||
+            str_contains($normalized, 'collagen') ||
+            str_contains($normalized, 'stearic')
+        ) {
+            return 'syubhat';
+        }
+
+        return 'belum_diverifikasi';
+    }
+
+    private function buildIngredientFeatureFallback(?string $ingredientsText): array
+    {
+        $estimatedStatus = $this->estimateHalalStatusFromText($ingredientsText);
+
+        return [
+            'ingredients' => [],
+            'nutrition_estimate' => [
+                'sugar_g' => 0,
+                'sodium_mg' => 0,
+                'calories' => 0,
+                'fat_g' => 0,
+            ],
+            'health_warnings' => [],
+            'personal_warnings' => [],
+            'status_halal' => $estimatedStatus,
+            'status_kesehatan' => 'perlu_riset',
+            'skor_kesehatan' => 50,
+            'ringkasan' => "Analisis tidak tersedia saat ini, silakan coba lagi nanti. Berdasarkan database kami, bahan ini tergolong {$estimatedStatus}.",
+            '_fallback' => true,
+        ];
+    }
+
+    private function buildHealthAssistantFallback(): array
+    {
+        return [
+            'condition' => 'Belum dapat dianalisis',
+            'gejala_terkait' => [],
+            'recommended_ingredients' => [],
+            'severity' => 'unknown',
+            'emergency_warning' => null,
+            'possible_causes' => [],
+            'halal_check' => [
+                'status' => 'belum_diverifikasi',
+                'notes' => 'Asisten AI sedang tidak tersedia.',
+            ],
+            'usage_instructions' => null,
+            'lifestyle_advice' => null,
+            'dosage_guidelines' => null,
+            'recommended_medicines_list' => [],
+            'recommendation' => 'Asisten AI sedang tidak tersedia. Silakan konsultasi dengan dokter atau tenaga medis.',
+            '_fallback' => true,
+        ];
+    }
+
+    private function buildOcrFeatureFallback(?string $rawText): array
+    {
+        $ocrText = trim((string) $rawText);
+
+        return [
+            'product_name' => null,
+            'brand' => null,
+            'ingredients' => [],
+            'nutrition_estimate' => [
+                'sugar_g' => 0,
+                'sodium_mg' => 0,
+                'calories' => 0,
+                'fat_g' => 0,
+            ],
+            'health_warnings' => [],
+            'personal_warnings' => [],
+            'status_halal' => $this->estimateHalalStatusFromText($ocrText),
+            'status_kesehatan' => 'perlu_riset',
+            'skor_kesehatan' => 50,
+            'ringkasan' => 'Analisis otomatis tidak tersedia, tapi teks berhasil diekstrak: ' . ($ocrText !== '' ? $ocrText : 'OCR belum menghasilkan teks yang cukup jelas.'),
+            'extracted_text' => $ocrText,
+            '_fallback' => true,
+        ];
+    }
+
+    // ================================================================
+    // DEDICATED GEMINI LOGGER
+    // ================================================================
+
+    /**
+     * Log to dedicated gemini.log channel.
+     */
+    private function geminiLog(string $level, string $message, array $context = []): void
+    {
+        $logMessage = "[Gemini] {$message}";
+
+        // Always log to dedicated Gemini log file
+        Log::channel('gemini')->{$level}($logMessage, $context);
+
+        // Also log errors to default channel
+        if (in_array($level, ['error', 'critical'])) {
+            Log::error($logMessage, $context);
+        }
+    }
+
+    // ================================================================
+    // JSON DECODE
+    // ================================================================
+
+    /**
+     * Clean and decode JSON from Gemini response.
+     */
+    private function decodeJson($text)
+    {
+        // Remove markdown code blocks
+        $text = preg_replace('/```json\s*/i', '', $text);
+        $text = preg_replace('/```/', '', $text);
+
+        // Extract JSON object
+        $start = strpos($text, '{');
+        $end = strrpos($text, '}');
+
+        if ($start !== false && $end !== false) {
+            $text = substr($text, $start, $end - $start + 1);
+        }
+
+        $text = trim($text);
+        $decoded = json_decode($text, true);
+
+        if (!$decoded) {
+            $this->geminiLog('warning', 'JSON decode failed', ['raw' => substr($text, 0, 200)]);
+            return ['raw_text' => $text, 'error' => 'Failed to parse AI response'];
+        }
+
+        return $decoded;
+    }
+
+    // ================================================================
+    // LOCALE INSTRUCTION
+    // ================================================================
+
+    /**
+     * Prepend strict language instruction based on request locale.
+     */
+    private function prependLocaleInstruction(string $prompt, bool $isVision): string
+    {
+        $locale = strtolower((string) app()->getLocale());
+        $languageLabel = match ($locale) {
+            'en' => 'English',
+            'ms' => 'Malay',
+            'ar' => 'Arabic',
+            default => 'Indonesian',
+        };
+
+        $modeLabel = $isVision ? 'image analysis' : 'text analysis';
+        $instruction = "SYSTEM INSTRUCTION ({$modeLabel}): " .
+            "Respond ONLY in {$languageLabel}. " .
+            "If output is JSON, keep all JSON keys exactly as requested and translate only human-readable values. " .
+            "Do not add extra wrappers or markdown.";
+
+        return $instruction . "\n\n" . $prompt;
+    }
+
+    // ================================================================
+    // FEATURE METHODS — All preserved, using core generateText/generateWithImage
+    // ================================================================
 
     /**
      * Check drug interaction between two medicines
@@ -198,12 +624,16 @@ Berikan analisis dalam format JSON yang valid tanpa markdown formatting:
     },
     \"usage_instructions\": \"cara pemakaian umum\",
     \"lifestyle_advice\": \"saran pola hidup/penanganan tanpa obat\",
-    \"dosage_guidelines\": \"aruran dosis umum untuk bahan aktif tersebut\",
+    \"dosage_guidelines\": \"aturan dosis umum untuk bahan aktif tersebut\",
     \"recommended_medicines_list\": [\"Obat A\", \"Obat B (Generik)\"],
     \"recommendation\": \"kesimpulan saran penutup\"
 }";
 
-        return $this->generateText($prompt);
+        $result = $this->generateText($prompt);
+
+        return $this->shouldUseFeatureFallback($result)
+            ? $this->buildHealthAssistantFallback()
+            : $result;
     }
 
     /**
@@ -287,7 +717,20 @@ PENTING:
 - Alcohol/Ethanol: kontroversial dalam fiqih
 - Carmine/CI 75470: dari serangga cochineal";
 
-        return $this->generateText($prompt);
+        $result = $this->generateText($prompt);
+
+        return $this->shouldUseFeatureFallback($result)
+            ? array_merge($this->buildIngredientFeatureFallback($ingredientsText), [
+                'bahan_terdeteksi' => [],
+                'bahan_berbahaya' => [],
+                'bahan_syubhat' => [],
+                'skor_keamanan' => 50,
+                'status_keamanan' => 'waspada',
+                'cocok_untuk' => [],
+                'tidak_cocok_untuk' => [],
+                'disclaimer' => 'Analisis fallback digunakan karena layanan AI tidak tersedia.',
+            ])
+            : $result;
     }
 
     /**
@@ -364,7 +807,11 @@ PENTING:
 - Estimasi nutrisi berdasarkan standar umum per sajian (estimasi terbaik).
 - Jika user memiliki riwayat medis (seperti diabetes atau hipertensi), sesuaikan 'personal_warnings' dan 'skor_kesehatan'.";
 
-        return $this->generateText($prompt);
+        $result = $this->generateText($prompt);
+
+        return $this->shouldUseFeatureFallback($result)
+            ? $this->buildIngredientFeatureFallback($ingredientsText)
+            : $result;
     }
 
     /**
@@ -406,125 +853,6 @@ PENTING:
     public function generateCustomContent($prompt)
     {
         return $this->generateText($prompt);
-    }
-
-    /**
-     * Core text generation
-     */
-    public function generateText($prompt)
-    {
-        try {
-            $prompt = $this->prependLocaleInstruction($prompt, false);
-            $response = Http::timeout(60)->post(
-                "{$this->baseUrl}/models/gemini-2.0-flash:generateContent?key={$this->apiKey}",
-                [
-                    'contents' => [
-                        ['parts' => [['text' => $prompt]]]
-                    ]
-                ]
-            );
-
-            if ($response->successful()) {
-                $text = $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? '';
-                return $this->decodeJson($text);
-            }
-            
-            Log::error("Gemini API Error: " . $response->body());
-            throw new \Exception('Gemini API error: ' . $response->body());
-        } catch (\Exception $e) {
-            Log::error('Gemini Service Error: ' . $e->getMessage());
-            return ['error' => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Core vision generation
-     */
-    public function generateWithImage($prompt, $imageBase64)
-    {
-        try {
-            $prompt = $this->prependLocaleInstruction($prompt, true);
-            $imageBase64 = preg_replace('/^data:image\/\w+;base64,/', '', $imageBase64);
-            $response = Http::timeout(60)->post(
-                "{$this->baseUrl}/models/gemini-2.0-flash:generateContent?key={$this->apiKey}",
-                [
-                    'contents' => [
-                        [
-                            'parts' => [
-                                ['text' => $prompt],
-                                [
-                                    'inline_data' => [
-                                        'mime_type' => 'image/jpeg',
-                                        'data' => $imageBase64
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-            );
-
-            if ($response->successful()) {
-                $text = $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? '';
-                return $this->decodeJson($text);
-            }
-            throw new \Exception('Gemini Vision API error: ' . $response->body());
-        } catch (\Exception $e) {
-            Log::error('Gemini Vision Error: ' . $e->getMessage());
-            return ['error' => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Clean and decode JSON
-     */
-    private function decodeJson($text)
-    {
-        // Remove markdown code blocks
-        $text = preg_replace('/```json\s*/i', '', $text);
-        $text = preg_replace('/```/', '', $text);
-        
-        // Remove any text before the first '{' and after the last '}'
-        $start = strpos($text, '{');
-        $end = strrpos($text, '}');
-        
-        if ($start !== false && $end !== false) {
-            $text = substr($text, $start, $end - $start + 1);
-        }
-        
-        $text = trim($text);
-        $decoded = json_decode($text, true);
-        
-        // Fallback: If decode fails, attempt to fix common issues or return raw wrapped
-        if (!$decoded) {
-            \Log::warning("JSON Decode Failed. Raw text: " . substr($text, 0, 100) . "...");
-            return ['raw_text' => $text, 'error' => 'Failed to parse AI response'];
-        }
-        
-        return $decoded;
-    }
-
-    /**
-     * Prepend strict language instruction based on request locale.
-     * JSON keys must remain unchanged for client compatibility.
-     */
-    private function prependLocaleInstruction(string $prompt, bool $isVision): string
-    {
-        $locale = strtolower((string) app()->getLocale());
-        $languageLabel = match ($locale) {
-            'en' => 'English',
-            'ms' => 'Malay',
-            'ar' => 'Arabic',
-            default => 'Indonesian',
-        };
-
-        $modeLabel = $isVision ? 'image analysis' : 'text analysis';
-        $instruction = "SYSTEM INSTRUCTION ({$modeLabel}): " .
-            "Respond ONLY in {$languageLabel}. " .
-            "If output is JSON, keep all JSON keys exactly as requested and translate only human-readable values. " .
-            "Do not add extra wrappers or markdown.";
-
-        return $instruction . "\n\n" . $prompt;
     }
 
     /**
@@ -593,6 +921,10 @@ PENTING:
 - Sesuaikan analisis dengan profil kesehatan user (misal: jika user diabetes, beri skor rendah pada produk tinggi gula).
 - Pastikan JSON valid dan tidak ada teks lain.";
 
-        return $this->generateWithImage($prompt, $imageBase64);
+        $result = $this->generateWithImage($prompt, $imageBase64);
+
+        return $this->shouldUseFeatureFallback($result)
+            ? $this->buildOcrFeatureFallback($result['raw_text'] ?? null)
+            : $result;
     }
 }

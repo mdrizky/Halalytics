@@ -12,9 +12,9 @@
         <p class="text-slate-500 text-sm mt-1">Real-time performance metrics for Halalytics platform.</p>
     </div>
     <div class="flex items-center space-x-2 bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <button class="px-4 py-1.5 text-xs font-bold rounded-lg bg-primary text-white">30 Days</button>
-        <button class="px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800">90 Days</button>
-        <button class="px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800">1 Year</button>
+        <button data-period="30" class="period-btn px-4 py-1.5 text-xs font-bold rounded-lg {{ ($period_days ?? 30) === 30 ? 'bg-primary text-white' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800' }}">30 Days</button>
+        <button data-period="90" class="period-btn px-4 py-1.5 text-xs font-bold rounded-lg {{ ($period_days ?? 30) === 90 ? 'bg-primary text-white' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800' }}">90 Days</button>
+        <button data-period="365" class="period-btn px-4 py-1.5 text-xs font-bold rounded-lg {{ ($period_days ?? 30) === 365 ? 'bg-primary text-white' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800' }}">1 Year</button>
         <div class="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
         <button class="px-2 py-1.5 text-slate-500 hover:text-primary">
             <span class="material-icons-round text-lg">calendar_today</span>
@@ -33,7 +33,7 @@
             <span class="text-[10px] font-extrabold px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-full">+4.2%</span>
         </div>
         <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Categories</p>
-        <h3 class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{{ $stats['categories'] ?? 0 }}</h3>
+        <h3 id="totalKategori-value" class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{{ $stats['categories'] ?? 0 }}</h3>
     </div>
     
     <!-- Card 2: Products -->
@@ -45,7 +45,7 @@
             <span class="text-[10px] font-extrabold px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-full">+12.5%</span>
         </div>
         <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Products</p>
-        <h3 class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{{ number_format($stats['products'] ?? 0) }}</h3>
+        <h3 id="totalProduk-value" class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{{ number_format($stats['products'] ?? 0) }}</h3>
     </div>
     
     <!-- Card 3: Users -->
@@ -57,7 +57,7 @@
             <span class="text-[10px] font-extrabold px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-full">+8.1%</span>
         </div>
         <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Users</p>
-        <h3 class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{{ number_format($stats['users'] ?? 0) }}</h3>
+        <h3 id="totalUsers-value" class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{{ number_format($stats['users'] ?? 0) }}</h3>
     </div>
     
     <!-- Card 4: Scans -->
@@ -83,7 +83,7 @@
                 $scansFormatted = number_format($scans);
             }
         @endphp
-        <h3 class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{{ $scansFormatted }}</h3>
+        <h3 id="totalScan-value" class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{{ $scansFormatted }}</h3>
     </div>
 </div>
 
@@ -166,45 +166,8 @@
                 </div>
             </div>
             
-            <!-- Chart SVG -->
             <div class="relative h-64 w-full">
-                <div class="absolute inset-0 flex flex-col justify-between">
-                    <div class="w-full border-t border-slate-100 dark:border-slate-800/50"></div>
-                    <div class="w-full border-t border-slate-100 dark:border-slate-800/50"></div>
-                    <div class="w-full border-t border-slate-100 dark:border-slate-800/50"></div>
-                    <div class="w-full border-t border-slate-100 dark:border-slate-800/50"></div>
-                    <div class="w-full border-t border-slate-100 dark:border-slate-800/50"></div>
-                </div>
-                <svg class="relative w-full h-full overflow-visible" viewBox="0 0 800 200">
-                    <!-- Area Fill -->
-                    <path d="M0,150 Q100,120 200,140 T400,100 T600,60 T800,80 L800,200 L0,200 Z" fill="url(#chartFill)"></path>
-                    <defs>
-                        <linearGradient id="chartFill" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" style="stop-color:#00bbc2;stop-opacity:0.15"></stop>
-                            <stop offset="100%" style="stop-color:#00bbc2;stop-opacity:0"></stop>
-                        </linearGradient>
-                    </defs>
-                    <!-- Dashed line for comparison -->
-                    <path d="M0,170 Q100,160 200,175 T400,150 T600,130 T800,140" fill="none" stroke="#cbd5e1" stroke-dasharray="6,4" stroke-width="2"></path>
-                    <!-- Main Line -->
-                    <path d="M0,150 Q100,120 200,140 T400,100 T600,60 T800,80" fill="none" stroke="#00bbc2" stroke-linecap="round" stroke-width="4"></path>
-                    <!-- Points -->
-                    <circle cx="200" cy="140" fill="white" r="4" stroke="#00bbc2" stroke-width="2"></circle>
-                    <circle cx="400" cy="100" fill="white" r="4" stroke="#00bbc2" stroke-width="2"></circle>
-                    <circle cx="600" cy="60" fill="white" r="4" stroke="#00bbc2" stroke-width="2"></circle>
-                </svg>
-                <!-- X Axis Labels -->
-                @php
-                    $dates = [];
-                    for ($i = 4; $i >= 0; $i--) {
-                        $dates[] = now()->subDays($i * 7)->format('M d');
-                    }
-                @endphp
-                <div class="flex justify-between mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
-                    @foreach($dates as $date)
-                    <span>{{ $date }}</span>
-                    @endforeach
-                </div>
+                <canvas id="scanActivityChart"></canvas>
             </div>
         </div>
         
@@ -229,13 +192,21 @@
                         <tr>
                             <td class="px-6 py-4">
                                 <div class="flex items-center">
-                                    <div class="w-8 h-8 rounded bg-slate-100 dark:bg-slate-800 mr-3 flex items-center justify-center">
+                                    <div class="w-8 h-8 rounded bg-slate-100 dark:bg-slate-800 mr-3 flex items-center justify-center overflow-hidden">
+                                        @if(!empty($scan->image))
+                                        @php
+                                            $scanImage = str_starts_with((string) $scan->image, 'http') ? $scan->image : asset($scan->image);
+                                        @endphp
+                                        <img src="{{ $scanImage }}" alt="{{ $scan->product_name ?? 'Product' }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <span class="material-icons-round text-sm text-slate-400" style="display:none">fastfood</span>
+                                        @else
                                         <span class="material-icons-round text-sm text-slate-400">fastfood</span>
+                                        @endif
                                     </div>
                                     <span class="text-sm font-medium">{{ $scan->product_name ?? 'Unknown Product' }}</span>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-sm">{{ $scan->user->username ?? 'Guest' }}</td>
+                            <td class="px-6 py-4 text-sm">{{ optional($scan->user)->username ?? optional($scan->user)->full_name ?? 'Guest' }}</td>
                             <td class="px-6 py-4">
                                 @php
                                     $status = strtolower($scan->status_halal ?? 'unknown');
@@ -302,7 +273,11 @@
                 <div class="flex items-center group cursor-pointer">
                     <div class="relative w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center transition-colors group-hover:bg-primary/10">
                         @if($product->image)
-                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->product_name }}" class="w-8 h-8 object-cover rounded shadow-sm">
+                        @php
+                            $topImage = str_starts_with((string) $product->image, 'http') ? $product->image : asset($product->image);
+                        @endphp
+                        <img src="{{ $topImage }}" alt="{{ $product->product_name }}" class="w-8 h-8 object-cover rounded shadow-sm" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <span class="material-icons-round text-slate-400" style="display:none">inventory_2</span>
                         @else
                         <span class="material-icons-round text-slate-400">inventory_2</span>
                         @endif
@@ -311,9 +286,18 @@
                     <div class="ml-4 flex-1">
                         <p class="text-sm font-bold text-slate-800 dark:text-white">{{ Str::limit($product->product_name, 20) }}</p>
                         <div class="flex items-center text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-wider">
-                            <span class="text-emerald-600">{{ $product->halal_status ?? 'Pending' }}</span>
+                            @php
+                                $topStatus = strtolower((string) ($product->halal_status ?? 'pending'));
+                                $topStatusClass = match ($topStatus) {
+                                    'halal' => 'text-emerald-600',
+                                    'haram', 'tidak halal' => 'text-red-600',
+                                    'syubhat', 'diragukan' => 'text-amber-600',
+                                    default => 'text-slate-500',
+                                };
+                            @endphp
+                            <span class="{{ $topStatusClass }}">{{ $product->halal_status ?? 'Pending' }}</span>
                             <span class="mx-2">•</span>
-                            <span>{{ $product->category->name ?? 'Uncategorized' }}</span>
+                            <span>{{ $product->category_name ?? 'Uncategorized' }}</span>
                         </div>
                     </div>
                     <div class="text-right">
@@ -392,9 +376,106 @@
 @push('scripts')
 <script>
 (() => {
+    const dashboardStatsUrl = "{{ route('admin.dashboard.stats') }}";
     const statsUrl = "{{ route('admin.dashboard.monitor.stats') }}";
     const feedUrl = "{{ route('admin.dashboard.monitor.feed') }}";
     const feedRoot = document.getElementById('realtime-feed-list');
+    const periodButtons = Array.from(document.querySelectorAll('.period-btn'));
+    const chartLabels = @json($chart_labels ?? []);
+    const chartData = @json($chart_data ?? []);
+    const initialPeriod = Number("{{ (int)($period_days ?? 30) }}") || 30;
+    let activePeriod = initialPeriod;
+    let scanChart = null;
+
+    const setPeriodButtonState = (period) => {
+        periodButtons.forEach((btn) => {
+            const value = Number(btn.dataset.period || 30);
+            const isActive = value === period;
+            btn.classList.toggle('bg-primary', isActive);
+            btn.classList.toggle('text-white', isActive);
+            btn.classList.toggle('text-slate-500', !isActive);
+        });
+    };
+
+    const updateKpi = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.textContent = Number(value || 0).toLocaleString();
+        }
+    };
+
+    const renderChart = (labels = [], data = []) => {
+        const canvas = document.getElementById('scanActivityChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 260);
+        gradient.addColorStop(0, 'rgba(0, 187, 194, 0.18)');
+        gradient.addColorStop(1, 'rgba(0, 187, 194, 0)');
+
+        if (scanChart) {
+            scanChart.destroy();
+        }
+
+        scanChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    data,
+                    borderColor: '#00bbc2',
+                    backgroundColor: gradient,
+                    fill: true,
+                    borderWidth: 3,
+                    pointRadius: 0,
+                    tension: 0.35,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#94a3b8', maxRotation: 0, autoSkip: true, maxTicksLimit: activePeriod === 365 ? 12 : 10 }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(148, 163, 184, 0.12)' },
+                        ticks: { color: '#94a3b8', precision: 0 }
+                    }
+                }
+            }
+        });
+    };
+
+    const refreshDashboardByPeriod = async (period) => {
+        try {
+            const res = await fetch(`${dashboardStatsUrl}?period=${period}`);
+            const json = await res.json();
+            if (!json?.success) return;
+
+            const stats = json.stats || {};
+            updateKpi('totalKategori-value', stats.totalKategori);
+            updateKpi('totalProduk-value', stats.totalProduk);
+            updateKpi('totalUsers-value', stats.totalUsers);
+            updateKpi('totalScan-value', stats.totalScan);
+            renderChart(json.chart?.labels || [], json.chart?.data || []);
+        } catch (error) {
+            console.warn('Failed loading dashboard period data', error);
+        }
+    };
+
+    periodButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const period = Number(button.dataset.period || 30);
+            activePeriod = period;
+            setPeriodButtonState(period);
+            refreshDashboardByPeriod(period);
+        });
+    });
 
     const renderFeed = (items = []) => {
         if (!feedRoot) return;
@@ -465,8 +546,11 @@
     }
 
     // Polling fallback / default refresh
+    setPeriodButtonState(initialPeriod);
+    renderChart(chartLabels, chartData);
     poll();
     setInterval(poll, 12000);
+    setInterval(() => refreshDashboardByPeriod(activePeriod), 20000);
 })();
 </script>
 @endpush

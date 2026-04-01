@@ -138,8 +138,22 @@
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
                             <div class="h-10 w-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
-                                @if(isset($scan->product) && $scan->product->gambar)
-                                    <img src="{{ asset('storage/' . $scan->product->gambar) }}" alt="Product" class="w-full h-full object-cover">
+                                @php
+                                    $productImage = null;
+                                    if (isset($scan->product)) {
+                                        if ($scan->product->gambar) {
+                                            $productImage = asset('storage/' . $scan->product->gambar);
+                                        } elseif ($scan->product->image) {
+                                            $imgVal = $scan->product->image;
+                                            $productImage = str_starts_with($imgVal, 'http') ? $imgVal : asset('storage/' . $imgVal);
+                                        } elseif ($scan->product->image_url) {
+                                            $productImage = $scan->product->image_url;
+                                        }
+                                    }
+                                @endphp
+                                @if($productImage)
+                                    <img src="{{ $productImage }}" alt="Product" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <span class="material-icons-round text-slate-400" style="display:none">fastfood</span>
                                 @else
                                     <span class="material-icons-round text-slate-400">fastfood</span>
                                 @endif

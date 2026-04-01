@@ -246,18 +246,80 @@ class AIAssistantController extends Controller
         $text = $request->ingredients_text;
         $profile = $request->health_profile;
 
-        // Custom prompt for health advice
-        $prompt = "As a health assistant, analyze these ingredients: '{$text}'. 
-        The user has the following medical profile: " . json_encode($profile) . ". 
-        Provide specific advice on whether this product is safe for them. 
-        Format as JSON: {'is_safe': boolean, 'warnings': [], 'recommendation': 'text'}";
+        $normalized = strtolower($text);
+        $warnings = [];
+        $riskScore = 0;
 
-        // We can reuse the analyzeIngredients logic with a custom prompt if we modify GeminiService
-        // For now, let's keep it simple.
+        $allergyText = strtolower((string) ($profile['allergy'] ?? $profile['allergies'] ?? ''));
+        if ($allergyText !== '') {
+            $allergens = collect(preg_split('/[,;|]/', $allergyText))
+                ->map(fn ($i) => trim((string) $i))
+                ->filter(fn ($i) => $i !== '')
+                ->values();
+            foreach ($allergens as $allergen) {
+                if (str_contains($normalized, $allergen)) {
+                    $warnings[] = "Terdeteksi alergen pribadi: {$allergen}.";
+                    $riskScore += 45;
+                }
+            }
+        }
+
+        $medicalHistory = strtolower((string) ($profile['medical_history'] ?? ''));
+        if ($medicalHistory !== '' && str_contains($medicalHistory, 'diabet')) {
+            foreach (['glucose', 'sugar', 'gula', 'high fructose corn syrup', 'fructose'] as $keyword) {
+                if (str_contains($normalized, $keyword)) {
+                    $warnings[] = "Bahan {$keyword} perlu dibatasi untuk profil diabetes.";
+                    $riskScore += 20;
+                    break;
+                }
+            }
+        }
+
+        foreach (['alcohol', 'ethanol', 'gelatin', 'lard'] as $sensitive) {
+            if (str_contains($normalized, $sensitive)) {
+                $warnings[] = "Bahan sensitif terdeteksi: {$sensitive}.";
+                $riskScore += 15;
+            }
+        }
+
+        $advice = null;
+        try {
+            $prompt = "Analyze ingredient safety briefly for this profile.\n"
+                . "Ingredients: {$text}\n"
+                . "Profile: " . json_encode($profile) . "\n"
+                . "Return concise JSON with keys: recommendation,warnings.";
+            $aiRaw = $this->geminiService->generateCustomContent($prompt);
+            $decoded = is_string($aiRaw) ? json_decode($aiRaw, true) : $aiRaw;
+            if (is_array($decoded)) {
+                $advice = $decoded;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Personal health advice AI fallback used: ' . $e->getMessage());
+        }
+
+        $riskLevel = match (true) {
+            $riskScore >= 60 => 'high',
+            $riskScore >= 30 => 'moderate',
+            default => 'low',
+        };
+        $isSafe = $riskLevel !== 'high';
+        $recommendation = $advice['recommendation'] ?? match ($riskLevel) {
+            'high' => 'Tidak direkomendasikan untuk dikonsumsi tanpa konsultasi lebih lanjut.',
+            'moderate' => 'Konsumsi terbatas dan pantau reaksi tubuh Anda.',
+            default => 'Relatif aman berdasarkan data profil saat ini.',
+        };
+        $aiWarnings = is_array($advice['warnings'] ?? null) ? $advice['warnings'] : [];
 
         return response()->json([
             'success' => true,
-            'advice' => 'Feature coming soon with full Gemini integration'
+            'data' => [
+                'is_safe' => $isSafe,
+                'risk_level' => $riskLevel,
+                'risk_score' => $riskScore,
+                'warnings' => array_values(array_unique(array_merge($warnings, $aiWarnings))),
+                'recommendation' => $recommendation,
+                'disclaimer' => 'Hasil ini bersifat edukatif dan tidak menggantikan diagnosis medis.'
+            ]
         ]);
     }
     /**

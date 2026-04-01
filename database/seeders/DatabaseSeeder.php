@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
             IngredientSeeder::class,
             MedicineSeeder::class,
             ProductSeeder::class,
+            StreetFoodSeeder::class,
+            HalalyticsFeatureSeeder::class,
             HalalDatabaseSeeder::class,
             BannerSeeder::class,
             UmkmSeeder::class,

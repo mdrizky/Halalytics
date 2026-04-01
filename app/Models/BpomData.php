@@ -30,14 +30,18 @@ class BpomData extends Model
         'barcode',
         'submitted_by',
         'verification_status',
+        'is_verified_manually',
         'verified_by',
         'verified_at',
+        'last_synced_at',
     ];
 
     protected $casts = [
         'tanggal_terbit' => 'date',
         'masa_berlaku' => 'date',
+        'is_verified_manually' => 'boolean',
         'verified_at' => 'datetime',
+        'last_synced_at' => 'datetime',
         'skor_keamanan' => 'integer',
     ];
 

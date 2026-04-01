@@ -76,27 +76,26 @@
 <!-- Search & Filters -->
 <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm mb-8">
     <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap gap-4 items-center justify-between bg-slate-50/50 dark:bg-slate-800/20">
-        <div class="flex-1 min-w-[300px]">
-            <form action="{{ route('admin.user') }}" method="GET">
+        <form action="{{ route('admin.user') }}" method="GET" class="w-full flex flex-wrap gap-4 items-center justify-between">
+            <div class="flex-1 min-w-[300px]">
                 <div class="relative group">
                     <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
                     <input type="text" name="search" value="{{ request('search') }}" class="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm outline-none" placeholder="Search by name, email, or UID...">
                 </div>
-            </form>
-        </div>
-        <div class="flex gap-2">
-            <select name="status" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm px-4 py-2 focus:ring-primary/20 focus:border-primary outline-none font-medium" onchange="this.form.submit()">
-                <option value="">Status: All</option>
-                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                <option value="blocked" {{ request('status') == 'blocked' ? 'selected' : '' }}>Blocked</option>
-                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending Verification</option>
-            </select>
-            <select name="sort" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm px-4 py-2 focus:ring-primary/20 focus:border-primary outline-none font-medium">
-                <option value="newest">Sort by: Newest</option>
-                <option value="active">Most Active</option>
-                <option value="alpha">Alphabetical</option>
-            </select>
-        </div>
+            </div>
+            <div class="flex gap-2">
+                <select name="status" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm px-4 py-2 focus:ring-primary/20 focus:border-primary outline-none font-medium" onchange="this.form.submit()">
+                    <option value="">Status: All</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                    <option value="blocked" {{ request('status') == 'blocked' ? 'selected' : '' }}>Blocked</option>
+                </select>
+                <select name="sort" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm px-4 py-2 focus:ring-primary/20 focus:border-primary outline-none font-medium" onchange="this.form.submit()">
+                    <option value="created_at" {{ request('sort', 'created_at') == 'created_at' ? 'selected' : '' }}>Sort by: Newest</option>
+                    <option value="username" {{ request('sort') == 'username' ? 'selected' : '' }}>Alphabetical</option>
+                    <option value="scans_count" {{ request('sort') == 'scans_count' ? 'selected' : '' }}>Most Active</option>
+                </select>
+            </div>
+        </form>
     </div>
     
     <!-- Data Table -->
@@ -134,11 +133,14 @@
                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">{{ $user->created_at ? $user->created_at->format('H:i A') : '' }}</p>
                     </td>
                     <td class="px-6 py-4 text-center">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">{{ number_format($user->scans_count ?? 0) }}</span>
+                        @php
+                            $userScanTotal = (int) ($user->scans_count ?? 0) + (int) ($user->scan_histories_count ?? 0);
+                        @endphp
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">{{ number_format($userScanTotal) }}</span>
                     </td>
                     <td class="px-6 py-4">
                         @php
-                            $status = $user->status ?? 'active';
+                            $status = (int)($user->active ?? 1) === 1 ? 'active' : 'blocked';
                             $statusClass = match($status) {
                                 'active' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200/50',
                                 'blocked' => 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200/50',
@@ -201,6 +203,19 @@
             <div>
                 <h3 class="text-xl font-extrabold mb-2 tracking-tight">Community Verification Status</h3>
                 <p class="text-slate-300 text-sm leading-relaxed mb-4">Halalytics relies on trusted contributors. Review the top 1% of users who have suggested verified halal certificates this month.</p>
+                <div class="space-y-2 mb-4">
+                    @forelse(($topContributors ?? []) as $contributor)
+                    @php
+                        $contributorScans = (int) ($contributor->scans_count ?? 0) + (int) ($contributor->scan_histories_count ?? 0);
+                    @endphp
+                    <div class="flex items-center justify-between text-xs bg-white/10 rounded-lg px-3 py-2">
+                        <span>{{ $contributor->username }}</span>
+                        <span class="font-bold">{{ number_format($contributorScans) }} scans</span>
+                    </div>
+                    @empty
+                    <div class="text-xs text-slate-400">Belum ada kontribusi pengguna.</div>
+                    @endforelse
+                </div>
             </div>
             <div class="flex items-center gap-4">
                 <button class="px-4 py-2 bg-primary rounded-lg text-sm font-extrabold hover:brightness-110 transition-all">Review Contributors</button>

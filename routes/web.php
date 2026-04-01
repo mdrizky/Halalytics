@@ -249,12 +249,12 @@ Route::middleware('auth')->group(function () {
     // User Management
     Route::prefix('admin/users')->middleware('role:admin')->group(function () {
         Route::get('/', [UserManagementController::class, 'index'])->name('admin.users.index');
-        Route::get('/{id}', [UserManagementController::class, 'show'])->name('admin.users.show');
-        Route::put('/{id}', [UserManagementController::class, 'update'])->name('admin.users.update');
-        Route::delete('/{id}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
-        Route::get('/{id}/scan-history', [UserManagementController::class, 'scanHistory'])->name('admin.users.scan-history');
-        Route::get('/{id}/export', [UserManagementController::class, 'export'])->name('admin.users.export');
         Route::get('/dashboard', [UserManagementController::class, 'dashboard'])->name('admin.users.dashboard');
+        Route::get('/{id}', [UserManagementController::class, 'show'])->name('admin.users.show')->where('id', '[0-9]+');
+        Route::put('/{id}', [UserManagementController::class, 'update'])->name('admin.users.update')->where('id', '[0-9]+');
+        Route::delete('/{id}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy')->where('id', '[0-9]+');
+        Route::get('/{id}/scan-history', [UserManagementController::class, 'scanHistory'])->name('admin.users.scan-history')->where('id', '[0-9]+');
+        Route::get('/{id}/export', [UserManagementController::class, 'export'])->name('admin.users.export')->where('id', '[0-9]+');
     });
 
     // OpenFoodFacts Management
@@ -269,9 +269,89 @@ Route::middleware('auth')->group(function () {
     // BPOM Verification Management
     Route::prefix('admin/bpom')->middleware('role:admin')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\BpomAdminController::class, 'index'])->name('admin.bpom.index');
+        Route::post('/sync-external', [\App\Http\Controllers\Admin\BpomAdminController::class, 'syncExternal'])->name('admin.bpom.sync');
         Route::get('/{id}', [\App\Http\Controllers\Admin\BpomAdminController::class, 'show'])->name('admin.bpom.show');
         Route::post('/{id}/verify', [\App\Http\Controllers\Admin\BpomAdminController::class, 'verify'])->name('admin.bpom.verify');
         Route::delete('/{id}', [\App\Http\Controllers\Admin\BpomAdminController::class, 'destroy'])->name('admin.bpom.destroy');
+    });
+
+    // Medicine Management (Admin)
+    Route::prefix('admin/medicines')->middleware('role:admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\MedicineAdminController::class, 'index'])->name('admin.medicines.index');
+        Route::get('/search-external', [\App\Http\Controllers\Admin\MedicineAdminController::class, 'searchExternal'])->name('admin.medicines.search-external');
+        Route::post('/import', [\App\Http\Controllers\Admin\MedicineAdminController::class, 'importFromFda'])->name('admin.medicines.import');
+        Route::post('/seed', [\App\Http\Controllers\Admin\MedicineAdminController::class, 'seedCommonMedicines'])->name('admin.medicines.seed');
+    });
+
+    // Cosmetic Management (Admin)
+    Route::prefix('admin/cosmetics')->middleware('role:admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\CosmeticAdminController::class, 'index'])->name('admin.cosmetics.index');
+        Route::get('/search-external', [\App\Http\Controllers\Admin\CosmeticAdminController::class, 'searchExternal'])->name('admin.cosmetics.search-external');
+        Route::post('/import', [\App\Http\Controllers\Admin\CosmeticAdminController::class, 'importExternal'])->name('admin.cosmetics.import');
+        Route::post('/seed', [\App\Http\Controllers\Admin\CosmeticAdminController::class, 'seedCosmetics'])->name('admin.cosmetics.seed');
+    });
+
+    // Articles Management (Admin)
+    Route::prefix('admin/articles')->middleware('role:admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ArticleAdminController::class, 'index'])->name('admin.articles.index');
+        Route::post('/', [\App\Http\Controllers\Admin\ArticleAdminController::class, 'store'])->name('admin.articles.store');
+        Route::put('/{id}', [\App\Http\Controllers\Admin\ArticleAdminController::class, 'update'])->name('admin.articles.update');
+        Route::delete('/{id}', [\App\Http\Controllers\Admin\ArticleAdminController::class, 'destroy'])->name('admin.articles.destroy');
+        Route::post('/{id}/toggle', [\App\Http\Controllers\Admin\ArticleAdminController::class, 'togglePublish'])->name('admin.articles.toggle');
+    });
+
+    // ═══ NEW ADMIN MODULES ═══
+
+    // Analytics Dashboard
+    Route::prefix('admin/analytics')->middleware('role:admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('admin.analytics.index');
+        Route::get('/users', [\App\Http\Controllers\Admin\AnalyticsController::class, 'users'])->name('admin.analytics.users');
+        Route::get('/products', [\App\Http\Controllers\Admin\AnalyticsController::class, 'products'])->name('admin.analytics.products');
+        Route::get('/ai', [\App\Http\Controllers\Admin\AnalyticsController::class, 'ai'])->name('admin.analytics.ai');
+        Route::get('/growth', [\App\Http\Controllers\Admin\AnalyticsController::class, 'growth'])->name('admin.analytics.growth');
+        Route::get('/export/{type}', [\App\Http\Controllers\Admin\AnalyticsController::class, 'export'])->name('admin.analytics.export');
+    });
+
+    // Halal Certificate Management
+    Route::prefix('admin/certificates')->middleware('role:admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\HalalCertificateController::class, 'index'])->name('admin.certificates.index');
+        Route::get('/create', [\App\Http\Controllers\Admin\HalalCertificateController::class, 'create'])->name('admin.certificates.create');
+        Route::post('/', [\App\Http\Controllers\Admin\HalalCertificateController::class, 'store'])->name('admin.certificates.store');
+        Route::get('/{certificate}/edit', [\App\Http\Controllers\Admin\HalalCertificateController::class, 'edit'])->name('admin.certificates.edit');
+        Route::put('/{certificate}', [\App\Http\Controllers\Admin\HalalCertificateController::class, 'update'])->name('admin.certificates.update');
+        Route::delete('/{certificate}', [\App\Http\Controllers\Admin\HalalCertificateController::class, 'destroy'])->name('admin.certificates.destroy');
+        Route::post('/import', [\App\Http\Controllers\Admin\HalalCertificateController::class, 'import'])->name('admin.certificates.import');
+    });
+
+    // AI Prompt Management
+    Route::prefix('admin/ai-prompts')->middleware('role:admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AiPromptController::class, 'index'])->name('admin.ai-prompts.index');
+        Route::get('/create', [\App\Http\Controllers\Admin\AiPromptController::class, 'create'])->name('admin.ai-prompts.create');
+        Route::post('/', [\App\Http\Controllers\Admin\AiPromptController::class, 'store'])->name('admin.ai-prompts.store');
+        Route::get('/{aiPrompt}/edit', [\App\Http\Controllers\Admin\AiPromptController::class, 'edit'])->name('admin.ai-prompts.edit');
+        Route::put('/{aiPrompt}', [\App\Http\Controllers\Admin\AiPromptController::class, 'update'])->name('admin.ai-prompts.update');
+        Route::delete('/{aiPrompt}', [\App\Http\Controllers\Admin\AiPromptController::class, 'destroy'])->name('admin.ai-prompts.destroy');
+        Route::post('/test', [\App\Http\Controllers\Admin\AiPromptController::class, 'test'])->name('admin.ai-prompts.test');
+        Route::post('/{aiPrompt}/toggle', [\App\Http\Controllers\Admin\AiPromptController::class, 'toggle'])->name('admin.ai-prompts.toggle');
+    });
+
+    // Notification Campaigns
+    Route::prefix('admin/campaigns')->middleware('role:admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\NotificationCampaignController::class, 'index'])->name('admin.campaigns.index');
+        Route::get('/create', [\App\Http\Controllers\Admin\NotificationCampaignController::class, 'create'])->name('admin.campaigns.create');
+        Route::post('/', [\App\Http\Controllers\Admin\NotificationCampaignController::class, 'store'])->name('admin.campaigns.store');
+        Route::get('/{campaign}', [\App\Http\Controllers\Admin\NotificationCampaignController::class, 'show'])->name('admin.campaigns.show');
+        Route::get('/{campaign}/edit', [\App\Http\Controllers\Admin\NotificationCampaignController::class, 'edit'])->name('admin.campaigns.edit');
+        Route::put('/{campaign}', [\App\Http\Controllers\Admin\NotificationCampaignController::class, 'update'])->name('admin.campaigns.update');
+        Route::delete('/{campaign}', [\App\Http\Controllers\Admin\NotificationCampaignController::class, 'destroy'])->name('admin.campaigns.destroy');
+        Route::post('/{campaign}/send', [\App\Http\Controllers\Admin\NotificationCampaignController::class, 'send'])->name('admin.campaigns.send');
+    });
+
+    // API Health Monitor
+    Route::prefix('admin/api-monitor')->middleware('role:admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ApiHealthMonitorController::class, 'index'])->name('admin.api-monitor.index');
+        Route::get('/{apiName}/history', [\App\Http\Controllers\Admin\ApiHealthMonitorController::class, 'history'])->name('admin.api-monitor.history');
+        Route::post('/check', [\App\Http\Controllers\Admin\ApiHealthMonitorController::class, 'check'])->name('admin.api-monitor.check');
     });
 
 });

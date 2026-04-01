@@ -10,25 +10,121 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\FDAService;
 use App\Services\GeminiService;
-use App\Services\ExternalApiService;
 use App\Services\ActivityEventService;
 
 class MedicineController extends Controller
 {
     private $geminiService;
-    private $externalApiService;
+    private $fdaService;
     private $activityEventService;
 
     public function __construct(
         GeminiService $geminiService,
-        ExternalApiService $externalApiService,
+        FDAService $fdaService,
         ActivityEventService $activityEventService
     )
     {
         $this->geminiService = $geminiService;
-        $this->externalApiService = $externalApiService;
+        $this->fdaService = $fdaService;
         $this->activityEventService = $activityEventService;
+    }
+
+    public function index(Request $request)
+    {
+        $limit = min(max((int) $request->query('limit', 20), 1), 50);
+        $search = $request->query('search');
+
+        $query = Medicine::query();
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('generic_name', 'like', "%{$search}%")
+                  ->orWhere('brand_name', 'like', "%{$search}%");
+            });
+        }
+
+        $medicines = $query->latest()->paginate($limit);
+
+        if ($medicines->total() === 0 && empty($search)) {
+            $fallbackItems = collect($this->fallbackMedicines())->take($limit)->values();
+            return response()->json([
+                'success' => true,
+                'message' => 'Daftar obat fallback dimuat',
+                'data' => $fallbackItems,
+                'meta' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'total' => $fallbackItems->count(),
+                    'fallback_mode' => true,
+                ]
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar obat berhasil dimuat',
+            'data' => $medicines->items(),
+            'meta' => [
+                'current_page' => $medicines->currentPage(),
+                'last_page' => $medicines->lastPage(),
+                'total' => $medicines->total(),
+                'fallback_mode' => false,
+            ]
+        ]);
+    }
+
+    private function fallbackMedicines(): array
+    {
+        return [
+            [
+                'id_medicine' => null,
+                'name' => 'Paracetamol 500mg',
+                'generic_name' => 'Paracetamol',
+                'brand_name' => 'Generic',
+                'halal_status' => 'halal',
+                'source' => 'fallback_seed',
+                'ingredients' => 'Paracetamol',
+            ],
+            [
+                'id_medicine' => null,
+                'name' => 'Ibuprofen 200mg',
+                'generic_name' => 'Ibuprofen',
+                'brand_name' => 'Generic',
+                'halal_status' => 'syubhat',
+                'source' => 'fallback_seed',
+                'ingredients' => 'Ibuprofen',
+            ],
+            [
+                'id_medicine' => null,
+                'name' => 'Cetirizine 10mg',
+                'generic_name' => 'Cetirizine',
+                'brand_name' => 'Generic',
+                'halal_status' => 'halal',
+                'source' => 'fallback_seed',
+                'ingredients' => 'Cetirizine HCl',
+            ],
+            [
+                'id_medicine' => null,
+                'name' => 'Amoxicillin 500mg',
+                'generic_name' => 'Amoxicillin',
+                'brand_name' => 'Generic',
+                'halal_status' => 'syubhat',
+                'source' => 'fallback_seed',
+                'ingredients' => 'Amoxicillin trihydrate',
+            ],
+            [
+                'id_medicine' => null,
+                'name' => 'Omeprazole 20mg',
+                'generic_name' => 'Omeprazole',
+                'brand_name' => 'Generic',
+                'halal_status' => 'halal',
+                'source' => 'fallback_seed',
+                'ingredients' => 'Omeprazole',
+            ],
+        ];
     }
 
     // AI Symptom-to-Medicine Mapping (Enhanced Phase 4)
@@ -393,12 +489,14 @@ class MedicineController extends Controller
 
         // OpenFDA is the primary external source for medicine labels and dosage guidance.
         try {
-            $fdaResult = $this->externalApiService->searchOpenFDA($query);
+            $fdaResult = $this->fdaService->search($query);
             if ($fdaResult['found'] ?? false) {
-                $savedMedicine = $this->externalApiService->upsertMedicineFromOpenFDA($fdaResult, $query);
-                if ($savedMedicine) {
-                    $savedMedicine->source = 'openfda';
-                    $results->push($savedMedicine);
+                foreach ($fdaResult['results'] ?? [] as $item) {
+                    $savedMedicine = $this->fdaService->importOrUpdate($item, $query);
+                    if ($savedMedicine) {
+                        $savedMedicine->source = $item['source'] ?? 'openfda';
+                        $results->push($savedMedicine);
+                    }
                 }
             }
         } catch (\Exception $e) {
@@ -411,12 +509,14 @@ class MedicineController extends Controller
                 $ingredientsResult = $this->geminiService->generateText("Ekstrak daftar bahan aktif utama dari nama obat/keluhan ini: '{$query}'. Balas HANYA dengan list JSON: [\"bahan1\", \"bahan2\"]");
                 if (is_array($ingredientsResult)) {
                     foreach ($ingredientsResult as $ingredient) {
-                        $fdaResult = $this->externalApiService->searchOpenFDA((string)$ingredient);
+                        $fdaResult = $this->fdaService->search((string) $ingredient);
                         if ($fdaResult['found'] ?? false) {
-                            $savedMedicine = $this->externalApiService->upsertMedicineFromOpenFDA($fdaResult, (string)$ingredient);
-                            if ($savedMedicine) {
-                                $savedMedicine->source = 'openfda';
-                                $results->push($savedMedicine);
+                            foreach ($fdaResult['results'] ?? [] as $item) {
+                                $savedMedicine = $this->fdaService->importOrUpdate($item, (string) $ingredient);
+                                if ($savedMedicine) {
+                                    $savedMedicine->source = $item['source'] ?? 'openfda';
+                                    $results->push($savedMedicine);
+                                }
                             }
                         }
                     }

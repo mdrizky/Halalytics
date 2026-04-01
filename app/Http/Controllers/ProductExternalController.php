@@ -30,7 +30,7 @@ class ProductExternalController extends Controller
     public function search(Request $request): JsonResponse
     {
         $request->validate([
-            'query' => 'required|string|min:2',
+            'query' => 'required|string|min:1',
             'page_size' => 'sometimes|integer|min:1|max:100',
             'page' => 'sometimes|integer|min:1'
         ]);

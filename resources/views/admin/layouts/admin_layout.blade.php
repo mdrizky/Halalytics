@@ -108,6 +108,12 @@
         input:checked + .toggle-slider:before {
             transform: translateX(20px);
         }
+        ::view-transition-group(*),
+        ::view-transition-old(*),
+        ::view-transition-new(*) {
+            animation-duration: 0.25s;
+            animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+        }
     </style>
     @stack('styles')
 </head>
@@ -151,6 +157,16 @@
                 <span class="text-sm flex-1">BPOM Data</span>
                 <span class="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-bold border border-primary/20">VERIFY</span>
             </a>
+            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.medicines*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.medicines.index') }}">
+                <span class="material-icons-round text-[20px]">medication</span>
+                <span class="text-sm flex-1">Medicines</span>
+                <span class="text-[10px] bg-indigo-100 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded-md font-bold text-indigo-600 border border-indigo-200 dark:border-indigo-700">{{ number_format($global_medicine_count) }}</span>
+            </a>
+            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.cosmetics*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.cosmetics.index') }}">
+                <span class="material-icons-round text-[20px]">spa</span>
+                <span class="text-sm flex-1">Cosmetics</span>
+                <span class="text-[10px] bg-pink-100 dark:bg-pink-900/30 px-1.5 py-0.5 rounded-md font-bold text-pink-600 border border-pink-200 dark:border-pink-700">{{ number_format($global_cosmetic_count) }}</span>
+            </a>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.ingredients*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.ingredients.index') }}">
                 <span class="material-icons-round text-[20px]">science</span>
                 <span class="text-sm flex-1">Ingredients</span>
@@ -160,6 +176,16 @@
                 <span class="material-icons-round text-[20px]">view_carousel</span>
                 <span class="text-sm flex-1">Banner Slider</span>
                 <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200 dark:border-slate-700">{{ number_format($global_banner_count) }}</span>
+            </a>
+            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.analytics*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.analytics.index') }}">
+                <span class="material-icons-round text-[20px]">query_stats</span>
+                <span class="text-sm flex-1">Analytics</span>
+                <span class="text-[10px] bg-sky-100 dark:bg-sky-900/30 px-1.5 py-0.5 rounded-md font-bold text-sky-600 border border-sky-200 dark:border-sky-700">REAL</span>
+            </a>
+            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.campaigns*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.campaigns.index') }}">
+                <span class="material-icons-round text-[20px]">campaign</span>
+                <span class="text-sm flex-1">Campaigns</span>
+                <span class="text-[10px] bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-md font-bold text-emerald-600 border border-emerald-200 dark:border-emerald-700">FCM</span>
             </a>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.promo.blog*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.promo.blog.index') }}">
                 <span class="material-icons-round text-[20px]">article</span>
@@ -188,11 +214,6 @@
                 @if($global_report_count > 0)
                 <span class="text-[10px] bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded-md font-bold text-red-600 border border-red-200 dark:border-red-800/50 animate-pulse-slow">{{ number_format($global_report_count) }}</span>
                 @endif
-            </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.users.*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.users.dashboard') }}">
-                <span class="material-icons-round text-[20px]">manage_accounts</span>
-                <span class="text-sm flex-1">User Control</span>
-                <span class="text-[10px] bg-indigo-100 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded-md font-bold text-indigo-600 border border-indigo-200 dark:border-indigo-700">ADMIN</span>
             </a>
         </nav>
         <div class="p-4 border-t border-slate-100 dark:border-slate-800">

@@ -1,60 +1,124 @@
 @extends('promo.layout')
 @section('title', 'Kebijakan Privasi - ' . ($settings['site_name'] ?? 'HalalScan AI'))
+@section('description', 'Kebijakan privasi HalalScan AI: bagaimana data pengguna dikumpulkan, digunakan, dan dilindungi.')
+@section('keywords', 'kebijakan privasi, keamanan data, perlindungan data, halalscan ai')
+@section('canonical', route('privacy'))
+
+@section('schema')
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Kebijakan Privasi",
+  "url": "{{ route('privacy') }}",
+  "description": "Penjelasan penggunaan dan perlindungan data pengguna HalalScan AI"
+}
+@endsection
+
+@section('styles')
+<style>
+    .privacy-hero {
+        background:
+            radial-gradient(900px 380px at 100% -20%, rgba(31,79,214,.20), transparent 60%),
+            radial-gradient(900px 380px at 0% 0%, rgba(14,165,107,.20), transparent 58%),
+            linear-gradient(180deg, #f7fbf9 0%, #ffffff 100%);
+    }
+    .privacy-card {
+        border: 1px solid #dbe3ea;
+        border-radius: 22px;
+        background: #fff;
+    }
+</style>
+@endsection
 
 @section('content')
-<div class="py-24 bg-white">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight sm:text-4xl mb-8">Kebijakan Privasi</h1>
-        
-        <div class="prose prose-green max-w-none text-gray-600 space-y-6">
-            <p>Di HalalScan AI, keamanan data Anda adalah prioritas kami. Kebijakan ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi informasi pribadi Anda.</p>
+<section class="privacy-hero pt-24 pb-14 border-b border-slate-200">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <span class="inline-flex px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-wider">Legal & Privacy</span>
+        <h1 class="mt-5 text-4xl md:text-5xl font-extrabold text-slate-900">Kebijakan Privasi</h1>
+        <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">
+            Kami berkomitmen menjaga kerahasiaan data pengguna dan memproses data secara bertanggung jawab.
+        </p>
+    </div>
+</section>
 
-            <h3 class="text-xl font-bold text-gray-900 mt-8 mb-4">1. Pengumpulan Data</h3>
-            <p>Kami mengumpulkan informasi yang Anda berikan secara langsung saat Anda mendaftar akun, mengatur profil kesehatan (umur, alergi, golongan darah), serta riwayat scan produk. Data ini kami simpan terenkripsi dengan aman di peladen kami.</p>
+<section class="py-14 bg-slate-50">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <article class="privacy-card p-7 md:p-10 text-slate-700 leading-relaxed space-y-7">
+            <p>
+                Di HalalScan AI, keamanan data Anda adalah prioritas. Dokumen ini menjelaskan bagaimana data dikumpulkan, digunakan, dan dilindungi selama Anda menggunakan layanan kami.
+            </p>
 
-            <h3 class="text-xl font-bold text-gray-900 mt-8 mb-4">2. Penggunaan Data</h3>
-            <p>Data profil kesehatan dan pantangan Anda HANYA digunakan oleh AI untuk memberikan peringatan dan rekomendasi produk yang relevan untuk interaksi obat dan tingkat kesehatan personal Anda.</p>
-
-            <h3 class="text-xl font-bold text-gray-900 mt-8 mb-4">3. Disclaimer (Penyangkalan Hukum)</h3>
-            <div class="bg-gray-100 p-6 rounded-xl border border-gray-200">
-                <p class="text-sm font-semibold text-gray-800">Harap dicatat:</p>
-                <p class="text-sm">Aplikasi ini dirancang sebagai instrumen bantu dan asisten cerdas berbasikan AI. Kami TIDAK menggantikan diagnosis dokter, ahli gizi profesional, apoteker, atau sertifikasi halal MUI yang resmi. Selalu periksa label dengan dokter Anda bila menghadapi kondisi medis yang berisiko.</p>
-            </div>
-            
-            <hr class="my-12">
-
-            <!-- Formulir Kontak Publik -->
-            <div class="bg-blue-50 rounded-2xl p-8 border border-blue-100 mt-12">
-                <h3 class="text-2xl font-bold text-blue-900 mb-2">Ada Pertanyaan? Hubungi Kami</h3>
-                <p class="text-blue-700 mb-6">Jika Anda memiliki kekhawatiran terkait data atau kolaborasi, silakan kirimkan pesan kepada kami.</p>
-                
-                <form action="{{ route('contact.send') }}" method="POST" class="space-y-4">
-                    @csrf
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
-                            <input type="text" name="name" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3 border outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                            <input type="email" name="email" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3 border outline-none">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Subjek</label>
-                        <input type="text" name="subject" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3 border outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Pesan Utama</label>
-                        <textarea name="message" rows="4" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3 border outline-none"></textarea>
-                    </div>
-                    <div>
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Kirim Pesan</button>
-                    </div>
-                </form>
+            <div>
+                <h2 class="text-2xl font-extrabold text-slate-900">1. Pengumpulan Data</h2>
+                <p class="mt-2">
+                    Kami mengumpulkan data yang Anda berikan langsung (misalnya nama, email, preferensi kesehatan), serta data penggunaan aplikasi seperti riwayat scan produk untuk meningkatkan kualitas rekomendasi.
+                </p>
             </div>
 
+            <div>
+                <h2 class="text-2xl font-extrabold text-slate-900">2. Penggunaan Data</h2>
+                <p class="mt-2">
+                    Data digunakan untuk mempersonalisasi analisis halal, peringatan interaksi obat, dan insight kesehatan. Kami tidak menggunakan data pribadi untuk tujuan yang tidak relevan dengan layanan inti tanpa persetujuan.
+                </p>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-extrabold text-slate-900">3. Penyimpanan & Proteksi</h2>
+                <p class="mt-2">
+                    Kami menerapkan kontrol keamanan teknis dan operasional untuk melindungi data dari akses tidak sah, perubahan, atau kehilangan.
+                </p>
+            </div>
+
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+                <h3 class="text-lg font-extrabold text-amber-800">Disclaimer Penting</h3>
+                <p class="text-amber-800/90 text-sm mt-2">
+                    HalalScan AI adalah alat bantu informasi. Aplikasi ini tidak menggantikan diagnosis dokter, apoteker, ahli gizi, ataupun sertifikasi halal resmi lembaga berwenang.
+                </p>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-extrabold text-slate-900">4. Hak Pengguna</h2>
+                <p class="mt-2">
+                    Anda dapat meminta pembaruan atau penghapusan data akun sesuai kebijakan yang berlaku. Hubungi tim kami jika membutuhkan bantuan lebih lanjut.
+                </p>
+            </div>
+        </article>
+    </div>
+</section>
+
+<section class="py-14 bg-white border-t border-slate-200">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="privacy-card p-7 md:p-10">
+            <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">Pertanyaan Terkait Privasi?</h2>
+            <p class="text-slate-600 mt-2">
+                Kirimkan pesan ke tim kami. Kami akan merespons secepat mungkin.
+            </p>
+
+            <form action="{{ route('contact.send') }}" method="POST" class="mt-7 space-y-4">
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Nama Lengkap</label>
+                        <input type="text" name="name" required class="w-full rounded-xl border border-slate-300 px-3 py-2.5 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Email</label>
+                        <input type="email" name="email" required class="w-full rounded-xl border border-slate-300 px-3 py-2.5 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Subjek</label>
+                    <input type="text" name="subject" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Pesan</label>
+                    <textarea name="message" rows="4" required class="w-full rounded-xl border border-slate-300 px-3 py-2.5 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea>
+                </div>
+                <button type="submit" class="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3 rounded-xl">
+                    Kirim Pesan
+                </button>
+            </form>
         </div>
     </div>
-</div>
+</section>
 @endsection

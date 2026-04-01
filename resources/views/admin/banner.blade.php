@@ -78,11 +78,14 @@
                     <td class="px-6 py-4">
                         <div class="w-32 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700 relative">
                             @if($banner->image)
-                                <img src="{{ asset($banner->image) }}" alt="Banner" class="w-full h-full object-cover">
+                                @php
+                                    $bannerImage = str_starts_with((string) $banner->image, 'http')
+                                        ? $banner->image
+                                        : asset($banner->image);
+                                @endphp
+                                <img src="{{ $bannerImage }}" alt="Banner" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
                             @else
-                                <div class="flex items-center justify-center h-full text-slate-400">
-                                    <span class="material-icons-round">image_not_supported</span>
-                                </div>
+                                <img src="{{ asset('images/placeholders/product-placeholder.svg') }}" alt="Banner placeholder" class="w-full h-full object-cover">
                             @endif
                         </div>
                     </td>
