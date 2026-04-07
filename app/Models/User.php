@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -13,9 +15,13 @@ use App\Models\ReportModel;
 use App\Models\ScanHistory;
 use App\Models\Favorite;
 
-class User extends Authenticatable
+use Spatie\Permission\Traits\HasRoles;
+
+class User extends Authenticatable implements FilamentUser
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+
+    protected string $guard_name = 'web';
 
     protected $table = 'users';
     protected $primaryKey = 'id_user';
@@ -121,5 +127,25 @@ class User extends Authenticatable
     public function reports()
     {
         return $this->hasMany(ReportModel::class, 'user_id', 'id_user');
+    }
+
+    public function expertProfile()
+    {
+        return $this->hasOne(Expert::class, 'user_id', 'id_user');
+    }
+
+    public function communityPosts()
+    {
+        return $this->hasMany(Post::class, 'user_id', 'id_user');
+    }
+
+    public function communityPointProfile()
+    {
+        return $this->hasOne(CommunityUserPoint::class, 'user_id', 'id_user');
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->hasRole('admin') || ($this->role ?? null) === 'admin';
     }
 }

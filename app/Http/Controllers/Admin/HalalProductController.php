@@ -22,6 +22,69 @@ class HalalProductController extends Controller
         return view('admin.halal-products.index', compact('products'));
     }
 
+    public function create()
+    {
+        return view('admin.halal-products.create');
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'product_name' => 'required|string|max:255',
+            'brand' => 'nullable|string|max:255',
+            'product_barcode' => 'nullable|string|max:100',
+            'halal_status' => 'required|in:halal,haram,syubhat,non_halal,unknown',
+            'halal_certificate_number' => 'nullable|string|max:255',
+            'certification_body' => 'nullable|string|max:255',
+            'certificate_valid_until' => 'nullable|date',
+        ]);
+
+        HalalProduct::create($validated);
+
+        return redirect()->route('halal-products.index')
+            ->with('success', 'Produk halal berhasil ditambahkan!');
+    }
+
+    public function show($id)
+    {
+        $product = HalalProduct::findOrFail($id);
+        return view('admin.halal-products.show', compact('product'));
+    }
+
+    public function edit($id)
+    {
+        $product = HalalProduct::findOrFail($id);
+        return view('admin.halal-products.edit', compact('product'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'product_name' => 'required|string|max:255',
+            'brand' => 'nullable|string|max:255',
+            'product_barcode' => 'nullable|string|max:100',
+            'halal_status' => 'required|in:halal,haram,syubhat,non_halal,unknown',
+            'halal_certificate_number' => 'nullable|string|max:255',
+            'certification_body' => 'nullable|string|max:255',
+            'certificate_valid_until' => 'nullable|date',
+        ]);
+
+        $product = HalalProduct::findOrFail($id);
+        $product->update($validated);
+
+        return redirect()->route('halal-products.index')
+            ->with('success', 'Produk halal berhasil diperbarui!');
+    }
+
+    public function destroy($id)
+    {
+        $product = HalalProduct::findOrFail($id);
+        $product->delete();
+
+        return redirect()->route('halal-products.index')
+            ->with('success', 'Produk halal berhasil dihapus!');
+    }
+
     public function search(Request $request)
     {
         $request->validate([
@@ -37,24 +100,7 @@ class HalalProductController extends Controller
         return response()->json($result);
     }
 
-    public function verify(Request $request)
-    {
-        $request->validate([
-            'barcode' => 'required|string',
-            'product_name' => 'required|string',
-            'brand' => 'required|string'
-        ]);
-
-        $result = $this->halalService->verifyAndStore(
-            $request->barcode,
-            $request->product_name,
-            $request->brand
-        );
-
-        return response()->json($result);
-    }
-
-    public function manualUpdate(Request $request, $id)
+    public function verify(Request $request, $id)
     {
         $request->validate([
             'halal_status' => 'required|in:halal,non_halal,unknown',

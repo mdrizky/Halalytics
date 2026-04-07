@@ -70,6 +70,20 @@ class NotificationController extends Controller
     }
 
     /**
+     * Show single notification detail
+     */
+    public function show($id, Request $request)
+    {
+        $notification = Notification::where('user_id', $this->authUserId($request))
+            ->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $notification
+        ]);
+    }
+
+    /**
      * Get unread count
      */
     public function unreadCount(Request $request)

@@ -221,9 +221,6 @@ Route::middleware('auth')->group(function () {
     // Notifications
     Route::resource('notifications', \App\Http\Controllers\Admin\NotificationController::class)->names('admin.notifications');
     
-    // UMKM
-    Route::resource('umkm', \App\Http\Controllers\Admin\UmkmProductController::class)->names('admin.umkm');
-    Route::get('umkm/{id}/download-qr', [\App\Http\Controllers\Admin\UmkmProductController::class, 'downloadQR'])->name('admin.umkm.download-qr');
 
     // Ingredients Encyclopedia
     Route::get('/admin/ingredients', [IngredientManagementController::class, 'index'])->name('admin.ingredients.index')->middleware('role:admin');

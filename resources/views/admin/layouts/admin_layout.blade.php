@@ -202,6 +202,21 @@
                 <span class="text-sm flex-1">Forbidden Ingredients</span>
                 <span class="text-[10px] bg-rose-100 dark:bg-rose-900/30 px-1.5 py-0.5 rounded-md font-bold text-rose-500 border border-rose-200 dark:border-rose-800">SAFETY</span>
             </a>
+            
+            <div class="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Expansion Modules</div>
+            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('halal-products*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('halal-products.index') }}">
+                <span class="material-icons-round text-[20px]">verified</span>
+                <span class="text-sm flex-1">Halal Products</span>
+            </a>
+
+            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.ocr*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.ocr.index') }}">
+                <span class="material-icons-round text-[20px]">document_scanner</span>
+                <span class="text-sm flex-1">OCR Management</span>
+            </a>
+            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.notifications*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.notifications.index') }}">
+                <span class="material-icons-round text-[20px]">notifications_active</span>
+                <span class="text-sm flex-1">Notifications</span>
+            </a>
             <div class="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Activity & Reports</div>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.scan*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.scan.index') }}">
                 <span class="material-icons-round text-[20px]">history</span>

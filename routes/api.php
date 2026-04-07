@@ -29,11 +29,16 @@ use App\Http\Controllers\Api\UserHealthInsightController;
 */
 
 Route::prefix('v1')->group(function () {
+    Route::get('products/popular', [ProductController::class, 'popular']);
+    Route::get('products/recent', [ProductController::class, 'recent']);
     Route::get('products/{barcode}', [ProductController::class, 'show']);
     Route::post('products/check-halal', [ProductController::class, 'checkHalal']);
     Route::post('products/batch-check-halal', [ProductController::class, 'batchCheckHalal']);
     Route::get('products/alternatives/{barcode}', [ProductController::class, 'alternatives']);
 });
+
+Route::post('halal/check', [\App\Http\Controllers\Api\HalalCheckController::class, 'check']);
+Route::get('food/search', [\App\Http\Controllers\Api\FoodSearchController::class, 'search']);
 
 // ==========================================================
 // 📱 ANDROID COMPATIBILITY ROUTES
@@ -146,6 +151,11 @@ Route::middleware('auth:sanctum')->group(function () {
         // NEW PROFILE FEATURES
         Route::get('/achievements', [\App\Http\Controllers\Api\ProfileFeatureController::class, 'getAchievements']);
         Route::post('/export-report', [\App\Http\Controllers\Api\ProfileFeatureController::class, 'exportMonthlyReport']);
+        Route::post('/report/export', [\App\Http\Controllers\Api\ReportExportController::class, 'export']);
+        
+        // Product specific user routes
+        Route::get('/products/scan-history', [ProductController::class, 'scanHistory']);
+        Route::get('/products/favorites', [ProductController::class, 'favorites']);
     });
     
     // SCAN HISTORY
@@ -195,9 +205,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/sessions/{session}/end', [\App\Http\Controllers\Api\ChatController::class, 'endSession']);
     });
 
-    // UMKM SCAN
-    Route::post('/umkm/scan-qr', [\App\Http\Controllers\Api\UmkmScanController::class, 'scanQR']);
-    Route::get('/umkm/nearby', [ApiController::class, 'getNearbyUmkm']);
+
 
     // VERIFICATION REQUESTS
     Route::post('/products/request-verification', [ApiController::class, 'requestVerification']);
@@ -209,6 +217,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('notifications')->group(function () {
         Route::get('/', [NotificationController::class, 'index']);
         Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::get('/{id}', [NotificationController::class, 'show']);
         Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
         Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
     });
@@ -288,6 +297,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/submit', [\App\Http\Controllers\Api\OCRController::class, 'submitOCR']);
         Route::get('/history/{id}', [\App\Http\Controllers\Api\OCRController::class, 'getUserOCRHistory']);
         Route::get('/statistics', [\App\Http\Controllers\Api\OCRController::class, 'getOCRStatistics']);
+        
+        // Additional OCR Routes
+        Route::post('/check-duplicate', [\App\Http\Controllers\Api\OCRController::class, 'checkDuplicateOCR']);
+        Route::get('/admin/products', [\App\Http\Controllers\Api\OCRController::class, 'getAdminProducts']);
+        Route::post('/favorites', [\App\Http\Controllers\Api\OCRController::class, 'addToFavorites']);
+        Route::delete('/favorites/{id}', [\App\Http\Controllers\Api\OCRController::class, 'removeFromFavorites']);
+        Route::get('/favorites', [\App\Http\Controllers\Api\OCRController::class, 'getFavorites']);
     });
 
     // AI ADVANCED HEALTH FEATURES
@@ -330,10 +346,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/quiz', [\App\Http\Controllers\Api\MentalHealthController::class, 'submitQuiz']);
         Route::get('/quiz/history', [\App\Http\Controllers\Api\MentalHealthController::class, 'history']);
         Route::get('/quiz/{type}/questions', [\App\Http\Controllers\Api\MentalHealthController::class, 'getQuestions']);
+        
+        Route::get('/topics', [\App\Http\Controllers\Api\MentalHealthController::class, 'topics']);
+        Route::get('/articles', [\App\Http\Controllers\Api\MentalHealthController::class, 'articles']);
+        Route::get('/experts', [\App\Http\Controllers\Api\MentalHealthController::class, 'experts']);
+        Route::post('/expert-request', [\App\Http\Controllers\Api\MentalHealthController::class, 'requestExpert']);
     });
 
     // Help Center
     Route::prefix('help')->group(function () {
+        Route::get('/categories', [\App\Http\Controllers\Api\HelpCenterController::class, 'categories']);
         Route::get('/faq', [\App\Http\Controllers\Api\HelpCenterController::class, 'faq']);
         Route::post('/request', [\App\Http\Controllers\Api\HelpCenterController::class, 'submitRequest']);
         Route::get('/requests', [\App\Http\Controllers\Api\HelpCenterController::class, 'myRequests']);
@@ -379,38 +401,78 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(functi
     Route::get('/stats/scans', [MobileSyncController::class, 'getScanStats']);
 });
 
-// ==========================================================
-// 🏆 GAMIFICATION — Points & Leaderboard
-// ==========================================================
-Route::get('/leaderboard', [\App\Http\Controllers\Api\LeaderboardController::class, 'index']);
+    // ==========================================================
+    // 🤖 AI EXPANSION FEATURES (4-7)
+    // ==========================================================
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user/points', [\App\Http\Controllers\Api\PointsController::class, 'myPoints']);
-    Route::get('/user/points/history', [\App\Http\Controllers\Api\PointsController::class, 'history']);
-    Route::get('/user/rank', [\App\Http\Controllers\Api\LeaderboardController::class, 'myRank']);
-});
+    Route::middleware('auth:sanctum')->group(function () {
+        // OFFLINE OCR (Feature 4)
+        Route::prefix('ocr-sync')->group(function () {
+            Route::get('/ingredients', [\App\Http\Controllers\Api\OcrController::class, 'syncIngredients']);
+            Route::post('/result', [\App\Http\Controllers\Api\OcrController::class, 'scanResult']);
+            Route::get('/history', [\App\Http\Controllers\Api\OcrController::class, 'history']);
+        });
 
-// ==========================================================
-// 📜 HALAL CERTIFICATE VERIFICATION
-// ==========================================================
-Route::post('/certificate/verify', [\App\Http\Controllers\Api\CertificateController::class, 'verify']);
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/certificate/history', [\App\Http\Controllers\Api\CertificateController::class, 'history']);
-});
+        // SMART NUTRITION (Feature 5)
+        Route::prefix('nutrition')->group(function () {
+            Route::post('/log-meal', [\App\Http\Controllers\Api\NutritionController::class, 'logMeal']);
+            Route::get('/daily-log', [\App\Http\Controllers\Api\NutritionController::class, 'getDailyLog']);
+            Route::get('/history', [\App\Http\Controllers\Api\NutritionController::class, 'getHistory']);
+            Route::post('/goals', [\App\Http\Controllers\Api\NutritionController::class, 'setGoals']);
+            Route::get('/goals', [\App\Http\Controllers\Api\NutritionController::class, 'getGoals']);
+        });
 
-// ==========================================================
-// 🔔 NOTIFICATION PREFERENCES
-// ==========================================================
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user/notification-preferences', [\App\Http\Controllers\Api\NotifPrefController::class, 'get']);
-    Route::put('/user/notification-preferences', [\App\Http\Controllers\Api\NotifPrefController::class, 'update']);
-});
+        // RECIPE AI (Feature 6)
+        Route::prefix('recipes-ai')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\RecipeController::class, 'index']);
+            Route::get('/{id}', [\App\Http\Controllers\Api\RecipeController::class, 'show']);
+            Route::post('/', [\App\Http\Controllers\Api\RecipeController::class, 'store']);
+            Route::post('/{id}/halal-switch', [\App\Http\Controllers\Api\RecipeController::class, 'halalSwitch']);
+        });
+
+        // HALOCODE EXPERT CHAT (Expansion)
+        Route::prefix('halocode')->group(function () {
+            Route::get('/experts', [\App\Http\Controllers\Api\ExpertController::class, 'index']);
+            Route::get('/experts/{id}', [\App\Http\Controllers\Api\ExpertController::class, 'show']);
+            Route::post('/consultations', [\App\Http\Controllers\Api\ExpertController::class, 'startConsultation']);
+            Route::post('/consultations/{id}/messages', [\App\Http\Controllers\Api\ExpertController::class, 'sendMessage']);
+            Route::get('/consultations/{id}/messages', [\App\Http\Controllers\Api\ExpertController::class, 'getMessages']);
+            Route::post('/consultations/{id}/end', [\App\Http\Controllers\Api\ExpertController::class, 'endConsultation']);
+            Route::post('/consultations/{id}/review', [\App\Http\Controllers\Api\ExpertController::class, 'submitReview']);
+            Route::get('/my-consultations', [\App\Http\Controllers\Api\ExpertController::class, 'myConsultations']);
+        });
+
+        // MARKETPLACE & HEALTH FACILITIES
+        Route::prefix('market-exp')->group(function () {
+            Route::get('/merchants', [\App\Http\Controllers\Api\MarketplaceController::class, 'merchants']);
+            Route::get('/merchants/{id}', [\App\Http\Controllers\Api\MarketplaceController::class, 'merchantDetail']);
+            Route::get('/products', [\App\Http\Controllers\Api\MarketplaceController::class, 'products']);
+            Route::get('/nearby-health', [\App\Http\Controllers\Api\MarketplaceController::class, 'nearbyHealthFacilities']);
+        });
+
+        // COMMUNITY HUB (Expansion)
+        Route::prefix('community-exp')->group(function () {
+            Route::get('/posts', [\App\Http\Controllers\Api\CommunityController::class, 'posts']);
+            Route::get('/posts/{id}', [\App\Http\Controllers\Api\CommunityController::class, 'postDetail']);
+            Route::post('/posts', [\App\Http\Controllers\Api\CommunityController::class, 'createPost']);
+            Route::post('/posts/{id}/like', [\App\Http\Controllers\Api\CommunityController::class, 'toggleLike']);
+            Route::post('/posts/{id}/comment', [\App\Http\Controllers\Api\CommunityController::class, 'addComment']);
+            Route::post('/posts/{id}/report', [\App\Http\Controllers\Api\CommunityController::class, 'reportPost']);
+            Route::get('/leaderboard', [\App\Http\Controllers\Api\CommunityController::class, 'leaderboard']);
+            Route::get('/my-stats', [\App\Http\Controllers\Api\CommunityController::class, 'myStats']);
+        });
+
+        // AR FINDER (Feature 7)
+        Route::get('/ar/nearby', [\App\Http\Controllers\Api\ArController::class, 'nearbyForAr']);
+    });
+
+Route::post('payment/callback', [\App\Http\Controllers\Api\ExpertController::class, 'callback']);
 
 Route::get('/health', function () {
     return response()->json([
         'status' => 'ok',
         'message' => 'Halalytics API is running',
         'timestamp' => now()->toIso8601String(),
-        'version' => '2.0.0'
+        'version' => '2.1.0'
     ]);
 });

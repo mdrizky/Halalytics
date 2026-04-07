@@ -202,4 +202,90 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get popular products (most scanned)
+     */
+    public function popular(Request $request)
+    {
+        $products = \App\Models\ScanHistory::select('product_name', 'barcode', 'status')
+            ->selectRaw('COUNT(*) as scan_count')
+            ->whereNotNull('product_name')
+            ->groupBy('product_name', 'barcode', 'status')
+            ->orderByDesc('scan_count')
+            ->limit(20)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'name' => $item->product_name,
+                    'barcode' => $item->barcode,
+                    'halal_status' => $item->status ?? 'unknown',
+                    'scan_count' => $item->scan_count,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $products,
+        ]);
+    }
+
+    /**
+     * Get recently added products
+     */
+    public function recent()
+    {
+        $products = ProductModel::orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id_product,
+                    'name' => $p->nama_product ?? $p->name,
+                    'brand' => $p->brand,
+                    'barcode' => $p->barcode,
+                    'halal_status' => $p->halal_status ?? 'unknown',
+                    'image_url' => $p->image,
+                    'created_at' => $p->created_at,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $products,
+        ]);
+    }
+
+    /**
+     * Get user's scan history
+     */
+    public function scanHistory(Request $request)
+    {
+        $user = $request->user();
+        $scans = \App\Models\ScanHistory::where('user_id', $user->id_user)
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $scans,
+        ]);
+    }
+
+    /**
+     * Get user's favorite products
+     */
+    public function favorites(Request $request)
+    {
+        $user = $request->user();
+        $favorites = \App\Models\FavoriteProduct::where('user_id', $user->id_user)
+            ->with(['ocrProduct', 'product'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $favorites,
+        ]);
+    }
 }

@@ -1,0 +1,90 @@
+@extends('admin.layouts.admin_layout')
+
+@section('title', 'Edit Notifikasi')
+
+@section('content')
+<div class="max-w-4xl mx-auto">
+    <div class="mb-8">
+        <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Edit Notifikasi</h2>
+        <p class="text-slate-500 text-sm mt-1">Edit notifikasi #{{ $notification->id }}</p>
+    </div>
+
+    <form action="{{ route('admin.notifications.update', $notification->id) }}" method="POST">
+        @csrf
+        @method('PUT')
+
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-6">Konten Notifikasi</h3>
+
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Judul Notifikasi *</label>
+                    <input type="text" name="title" required value="{{ old('title', $notification->title) }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                    @error('title') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Pesan Notifikasi *</label>
+                    <textarea name="body" required rows="4" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all">{{ old('body', $notification->body) }}</textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Tipe Notifikasi *</label>
+                        <select name="type" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary">
+                            <option value="general" {{ old('type', $notification->type) == 'general' ? 'selected' : '' }}>Umum (Berita/Update)</option>
+                            <option value="ingredient_alert" {{ old('type', $notification->type) == 'ingredient_alert' ? 'selected' : '' }}>Peringatan Bahan</option>
+                            <option value="product_reminder" {{ old('type', $notification->type) == 'product_reminder' ? 'selected' : '' }}>Pengingat Produk</option>
+                            <option value="product" {{ old('type', $notification->type) == 'product' ? 'selected' : '' }}>Produk Baru</option>
+                            <option value="poster" {{ old('type', $notification->type) == 'poster' ? 'selected' : '' }}>Poster/Promo</option>
+                            <option value="news" {{ old('type', $notification->type) == 'news' ? 'selected' : '' }}>News/Artikel</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Target Pengguna *</label>
+                        <select id="targetType" name="target_type" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary">
+                            <option value="all" {{ old('target_type', $notification->target_type) == 'all' ? 'selected' : '' }}>Semua Pengguna</option>
+                            <option value="specific_users" {{ old('target_type', $notification->target_type) == 'specific_users' ? 'selected' : '' }}>Pengguna Tertentu</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="specificUsersField" class="space-y-2 {{ old('target_type', $notification->target_type) == 'specific_users' ? '' : 'hidden' }}">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">User ID Target</label>
+                    <input type="text" name="user_ids" value="{{ old('user_ids', implode(', ', $notification->target_data['user_ids'] ?? [])) }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all" placeholder="Contoh: 12, 45, 91">
+                    @error('user_ids') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Jadwal Kirim (Opsional)</label>
+                    <input type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at', $notification->scheduled_at ? $notification->scheduled_at->format('Y-m-d\TH:i') : '') }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 flex items-center justify-end space-x-4">
+            <a href="{{ route('admin.notifications.index') }}" class="px-6 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-800 transition-all">Batal</a>
+            <button type="submit" class="px-8 py-2.5 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary-dark transition-all shadow-md shadow-primary/20 flex items-center space-x-2">
+                <span class="material-icons-round text-sm">save</span>
+                <span>Simpan Perubahan</span>
+            </button>
+        </div>
+    </form>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    const targetType = document.getElementById('targetType');
+    const specificUsersField = document.getElementById('specificUsersField');
+
+    function toggleSpecificUsersField() {
+        if (!targetType || !specificUsersField) return;
+        const isSpecific = targetType.value === 'specific_users';
+        specificUsersField.classList.toggle('hidden', !isSpecific);
+    }
+
+    targetType?.addEventListener('change', toggleSpecificUsersField);
+</script>
+@endpush

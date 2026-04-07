@@ -101,4 +101,31 @@ class HelpCenterController extends Controller
             'data' => $tickets,
         ]);
     }
+
+    /**
+     * Get help center categories
+     */
+    public function categories()
+    {
+        $categories = [
+            ['id' => 'panduan', 'name' => 'Panduan Pengguna', 'icon' => 'menu_book', 'description' => 'Cara menggunakan fitur-fitur aplikasi'],
+            ['id' => 'kesehatan', 'name' => 'Fitur Kesehatan', 'icon' => 'favorite', 'description' => 'Pertanyaan seputar fitur kesehatan'],
+            ['id' => 'akun', 'name' => 'Akun & Keamanan', 'icon' => 'security', 'description' => 'Pengaturan akun dan privasi'],
+            ['id' => 'teknis', 'name' => 'Teknis', 'icon' => 'build', 'description' => 'Masalah teknis dan bug'],
+            ['id' => 'lainnya', 'name' => 'Lainnya', 'icon' => 'help', 'description' => 'Pertanyaan umum lainnya'],
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $categories,
+        ]);
+    }
+
+    /**
+     * Alias for submitRequest (Android calls submitTicket)
+     */
+    public function submitTicket(Request $request)
+    {
+        return $this->submitRequest($request);
+    }
 }

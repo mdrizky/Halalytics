@@ -43,6 +43,10 @@ class AuthController extends Controller
             'active' => true,
         ]);
 
+        if (method_exists($user, 'assignRole')) {
+            $user->assignRole('user');
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([

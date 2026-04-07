@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\ConsultationSession;
+use App\Models\Consultation;
 use Illuminate\Support\Facades\Broadcast;
 
 /*
@@ -44,4 +45,17 @@ Broadcast::channel('consultation.{sessionId}', function ($user, $sessionId) {
     }
 
     return false;
+});
+
+Broadcast::channel('private-consultation.{consultationId}', function ($user, $consultationId) {
+    $consultation = Consultation::with('expert')->find($consultationId);
+
+    if (! $consultation) {
+        return false;
+    }
+
+    $userId = (int) ($user->id_user ?? $user->id);
+
+    return (int) $consultation->user_id === $userId
+        || (int) $consultation->expert?->user_id === $userId;
 });

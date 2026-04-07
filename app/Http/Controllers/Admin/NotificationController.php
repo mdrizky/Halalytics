@@ -70,6 +70,52 @@ class NotificationController extends Controller
             ->with('success', 'Notifikasi berhasil dibuat!');
     }
 
+    public function show($id)
+    {
+        $notification = PushNotification::findOrFail($id);
+        return view('admin.notifications.show', compact('notification'));
+    }
+
+    public function edit($id)
+    {
+        $notification = PushNotification::findOrFail($id);
+        return view('admin.notifications.edit', compact('notification'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'body' => 'required|string',
+            'type' => 'required|in:ingredient_alert,product_reminder,general,product,poster,news',
+            'target_type' => 'required|in:all,specific_users',
+            'user_ids' => 'nullable|string',
+            'scheduled_at' => 'nullable|date',
+        ]);
+
+        $notification = PushNotification::findOrFail($id);
+
+        $userIds = collect(explode(',', (string) ($validated['user_ids'] ?? '')))
+            ->map(fn ($id) => trim($id))
+            ->filter(fn ($id) => $id !== '')
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->values()
+            ->all();
+
+        $notification->update([
+            'title' => $validated['title'],
+            'body' => $validated['body'],
+            'type' => $validated['type'],
+            'target_type' => $validated['target_type'],
+            'target_data' => ['user_ids' => $userIds],
+            'scheduled_at' => $validated['scheduled_at'] ?? null,
+        ]);
+
+        return redirect()->route('admin.notifications.index')
+            ->with('success', 'Notifikasi berhasil diperbarui!');
+    }
+
     protected function sendNotification($notification)
     {
         $extraData = [
@@ -92,7 +138,6 @@ class NotificationController extends Controller
                 $extraData
             );
         } else {
-            // Send via service: inbox + realtime + fcm
             $result = $this->notificationService->broadcast(
                 $notification->title,
                 $notification->body,

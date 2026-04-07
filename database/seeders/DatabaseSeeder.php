@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $this->call([
+            RoleSeeder::class,
             UserSeeder::class,
             HalalCriticalIngredientSeeder::class,
             IngredientSeeder::class,
@@ -24,7 +25,6 @@ class DatabaseSeeder extends Seeder
             HalalyticsFeatureSeeder::class,
             HalalDatabaseSeeder::class,
             BannerSeeder::class,
-            UmkmSeeder::class,
         ]);
     }
 }

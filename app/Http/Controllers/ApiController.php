@@ -571,7 +571,7 @@ class ApiController extends Controller
         ]);
 
         // Create scan history record
-        $scanHistory = ScanHistory::create([
+        $scanHistory = \App\Models\ScanHistory::create([
             'user_id' => $user->id_user,
             'scannable_type' => 'App\\Models\\ProductModel', // Default to ProductModel
             'scannable_id' => 0, // Will be updated if product exists
@@ -730,32 +730,7 @@ class ApiController extends Controller
         ], 200);
     }
 
-    /**
-     * Get nearby UMKM products based on location
-     */
-    public function getNearbyUmkm(Request $request)
-    {
-        $lat = $request->lat;
-        $lng = $request->lng;
-        $radius = $request->radius ?? 5; // km
 
-        if (!$lat || !$lng) {
-            return response()->json(['response_code' => 400, 'message' => 'Lat & Lng required'], 400);
-        }
-
-        // Haversine formula
-        $umkms = UmkmProduct::select('*')
-            ->selectRaw("(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance", [$lat, $lng, $lat])
-            ->having('distance', '<', $radius)
-            ->orderBy('distance')
-            ->get();
-
-        return response()->json([
-            'response_code' => 200,
-            'message' => 'UMKM terdekat ditemukan',
-            'content' => $umkms
-        ], 200);
-    }
 
     /**
      * Submit request for product verification

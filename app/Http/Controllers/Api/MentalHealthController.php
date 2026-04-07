@@ -153,4 +153,145 @@ class MentalHealthController extends Controller
             default => "Hasil kuis menunjukkan bahwa Anda mungkin membutuhkan bantuan profesional. Kami sangat menyarankan untuk:\n\n1. Segera hubungi psikolog atau psikiater\n2. Hubungi hotline kesehatan mental: 119 ext. 8\n3. Jangan ragu untuk meminta bantuan\n\nAnda layak mendapatkan dukungan. Bantuan profesional bisa membuat perbedaan besar.",
         };
     }
+
+    /**
+     * Get mental health topics
+     */
+    public function topics()
+    {
+        $topics = [
+            ['id' => 1, 'name' => 'Kecemasan', 'icon' => 'psychology', 'color' => '#4CAF50', 'description' => 'Mengelola rasa cemas dan khawatir berlebihan'],
+            ['id' => 2, 'name' => 'Depresi', 'icon' => 'mood_bad', 'color' => '#2196F3', 'description' => 'Memahami dan mengatasi perasaan sedih berkepanjangan'],
+            ['id' => 3, 'name' => 'Stres', 'icon' => 'local_fire_department', 'color' => '#FF9800', 'description' => 'Teknik mengelola stres dalam kehidupan sehari-hari'],
+            ['id' => 4, 'name' => 'Tidur', 'icon' => 'bedtime', 'color' => '#9C27B0', 'description' => 'Meningkatkan kualitas tidur untuk kesehatan mental'],
+            ['id' => 5, 'name' => 'Mindfulness', 'icon' => 'self_improvement', 'color' => '#00BCD4', 'description' => 'Praktik kesadaran untuk ketenangan batin'],
+            ['id' => 6, 'name' => 'Relasi', 'icon' => 'people', 'color' => '#E91E63', 'description' => 'Membangun hubungan yang sehat dan supportif'],
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $topics,
+        ]);
+    }
+
+    /**
+     * Get mental health articles
+     */
+    public function articles()
+    {
+        $articles = [
+            [
+                'id' => 1,
+                'title' => '5 Cara Mengelola Kecemasan Sehari-hari',
+                'summary' => 'Teknik sederhana yang bisa Anda lakukan kapan saja untuk mengurangi rasa cemas.',
+                'category' => 'Kecemasan',
+                'read_time' => '5 menit',
+                'image_url' => null,
+                'created_at' => now()->subDays(1)->toISOString(),
+            ],
+            [
+                'id' => 2,
+                'title' => 'Mengenal Tanda-tanda Burnout',
+                'summary' => 'Pelajari gejala burnout dan cara mengatasinya sebelum terlambat.',
+                'category' => 'Stres',
+                'read_time' => '7 menit',
+                'image_url' => null,
+                'created_at' => now()->subDays(3)->toISOString(),
+            ],
+            [
+                'id' => 3,
+                'title' => 'Meditasi untuk Pemula: Panduan Lengkap',
+                'summary' => 'Mulai perjalanan meditasi Anda dengan panduan langkah demi langkah.',
+                'category' => 'Mindfulness',
+                'read_time' => '10 menit',
+                'image_url' => null,
+                'created_at' => now()->subDays(5)->toISOString(),
+            ],
+            [
+                'id' => 4,
+                'title' => 'Tips Tidur Nyenyak di Malam Hari',
+                'summary' => 'Kebiasaan sebelum tidur yang dapat meningkatkan kualitas istirahat Anda.',
+                'category' => 'Tidur',
+                'read_time' => '4 menit',
+                'image_url' => null,
+                'created_at' => now()->subDays(7)->toISOString(),
+            ],
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $articles,
+        ]);
+    }
+
+    /**
+     * Get available mental health experts
+     */
+    public function experts()
+    {
+        $experts = \App\Models\Specialist::where('is_available', true)
+            ->orderByDesc('rating')
+            ->limit(20)
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'id' => $s->id,
+                    'name' => $s->name,
+                    'specialty' => $s->specialty,
+                    'avatar_url' => $s->avatar_url,
+                    'bio' => $s->bio,
+                    'is_online' => $s->is_online,
+                    'rating' => (float) $s->rating,
+                    'total_consultations' => $s->total_consultations,
+                ];
+            });
+
+        // If no real specialists exist, return sample data
+        if ($experts->isEmpty()) {
+            $experts = collect([
+                ['id' => 1, 'name' => 'Dr. Siti Aminah, M.Psi', 'specialty' => 'Psikologi Klinis', 'avatar_url' => null, 'bio' => 'Spesialis gangguan kecemasan dan depresi', 'is_online' => true, 'rating' => 4.9, 'total_consultations' => 150],
+                ['id' => 2, 'name' => 'Dr. Ahmad Rizki, Sp.KJ', 'specialty' => 'Psikiater', 'avatar_url' => null, 'bio' => 'Berpengalaman 10+ tahun dalam kesehatan mental', 'is_online' => false, 'rating' => 4.8, 'total_consultations' => 200],
+                ['id' => 3, 'name' => 'Sarah Nurul, M.Psi', 'specialty' => 'Konselor', 'avatar_url' => null, 'bio' => 'Spesialis terapi kognitif perilaku', 'is_online' => true, 'rating' => 4.7, 'total_consultations' => 95],
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $experts,
+        ]);
+    }
+
+    /**
+     * Request consultation with expert
+     */
+    public function requestExpert(Request $request)
+    {
+        $request->validate([
+            'specialist_id' => 'required|integer',
+            'topic' => 'nullable|string|max:200',
+        ]);
+
+        try {
+            $session = \App\Models\ConsultationSession::create([
+                'user_id' => $request->user()->id_user,
+                'specialist_id' => $request->specialist_id,
+                'status' => 'waiting',
+                'topic' => $request->topic,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Permintaan konsultasi berhasil dikirim. Ahli akan segera merespons.',
+                'data' => [
+                    'session_id' => $session->id,
+                    'status' => 'waiting',
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengirim permintaan: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }

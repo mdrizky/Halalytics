@@ -19,12 +19,31 @@ class RoleMiddleware
     public function handle(Request $request, Closure $next, $role)
     {
         if (!Auth::check()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                    'data' => null,
+                ], 401);
+            }
+
             return redirect('/')->with('error', 'Anda harus login terlebih dahulu.');
         }
 
         $user = Auth::user();
-        
-        if ($user->role !== $role) {
+
+        $hasRole = method_exists($user, 'hasRole') && $user->hasRole($role);
+        $legacyRoleMatch = ($user->role ?? null) === $role;
+
+        if (! $hasRole && ! $legacyRoleMatch) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Akses ditolak.',
+                    'data' => null,
+                ], 403);
+            }
+
             abort(403, 'Akses ditolak: Anda tidak memiliki izin untuk mengakses halaman ini.');
         }
 
