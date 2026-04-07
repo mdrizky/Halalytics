@@ -467,6 +467,25 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(functi
     });
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('ocr/ingredients/sync', [\App\Http\Controllers\Api\OcrController::class, 'syncIngredients']);
+    Route::post('ocr/scan-result', [\App\Http\Controllers\Api\OcrController::class, 'scanResult']);
+    Route::get('ocr/history', [\App\Http\Controllers\Api\OcrController::class, 'history']);
+
+    Route::post('nutrition/log', [\App\Http\Controllers\Api\NutritionController::class, 'logMeal']);
+    Route::get('nutrition/daily', [\App\Http\Controllers\Api\NutritionController::class, 'getDailyLog']);
+    Route::get('nutrition/history', [\App\Http\Controllers\Api\NutritionController::class, 'getHistory']);
+    Route::post('nutrition/goals', [\App\Http\Controllers\Api\NutritionController::class, 'setGoals']);
+    Route::get('nutrition/goals', [\App\Http\Controllers\Api\NutritionController::class, 'getGoals']);
+
+    Route::get('recipes', [\App\Http\Controllers\Api\RecipeController::class, 'index']);
+    Route::post('recipes', [\App\Http\Controllers\Api\RecipeController::class, 'store']);
+    Route::get('recipes/{id}', [\App\Http\Controllers\Api\RecipeController::class, 'show']);
+    Route::get('recipes/{id}/substitution', [\App\Http\Controllers\Api\RecipeController::class, 'getSubstitution']);
+    Route::post('recipes/{id}/halal-switch', [\App\Http\Controllers\Api\RecipeController::class, 'halalSwitch']);
+
+    Route::get('dashboard/daily-mission', [\App\Http\Controllers\Api\DashboardController::class, 'dailyMission']);
+    Route::post('dashboard/complete-mission', [\App\Http\Controllers\Api\DashboardController::class, 'completeMission']);
+
     Route::get('experts', [\App\Http\Controllers\Api\ExpertController::class, 'index']);
     Route::get('experts/{id}', [\App\Http\Controllers\Api\ExpertController::class, 'show']);
 
