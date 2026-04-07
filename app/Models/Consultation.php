@@ -28,7 +28,7 @@ class Consultation extends Model
 
     public function messages()
     {
-        return $this->hasMany(HalocodeMessage::class);
+        return $this->hasMany(Message::class, 'consultation_id');
     }
 
     public function review()

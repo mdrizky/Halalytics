@@ -21,10 +21,14 @@ class OCRController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return response()->json([
-            'success' => true,
-            'data' => $products
-        ]);
+        if (request()->wantsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'data' => $products
+            ]);
+        }
+
+        return view('admin.ocr.index', compact('products'));
     }
 
     /**

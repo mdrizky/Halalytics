@@ -6,33 +6,45 @@ use App\Http\Controllers\Controller;
 use App\Models\HaramIngredient;
 use App\Models\OcrScanHistory;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class OcrController extends Controller
 {
     public function syncIngredients(Request $request)
     {
-        if ($request->updated_after) {
-            $ingredients = HaramIngredient::where('is_active', true)
-                ->where('updated_at', '>', $request->updated_after)
-                ->get();
-        } else {
-            $ingredients = Cache::remember('haram_ingredients_all', 3600, function () {
-                return HaramIngredient::where('is_active', true)->get();
-            });
-        }
+        $updatedAfter = $request->input('updated_after');
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Data bahan haram berhasil disinkronkan',
-            'data'    => $ingredients,
-        ]);
+        $ingredients = $updatedAfter
+            ? HaramIngredient::query()
+                ->where('is_active', true)
+                ->where('updated_at', '>', $updatedAfter)
+                ->orderBy('updated_at')
+                ->get()
+            : Cache::remember('haram_ingredients_all', 3600, function () {
+                return HaramIngredient::query()
+                    ->where('is_active', true)
+                    ->orderBy('name')
+                    ->get();
+            });
+
+        return $this->successResponse(
+            $ingredients->map(fn (HaramIngredient $ingredient) => [
+                'id' => $ingredient->id,
+                'name' => $ingredient->name,
+                'aliases' => $ingredient->aliases ?? [],
+                'category' => $ingredient->category,
+                'severity' => (int) $ingredient->severity,
+                'description' => $ingredient->description,
+                'is_active' => (bool) $ingredient->is_active,
+                'updated_at' => optional($ingredient->updated_at)->toISOString(),
+            ]),
+            'Data bahan haram berhasil disinkronkan.'
+        );
     }
 
     public function scanResult(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'product_name'   => 'nullable|string|max:255',
             'raw_text'       => 'required|string',
             'detected_haram' => 'nullable|array',
@@ -40,27 +52,27 @@ class OcrController extends Controller
         ]);
 
         $scan = OcrScanHistory::create([
-            'user_id'        => Auth::id(),
-            'product_name'   => $request->product_name,
-            'raw_text'       => $request->raw_text,
-            'detected_haram' => $request->detected_haram,
-            'severity'       => $request->severity,
+            'user_id'        => $request->user()->id_user,
+            'product_name'   => $validated['product_name'] ?? null,
+            'raw_text'       => $validated['raw_text'],
+            'detected_haram' => $validated['detected_haram'] ?? [],
+            'severity'       => $validated['severity'] ?? null,
             'scanned_at'     => now(),
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Hasil scan berhasil disimpan',
-            'data'    => $scan,
-        ]);
+        return $this->successResponse([
+            'scan' => $scan,
+            'contains_haram' => ! empty($validated['detected_haram'] ?? []),
+            'max_severity' => (int) ($validated['severity'] ?? 0),
+        ], 'Hasil scan berhasil disimpan.');
     }
 
     public function history()
     {
-        $scans = OcrScanHistory::where('user_id', Auth::id())
+        $scans = OcrScanHistory::where('user_id', auth()->id())
             ->orderByDesc('scanned_at')
             ->paginate(20);
 
-        return response()->json(['success' => true, 'data' => $scans]);
+        return $this->successResponse($scans, 'Riwayat OCR berhasil diambil.');
     }
 }

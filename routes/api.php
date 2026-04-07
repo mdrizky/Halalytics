@@ -466,7 +466,43 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(functi
         Route::get('/ar/nearby', [\App\Http\Controllers\Api\ArController::class, 'nearbyForAr']);
     });
 
-Route::post('payment/callback', [\App\Http\Controllers\Api\ExpertController::class, 'callback']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('experts', [\App\Http\Controllers\Api\ExpertController::class, 'index']);
+    Route::get('experts/{id}', [\App\Http\Controllers\Api\ExpertController::class, 'show']);
+
+    Route::post('consultations', [\App\Http\Controllers\Api\ConsultationController::class, 'store']);
+    Route::post('consultations/{id}/end', [\App\Http\Controllers\Api\ConsultationController::class, 'end']);
+    Route::get('consultations/history', [\App\Http\Controllers\Api\ConsultationController::class, 'history']);
+
+    Route::get('messages/{consultationId}', [\App\Http\Controllers\Api\MessageController::class, 'index']);
+    Route::post('messages/{consultationId}', [\App\Http\Controllers\Api\MessageController::class, 'store']);
+
+    Route::get('marketplace/nearby', [\App\Http\Controllers\Api\MarketplaceController::class, 'nearbyMerchants']);
+    Route::get('marketplace/health-facilities', [\App\Http\Controllers\Api\MarketplaceController::class, 'nearbyHealthFacilities']);
+    Route::get('marketplace/products', [\App\Http\Controllers\Api\MarketplaceController::class, 'products']);
+    Route::get('marketplace/products/{id}', [\App\Http\Controllers\Api\MarketplaceController::class, 'productDetail']);
+
+    Route::get('community/posts', [\App\Http\Controllers\Api\CommunityController::class, 'index']);
+    Route::post('community/posts', [\App\Http\Controllers\Api\CommunityController::class, 'store']);
+    Route::get('community/posts/{id}', [\App\Http\Controllers\Api\CommunityController::class, 'show']);
+    Route::post('community/posts/{id}/like', [\App\Http\Controllers\Api\CommunityController::class, 'likePost']);
+    Route::post('community/posts/{id}/comment', [\App\Http\Controllers\Api\CommunityController::class, 'comment']);
+    Route::post('community/posts/{id}/report', [\App\Http\Controllers\Api\CommunityController::class, 'reportPost']);
+    Route::get('community/user/{userId}/posts', [\App\Http\Controllers\Api\CommunityController::class, 'userPosts']);
+    Route::get('community/leaderboard', [\App\Http\Controllers\Api\CommunityController::class, 'leaderboard']);
+
+    Route::middleware('role:expert')->group(function () {
+        Route::post('expert/toggle-online', [\App\Http\Controllers\Api\ExpertController::class, 'toggleOnline']);
+        Route::put('expert/profile', [\App\Http\Controllers\Api\ExpertController::class, 'updateProfile']);
+        Route::get('expert/queue', [\App\Http\Controllers\Api\ConsultationController::class, 'expertQueue']);
+        Route::post('consultations/{id}/start', [\App\Http\Controllers\Api\ConsultationController::class, 'start']);
+        Route::get('wallet/balance', [\App\Http\Controllers\Api\WalletController::class, 'balance']);
+        Route::get('wallet/transactions', [\App\Http\Controllers\Api\WalletController::class, 'transactions']);
+        Route::post('wallet/withdraw', [\App\Http\Controllers\Api\WalletController::class, 'withdraw']);
+    });
+});
+
+Route::post('payment/callback', [\App\Http\Controllers\Api\ConsultationController::class, 'callback']);
 
 Route::get('/health', function () {
     return response()->json([

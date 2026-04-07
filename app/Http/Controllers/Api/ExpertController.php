@@ -3,154 +3,214 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Expert;
 use App\Models\Consultation;
-use App\Models\HalocodeMessage;
+use App\Models\Expert;
 use App\Models\ExpertReview;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class ExpertController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Expert::with('user:id_user,username,full_name,avatar_url')
-            ->where('is_verified', true);
+        $experts = Expert::query()
+            ->with('user:id_user,username,full_name,image,avatar_url')
+            ->where('is_verified', true)
+            ->when($request->filled('specialization'), fn ($query) => $query->where('specialization', $request->input('specialization')))
+            ->when($request->boolean('online_only'), fn ($query) => $query->where('is_online', true))
+            ->orderByDesc('is_online')
+            ->orderByDesc('rating')
+            ->get()
+            ->map(fn (Expert $expert) => $this->expertPayload($expert));
 
-        if ($request->specialization) {
-            $query->where('specialization', $request->specialization);
-        }
-        if ($request->boolean('online_only')) {
-            $query->where('is_online', true);
-        }
-
-        $experts = $query->orderByDesc('rating')->paginate(20);
-        return response()->json(['success' => true, 'data' => $experts]);
+        return $this->successResponse($experts, 'Daftar pakar berhasil diambil.');
     }
 
     public function show($id)
     {
-        $expert = Expert::with(['user:id_user,username,full_name,avatar_url', 'schedules', 'reviews.user:id_user,username'])
+        $expert = Expert::query()
+            ->with([
+                'user:id_user,username,full_name,image,avatar_url',
+                'schedules',
+                'reviews.user:id_user,username,full_name,image,avatar_url',
+            ])
             ->findOrFail($id);
-        return response()->json(['success' => true, 'data' => $expert]);
+
+        $payload = $this->expertPayload($expert);
+        $payload['schedules'] = $expert->schedules
+            ->where('is_active', true)
+            ->sortBy(fn ($schedule) => sprintf('%d-%s', $schedule->day_of_week, $schedule->start_time))
+            ->values()
+            ->map(fn ($schedule) => [
+                'id' => $schedule->id,
+                'day_of_week' => (int) $schedule->day_of_week,
+                'start_time' => $schedule->start_time,
+                'end_time' => $schedule->end_time,
+                'is_active' => (bool) $schedule->is_active,
+            ])
+            ->all();
+        $payload['reviews'] = $expert->reviews
+            ->sortByDesc('created_at')
+            ->values()
+            ->map(fn (ExpertReview $review) => [
+                'id' => $review->id,
+                'user_id' => $review->user_id,
+                'user_name' => $review->user?->full_name ?? $review->user?->username,
+                'rating' => (int) $review->rating,
+                'review' => $review->review,
+                'created_at' => optional($review->created_at)->toISOString(),
+            ])
+            ->all();
+
+        return $this->successResponse($payload, 'Detail pakar berhasil diambil.');
+    }
+
+    public function toggleOnline(Request $request)
+    {
+        $expert = Expert::firstOrCreate(
+            ['user_id' => $request->user()->id_user],
+            [
+                'specialization' => 'Konsultan Umum',
+                'bio' => null,
+                'price_per_session' => 0,
+                'is_verified' => false,
+                'is_online' => false,
+            ]
+        );
+
+        $expert->update([
+            'is_online' => ! $expert->is_online,
+        ]);
+
+        return $this->successResponse([
+            'is_online' => (bool) $expert->fresh()->is_online,
+        ], 'Status online pakar berhasil diperbarui.');
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $validated = $request->validate([
+            'specialization' => 'required|string|max:255',
+            'bio' => 'nullable|string|max:5000',
+            'price_per_session' => 'required|integer|min:0',
+            'certificate' => 'nullable|file|max:5120',
+        ]);
+
+        $expert = Expert::firstOrCreate(
+            ['user_id' => $request->user()->id_user],
+            [
+                'specialization' => $validated['specialization'],
+                'bio' => $validated['bio'] ?? null,
+                'price_per_session' => $validated['price_per_session'],
+                'is_verified' => false,
+                'is_online' => false,
+            ]
+        );
+
+        $payload = [
+            'specialization' => $validated['specialization'],
+            'bio' => $validated['bio'] ?? null,
+            'price_per_session' => $validated['price_per_session'],
+        ];
+
+        if ($request->hasFile('certificate')) {
+            $payload['certificate_path'] = $request->file('certificate')->store('experts/certificates', 'public');
+            $payload['is_verified'] = false;
+        }
+
+        $expert->update($payload);
+
+        return $this->successResponse(
+            $this->expertPayload($expert->fresh('user')),
+            'Profil pakar berhasil diperbarui.'
+        );
     }
 
     public function startConsultation(Request $request)
     {
-        $request->validate([
-            'expert_id' => 'required|exists:experts,id',
-        ]);
+        return app(ConsultationController::class)->store($request);
+    }
 
-        $expert = Expert::findOrFail($request->expert_id);
-
-        $consultation = Consultation::create([
-            'user_id'        => Auth::id(),
-            'expert_id'      => $expert->id,
-            'status'         => 'pending',
-            'payment_status' => 'unpaid',
-            'amount'         => $expert->price_per_session,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Konsultasi dibuat, menunggu pembayaran',
-            'data'    => $consultation,
-        ]);
+    public function callback(Request $request)
+    {
+        return app(ConsultationController::class)->callback($request);
     }
 
     public function sendMessage(Request $request, $consultationId)
     {
-        $request->validate(['message' => 'required|string|max:2000']);
-
-        $consultation = Consultation::where('id', $consultationId)
-            ->where(function ($q) {
-                $q->where('user_id', Auth::id())
-                  ->orWhereHas('expert', fn($eq) => $eq->where('user_id', Auth::id()));
-            })->firstOrFail();
-
-        $message = HalocodeMessage::create([
-            'consultation_id' => $consultation->id,
-            'sender_id'       => Auth::id(),
-            'message'         => $request->message,
-            'attachment_path' => $request->hasFile('attachment')
-                ? $request->file('attachment')->store('chat_attachments', 'public') : null,
-        ]);
-
-        return response()->json(['success' => true, 'data' => $message]);
+        return app(MessageController::class)->store($request, $consultationId);
     }
 
-    public function getMessages($consultationId)
+    public function getMessages(Request $request, $consultationId)
     {
-        $consultation = Consultation::where('id', $consultationId)
-            ->where(function ($q) {
-                $q->where('user_id', Auth::id())
-                  ->orWhereHas('expert', fn($eq) => $eq->where('user_id', Auth::id()));
-            })->firstOrFail();
-
-        $messages = HalocodeMessage::where('consultation_id', $consultationId)
-            ->with('sender:id_user,username,full_name,avatar_url')
-            ->orderBy('created_at')
-            ->get();
-
-        // Mark as read
-        HalocodeMessage::where('consultation_id', $consultationId)
-            ->where('sender_id', '!=', Auth::id())
-            ->where('is_read', false)
-            ->update(['is_read' => true]);
-
-        return response()->json(['success' => true, 'data' => $messages]);
+        return app(MessageController::class)->index($request, $consultationId);
     }
 
-    public function endConsultation($consultationId)
+    public function endConsultation(Request $request, $consultationId)
     {
-        $consultation = Consultation::where('id', $consultationId)
-            ->where(function ($q) {
-                $q->where('user_id', Auth::id())
-                  ->orWhereHas('expert', fn($eq) => $eq->where('user_id', Auth::id()));
-            })->firstOrFail();
-
-        $consultation->update(['status' => 'ended', 'ended_at' => now()]);
-
-        return response()->json(['success' => true, 'message' => 'Konsultasi selesai']);
+        return app(ConsultationController::class)->end($request, $consultationId);
     }
 
     public function submitReview(Request $request, $consultationId)
     {
-        $request->validate([
+        $validated = $request->validate([
             'rating' => 'required|integer|min:1|max:5',
             'review' => 'nullable|string|max:1000',
         ]);
 
-        $consultation = Consultation::where('id', $consultationId)
-            ->where('user_id', Auth::id())
+        $consultation = Consultation::query()
+            ->where('id', $consultationId)
+            ->where('user_id', $request->user()->id_user)
             ->where('status', 'ended')
             ->firstOrFail();
 
         $review = ExpertReview::updateOrCreate(
-            ['consultation_id' => $consultationId, 'user_id' => Auth::id()],
             [
+                'consultation_id' => $consultation->id,
+                'user_id' => $request->user()->id_user,
                 'expert_id' => $consultation->expert_id,
-                'rating'    => $request->rating,
-                'review'    => $request->review,
+            ],
+            [
+                'rating' => $validated['rating'],
+                'review' => $validated['review'] ?? null,
             ]
         );
 
-        // Update expert rating
-        $expert = Expert::find($consultation->expert_id);
-        $avgRating = ExpertReview::where('expert_id', $expert->id)->avg('rating');
-        $totalReviews = ExpertReview::where('expert_id', $expert->id)->count();
-        $expert->update(['rating' => round($avgRating, 2), 'total_reviews' => $totalReviews]);
+        $expert = Expert::findOrFail($consultation->expert_id);
+        $expert->update([
+            'rating' => round((float) ExpertReview::where('expert_id', $expert->id)->avg('rating'), 2),
+            'total_reviews' => ExpertReview::where('expert_id', $expert->id)->count(),
+        ]);
 
-        return response()->json(['success' => true, 'data' => $review]);
+        return $this->successResponse([
+            'id' => $review->id,
+            'consultation_id' => $review->consultation_id,
+            'expert_id' => $review->expert_id,
+            'user_id' => $review->user_id,
+            'rating' => (int) $review->rating,
+            'review' => $review->review,
+            'created_at' => optional($review->created_at)->toISOString(),
+        ], 'Ulasan konsultasi berhasil dikirim.');
     }
 
-    public function myConsultations()
+    public function myConsultations(Request $request)
     {
-        $consultations = Consultation::where('user_id', Auth::id())
-            ->with('expert.user:id_user,username,full_name,avatar_url')
-            ->orderByDesc('created_at')
-            ->paginate(20);
+        return app(ConsultationController::class)->history($request);
+    }
 
-        return response()->json(['success' => true, 'data' => $consultations]);
+    private function expertPayload(Expert $expert): array
+    {
+        return [
+            'id' => $expert->id,
+            'user_id' => $expert->user_id,
+            'name' => $expert->user?->full_name ?? $expert->user?->username ?? 'Pakar',
+            'photo_url' => $expert->user?->avatar_url ?? $expert->user?->image,
+            'specialization' => $expert->specialization,
+            'bio' => $expert->bio,
+            'is_verified' => (bool) $expert->is_verified,
+            'is_online' => (bool) $expert->is_online,
+            'price_per_session' => (int) $expert->price_per_session,
+            'rating' => (float) $expert->rating,
+            'total_reviews' => (int) $expert->total_reviews,
+        ];
     }
 }

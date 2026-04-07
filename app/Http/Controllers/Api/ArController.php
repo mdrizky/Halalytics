@@ -5,33 +5,45 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Merchant;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ArController extends Controller
 {
     public function nearbyForAr(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'lat' => 'required|numeric',
             'lng' => 'required|numeric',
+            'radius' => 'nullable|numeric|min:1|max:10',
         ]);
 
-        $lat    = $request->lat;
-        $lng    = $request->lng;
-        $radius = $request->radius ?? 2; // km, default 2km untuk AR
+        $lat = (float) $validated['lat'];
+        $lng = (float) $validated['lng'];
+        $radius = (float) ($validated['radius'] ?? 2);
 
-        $merchants = Merchant::select('id', 'name', 'type', 'latitude', 'longitude', 'phone', DB::raw("
-            (6371 * acos(cos(radians($lat))
-            * cos(radians(latitude))
-            * cos(radians(longitude) - radians($lng))
-            + sin(radians($lat))
-            * sin(radians(latitude)))) AS distance
-        "))
-        ->having('distance', '<=', $radius)
-        ->orderBy('distance')
-        ->limit(10)
-        ->get();
+        $merchants = Merchant::query()
+            ->select('merchants.*')
+            ->selectRaw(
+                '(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance',
+                [$lat, $lng, $lat]
+            )
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->where('is_verified', true)
+            ->having('distance', '<=', $radius)
+            ->orderBy('distance')
+            ->limit(10)
+            ->get()
+            ->map(fn (Merchant $merchant) => [
+                'id' => $merchant->id,
+                'name' => $merchant->name,
+                'type' => $merchant->type,
+                'latitude' => (float) $merchant->latitude,
+                'longitude' => (float) $merchant->longitude,
+                'distance' => round((float) $merchant->distance, 3),
+                'rating' => null,
+                'phone' => $merchant->phone,
+            ]);
 
-        return response()->json(['success' => true, 'data' => $merchants]);
+        return $this->successResponse($merchants, 'Lokasi AR terdekat berhasil diambil.');
     }
 }
