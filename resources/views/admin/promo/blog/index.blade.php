@@ -24,11 +24,11 @@
 
 <!-- Tabs -->
 <div class="flex gap-2 mb-6">
-    <button onclick="showTab('local')" id="tabLocal" class="px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-900 dark:bg-white text-white dark:text-slate-900">
+    <button onclick="showTab('local')" id="tabLocal" class="px-4 py-2 rounded-lg text-sm font-bold transition bg-primary text-white shadow-sm">
         Artikel Lokal
     </button>
-    <button onclick="showTab('external')" id="tabExternal" class="px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-100 dark:bg-slate-800 text-slate-500">
-        Artikel External (Health News)
+    <button onclick="showTab('external')" id="tabExternal" class="px-4 py-2 rounded-lg text-sm font-bold transition bg-primary/10 text-primary">
+        Artikel Eksternal
     </button>
 </div>
 
@@ -134,10 +134,31 @@
     </div>
 
     <div id="externalArticlesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Will be populated by JS -->
+        @foreach(($externalArticles ?? collect()) as $article)
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden hover:shadow-md transition-shadow" data-external-card="1">
+                @if(!empty($article['image_url']))
+                    <img src="{{ $article['image_url'] }}" alt="{{ $article['title'] }}" class="w-full h-40 object-cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                @endif
+                <div class="h-40 w-full bg-gradient-to-br from-[#E0F2F1] via-white to-[#F4F9F8] items-center justify-center {{ !empty($article['image_url']) ? 'hidden' : 'flex' }}">
+                    <span class="material-icons-round text-primary text-4xl">article</span>
+                </div>
+                <div class="p-5">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="material-icons-round text-primary">public</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">{{ $article['source'] ?? 'external' }}</span>
+                        <span class="text-[10px] text-slate-400 ml-auto">{{ $article['published_label'] ?? '-' }}</span>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-white mb-2 line-clamp-2">{{ $article['title'] ?? '-' }}</h3>
+                    <p class="text-xs text-slate-500 mb-4 line-clamp-3">{{ $article['excerpt'] ?? '-' }}</p>
+                    <a href="{{ $article['source_url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary-dark transition">
+                        Baca Selengkapnya <span class="material-icons-round text-sm">open_in_new</span>
+                    </a>
+                </div>
+            </div>
+        @endforeach
     </div>
 
-    <div id="externalEmpty" class="hidden text-center py-12 text-slate-400">
+    <div id="externalEmpty" class="{{ !($externalArticles ?? collect())->count() ? '' : 'hidden' }} text-center py-12 text-slate-400">
         <span class="material-icons-round text-4xl mb-2">article</span>
         <p>Klik tombol search untuk mengambil artikel dari sumber eksternal.</p>
     </div>
@@ -153,19 +174,19 @@ function showTab(tab) {
     const panelExternal = document.getElementById('panelExternal');
 
     if (tab === 'local') {
-        tabLocal.className = 'px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-900 dark:bg-white text-white dark:text-slate-900';
-        tabExternal.className = 'px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-100 dark:bg-slate-800 text-slate-500';
+        tabLocal.className = 'px-4 py-2 rounded-lg text-sm font-bold transition bg-primary text-white shadow-sm';
+        tabExternal.className = 'px-4 py-2 rounded-lg text-sm font-bold transition bg-primary/10 text-primary';
         panelLocal.classList.remove('hidden');
         panelExternal.classList.add('hidden');
     } else {
-        tabExternal.className = 'px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-900 dark:bg-white text-white dark:text-slate-900';
-        tabLocal.className = 'px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-100 dark:bg-slate-800 text-slate-500';
+        tabExternal.className = 'px-4 py-2 rounded-lg text-sm font-bold transition bg-primary text-white shadow-sm';
+        tabLocal.className = 'px-4 py-2 rounded-lg text-sm font-bold transition bg-primary/10 text-primary';
         panelExternal.classList.remove('hidden');
         panelLocal.classList.add('hidden');
         
         // Auto-fetch on first tab open
         const grid = document.getElementById('externalArticlesGrid');
-        if (grid.children.length === 0) {
+        if (!grid.querySelector('[data-external-card]') && grid.children.length === 0) {
             fetchExternalArticles();
         }
     }
@@ -209,7 +230,7 @@ async function fetchExternalArticles() {
                         <span class="material-icons-round text-slate-400 text-4xl">article</span>
                    </div>`;
             grid.innerHTML += `
-                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden hover:shadow-md transition-shadow" data-external-card="1">
                     ${imageHtml}
                     <div class="p-5">
                         <div class="flex items-center gap-2 mb-3">

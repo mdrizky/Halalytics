@@ -6,7 +6,7 @@
 
 @section('content')
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-    <div class="rounded-xl p-4 bg-cyan-500 text-white shadow-sm border border-cyan-600/20">
+    <div class="rounded-xl p-4 bg-primary text-white shadow-sm border border-primary/20">
         <div class="text-sm opacity-80 font-medium">Total Artikel</div>
         <div class="text-3xl font-extrabold mt-1">{{ number_format($stats['total']) }}</div>
     </div>
@@ -18,7 +18,7 @@
         <div class="text-sm opacity-80 font-medium">Draft</div>
         <div class="text-3xl font-extrabold mt-1">{{ number_format($stats['draft']) }}</div>
     </div>
-    <div class="rounded-xl p-4 bg-indigo-500 text-white shadow-sm border border-indigo-600/20">
+    <div class="rounded-xl p-4 bg-primary text-white shadow-sm border border-primary/20">
         <div class="text-sm opacity-80 font-medium">Total Views</div>
         <div class="text-3xl font-extrabold mt-1">{{ number_format($stats['total_views']) }}</div>
     </div>
@@ -64,7 +64,7 @@
             </select>
         </div>
         <div class="md:col-span-2">
-            <button type="submit" class="w-full h-full px-4 py-2 rounded-lg bg-slate-800 dark:bg-slate-700 text-white font-semibold hover:bg-slate-900 dark:hover:bg-slate-600 transition">Filter</button>
+            <button type="submit" class="w-full h-full px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition">Filter</button>
         </div>
     </form>
 </div>
@@ -102,7 +102,7 @@
                         </div>
                     </td>
                     <td class="px-5 py-4">
-                        <span class="inline-flex px-2 py-1 rounded bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold uppercase border border-indigo-100 dark:border-indigo-800">
+                        <span class="inline-flex px-2 py-1 rounded bg-primary/10 dark:bg-primary/15 text-primary dark:text-emerald-300 text-xs font-bold uppercase border border-primary/20 dark:border-primary/30">
                             {{ $article->category }}
                         </span>
                     </td>
@@ -142,7 +142,7 @@
                 <tr>
                     <td colspan="5" class="px-5 py-16 text-center">
                         <div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
-                            <span class="material-icons-round text-5xl mb-3 opacity-50 text-indigo-500">newspaper</span>
+                            <span class="material-icons-round text-5xl mb-3 opacity-50 text-primary">newspaper</span>
                             <p class="text-sm font-medium">Belum ada artikel.</p>
                             <p class="text-xs mt-1">Klik tombol <strong>Tambah Artikel</strong> untuk membuat konten baru.</p>
                         </div>
@@ -215,6 +215,70 @@
                 </form>
             </div>
         </div>
+    </div>
+</div>
+
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Artikel Eksternal</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Feed Google News kesehatan/halal yang bisa dipakai admin untuk referensi konten dan halaman promosi.</p>
+        </div>
+        <form action="{{ route('admin.articles.index') }}" method="GET" class="flex items-center gap-2 w-full lg:w-auto">
+            <input type="text" name="external_q" value="{{ $externalQuery }}" placeholder="Cari artikel eksternal..." class="w-full lg:w-80 rounded-xl border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-primary focus:border-primary">
+            @if(request('search'))
+                <input type="hidden" name="search" value="{{ request('search') }}">
+            @endif
+            @if(request('category'))
+                <input type="hidden" name="category" value="{{ request('category') }}">
+            @endif
+            <button type="submit" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white font-semibold hover:bg-primary-dark transition">
+                <span class="material-icons-round text-lg">travel_explore</span>
+                Cari
+            </button>
+        </form>
+    </div>
+    <div class="p-5">
+        @if(($externalArticles ?? collect())->isEmpty())
+            <div class="rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 px-6 py-14 text-center text-slate-400">
+                <span class="material-icons-round text-5xl mb-3 block text-primary/60">rss_feed</span>
+                Belum ada artikel eksternal yang cocok untuk pencarian ini.
+            </div>
+        @else
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                @foreach($externalArticles as $article)
+                    <article class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-950 shadow-sm hover:-translate-y-1 transition-all">
+                        <div class="relative h-44 bg-slate-100 dark:bg-slate-800">
+                            @if(!empty($article['image_url']))
+                                <img src="{{ $article['image_url'] }}" alt="{{ $article['title'] }}" class="w-full h-full object-cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                            @endif
+                            <div class="absolute inset-0 items-center justify-center {{ empty($article['image_url']) ? 'flex' : 'hidden' }} bg-gradient-to-br from-primary/10 to-emerald-50 dark:from-primary/10 dark:to-slate-900">
+                                <span class="material-icons-round text-4xl text-primary/70">newspaper</span>
+                            </div>
+                            <span class="absolute top-3 left-3 inline-flex items-center px-2.5 py-1 rounded-full bg-primary text-white text-[10px] font-black uppercase tracking-[0.18em]">
+                                {{ $article['source'] ?? 'Google News' }}
+                            </span>
+                        </div>
+                        <div class="p-4">
+                            <div class="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                                {{ $article['published_label'] ?? 'Terbaru' }}
+                            </div>
+                            <h4 class="mt-2 text-base font-extrabold text-slate-900 dark:text-white line-clamp-2">{{ $article['title'] }}</h4>
+                            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400 line-clamp-3">{{ $article['excerpt'] ?? 'Ringkasan artikel tidak tersedia.' }}</p>
+                            <div class="mt-4 flex items-center justify-between gap-3">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold">
+                                    External Feed
+                                </span>
+                                <a href="{{ $article['source_url'] }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-sm font-bold text-primary hover:text-primary-dark">
+                                    Buka Sumber
+                                    <span class="material-icons-round text-base">open_in_new</span>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+        @endif
     </div>
 </div>
 @endsection

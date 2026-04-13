@@ -60,7 +60,7 @@
     <!-- Active Users -->
     <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-            <span class="material-icons-round text-6xl text-blue-500">person</span>
+            <span class="material-icons-round text-6xl text-primary">person</span>
         </div>
         <p class="text-slate-500 text-sm font-semibold uppercase tracking-wider">Active Users (7d)</p>
         <div class="flex items-baseline gap-3 mt-2">
@@ -87,7 +87,7 @@
                 </div>
                 <div class="h-8 w-px bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
                 <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
-                    <button type="submit" name="status" value="" class="{{ !request('status') ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'bg-slate-50 dark:bg-slate-800 text-slate-500' }} text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-tight transition-colors">All Scans</button>
+                    <button type="submit" name="status" value="" class="{{ !request('status') ? 'bg-primary text-white' : 'bg-slate-50 dark:bg-slate-800 text-slate-500' }} text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-tight transition-colors">All Scans</button>
                     <button type="submit" name="status" value="halal" class="{{ request('status') == 'halal' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-500' }} text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-tight hover:bg-emerald-100/50 hover:text-emerald-600 transition-colors">Halal</button>
                     <button type="submit" name="status" value="syubhat" class="{{ request('status') == 'syubhat' ? 'bg-amber-100 text-amber-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-500' }} text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-tight hover:bg-amber-100/50 hover:text-amber-600 transition-colors">Syubhat</button>
                     <button type="submit" name="status" value="haram" class="{{ request('status') == 'haram' ? 'bg-red-100 text-red-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-500' }} text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-tight hover:bg-red-100/50 hover:text-red-600 transition-colors">Haram</button>
@@ -139,17 +139,7 @@
                         <div class="flex items-center gap-3">
                             <div class="h-10 w-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
                                 @php
-                                    $productImage = null;
-                                    if (isset($scan->product)) {
-                                        if ($scan->product->gambar) {
-                                            $productImage = asset('storage/' . $scan->product->gambar);
-                                        } elseif ($scan->product->image) {
-                                            $imgVal = $scan->product->image;
-                                            $productImage = str_starts_with($imgVal, 'http') ? $imgVal : asset('storage/' . $imgVal);
-                                        } elseif ($scan->product->image_url) {
-                                            $productImage = $scan->product->image_url;
-                                        }
-                                    }
+                                    $productImage = $scan->product->image ?? $scan->product->image_url ?? null;
                                 @endphp
                                 @if($productImage)
                                     <img src="{{ $productImage }}" alt="Product" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">

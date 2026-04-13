@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Services\DisplayImageService;
 
 class ScanHistory extends Model
 {
@@ -55,5 +56,14 @@ class ScanHistory extends Model
     public function scopeThisMonth($query)
     {
         return $query->whereMonth('created_at', now()->month);
+    }
+
+    public function getProductImageAttribute($value): string
+    {
+        return app(DisplayImageService::class)->resolve($value, [
+            'name' => $this->product_name,
+            'barcode' => $this->barcode,
+            'category' => 'scan-history',
+        ], 'product');
     }
 }

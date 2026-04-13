@@ -8,8 +8,8 @@
 <style>
     .about-hero {
         background:
-            radial-gradient(900px 420px at 110% -20%, rgba(31,79,214,.20), transparent 60%),
-            radial-gradient(780px 420px at -5% 0%, rgba(14,165,107,.20), transparent 58%),
+            radial-gradient(900px 420px at 110% -20%, rgba(38,166,154,.18), transparent 60%),
+            radial-gradient(780px 420px at -5% 0%, rgba(0,77,64,.14), transparent 58%),
             linear-gradient(180deg, #f7fbf9 0%, #ffffff 100%);
     }
     .about-card {
@@ -76,7 +76,7 @@
                 HalalScan AI bersifat alat bantu keputusan. Untuk validitas formal/sertifikasi, pengguna tetap disarankan mengecek dokumen resmi (misalnya BPOM, sertifikat halal, atau rekomendasi tenaga medis).
             </p>
             <div class="mt-7 flex flex-col sm:flex-row gap-3">
-                <a href="{{ route('privacy') }}" class="inline-flex items-center justify-center px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800">Lihat Privacy Policy</a>
+                <a href="{{ route('privacy') }}" class="inline-flex items-center justify-center px-6 py-3 bg-[#004D40] text-white rounded-xl font-bold hover:bg-[#00372e]">Lihat Privacy Policy</a>
                 <a href="{{ route('download') }}" class="inline-flex items-center justify-center px-6 py-3 border border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-50">Download Aplikasi</a>
             </div>
         </div>

@@ -38,9 +38,9 @@
 <style>
     .article-hero {
         background:
-            radial-gradient(900px 420px at 100% -10%, rgba(31,79,214,.30), transparent 60%),
-            radial-gradient(900px 420px at 0% 0%, rgba(14,165,107,.30), transparent 58%),
-            linear-gradient(135deg, #0c1f18 0%, #15364f 100%);
+            radial-gradient(900px 420px at 100% -10%, rgba(0, 187, 194, .22), transparent 60%),
+            radial-gradient(900px 420px at 0% 0%, rgba(16, 185, 129, .32), transparent 58%),
+            linear-gradient(135deg, #0c1f18 0%, #124734 100%);
     }
     .article-wrap {
         border: 1px solid #dbe3ea;
@@ -109,8 +109,8 @@
                 <div class="mt-10 pt-6 border-t border-slate-200 flex flex-col md:flex-row justify-between gap-4">
                     <div class="flex items-center gap-3">
                         <span class="font-semibold text-slate-700 text-sm">Bagikan:</span>
-                        <a href="https://twitter.com/intent/tweet?text={{ urlencode($blog->title) }}&url={{ urlencode(route('blog.show', $blog->slug)) }}" target="_blank" class="text-slate-500 hover:text-blue-500 text-sm font-semibold">X/Twitter</a>
-                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('blog.show', $blog->slug)) }}" target="_blank" class="text-slate-500 hover:text-blue-700 text-sm font-semibold">Facebook</a>
+                        <a href="https://twitter.com/intent/tweet?text={{ urlencode($blog->title) }}&url={{ urlencode(route('blog.show', $blog->slug)) }}" target="_blank" class="text-slate-500 hover:text-primary text-sm font-semibold">X/Twitter</a>
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('blog.show', $blog->slug)) }}" target="_blank" class="text-slate-500 hover:text-emerald-700 text-sm font-semibold">Facebook</a>
                         <a href="https://wa.me/?text={{ urlencode($blog->title . ' - ' . route('blog.show', $blog->slug)) }}" target="_blank" class="text-slate-500 hover:text-green-600 text-sm font-semibold">WhatsApp</a>
                     </div>
                     <a href="{{ route('blog.index') }}" class="text-emerald-700 hover:text-emerald-800 text-sm font-bold">
@@ -133,7 +133,7 @@
                     @if($related->image)
                     <img src="{{ $related->image_url }}" alt="{{ $related->title }}" class="w-full h-48 object-cover">
                     @else
-                    <div class="w-full h-48 bg-gradient-to-br from-emerald-200 to-blue-200"></div>
+                    <div class="w-full h-48 bg-gradient-to-br from-emerald-200 via-teal-100 to-primary/20"></div>
                     @endif
                 </a>
                 <div class="p-6">

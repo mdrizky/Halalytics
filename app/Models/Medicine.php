@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Services\DisplayImageService;
 
 class Medicine extends Model
 {
@@ -80,5 +81,59 @@ class Medicine extends Model
               ->orWhere('generic_name', 'LIKE', "%{$term}%")
               ->orWhere('brand_name', 'LIKE', "%{$term}%");
         });
+    }
+
+    public function getImageUrlAttribute($value): string
+    {
+        return app(DisplayImageService::class)->resolve($value, [
+            'name' => $this->name,
+            'brand' => $this->brand_name,
+            'barcode' => $this->barcode,
+            'category' => $this->category ?: 'medicine',
+        ], 'medicine');
+    }
+
+    public function getDescriptionAttribute($value): string
+    {
+        $description = trim((string) $value);
+
+        if ($description !== '') {
+            return $description;
+        }
+
+        return 'Deskripsi obat belum tersedia. Gunakan sesuai indikasi, baca kemasan, dan konsultasikan ke tenaga kesehatan bila perlu.';
+    }
+
+    public function getIndicationsAttribute($value): string
+    {
+        $indications = trim((string) $value);
+
+        if ($indications !== '') {
+            return $indications;
+        }
+
+        return 'Indikasi spesifik belum dicantumkan. Periksa label kemasan atau konsultasikan ke apoteker.';
+    }
+
+    public function getWarningsAttribute($value): string
+    {
+        $warnings = trim((string) $value);
+
+        if ($warnings !== '') {
+            return $warnings;
+        }
+
+        return 'Gunakan sesuai aturan pakai. Hentikan penggunaan jika muncul reaksi alergi atau keluhan memburuk.';
+    }
+
+    public function getSideEffectsAttribute($value): string
+    {
+        $sideEffects = trim((string) $value);
+
+        if ($sideEffects !== '') {
+            return $sideEffects;
+        }
+
+        return 'Efek samping spesifik belum tersedia. Bacalah brosur obat dan konsultasi jika ada efek yang mengganggu.';
     }
 }

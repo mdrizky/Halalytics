@@ -61,7 +61,7 @@
     <!-- Card 3: Total Users -->
     <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-4">
-            <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+            <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                 <span class="material-icons-round">people</span>
             </div>
             <span class="text-[10px] font-extrabold px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-halal rounded-full">+8.1%</span>

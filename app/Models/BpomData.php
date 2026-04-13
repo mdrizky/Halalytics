@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Services\DisplayImageService;
 
 class BpomData extends Model
 {
@@ -105,5 +106,15 @@ class BpomData extends Model
             'bahaya' => 'red',
             default => 'gray',
         };
+    }
+
+    public function getImageUrlAttribute($value): string
+    {
+        return app(DisplayImageService::class)->resolve($value, [
+            'name' => $this->nama_produk,
+            'brand' => $this->merk,
+            'barcode' => $this->barcode,
+            'category' => $this->kategori,
+        ], in_array($this->kategori, ['kosmetik', 'beauty'], true) ? 'cosmetic' : 'bpom');
     }
 }

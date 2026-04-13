@@ -5,10 +5,15 @@ namespace App\Http\Controllers\Promo;
 use App\Http\Controllers\Controller;
 use App\Models\PromoBlog;
 use App\Models\PromoSetting;
-use Illuminate\Http\Request;
+use App\Services\ExternalHealthArticleService;
 
 class PageController extends Controller
 {
+    public function __construct(
+        private readonly ExternalHealthArticleService $externalArticles
+    ) {
+    }
+
     public function home()
     {
         $settings = PromoSetting::getAllSettings();
@@ -16,8 +21,9 @@ class PageController extends Controller
             ->orderBy('created_at', 'desc')
             ->take(3)
             ->get();
-            
-        return view('promo.home', compact('settings', 'latestBlogs'));
+        $externalArticles = $this->externalArticles->search('', 3);
+
+        return view('promo.home', compact('settings', 'latestBlogs', 'externalArticles'));
     }
 
     public function features()

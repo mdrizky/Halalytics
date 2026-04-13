@@ -6,19 +6,19 @@
 
 @section('content')
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-    <div class="rounded-xl p-4 bg-cyan-500 text-white shadow-sm border border-cyan-600/20">
+    <div class="metric-card metric-card--primary">
         <div class="text-sm opacity-80 font-medium">Total Kosmetik</div>
         <div class="text-3xl font-extrabold mt-1">{{ number_format($stats['total']) }}</div>
     </div>
-    <div class="rounded-xl p-4 bg-emerald-500 text-white shadow-sm border border-emerald-600/20">
+    <div class="metric-card metric-card--accent">
         <div class="text-sm opacity-80 font-medium">Aman</div>
         <div class="text-3xl font-extrabold mt-1">{{ number_format($stats['aman']) }}</div>
     </div>
-    <div class="rounded-xl p-4 bg-rose-500 text-white shadow-sm border border-rose-600/20">
+    <div class="metric-card metric-card--danger">
         <div class="text-sm opacity-80 font-medium">Bahan Berbahaya/Haram</div>
         <div class="text-3xl font-extrabold mt-1">{{ number_format($stats['bahaya'] + $stats['haram']) }}</div>
     </div>
-    <div class="rounded-xl p-4 bg-fuchsia-500 text-white shadow-sm border border-fuchsia-600/20">
+    <div class="metric-card metric-card--soft">
         <div class="text-sm opacity-80 font-medium">Dari OpenBeautyFacts</div>
         <div class="text-3xl font-extrabold mt-1">{{ number_format($stats['from_obf']) }}</div>
     </div>
@@ -31,7 +31,7 @@
     </div>
     <form action="{{ route('admin.cosmetics.seed') }}" method="POST" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button span:last-child').textContent='Mengimpor...';">
         @csrf
-        <button type="submit" class="inline-flex flex-shrink-0 items-center gap-2 px-4 py-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white rounded-lg font-semibold transition shadow-sm">
+        <button type="submit" class="inline-flex flex-shrink-0 items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg font-semibold transition shadow-sm">
             <span class="material-icons-round text-lg">auto_awesome</span>
             <span>Seed dari OpenBeautyFacts</span>
         </button>
@@ -64,7 +64,7 @@
                 </select>
             </div>
             <div class="md:col-span-3">
-                <button type="submit" class="w-full px-4 py-2 rounded-lg bg-slate-800 dark:bg-slate-700 text-white font-semibold hover:bg-slate-900 dark:hover:bg-slate-600 transition">Filter</button>
+                <button type="submit" class="w-full px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition">Filter</button>
             </div>
         </form>
     </div>
@@ -72,11 +72,11 @@
     <!-- OBF Search -->
     <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
         <h3 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-            <span class="material-icons-round text-fuchsia-500">travel_explore</span> Live Search OpenBeautyFacts
+            <span class="material-icons-round text-primary">travel_explore</span> Live Search OpenBeautyFacts
         </h3>
         <div class="flex gap-2">
             <input type="text" id="obfSearchInput" class="flex-1 rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white" placeholder="Cari barcode / merk kosmetik di API OBF...">
-            <button onclick="searchOBF()" type="button" class="px-4 py-2 rounded-lg bg-fuchsia-600 text-white font-semibold hover:bg-fuchsia-700 transition flex items-center gap-2">
+            <button onclick="searchOBF()" type="button" class="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition flex items-center gap-2">
                 <span class="material-icons-round text-sm">search</span> Cari
             </button>
         </div>
@@ -104,7 +104,7 @@
                 @forelse($cosmetics as $item)
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                     <td class="px-5 py-4 flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-lg overflow-hidden bg-fuchsia-50 dark:bg-fuchsia-900/30 text-fuchsia-500 border border-slate-100 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+                        <div class="w-10 h-10 rounded-lg overflow-hidden bg-primary/10 text-primary border border-slate-100 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
                             @if($item->image_url)
                                 <img src="{{ $item->image_url }}" class="w-full h-full object-cover" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                                 <span class="material-icons-round hidden">face_retouching_natural</span>
@@ -141,13 +141,13 @@
                     </td>
                     <td class="px-5 py-4">
                         @if(in_array($item->sumber_data, ['open_beauty_facts', 'open_beauty_facts_api']))
-                            <span class="inline-flex px-2 py-1 rounded text-[10px] font-bold bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-100">OBF</span>
+                            <span class="inline-flex px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">OBF</span>
                         @else
                             <span class="inline-flex px-2 py-1 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Sistem</span>
                         @endif
                     </td>
                     <td class="px-5 py-4 text-right">
-                        <button onclick='showCosmeticDetailModal(@json($item))' class="p-2 rounded-lg text-slate-400 hover:text-fuchsia-600 hover:bg-fuchsia-50 dark:hover:bg-fuchsia-900/30 transition shadow-sm border border-transparent hover:border-fuchsia-100 dark:hover:border-fuchsia-800" title="Detail">
+                        <button onclick='showCosmeticDetailModal(@json($item))' class="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition shadow-sm border border-transparent hover:border-primary/20" title="Detail">
                             <span class="material-icons-round text-lg leading-none">visibility</span>
                         </button>
                     </td>
@@ -156,7 +156,7 @@
                 <tr>
                     <td colspan="6" class="px-5 py-16 text-center">
                         <div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
-                            <span class="material-icons-round text-5xl mb-3 opacity-50 text-fuchsia-500">face_retouching_natural</span>
+                            <span class="material-icons-round text-5xl mb-3 opacity-50 text-primary">face_retouching_natural</span>
                             <p class="text-sm font-medium">Belum ada data kosmetik lokal/API.</p>
                         </div>
                     </td>
@@ -178,7 +178,7 @@
             <div id="cosmeticModalPanel" class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-2xl transition-all opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95 sm:my-8 sm:w-full sm:max-w-2xl border border-slate-200 dark:border-slate-700">
                 <div class="bg-white dark:bg-slate-900 px-4 pb-4 pt-5 sm:p-6 sm:pb-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                     <h3 class="text-lg font-bold leading-6 text-slate-900 dark:text-white flex items-center gap-2" id="modalTitle">
-                        <span class="material-icons-round text-fuchsia-500">face_retouching_natural</span> Detail Kosmetik
+                        <span class="material-icons-round text-primary">face_retouching_natural</span> Detail Kosmetik
                     </h3>
                     <button type="button" onclick="closeCosmeticModal()" class="text-slate-400 hover:text-slate-500 dark:hover:text-slate-300 focus:outline-none">
                         <span class="material-icons-round">close</span>
@@ -236,7 +236,7 @@ async function searchOBF() {
                     <form action="{{ route('admin.cosmetics.import') }}" method="POST" class="flex-shrink-0">
                         @csrf
                         <input type="hidden" name="identifier" value="${r.barcode || name}">
-                        <button type="submit" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-fuchsia-50 dark:bg-fuchsia-900/30 text-fuchsia-600 dark:text-fuchsia-400 border border-fuchsia-100 dark:border-fuchsia-800 hover:bg-fuchsia-100 dark:hover:bg-fuchsia-900/50 transition">
+                        <button type="submit" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 transition">
                             <i class="fas fa-download mr-1"></i> Import
                         </button>
                     </form>
@@ -258,7 +258,7 @@ const backdrop = document.getElementById('cosmeticModalBackdrop');
 const panel = document.getElementById('cosmeticModalPanel');
 
 function showCosmeticDetailModal(item) {
-    document.getElementById('modalTitle').innerHTML = `<span class="material-icons-round text-fuchsia-500">face_retouching_natural</span> ${item.nama_produk || 'Detail Kosmetik'}`;
+    document.getElementById('modalTitle').innerHTML = `<span class="material-icons-round text-primary">face_retouching_natural</span> ${item.nama_produk || 'Detail Kosmetik'}`;
     
     // Status Badge Logic
     let statusBadge = '';

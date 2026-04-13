@@ -9,7 +9,17 @@ class AdminKategoriController extends Controller
 {
     public function index()
     {
-        $kategori = KategoriModel::withCount('products')->orderBy('id_kategori', 'desc')->paginate(10); // Changed sort to standard ID
+        $kategori = KategoriModel::withCount('products')
+            ->with([
+                'products' => fn ($query) => $query
+                    ->select('id_product', 'kategori_id', 'image', 'nama_produk')
+                    ->whereNotNull('image')
+                    ->latest('id_product')
+                    ->limit(1),
+            ])
+            ->orderBy('id_kategori', 'desc')
+            ->paginate(10);
+
         return view('admin.kategori-redesign', compact('kategori'));
     }
 

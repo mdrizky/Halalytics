@@ -49,7 +49,7 @@
     <!-- Products Linked -->
     <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-            <span class="material-icons-round text-6xl text-blue-500">inventory_2</span>
+            <span class="material-icons-round text-6xl text-primary">inventory_2</span>
         </div>
         <p class="text-slate-500 text-sm font-semibold uppercase tracking-wider">Products Linked</p>
         <div class="flex items-baseline gap-3 mt-2">
@@ -89,8 +89,9 @@
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
-                            <div class="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
-                                {{ strtoupper(substr($kat->nama_kategori, 0, 1)) }}
+                            <div class="h-12 w-12 rounded-2xl overflow-hidden bg-primary/10 flex items-center justify-center text-primary font-bold text-lg border border-slate-200 dark:border-slate-700">
+                                <img src="{{ $kat->thumbnail_url }}" alt="{{ $kat->nama_kategori }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <span class="hidden">{{ strtoupper(substr($kat->nama_kategori, 0, 1)) }}</span>
                             </div>
                             <span class="text-sm font-bold text-slate-900 dark:text-white">{{ $kat->nama_kategori }}</span>
                         </div>
@@ -101,7 +102,7 @@
                         </p>
                     </td>
                     <td class="px-6 py-4 text-center">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary dark:bg-primary/15 dark:text-emerald-300">
                             {{ $kat->products_count }} Products
                         </span>
                     </td>

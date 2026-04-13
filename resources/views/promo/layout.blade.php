@@ -40,25 +40,42 @@
 
     <style>
         :root {
-            --promo-green: #0ea56b;
-            --promo-green-deep: #08734a;
-            --promo-blue: #1f4fd6;
-            --promo-ink: #0f172a;
+            --promo-primary: #004D40;
+            --promo-primary-deep: #00372e;
+            --promo-secondary: #26A69A;
+            --promo-container: #E0F2F1;
+            --promo-background: #F4F9F8;
+            --promo-surface: #FFFFFF;
+            --promo-error: #D32F2F;
+            --promo-ink: #163832;
         }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--promo-background); color: var(--promo-ink); }
         h1, h2, h3, h4, .font-brand { font-family: 'Space Grotesk', sans-serif; }
-        .gradient-bg { background: linear-gradient(135deg, #065f46 0%, #1d4ed8 100%); }
-        .gradient-text { background: linear-gradient(135deg, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .gradient-bg { background: linear-gradient(135deg, #004D40 0%, #26A69A 100%); }
+        .gradient-text { background: linear-gradient(135deg, #004D40, #26A69A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
-        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.12); }
+        .card-hover:hover { transform: translateY(-4px) rotateX(2deg); box-shadow: 0 24px 48px rgba(0, 77, 64, 0.14); }
+        .promo-link { color: #4b5563; transition: color .2s ease; }
+        .promo-link:hover, .promo-link.active { color: var(--promo-primary); }
+        .promo-btn {
+            background: var(--promo-primary);
+            color: white;
+            transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+            box-shadow: 0 14px 30px rgba(0, 77, 64, 0.16);
+        }
+        .promo-btn:hover { background: var(--promo-primary-deep); transform: translateY(-1px); }
+        .promo-depth {
+            transform-style: preserve-3d;
+            box-shadow: 0 22px 50px rgba(0, 77, 64, 0.10);
+        }
     </style>
     @stack('head')
     @yield('styles')
 </head>
-<body class="bg-white text-gray-800">
+<body>
 
     <!-- ===== NAVBAR ===== -->
-    <nav class="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-100">
+    <nav class="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-sm shadow-sm border-b border-[#d8ebe8]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
 
@@ -67,26 +84,26 @@
                     <div class="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center">
                         <span class="text-white font-bold text-sm">H</span>
                     </div>
-                    <span class="font-brand font-bold text-xl text-gray-900">
+                    <span class="font-brand font-bold text-xl text-[#163832]">
                         {{ $settings['site_name'] ?? 'HalalScan AI' }}
                     </span>
                 </a>
 
                 <!-- Menu Desktop -->
                 <div class="hidden md:flex items-center space-x-8">
-                    <a href="{{ route('home') }}" class="text-gray-600 hover:text-green-600 font-medium transition-colors {{ request()->routeIs('home') ? 'text-green-600' : '' }}">
+                    <a href="{{ route('home') }}" class="promo-link font-medium {{ request()->routeIs('home') ? 'active' : '' }}">
                         Beranda
                     </a>
-                    <a href="{{ route('features') }}" class="text-gray-600 hover:text-green-600 font-medium transition-colors {{ request()->routeIs('features') ? 'text-green-600' : '' }}">
+                    <a href="{{ route('features') }}" class="promo-link font-medium {{ request()->routeIs('features') ? 'active' : '' }}">
                         Fitur
                     </a>
-                    <a href="{{ route('blog.index') }}" class="text-gray-600 hover:text-green-600 font-medium transition-colors {{ request()->routeIs('blog*') ? 'text-green-600' : '' }}">
+                    <a href="{{ route('blog.index') }}" class="promo-link font-medium {{ request()->routeIs('blog*') ? 'active' : '' }}">
                         Blog
                     </a>
-                    <a href="{{ route('about') }}" class="text-gray-600 hover:text-green-600 font-medium transition-colors {{ request()->routeIs('about') ? 'text-green-600' : '' }}">
+                    <a href="{{ route('about') }}" class="promo-link font-medium {{ request()->routeIs('about') ? 'active' : '' }}">
                         Tentang
                     </a>
-                    <a href="{{ route('download') }}" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded-full transition-colors">
+                    <a href="{{ route('download') }}" class="promo-btn font-semibold px-5 py-2 rounded-full">
                         Download APK
                     </a>
                 </div>
@@ -101,11 +118,11 @@
 
             <!-- Menu Mobile -->
             <div id="mobileMenu" class="hidden md:hidden pb-4 space-y-2">
-                <a href="{{ route('home') }}" class="block py-2 px-4 text-gray-600 hover:bg-gray-50 rounded-lg">Beranda</a>
-                <a href="{{ route('features') }}" class="block py-2 px-4 text-gray-600 hover:bg-gray-50 rounded-lg">Fitur</a>
-                <a href="{{ route('blog.index') }}" class="block py-2 px-4 text-gray-600 hover:bg-gray-50 rounded-lg">Blog</a>
-                <a href="{{ route('about') }}" class="block py-2 px-4 text-gray-600 hover:bg-gray-50 rounded-lg">Tentang</a>
-                <a href="{{ route('download') }}" class="block py-2 px-4 bg-green-600 text-white rounded-lg font-semibold text-center">Download APK</a>
+                <a href="{{ route('home') }}" class="block py-2 px-4 text-slate-700 hover:bg-[#E0F2F1] rounded-lg">Beranda</a>
+                <a href="{{ route('features') }}" class="block py-2 px-4 text-slate-700 hover:bg-[#E0F2F1] rounded-lg">Fitur</a>
+                <a href="{{ route('blog.index') }}" class="block py-2 px-4 text-slate-700 hover:bg-[#E0F2F1] rounded-lg">Blog</a>
+                <a href="{{ route('about') }}" class="block py-2 px-4 text-slate-700 hover:bg-[#E0F2F1] rounded-lg">Tentang</a>
+                <a href="{{ route('download') }}" class="block py-2 px-4 promo-btn rounded-lg font-semibold text-center">Download APK</a>
             </div>
         </div>
     </nav>
@@ -135,7 +152,7 @@
     </main>
 
     <!-- ===== FOOTER ===== -->
-    <footer class="bg-gray-900 text-white mt-20">
+    <footer class="bg-[#0e2e29] text-white mt-20">
         <div class="max-w-7xl mx-auto px-4 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <!-- Brand -->
@@ -155,11 +172,11 @@
                 <div>
                     <h4 class="font-semibold mb-4 text-gray-300">Navigasi</h4>
                     <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="{{ route('home') }}" class="hover:text-green-400 transition-colors">Beranda</a></li>
-                        <li><a href="{{ route('features') }}" class="hover:text-green-400 transition-colors">Fitur</a></li>
-                        <li><a href="{{ route('blog.index') }}" class="hover:text-green-400 transition-colors">Blog</a></li>
-                        <li><a href="{{ route('about') }}" class="hover:text-green-400 transition-colors">Tentang</a></li>
-                        <li><a href="{{ route('privacy') }}" class="hover:text-green-400 transition-colors">Privacy Policy</a></li>
+                        <li><a href="{{ route('home') }}" class="hover:text-[#7ce0d4] transition-colors">Beranda</a></li>
+                        <li><a href="{{ route('features') }}" class="hover:text-[#7ce0d4] transition-colors">Fitur</a></li>
+                        <li><a href="{{ route('blog.index') }}" class="hover:text-[#7ce0d4] transition-colors">Blog</a></li>
+                        <li><a href="{{ route('about') }}" class="hover:text-[#7ce0d4] transition-colors">Tentang</a></li>
+                        <li><a href="{{ route('privacy') }}" class="hover:text-[#7ce0d4] transition-colors">Privacy Policy</a></li>
                     </ul>
                 </div>
 
@@ -167,7 +184,7 @@
                 <div>
                     <h4 class="font-semibold mb-4 text-gray-300">Download</h4>
                     <a href="{{ $settings['playstore_url'] ?? '#' }}" target="_blank"
-                       class="inline-flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                       class="inline-flex items-center space-x-2 promo-btn px-4 py-2 rounded-lg text-sm font-medium">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M3 20.5v-17c0-.83.94-1.3 1.6-.8l14 8.5a1 1 0 010 1.6l-14 8.5c-.66.5-1.6.03-1.6-.8z"/>
                         </svg>

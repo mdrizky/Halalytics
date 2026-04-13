@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Services\DisplayImageService;
 
 class ProductRequest extends Model
 {
@@ -23,5 +24,21 @@ class ProductRequest extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id_user');
+    }
+
+    public function getImageFrontAttribute($value): string
+    {
+        return app(DisplayImageService::class)->resolve($value, [
+            'name' => $this->product_name,
+            'barcode' => $this->barcode,
+        ], 'product');
+    }
+
+    public function getImageBackAttribute($value): string
+    {
+        return app(DisplayImageService::class)->resolve($value, [
+            'name' => $this->product_name,
+            'barcode' => $this->barcode,
+        ], 'product');
     }
 }

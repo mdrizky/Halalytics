@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use App\Services\DisplayImageService;
 
 class StreetFood extends Model
 {
@@ -221,5 +222,13 @@ class StreetFood extends Model
         }
 
         return $recommendations;
+    }
+
+    public function getImageUrlAttribute($value): string
+    {
+        return app(DisplayImageService::class)->resolve($value, [
+            'name' => $this->name,
+            'category' => $this->category,
+        ], 'street_food');
     }
 }

@@ -39,11 +39,8 @@
                     <td class="px-6 py-4">
                         <div class="flex items-center space-x-3">
                             <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
-                                @if($food->image_url)
-                                <img src="{{ asset($food->image_url) }}" alt="{{ $food->name }}" class="w-full h-full object-cover">
-                                @else
-                                <span class="material-icons-round text-slate-400 text-xl">restaurant</span>
-                                @endif
+                                <img src="{{ $food->image_url }}" alt="{{ $food->name }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <span class="material-icons-round text-slate-400 text-xl hidden">restaurant</span>
                             </div>
                             <span class="text-sm font-bold text-slate-800 dark:text-white">{{ $food->name }}</span>
                         </div>

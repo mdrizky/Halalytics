@@ -5,10 +5,16 @@ namespace App\Http\Controllers\Promo;
 use App\Http\Controllers\Controller;
 use App\Models\PromoBlog;
 use App\Models\PromoSetting;
+use App\Services\ExternalHealthArticleService;
 use Illuminate\Http\Request;
 
 class BlogController extends Controller
 {
+    public function __construct(
+        private readonly ExternalHealthArticleService $externalArticles
+    ) {
+    }
+
     public function index(Request $request)
     {
         $settings = PromoSetting::getAllSettings();
@@ -31,8 +37,9 @@ class BlogController extends Controller
         
         $blogs = $query->orderBy('created_at', 'desc')->paginate(9)->withQueryString();
         $categories = PromoBlog::where('status', 'published')->select('category')->distinct()->pluck('category');
-        
-        return view('promo.blog', compact('settings', 'blogs', 'categories'));
+        $externalArticles = $this->externalArticles->search((string) $request->get('search', ''), 6);
+
+        return view('promo.blog', compact('settings', 'blogs', 'categories', 'externalArticles'));
     }
 
     public function show($slug)

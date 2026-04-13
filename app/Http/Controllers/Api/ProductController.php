@@ -6,21 +6,26 @@ use App\Http\Controllers\Controller;
 use App\Models\ProductModel;
 use App\Models\HalalProduct;
 use App\Models\ActivityModel;
+use App\Services\DisplayImageService;
 use App\Services\HalalCertificationService;
 use App\Services\GeminiService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
     protected $halalService;
     protected $universalProductService;
+    protected $displayImageService;
 
     public function __construct(
         HalalCertificationService $halalService,
-        \App\Services\UniversalProductService $universalProductService
+        \App\Services\UniversalProductService $universalProductService,
+        DisplayImageService $displayImageService
     ) {
         $this->halalService = $halalService;
         $this->universalProductService = $universalProductService;
+        $this->displayImageService = $displayImageService;
     }
 
     /**
@@ -28,59 +33,56 @@ class ProductController extends Controller
      */
     public function show($barcode)
     {
-        // Use Universal Service
-        $result = $this->universalProductService->findProduct($barcode);
+        try {
+            $result = $this->universalProductService->findProduct($barcode);
 
-        if ($result['found']) {
-            // Check Halal Status via HalalService if not already verified
-            // Or just use the data we found.
-            // Existing app expects 'halal_info'.
-            
-            // Map standardized data to response format
-            $productData = $result['standardized'];
-            
-            // Construct Halal Info Object (Mocking the structure app expects if not from local DB)
-            $halalInfo = [
-                'halal_status' => $productData['status_halal'] ?? 'unknown',
-                'halal_certificate_number' => $productData['halal_certificate'],
-                'certification_body' => null,
-                'source' => $result['source']
-            ];
+            if ($result['found']) {
+                $productData = $result['standardized'] ?? [];
+                $normalizedProduct = $this->normalizeProductPayload($productData, $result['data'] ?? null);
+                $halalInfo = [
+                    'halal_status' => data_get($productData, 'status_halal', 'unknown'),
+                    'halal_certificate_number' => data_get($productData, 'halal_certificate'),
+                    'certification_body' => data_get($productData, 'certification_body'),
+                    'source' => $result['source'] ?? 'unknown',
+                ];
 
-            // Determine ID based on source model
-            $model = $result['data'];
-            $productId = 0;
-            if ($model instanceof \App\Models\BpomData) {
-                $productId = $model->id;
-            } elseif ($model instanceof \App\Models\ProductModel) {
-                $productId = $model->id_product;
-            }
-
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'product' => [
-                        'id' => $productId,
-                        'barcode' => $productData['barcode'],
-                        'name' => $productData['name'],
-                        'brand' => $productData['brand'],
-                        'image_front_url' => $productData['image_url'],
-                        'image' => $productData['image_url'], // Map for Android
-                        'ingredients_text' => $productData['ingredients_text'],
-                        'category' => $productData['category'],
-                        'nutriscore' => $productData['nutriscore'] ?? null,
-                        'additives' => $productData['additives'] ?? [],
-                        'allergens' => $productData['allergens'] ?? []
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Detail produk berhasil dimuat',
+                    'data' => [
+                        'product' => $normalizedProduct,
+                        'halal_info' => $halalInfo,
+                        'halal_source' => $result['source'] ?? 'unknown',
                     ],
-                    'halal_info' => $halalInfo,
-                    'halal_source' => $result['source']
-                ]
+                ]);
+            }
+        } catch (\Throwable $throwable) {
+            Log::warning('ProductController show failed', [
+                'barcode' => $barcode,
+                'error' => $throwable->getMessage(),
             ]);
         }
 
         return response()->json([
             'success' => false,
-            'message' => 'Product not found'
+            'message' => 'Produk belum ditemukan. Coba scan ulang atau cek barcode produk.',
+            'data' => [
+                'product' => $this->normalizeProductPayload([
+                    'barcode' => $barcode,
+                    'name' => 'Produk belum ditemukan',
+                    'brand' => 'Merek tidak tersedia',
+                    'ingredients_text' => 'Komposisi belum tersedia',
+                    'category' => 'Produk Umum',
+                    'status_halal' => 'unknown',
+                ]),
+                'halal_info' => [
+                    'halal_status' => 'unknown',
+                    'halal_certificate_number' => null,
+                    'certification_body' => null,
+                    'source' => 'fallback',
+                ],
+                'halal_source' => 'fallback',
+            ],
         ], 404);
     }
 
@@ -241,11 +243,16 @@ class ProductController extends Controller
             ->map(function ($p) {
                 return [
                     'id' => $p->id_product,
-                    'name' => $p->nama_product ?? $p->name,
-                    'brand' => $p->brand,
+                    'name' => $p->nama_product ?? $p->name ?? 'Produk tanpa nama',
+                    'brand' => $p->brand ?: 'Merek belum tersedia',
                     'barcode' => $p->barcode,
                     'halal_status' => $p->halal_status ?? 'unknown',
-                    'image_url' => $p->image,
+                    'image_url' => $this->displayImageService->resolve($p->image, [
+                        'name' => $p->nama_product ?? $p->name,
+                        'brand' => $p->brand,
+                        'barcode' => $p->barcode,
+                        'category' => $p->kategori ?? $p->category ?? 'product',
+                    ], 'product'),
                     'created_at' => $p->created_at,
                 ];
             });
@@ -287,5 +294,40 @@ class ProductController extends Controller
             'success' => true,
             'data' => $favorites,
         ]);
+    }
+
+    private function normalizeProductPayload(array $productData, $model = null): array
+    {
+        $productId = 0;
+        if ($model instanceof \App\Models\BpomData) {
+            $productId = $model->id;
+        } elseif ($model instanceof \App\Models\ProductModel) {
+            $productId = $model->id_product;
+        }
+
+        $resolvedImage = $this->displayImageService->resolve(
+            data_get($productData, 'image_url'),
+            [
+                'name' => data_get($productData, 'name'),
+                'brand' => data_get($productData, 'brand'),
+                'barcode' => data_get($productData, 'barcode'),
+                'category' => data_get($productData, 'category', 'product'),
+            ],
+            'product'
+        );
+
+        return [
+            'id' => $productId,
+            'barcode' => data_get($productData, 'barcode'),
+            'name' => data_get($productData, 'name', 'Produk tanpa nama'),
+            'brand' => data_get($productData, 'brand', 'Merek belum tersedia'),
+            'image_front_url' => $resolvedImage,
+            'image' => $resolvedImage,
+            'ingredients_text' => data_get($productData, 'ingredients_text', 'Komposisi belum tersedia'),
+            'category' => data_get($productData, 'category', 'Produk Umum'),
+            'nutriscore' => data_get($productData, 'nutriscore'),
+            'additives' => data_get($productData, 'additives', []),
+            'allergens' => data_get($productData, 'allergens', []),
+        ];
     }
 }

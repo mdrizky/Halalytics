@@ -95,9 +95,7 @@
                                 <div class="w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg flex-shrink-0 flex items-center justify-center p-1 overflow-hidden">
                                 @if($report->product && $report->product->image)
                                     @php
-                                        $reportImage = str_starts_with((string) $report->product->image, 'http')
-                                            ? $report->product->image
-                                            : asset($report->product->image);
+                                        $reportImage = $report->product->image;
                                     @endphp
                                     <img src="{{ $reportImage }}" alt="Product" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
                                 @else

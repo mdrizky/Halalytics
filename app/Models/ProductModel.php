@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Services\DisplayImageService;
 
 class ProductModel extends Model
 {
@@ -71,5 +72,14 @@ class ProductModel extends Model
     public function reports()
     {
         return $this->hasMany(ReportModel::class, 'product_id', 'id_product');
+    }
+
+    public function getImageAttribute($value): string
+    {
+        return app(DisplayImageService::class)->resolve($value, [
+            'name' => $this->nama_product,
+            'barcode' => $this->barcode,
+            'category' => optional($this->kategori)->nama_kategori,
+        ], 'product');
     }
 }

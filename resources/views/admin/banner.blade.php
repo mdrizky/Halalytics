@@ -49,7 +49,7 @@
     <!-- Estimated Reach -->
     <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-            <span class="material-icons-round text-6xl text-blue-500">people</span>
+            <span class="material-icons-round text-6xl text-primary">people</span>
         </div>
         <p class="text-slate-500 text-sm font-semibold uppercase tracking-wider">Estimated Reach</p>
         <div class="flex items-baseline gap-3 mt-2">

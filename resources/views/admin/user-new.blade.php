@@ -43,10 +43,10 @@
     <!-- Daily Active Users -->
     <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
         <div class="flex justify-between items-start mb-4">
-            <div class="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+            <div class="p-2 bg-primary/10 rounded-lg text-primary">
                 <span class="material-icons-round">bolt</span>
             </div>
-            <span class="text-[10px] font-bold px-2 py-1 bg-blue-100 text-blue-700 rounded-full">Active Now</span>
+            <span class="text-[10px] font-bold px-2 py-1 bg-primary/10 text-primary rounded-full">Active Now</span>
         </div>
         <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Daily Active Users</p>
         <p class="text-3xl font-extrabold text-slate-900 dark:text-white">{{ number_format($stats['active_users'] ?? 0) }}</p>
@@ -268,13 +268,13 @@
             </div>
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-2 h-2 rounded-full bg-indigo-400"></div>
+                    <div class="w-2 h-2 rounded-full bg-primary"></div>
                     <span class="text-sm font-bold text-slate-600 dark:text-slate-400">Beauty & Cosmetics</span>
                 </div>
                 <span class="text-sm font-extrabold text-slate-900 dark:text-white">15%</span>
             </div>
             <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div class="bg-indigo-400 h-full rounded-full" style="width: 15%"></div>
+                <div class="bg-primary h-full rounded-full" style="width: 15%"></div>
             </div>
             @endforelse
         </div>

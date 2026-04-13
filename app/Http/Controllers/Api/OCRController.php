@@ -90,7 +90,7 @@ class OCRController extends Controller
             
             // Create OCR product record
             $ocrProduct = OCRProduct::create([
-                'user_id' => $user->id,
+                'user_id' => $user->id_user,
                 'product_name' => $aiAnalysis['product_name'] ?? 'Unknown Product',
                 'brand' => $aiAnalysis['brand'] ?? 'Unknown Brand',
                 'country' => $aiAnalysis['country'] ?? 'Unknown',
@@ -118,7 +118,7 @@ class OCRController extends Controller
 
             // Add to scan history
             ScanHistory::create([
-                'user_id' => $user->id,
+                'user_id' => $user->id_user,
                 'product_id' => $ocrProduct->id,
                 'product_type' => 'ocr',
                 'product_name' => $ocrProduct->product_name,

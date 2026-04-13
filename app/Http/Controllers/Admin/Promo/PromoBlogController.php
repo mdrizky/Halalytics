@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Promo;
 
 use App\Http\Controllers\Controller;
 use App\Models\PromoBlog;
+use App\Services\ExternalHealthArticleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -11,13 +12,16 @@ use Illuminate\Support\Facades\Storage;
 class PromoBlogController extends Controller
 {
     public function __construct(
-        private readonly \App\Services\AdminBroadcastNotificationService $notificationService
+        private readonly \App\Services\AdminBroadcastNotificationService $notificationService,
+        private readonly ExternalHealthArticleService $externalArticles
     ) {}
 
     public function index()
     {
         $blogs = PromoBlog::orderBy('created_at', 'desc')->paginate(10);
-        return view('admin.promo.blog.index', compact('blogs'));
+        $externalArticles = $this->externalArticles->search('halal food health', 12);
+
+        return view('admin.promo.blog.index', compact('blogs', 'externalArticles'));
     }
 
     public function create()

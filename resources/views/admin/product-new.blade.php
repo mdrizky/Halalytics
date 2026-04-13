@@ -92,17 +92,8 @@
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-1 shadow-inner">
-                                    @if($product->image)
-                                    @php
-                                        $localImage = str_starts_with((string) $product->image, 'http')
-                                            ? $product->image
-                                            : asset($product->image);
-                                    @endphp
-                                    <img src="{{ $localImage }}" alt="{{ $product->nama_product }}" class="w-full h-full object-contain" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
-                                    @else
-                                    <img src="{{ asset('images/placeholders/product-placeholder.svg') }}" alt="No product image" class="w-full h-full object-contain">
-                                    @endif
+                                <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-1 shadow-inner overflow-hidden">
+                                    <img src="{{ $product->image }}" alt="{{ $product->nama_product }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
                                 </div>
                                 <div>
                                     <p class="font-bold text-slate-900 dark:text-white">{{ Str::limit($product->nama_product, 25) }}</p>
@@ -150,7 +141,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="4" class="px-6 py-12 text-center text-slate-400">No managed local products found.</td></tr>
+                    <tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">No managed local products found.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -164,10 +155,10 @@
     <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between">
             <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                <span class="material-icons-round text-indigo-500 text-xl">public</span>
+                <span class="material-icons-round text-primary text-xl">public</span>
                 <span>External / Imported Products</span>
             </h3>
-            <span class="px-3 py-1 bg-indigo-500/10 text-indigo-500 text-xs font-bold rounded-full uppercase tracking-wider">
+            <span class="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full uppercase tracking-wider">
                 {{ $apiProducts->total() ?? 0 }} Synced
             </span>
         </div>
@@ -185,16 +176,11 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     @forelse($apiProducts as $product)
-                    <tr class="hover:bg-indigo-50/20 dark:hover:bg-indigo-900/10 transition-colors group">
+                    <tr class="hover:bg-primary/5 transition-colors group">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-1 overflow-hidden shadow-inner transform transition-transform group-hover:scale-110">
-                                    @php
-                                        $externalImage = $product->image
-                                            ? (str_starts_with((string) $product->image, 'http') ? $product->image : asset($product->image))
-                                            : asset('images/placeholders/product-placeholder.svg');
-                                    @endphp
-                                    <img src="{{ $externalImage }}" alt="" class="w-full h-full object-contain" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
+                                <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-1 overflow-hidden shadow-inner transform transition-transform group-hover:scale-110">
+                                    <img src="{{ $product->image }}" alt="" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
                                 </div>
                                 <div>
                                     <p class="font-bold text-slate-900 dark:text-white">{{ Str::limit($product->nama_product, 25) }}</p>
@@ -206,7 +192,7 @@
                              {{ $product->kategori->nama_kategori ?? 'Auto-Detected' }}
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-primary/10 text-primary dark:bg-primary/15 dark:text-emerald-300 border border-primary/20 dark:border-primary/30">
                                 {{ $product->source ?? 'Unknown' }}
                             </span>
                         </td>
@@ -224,7 +210,7 @@
                         <td class="px-6 py-4 text-center">
                             @if($product->halal_analysis)
                                 <div class="group relative inline-block">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 text-[10px] font-extrabold text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 uppercase tracking-tighter cursor-help">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-primary/20 text-[10px] font-extrabold text-primary bg-primary/10 uppercase tracking-tighter cursor-help">
                                         <span class="material-icons-round text-[10px]">auto_awesome</span>
                                         {{ $product->halal_analysis['status'] ?? $product->status }}
                                     </span>
@@ -252,7 +238,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="4" class="px-6 py-12 text-center text-slate-400">No API products found in current search.</td></tr>
+                    <tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">No API products found in current search.</td></tr>
                     @endforelse
                 </tbody>
             </table>

@@ -8,9 +8,9 @@
 <style>
     .feature-hero {
         background:
-            radial-gradient(900px 460px at 90% -20%, rgba(31,79,214,.24), transparent 62%),
+            radial-gradient(900px 460px at 90% -20%, rgba(38,166,154,.24), transparent 62%),
             radial-gradient(900px 420px at 0% 0%, rgba(14,165,107,.24), transparent 60%),
-            linear-gradient(180deg, #f5f9f7 0%, #f5f8ff 100%);
+            linear-gradient(180deg, #f5f9f7 0%, #eef8f5 100%);
     }
     .feature-card {
         background: #fff;
@@ -26,6 +26,9 @@
         background: linear-gradient(145deg, #101522, #0d1018);
         border: 4px solid #20283a;
         border-radius: 34px;
+        transform-style: preserve-3d;
+        transform: perspective(1200px) rotateY(-10deg) rotateX(5deg);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, .24);
     }
     .phone-shell .screen {
         border-radius: 26px;
@@ -61,8 +64,8 @@
                                 <p class="text-emerald-300 text-[11px] font-bold uppercase">Halal Analyzer</p>
                                 <p class="text-white font-semibold text-sm mt-1">Ingredient Risk Matrix</p>
                             </div>
-                            <div class="rounded-2xl border border-blue-400/35 bg-blue-500/10 p-3">
-                                <p class="text-blue-300 text-[11px] font-bold uppercase">Drug Checker</p>
+                            <div class="rounded-2xl border border-emerald-300/35 bg-primary/18 p-3">
+                                <p class="text-emerald-200 text-[11px] font-bold uppercase">Drug Checker</p>
                                 <p class="text-white font-semibold text-sm mt-1">Major / Moderate / Minor</p>
                             </div>
                             <div class="rounded-2xl border border-amber-400/35 bg-amber-500/10 p-3">
@@ -115,7 +118,7 @@
                         <div class="h-7 bg-slate-950"></div>
                         <img src="{{ asset($ss[1]) }}" alt="{{ $ss[0] }}" class="w-full h-[calc(100%-1.75rem)] object-cover"
                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="hidden w-full h-[calc(100%-1.75rem)] bg-gradient-to-br from-emerald-50 to-blue-50 items-center justify-center text-center px-4 text-xs text-slate-500">
+                        <div class="hidden w-full h-[calc(100%-1.75rem)] bg-gradient-to-br from-emerald-50 to-teal-50 items-center justify-center text-center px-4 text-xs text-slate-500">
                             Tambahkan SS: <code class="mx-1">public/{{ $ss[1] }}</code>
                         </div>
                     </div>

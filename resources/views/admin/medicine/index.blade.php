@@ -6,19 +6,19 @@
 
 @section('content')
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-    <div class="rounded-xl p-4 bg-cyan-500 text-white shadow-lg shadow-cyan-500/30">
+    <div class="metric-card metric-card--primary">
         <div class="text-sm opacity-80 font-medium">Total Obat</div>
         <div class="text-3xl font-extrabold mt-1">{{ number_format($stats['total']) }}</div>
     </div>
-    <div class="rounded-xl p-4 bg-emerald-500 text-white shadow-lg shadow-emerald-500/30">
+    <div class="metric-card metric-card--accent">
         <div class="text-sm opacity-80 font-medium">Status Halal</div>
         <div class="text-3xl font-extrabold mt-1">{{ number_format($stats['halal']) }}</div>
     </div>
-    <div class="rounded-xl p-4 bg-amber-500 text-white shadow-lg shadow-amber-500/30">
+    <div class="metric-card metric-card--soft">
         <div class="text-sm opacity-80 font-medium">Status Syubhat</div>
         <div class="text-3xl font-extrabold mt-1">{{ number_format($stats['syubhat']) }}</div>
     </div>
-    <div class="rounded-xl p-4 bg-indigo-500 text-white shadow-lg shadow-indigo-500/30">
+    <div class="metric-card metric-card--primary">
         <div class="text-sm opacity-80 font-medium">Dari OpenFDA</div>
         <div class="text-3xl font-extrabold mt-1">{{ number_format($stats['from_fda']) }}</div>
     </div>
@@ -32,7 +32,7 @@
     </div>
     <form action="{{ route('admin.medicines.seed') }}" method="POST" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button span:last-child').textContent='Mengimpor...';">
         @csrf
-        <button type="submit" class="inline-flex flex-shrink-0 items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition shadow-lg shadow-indigo-600/30">
+        <button type="submit" class="inline-flex flex-shrink-0 items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg font-semibold transition shadow-lg shadow-primary/20">
             <span class="material-icons-round text-lg">cloud_download</span>
             <span>Seed dari OpenFDA</span>
         </button>
@@ -66,7 +66,7 @@
                 </select>
             </div>
             <div class="md:col-span-3">
-                <button type="submit" class="w-full px-4 py-2 rounded-lg bg-slate-800 dark:bg-slate-700 text-white font-semibold hover:bg-slate-900 dark:hover:bg-slate-600 transition">Filter</button>
+                <button type="submit" class="w-full px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition">Filter</button>
             </div>
         </form>
     </div>
@@ -74,11 +74,11 @@
     <!-- FDA Search -->
     <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
         <h3 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-            <span class="material-icons-round text-indigo-500">travel_explore</span> Live Search OpenFDA
+            <span class="material-icons-round text-primary">travel_explore</span> Live Search OpenFDA
         </h3>
         <div class="flex gap-2">
             <input type="text" id="fdaSearchInput" class="flex-1 rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white" placeholder="Ketik nama obat untuk ditarik...">
-            <button onclick="searchFDA()" type="button" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition flex items-center gap-2">
+            <button onclick="searchFDA()" type="button" class="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition flex items-center gap-2">
                 <span class="material-icons-round text-sm">search</span> Cari
             </button>
         </div>
@@ -106,8 +106,9 @@
                 @forelse($medicines as $med)
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                     <td class="px-5 py-4 flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
-                            <span class="material-icons-round">medication</span>
+                        <div class="w-12 h-12 rounded-2xl overflow-hidden bg-[#E0F2F1] border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+                            <img src="{{ $med->image_url }}" alt="{{ $med->name }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <span class="material-icons-round hidden text-[#004D40]">medication</span>
                         </div>
                         <div>
                             <div class="text-sm font-bold text-slate-800 dark:text-white line-clamp-1" title="{{ $med->name }}">{{ Str::limit($med->name, 40) }}</div>
@@ -142,13 +143,13 @@
                     </td>
                     <td class="px-5 py-4">
                         @if($med->source == 'openfda')
-                            <span class="inline-flex px-2 py-1 rounded-md bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-[11px] font-bold border border-indigo-100 dark:border-indigo-800/30">OpenFDA</span>
+                            <span class="inline-flex px-2 py-1 rounded-md bg-primary/10 text-primary text-[11px] font-bold border border-primary/20">OpenFDA</span>
                         @else
                             <span class="inline-flex px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[11px] font-bold border border-slate-200 dark:border-slate-700">Lokal</span>
                         @endif
                     </td>
                     <td class="px-5 py-4 text-right">
-                        <button onclick='showMedicineDetailModal(@json($med))' class="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition shadow-sm border border-transparent hover:border-indigo-100 dark:hover:border-indigo-800" title="Lihat Detail">
+                        <button onclick='showMedicineDetailModal(@json($med))' class="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition shadow-sm border border-transparent hover:border-primary/20" title="Lihat Detail">
                             <span class="material-icons-round text-lg leading-none">visibility</span>
                         </button>
                     </td>
@@ -157,7 +158,7 @@
                 <tr>
                     <td colspan="6" class="px-5 py-16 text-center">
                         <div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
-                            <span class="material-icons-round text-5xl mb-3 opacity-50 text-indigo-500">medication</span>
+                            <span class="material-icons-round text-5xl mb-3 opacity-50 text-primary">medication</span>
                             <p class="text-sm font-medium">Belum ada data obat lokal atau API.</p>
                             <p class="text-xs mt-1">Gunakan tombol <strong>Seed dari OpenFDA</strong> untuk mengisi data awal.</p>
                         </div>
@@ -180,7 +181,7 @@
             <div id="medicineModalPanel" class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-2xl transition-all opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95 sm:my-8 sm:w-full sm:max-w-2xl border border-slate-200 dark:border-slate-700">
                 <div class="bg-white dark:bg-slate-900 px-4 pb-4 pt-5 sm:p-6 sm:pb-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                     <h3 class="text-lg font-bold leading-6 text-slate-900 dark:text-white flex items-center gap-2" id="modalTitle">
-                        <span class="material-icons-round text-indigo-500">info</span> Detail Obat
+                        <span class="material-icons-round text-primary">info</span> Detail Obat
                     </h3>
                     <button type="button" onclick="closeMedicineModal()" class="text-slate-400 hover:text-slate-500 dark:hover:text-slate-300 focus:outline-none">
                         <span class="material-icons-round">close</span>
@@ -238,7 +239,7 @@ async function searchFDA() {
                     <form action="{{ route('admin.medicines.import') }}" method="POST" class="flex-shrink-0">
                         @csrf
                         <input type="hidden" name="drug_name" value="${r.nama_produk || r.brand_name || query}">
-                        <button type="submit" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition">
+                        <button type="submit" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 transition">
                             <i class="fas fa-plus mr-1"></i> ${act}
                         </button>
                     </form>
@@ -260,7 +261,7 @@ const backdrop = document.getElementById('medicineModalBackdrop');
 const panel = document.getElementById('medicineModalPanel');
 
 function showMedicineDetailModal(med) {
-    document.getElementById('modalTitle').innerHTML = `<span class="material-icons-round text-indigo-500">medication</span> ${med.name || 'Detail Obat'}`;
+    document.getElementById('modalTitle').innerHTML = `<span class="material-icons-round text-primary">medication</span> ${med.name || 'Detail Obat'}`;
     
     // Status Badge Logic
     let statusBadge = '';
@@ -294,7 +295,7 @@ function showMedicineDetailModal(med) {
         <div class="space-y-3">
             <div>
                 <p class="text-[11px] uppercase font-bold text-slate-400 mb-1.5 tracking-wider">Indications</p>
-                <div class="p-3 text-sm text-slate-600 dark:text-slate-300 rounded-lg bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 leading-relaxed">
+                <div class="p-3 text-sm text-slate-600 dark:text-slate-300 rounded-lg bg-primary/10 border border-primary/15 leading-relaxed">
                     ${med.indications || 'Tidak ada data indikasi.'}
                 </div>
             </div>

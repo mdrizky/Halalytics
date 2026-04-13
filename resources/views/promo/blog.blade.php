@@ -22,9 +22,9 @@
 <style>
     .blog-hero {
         background:
-            radial-gradient(900px 420px at 100% -10%, rgba(31,79,214,.24), transparent 60%),
-            radial-gradient(900px 420px at 0% 0%, rgba(14,165,107,.24), transparent 58%),
-            linear-gradient(180deg, #f5f9f7 0%, #f7f9ff 100%);
+            radial-gradient(900px 420px at 100% -10%, rgba(38,166,154,.20), transparent 60%),
+            radial-gradient(900px 420px at 0% 0%, rgba(0,77,64,.12), transparent 58%),
+            linear-gradient(180deg, #f4f9f8 0%, #ffffff 100%);
     }
     .blog-card {
         background: #fff;
@@ -56,7 +56,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
             <div class="flex gap-2 overflow-x-auto w-full lg:w-auto pb-2">
-                <a href="{{ route('blog.index') }}" class="px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap {{ !request('category') ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
+                <a href="{{ route('blog.index') }}" class="px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap {{ !request('category') ? 'bg-[#004D40] text-white' : 'bg-slate-100 text-slate-600 hover:bg-[#E0F2F1] hover:text-[#004D40]' }}">
                     Semua
                 </a>
                 @foreach($categories as $cat)
@@ -83,6 +83,41 @@
 
 <section class="py-14 bg-slate-50 min-h-[40vh]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        @if(!empty($externalArticles) && $externalArticles->count() > 0)
+        <div class="mb-12">
+            <div class="flex items-end justify-between mb-5">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-slate-900">Berita Eksternal Pilihan</h2>
+                    <p class="text-slate-500 mt-1">Feed kesehatan terkini yang otomatis diambil dari sumber eksternal.</p>
+                </div>
+                <span class="inline-flex px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">Realtime External Feed</span>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                @foreach($externalArticles as $article)
+                <article class="blog-card overflow-hidden flex flex-col">
+                    @if(!empty($article['image_url']))
+                    <img src="{{ $article['image_url'] }}" alt="{{ $article['title'] }}" class="w-full h-48 object-cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                    @endif
+                    <div class="w-full h-48 bg-gradient-to-br from-[#E0F2F1] to-white items-center justify-center hidden">
+                        <span class="text-[#004D40] font-bold">Halalytics News Feed</span>
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="inline-flex px-3 py-1 rounded-full bg-[#E0F2F1] text-[#004D40] text-xs font-bold">{{ $article['source'] }}</span>
+                            <span class="text-xs text-slate-400">{{ $article['published_label'] ?? '-' }}</span>
+                        </div>
+                        <h3 class="mt-3 text-lg font-extrabold text-slate-900 leading-snug line-clamp-2">{{ $article['title'] }}</h3>
+                        <p class="text-slate-500 text-sm mt-2 line-clamp-3">{{ $article['excerpt'] }}</p>
+                        <a href="{{ $article['source_url'] }}" target="_blank" rel="noopener noreferrer" class="inline-flex mt-auto pt-4 text-sm font-bold text-[#004D40] hover:text-[#00372e]">
+                            Buka Sumber Asli
+                        </a>
+                    </div>
+                </article>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         @if($blogs->count() > 0)
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
             @foreach($blogs as $blog)
@@ -91,7 +126,7 @@
                     @if($blog->image)
                     <img src="{{ $blog->image_url }}" alt="{{ $blog->title }}" class="w-full h-52 object-cover">
                     @else
-                    <div class="w-full h-52 bg-gradient-to-br from-emerald-200 to-blue-200"></div>
+                    <div class="w-full h-52 bg-gradient-to-br from-[#E0F2F1] to-white"></div>
                     @endif
                 </a>
                 <div class="p-6 flex flex-col flex-grow">

@@ -16,13 +16,15 @@
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#00bbc2",
-                        "primary-dark": "#009a9f",
-                        "background-light": "#f9fafb",
+                        "primary": "#004D40",
+                        "primary-dark": "#00372e",
+                        "primary-soft": "#E0F2F1",
+                        "accent": "#26A69A",
+                        "background-light": "#F4F9F8",
                         "background-dark": "#1f2938",
                         "emerald-halal": "#059669",
                         "amber-syubhat": "#d97706",
-                        "red-haram": "#dc2626",
+                        "red-haram": "#D32F2F",
                         "slate-custom": "#475569"
                     },
                     fontFamily: {
@@ -40,9 +42,19 @@
         }
     </script>
     <style>
+        :root {
+            --hal-primary: #004D40;
+            --hal-primary-dark: #00372e;
+            --hal-secondary: #26A69A;
+            --hal-container: #E0F2F1;
+            --hal-background: #F4F9F8;
+            --hal-surface: #FFFFFF;
+            --hal-error: #D32F2F;
+        }
+
         body { font-family: 'Manrope', sans-serif; }
         .chart-gradient {
-            background: linear-gradient(180deg, rgba(0, 187, 194, 0.1) 0%, rgba(0, 187, 194, 0) 100%);
+            background: linear-gradient(180deg, rgba(38, 166, 154, 0.16) 0%, rgba(38, 166, 154, 0) 100%);
         }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -56,9 +68,10 @@
         
         /* Sidebar active indicator */
         .nav-active {
-            background: rgba(0, 187, 194, 0.1);
-            color: #00bbc2;
+            background: rgba(38, 166, 154, 0.14);
+            color: var(--hal-primary);
             font-weight: 700;
+            box-shadow: inset 0 0 0 1px rgba(38, 166, 154, 0.12);
         }
         
         /* Badge styles */
@@ -103,10 +116,43 @@
             border-radius: 50%;
         }
         input:checked + .toggle-slider {
-            background-color: #00bbc2;
+            background-color: var(--hal-secondary);
         }
         input:checked + .toggle-slider:before {
             transform: translateX(20px);
+        }
+        .surface-card {
+            background: var(--hal-surface);
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: 0 20px 45px rgba(0, 77, 64, 0.06);
+        }
+        .depth-card {
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform .25s ease, box-shadow .25s ease;
+            box-shadow: 0 18px 40px rgba(0, 77, 64, 0.08);
+        }
+        .depth-card:hover {
+            transform: translateY(-4px) rotateX(3deg);
+            box-shadow: 0 26px 54px rgba(0, 77, 64, 0.12);
+        }
+        .metric-card {
+            color: white;
+            border-radius: 1rem;
+            padding: 1rem;
+            box-shadow: 0 18px 38px rgba(0, 77, 64, 0.18);
+        }
+        .metric-card--primary {
+            background: linear-gradient(145deg, #004D40, #11695b);
+        }
+        .metric-card--accent {
+            background: linear-gradient(145deg, #26A69A, #4db6ac);
+        }
+        .metric-card--soft {
+            background: linear-gradient(145deg, #0f7f73, #26A69A);
+        }
+        .metric-card--danger {
+            background: linear-gradient(145deg, #D32F2F, #ef5350);
         }
         ::view-transition-group(*),
         ::view-transition-old(*),
@@ -122,7 +168,7 @@
     <!-- Sidebar Navigation -->
     <aside class="w-64 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
         <div class="p-6 flex items-center space-x-3">
-            <div class="w-8 h-8 bg-primary rounded flex items-center justify-center">
+            <div class="w-8 h-8 bg-primary rounded-xl shadow-lg shadow-emerald-900/20 flex items-center justify-center">
                 <span class="material-icons-round text-white text-xl">qr_code_scanner</span>
             </div>
             <h1 class="text-xl font-bold tracking-tight text-slate-800 dark:text-white">Halalytics</h1>
@@ -160,7 +206,7 @@
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.medicines*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.medicines.index') }}">
                 <span class="material-icons-round text-[20px]">medication</span>
                 <span class="text-sm flex-1">Medicines</span>
-                <span class="text-[10px] bg-indigo-100 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded-md font-bold text-indigo-600 border border-indigo-200 dark:border-indigo-700">{{ number_format($global_medicine_count) }}</span>
+                <span class="text-[10px] bg-primary/10 dark:bg-primary/15 px-1.5 py-0.5 rounded-md font-bold text-primary border border-primary/20 dark:border-primary/30">{{ number_format($global_medicine_count) }}</span>
             </a>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.cosmetics*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.cosmetics.index') }}">
                 <span class="material-icons-round text-[20px]">spa</span>
@@ -253,7 +299,7 @@
     <!-- Main Content Area -->
     <main class="flex-1 overflow-y-auto scrollbar-hide">
         <!-- Top Bar -->
-        <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 sticky top-0 z-10">
+        <header class="h-16 bg-white/95 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 backdrop-blur flex items-center justify-between px-8 sticky top-0 z-10">
             <div class="flex items-center space-x-2 text-sm">
                 @hasSection('breadcrumb')
                     @yield('breadcrumb')

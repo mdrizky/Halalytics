@@ -1,528 +1,382 @@
-@extends('admin.master')
+@extends('admin.layouts.admin_layout')
 
-@section('title', 'OCR Management')
+@section('title', 'OCR Management - Halalytics Admin')
+@section('breadcrumb-parent', 'Expansion Modules')
+@section('breadcrumb-current', 'OCR Management')
 
 @section('content')
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">OCR Product Management</h1>
-        <div>
-            <button class="btn btn-sm btn-primary" onclick="refreshOCRData()">
-                <i class="fas fa-sync-alt"></i> Refresh
-            </button>
-            <a href="{{ route('admin.ocr.statistics') }}" class="btn btn-sm btn-info">
-                <i class="fas fa-chart-bar"></i> Statistics
-            </a>
-        </div>
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-8">
+    <div>
+        <h2 class="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight">OCR Management</h2>
+        <p class="text-slate-500 dark:text-slate-400 mt-2 max-w-2xl">
+            Review hasil OCR kemasan produk, cek gambar depan-belakang, dan putuskan approval dari satu panel yang sinkron dengan skema data terbaru.
+        </p>
     </div>
+    <div class="flex gap-3">
+        <a href="{{ route('admin.ocr.export') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-semibold shadow-sm hover:-translate-y-0.5 transition-all">
+            <span class="material-icons-round text-lg">download</span>
+            Export CSV
+        </a>
+        <button type="button" onclick="refreshOcrDashboard()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white font-semibold shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all">
+            <span class="material-icons-round text-lg">refresh</span>
+            Refresh
+        </button>
+    </div>
+</div>
 
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total Scans
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalScans">0</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-qrcode fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Pending Review
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="pendingReview">0</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clock fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Approved Today
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="approvedToday">0</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-check fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-danger shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                Rejected Today
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="rejectedToday">0</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-times fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+    <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+        <p class="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Total Scan</p>
+        <div class="mt-3 flex items-center justify-between">
+            <div class="text-3xl font-extrabold text-slate-900 dark:text-white" id="ocrTotal">0</div>
+            <div class="w-11 h-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                <span class="material-icons-round">qr_code_scanner</span>
             </div>
         </div>
     </div>
-
-    <!-- Filter Tabs -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <ul class="nav nav-tabs card-header-tabs">
-                <li class="nav-item">
-                    <a class="nav-link active" href="#" data-status="pending" onclick="filterOCRProducts('pending')">
-                        <i class="fas fa-clock"></i> Pending Review
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" data-status="approved" onclick="filterOCRProducts('approved')">
-                        <i class="fas fa-check"></i> Approved
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" data-status="rejected" onclick="filterOCRProducts('rejected')">
-                        <i class="fas fa-times"></i> Rejected
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" data-status="all" onclick="filterOCRProducts('all')">
-                        <i class="fas fa-list"></i> All
-                    </a>
-                </li>
-            </ul>
+    <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+        <p class="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Pending Review</p>
+        <div class="mt-3 flex items-center justify-between">
+            <div class="text-3xl font-extrabold text-slate-900 dark:text-white" id="ocrPending">0</div>
+            <div class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                <span class="material-icons-round">schedule</span>
+            </div>
         </div>
-
-        <!-- OCR Products List -->
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" id="ocrProductsTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>User</th>
-                            <th>Barcode</th>
-                            <th>Images</th>
-                            <th>Extracted Text</th>
-                            <th>Ingredients</th>
-                            <th>Confidence</th>
-                            <th>Step</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Products will be loaded here -->
-                    </tbody>
-                </table>
+    </div>
+    <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+        <p class="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Approved Hari Ini</p>
+        <div class="mt-3 flex items-center justify-between">
+            <div class="text-3xl font-extrabold text-slate-900 dark:text-white" id="ocrApprovedToday">0</div>
+            <div class="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                <span class="material-icons-round">verified</span>
             </div>
-            
-            <!-- Loading Spinner -->
-            <div id="loadingSpinner" class="text-center py-4" style="display: none;">
-                <div class="spinner-border" role="status">
-                    <span class="sr-only">Loading...</span>
-                </div>
-            </div>
-            
-            <!-- Empty State -->
-            <div id="emptyState" class="text-center py-4" style="display: none;">
-                <i class="fas fa-inbox fa-3x text-gray-300 mb-3"></i>
-                <p class="text-gray-500">No OCR products found</p>
+        </div>
+    </div>
+    <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+        <p class="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Rejected Hari Ini</p>
+        <div class="mt-3 flex items-center justify-between">
+            <div class="text-3xl font-extrabold text-slate-900 dark:text-white" id="ocrRejectedToday">0</div>
+            <div class="w-11 h-11 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center">
+                <span class="material-icons-round">dangerous</span>
             </div>
         </div>
     </div>
 </div>
 
-<!-- OCR Product Detail Modal -->
-<div class="modal fade" id="ocrProductModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">OCR Product Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px] gap-6">
+    <section class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Queue Produk OCR</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Filter hasil scan dan lakukan approval tanpa reload halaman.</p>
             </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Front Image</h6>
-                        <img id="frontImagePreview" class="img-fluid mb-3" style="max-height: 200px;">
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Back Image</h6>
-                        <img id="backImagePreview" class="img-fluid mb-3" style="max-height: 200px;">
-                    </div>
-                </div>
-                
-                <div class="mt-3">
-                    <h6>Extracted Text</h6>
-                    <div id="extractedTextDisplay" class="border rounded p-2 bg-light" style="max-height: 150px; overflow-y: auto;"></div>
-                </div>
-                
-                <div class="mt-3">
-                    <h6>Detected Ingredients</h6>
-                    <div id="ingredientsList" class="border rounded p-2 bg-light" style="max-height: 150px; overflow-y: auto;"></div>
-                </div>
-                
-                <div class="mt-3">
-                    <h6>Processing Information</h6>
-                    <table class="table table-sm">
-                        <tr>
-                            <td><strong>Confidence Score:</strong></td>
-                            <td id="confidenceScoreDisplay"></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Processing Step:</strong></td>
-                            <td id="processingStepDisplay"></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Status:</strong></td>
-                            <td id="statusDisplay"></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Created:</strong></td>
-                            <td id="createdDisplay"></td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success" onclick="approveOCRProduct()">
-                    <i class="fas fa-check"></i> Approve
-                </button>
-                <button type="button" class="btn btn-danger" onclick="rejectOCRProduct()">
-                    <i class="fas fa-times"></i> Reject
-                </button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <div class="flex flex-wrap gap-2" id="ocrFilters">
+                <button type="button" data-filter="pending" class="ocr-filter-btn px-3 py-2 rounded-full text-xs font-bold bg-primary text-white">Pending</button>
+                <button type="button" data-filter="approved" class="ocr-filter-btn px-3 py-2 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500">Approved</button>
+                <button type="button" data-filter="rejected" class="ocr-filter-btn px-3 py-2 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500">Rejected</button>
             </div>
         </div>
-    </div>
-</div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 text-[11px] font-black uppercase tracking-[0.24em] text-slate-400">
+                    <tr>
+                        <th class="px-5 py-4">Produk</th>
+                        <th class="px-5 py-4">User</th>
+                        <th class="px-5 py-4">Confidence</th>
+                        <th class="px-5 py-4">Status</th>
+                        <th class="px-5 py-4">Waktu</th>
+                        <th class="px-5 py-4 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="ocrTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                    <tr>
+                        <td colspan="6" class="px-5 py-16 text-center text-slate-400">Memuat data OCR...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 
-<!-- Reject Modal -->
-<div class="modal fade" id="rejectModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Reject OCR Product</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="rejectionReason" class="form-label">Rejection Reason</label>
-                    <textarea class="form-control" id="rejectionReason" rows="3" placeholder="Please specify the reason for rejection..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger" onclick="confirmReject()">Reject</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+    <aside class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden min-h-[580px]">
+        <div class="p-5 border-b border-slate-100 dark:border-slate-800">
+            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Detail Review</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Klik salah satu item untuk melihat gambar, teks OCR, dan hasil parsing bahan.</p>
+        </div>
+        <div id="ocrDetailPanel" class="p-5">
+            <div class="rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 px-6 py-16 text-center text-slate-400">
+                <span class="material-icons-round text-5xl mb-3 block text-primary/60">document_scanner</span>
+                Pilih item OCR dari tabel untuk mulai review.
             </div>
         </div>
-    </div>
+    </aside>
 </div>
 @endsection
 
 @push('scripts')
 <script>
-let currentOCRProduct = null;
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+const ocrBaseUrl = @json(url('/admin/ocr'));
 let currentFilter = 'pending';
+let currentDetail = null;
 
-// Load initial data
-$(document).ready(function() {
-    loadOCRStatistics();
-    loadOCRProducts();
+document.querySelectorAll('.ocr-filter-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+        currentFilter = button.dataset.filter;
+        document.querySelectorAll('.ocr-filter-btn').forEach((btn) => {
+            btn.className = 'ocr-filter-btn px-3 py-2 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500';
+        });
+        button.className = 'ocr-filter-btn px-3 py-2 rounded-full text-xs font-bold bg-primary text-white';
+        loadOcrProducts();
+    });
 });
 
-// Load OCR statistics
-function loadOCRStatistics() {
-    $.get('/api/ocr/statistics')
-        .done(function(data) {
-            if (data.success) {
-                $('#totalScans').text(data.data.total_scans);
-                $('#pendingReview').text(data.data.pending_review);
-                $('#approvedToday').text(data.data.approved_today);
-                $('#rejectedToday').text(data.data.rejected_today);
-            }
-        })
-        .fail(function() {
-            console.error('Failed to load OCR statistics');
-        });
+async function refreshOcrDashboard() {
+    await Promise.all([loadOcrStatistics(), loadOcrProducts()]);
 }
 
-// Load OCR products
-function loadOCRProducts() {
-    $('#loadingSpinner').show();
-    $('#ocrProductsTable tbody').empty();
-    
-    let url = currentFilter === 'all' ? '/api/ocr/pending' : '/api/ocr/pending';
-    
-    $.get(url)
-        .done(function(data) {
-            $('#loadingSpinner').hide();
-            
-            if (data.success && data.data.data.length > 0) {
-                renderOCRProducts(data.data.data);
-                $('#emptyState').hide();
-            } else {
-                $('#emptyState').show();
-            }
-        })
-        .fail(function() {
-            $('#loadingSpinner').hide();
-            $('#emptyState').show();
-            console.error('Failed to load OCR products');
-        });
-}
-
-// Render OCR products
-function renderOCRProducts(products) {
-    let tbody = $('#ocrProductsTable tbody');
-    tbody.empty();
-    
-    products.forEach(function(product) {
-        let statusBadge = getStatusBadge(product.status);
-        let stepBadge = getStepBadge(product.processing_step);
-        
-        let row = `
-            <tr>
-                <td>${product.id}</td>
-                <td>${product.user.name}</td>
-                <td>${product.barcode || '-'}</td>
-                <td>
-                    ${product.front_image ? `<img src="${product.front_image_url}" width="30" class="me-1">` : ''}
-                    ${product.back_image ? `<img src="${product.back_image_url}" width="30">` : ''}
-                </td>
-                <td>
-                    <small class="text-muted">${product.extracted_text ? product.extracted_text.substring(0, 50) + '...' : '-'}</small>
-                </td>
-                <td>
-                    <small class="text-muted">${product.ingredients ? product.ingredients.length + ' items' : '-'}</small>
-                </td>
-                <td>
-                    <span class="badge bg-info">${(product.confidence_score * 100).toFixed(1)}%</span>
-                </td>
-                <td>${stepBadge}</td>
-                <td>${statusBadge}</td>
-                <td>${new Date(product.created_at).toLocaleDateString()}</td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="viewOCRProduct(${product.id})">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    ${product.status === 'pending' ? `
-                        <button class="btn btn-sm btn-success" onclick="quickApprove(${product.id})">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="quickReject(${product.id})">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    ` : ''}
-                </td>
-            </tr>
-        `;
-        tbody.append(row);
-    });
-}
-
-// Get status badge
-function getStatusBadge(status) {
-    const badges = {
-        'pending': '<span class="badge bg-warning">Pending</span>',
-        'approved': '<span class="badge bg-success">Approved</span>',
-        'rejected': '<span class="badge bg-danger">Rejected</span>'
-    };
-    return badges[status] || '<span class="badge bg-secondary">Unknown</span>';
-}
-
-// Get step badge
-function getStepBadge(step) {
-    const badges = {
-        'front': '<span class="badge bg-info">Front</span>',
-        'back': '<span class="badge bg-primary">Back</span>',
-        'processing': '<span class="badge bg-warning">Processing</span>',
-        'complete': '<span class="badge bg-success">Complete</span>'
-    };
-    return badges[step] || '<span class="badge bg-secondary">Unknown</span>';
-}
-
-// View OCR product details
-function viewOCRProduct(productId) {
-    $.get(`/api/ocr/product/${productId}`)
-        .done(function(data) {
-            if (data.success) {
-                currentOCRProduct = data.data;
-                displayOCRProductDetails(currentOCRProduct);
-                $('#ocrProductModal').modal('show');
-            }
-        })
-        .fail(function() {
-            alert('Failed to load OCR product details');
-        });
-}
-
-// Display OCR product details
-function displayOCRProductDetails(product) {
-    $('#frontImagePreview').attr('src', product.front_image_url || '/img/no-image.png');
-    $('#backImagePreview').attr('src', product.back_image_url || '/img/no-image.png');
-    $('#extractedTextDisplay').text(product.extracted_text || 'No text extracted');
-    
-    let ingredientsHtml = '';
-    if (product.ingredients && product.ingredients.length > 0) {
-        product.ingredients.forEach(function(ingredient) {
-            ingredientsHtml += `<span class="badge bg-secondary me-1">${ingredient}</span>`;
-        });
-    } else {
-        ingredientsHtml = 'No ingredients detected';
-    }
-    $('#ingredientsList').html(ingredientsHtml);
-    
-    $('#confidenceScoreDisplay').text((product.confidence_score * 100).toFixed(1) + '%');
-    $('#processingStepDisplay').text(product.processing_step || 'Unknown');
-    $('#statusDisplay').html(getStatusBadge(product.status));
-    $('#createdDisplay').text(new Date(product.created_at).toLocaleString());
-}
-
-// Approve OCR product
-function approveOCRProduct() {
-    if (!currentOCRProduct) return;
-    
-    if (confirm('Are you sure you want to approve this OCR product?')) {
-        $.post(`/api/ocr/approve/${currentOCRProduct.id}`, {
-            notes: 'Approved by admin'
-        })
-        .done(function(data) {
-            if (data.success) {
-                $('#ocrProductModal').modal('hide');
-                loadOCRProducts();
-                loadOCRStatistics();
-                alert('OCR product approved successfully!');
-            } else {
-                alert('Failed to approve OCR product: ' + data.message);
-            }
-        })
-        .fail(function() {
-            alert('Failed to approve OCR product');
-        });
+async function loadOcrStatistics() {
+    try {
+        const response = await fetch(`${ocrBaseUrl}/statistics`, { headers: { Accept: 'application/json' } });
+        const payload = await response.json();
+        const stats = payload?.data || {};
+        document.getElementById('ocrTotal').textContent = stats.total_scans ?? stats.total ?? 0;
+        document.getElementById('ocrPending').textContent = stats.pending_review ?? stats.pending ?? 0;
+        document.getElementById('ocrApprovedToday').textContent = stats.approved_today ?? stats.today_approved ?? 0;
+        document.getElementById('ocrRejectedToday').textContent = stats.rejected_today ?? stats.today_rejected ?? 0;
+    } catch (error) {
+        console.error('OCR statistics error', error);
     }
 }
 
-// Reject OCR product
-function rejectOCRProduct() {
-    if (!currentOCRProduct) return;
-    $('#rejectModal').modal('show');
+async function loadOcrProducts() {
+    const routeMap = {
+        pending: `${ocrBaseUrl}/pending`,
+        approved: `${ocrBaseUrl}/approved`,
+        rejected: `${ocrBaseUrl}/rejected`,
+    };
+
+    const tbody = document.getElementById('ocrTableBody');
+    tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-16 text-center text-slate-400">Memuat data OCR...</td></tr>';
+
+    try {
+        const response = await fetch(routeMap[currentFilter], { headers: { Accept: 'application/json' } });
+        const payload = await response.json();
+        const rows = payload?.data?.data || [];
+
+        if (rows.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="px-5 py-16 text-center text-slate-400">Belum ada produk OCR pada filter ${escapeHtml(currentFilter)}.</td></tr>`;
+            document.getElementById('ocrDetailPanel').innerHTML = `
+                <div class="rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 px-6 py-16 text-center text-slate-400">
+                    <span class="material-icons-round text-5xl mb-3 block text-primary/60">inbox</span>
+                    Tidak ada data untuk filter saat ini.
+                </div>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = rows.map((row) => renderOcrRow(row)).join('');
+        currentDetail = rows[0];
+        renderDetail(rows[0]);
+    } catch (error) {
+        console.error('OCR products error', error);
+        tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-16 text-center text-rose-500">Gagal memuat data OCR.</td></tr>';
+    }
 }
 
-// Confirm reject
-function confirmReject() {
-    if (!currentOCRProduct) return;
-    
-    let reason = $('#rejectionReason').val();
-    if (!reason.trim()) {
-        alert('Please provide a rejection reason');
+function renderOcrRow(product) {
+    const image = product.front_image_url || product.back_image_url;
+    const confidence = Number(product.confidence_level || product.confidence_score || 0);
+    const statusClass = product.status === 'approved'
+        ? 'bg-emerald-100 text-emerald-700'
+        : product.status === 'rejected'
+            ? 'bg-rose-100 text-rose-700'
+            : 'bg-amber-100 text-amber-700';
+
+    return `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer" onclick="loadOcrDetail(${product.id})">
+            <td class="px-5 py-4">
+                <div class="flex items-center gap-3">
+                    <img src="${escapeHtml(image)}" alt="${escapeHtml(product.product_name || 'OCR Product')}" class="w-12 h-12 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div>
+                        <div class="text-sm font-bold text-slate-900 dark:text-white">${escapeHtml(product.product_name || 'Produk OCR')}</div>
+                        <div class="text-[11px] text-slate-400">${escapeHtml(product.brand || 'Tanpa brand')} · ${escapeHtml(product.processing_step || 'Belum lengkap')}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-5 py-4">
+                <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">${escapeHtml(product.user?.full_name || product.user?.username || 'Unknown')}</div>
+                <div class="text-[11px] text-slate-400">${escapeHtml(product.user?.username || '-')}</div>
+            </td>
+            <td class="px-5 py-4">
+                <div class="text-sm font-bold text-slate-900 dark:text-white">${confidence.toFixed(1)}%</div>
+                <div class="mt-2 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div class="h-full bg-primary rounded-full" style="width:${Math.min(100, Math.max(confidence, 4))}%"></div>
+                </div>
+            </td>
+            <td class="px-5 py-4">
+                <span class="inline-flex px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-[0.18em] ${statusClass}">
+                    ${escapeHtml(product.status_label || product.status)}
+                </span>
+            </td>
+            <td class="px-5 py-4 text-sm text-slate-500">${formatDate(product.created_at)}</td>
+            <td class="px-5 py-4 text-right">
+                <div class="flex justify-end gap-2">
+                    ${product.status !== 'approved' ? `<button type="button" onclick="event.stopPropagation(); approveOcr(${product.id})" class="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-emerald-500 text-white text-xs font-bold shadow-sm hover:bg-emerald-600">Approve</button>` : ''}
+                    ${product.status !== 'rejected' ? `<button type="button" onclick="event.stopPropagation(); rejectOcr(${product.id})" class="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-rose-500 text-white text-xs font-bold shadow-sm hover:bg-rose-600">Reject</button>` : ''}
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+async function loadOcrDetail(id) {
+    try {
+        const response = await fetch(`${ocrBaseUrl}/product/${id}`, { headers: { Accept: 'application/json' } });
+        const payload = await response.json();
+        currentDetail = payload?.data || null;
+        if (currentDetail) {
+            renderDetail(currentDetail);
+        }
+    } catch (error) {
+        console.error('OCR detail error', error);
+    }
+}
+
+function renderDetail(product) {
+    const panel = document.getElementById('ocrDetailPanel');
+    const images = [product.front_image_url, product.back_image_url].filter(Boolean);
+    const ingredients = (product.ingredients || []).slice(0, 20);
+    const adminNote = product.admin_note ? `<div class="rounded-2xl bg-amber-50 text-amber-700 px-4 py-3 text-sm font-medium">${escapeHtml(product.admin_note)}</div>` : '';
+
+    panel.innerHTML = `
+        <div class="space-y-5">
+            <div>
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h4 class="text-xl font-extrabold text-slate-900 dark:text-white">${escapeHtml(product.product_name || 'Produk OCR')}</h4>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">${escapeHtml(product.brand || 'Tanpa brand')} · ${escapeHtml(product.user?.full_name || product.user?.username || 'Unknown')}</p>
+                    </div>
+                    <span class="inline-flex px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-[0.18em] ${product.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : product.status === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">
+                        ${escapeHtml(product.status_label || product.status)}
+                    </span>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                ${images.map((image) => `<img src="${escapeHtml(image)}" alt="OCR Image" class="w-full aspect-[4/3] object-cover rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">`).join('')}
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="rounded-2xl bg-slate-50 dark:bg-slate-800 p-4">
+                    <p class="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Confidence</p>
+                    <p class="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">${Number(product.confidence_level || product.confidence_score || 0).toFixed(1)}%</p>
+                </div>
+                <div class="rounded-2xl bg-slate-50 dark:bg-slate-800 p-4">
+                    <p class="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Waktu Submit</p>
+                    <p class="mt-2 text-sm font-bold text-slate-900 dark:text-white">${formatDate(product.created_at, true)}</p>
+                </div>
+            </div>
+            ${adminNote}
+            <div>
+                <p class="text-xs font-black uppercase tracking-[0.24em] text-slate-400 mb-3">Extracted Text</p>
+                <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 text-sm text-slate-700 dark:text-slate-300 leading-7">${escapeHtml(product.extracted_text || '-')}</div>
+            </div>
+            <div>
+                <p class="text-xs font-black uppercase tracking-[0.24em] text-slate-400 mb-3">Detected Ingredients</p>
+                <div class="flex flex-wrap gap-2">
+                    ${ingredients.length > 0
+                        ? ingredients.map((item) => `<span class="inline-flex px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold">${escapeHtml(item)}</span>`).join('')
+                        : '<span class="text-sm text-slate-400">Belum ada bahan yang berhasil diparsing.</span>'}
+                </div>
+            </div>
+            <div class="flex gap-3 pt-2">
+                ${product.status !== 'approved' ? `<button type="button" onclick="approveOcr(${product.id})" class="flex-1 inline-flex justify-center items-center gap-2 px-4 py-3 rounded-2xl bg-emerald-500 text-white font-bold hover:bg-emerald-600">Approve</button>` : ''}
+                ${product.status !== 'rejected' ? `<button type="button" onclick="rejectOcr(${product.id})" class="flex-1 inline-flex justify-center items-center gap-2 px-4 py-3 rounded-2xl bg-rose-500 text-white font-bold hover:bg-rose-600">Reject</button>` : ''}
+            </div>
+        </div>
+    `;
+}
+
+async function approveOcr(id) {
+    if (!confirm('Setujui hasil OCR ini?')) {
         return;
     }
-    
-    $.post(`/api/ocr/reject/${currentOCRProduct.id}`, {
-        reason: reason
-    })
-    .done(function(data) {
-        if (data.success) {
-            $('#rejectModal').modal('hide');
-            $('#ocrProductModal').modal('hide');
-            $('#rejectionReason').val('');
-            loadOCRProducts();
-            loadOCRStatistics();
-            alert('OCR product rejected successfully!');
-        } else {
-            alert('Failed to reject OCR product: ' + data.message);
-        }
-    })
-    .fail(function() {
-        alert('Failed to reject OCR product');
-    });
-}
 
-// Quick approve
-function quickApprove(productId) {
-    if (confirm('Are you sure you want to approve this OCR product?')) {
-        $.post(`/api/ocr/approve/${productId}`, {
-            notes: 'Quick approved by admin'
-        })
-        .done(function(data) {
-            if (data.success) {
-                loadOCRProducts();
-                loadOCRStatistics();
-            } else {
-                alert('Failed to approve: ' + data.message);
-            }
-        })
-        .fail(function() {
-            alert('Failed to approve OCR product');
+    try {
+        const response = await fetch(`${ocrBaseUrl}/approve/${id}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ notes: 'Approved via admin OCR dashboard' })
         });
+
+        const payload = await response.json();
+        if (!payload.success) {
+            throw new Error(payload.message || 'Approval gagal');
+        }
+
+        await refreshOcrDashboard();
+        await loadOcrDetail(id);
+    } catch (error) {
+        alert(error.message || 'Gagal approve OCR');
     }
 }
 
-// Quick reject
-function quickReject(productId) {
-    let reason = prompt('Please provide rejection reason:');
-    if (!reason) return;
-    
-    $.post(`/api/ocr/reject/${productId}`, {
-        reason: reason
-    })
-    .done(function(data) {
-        if (data.success) {
-            loadOCRProducts();
-            loadOCRStatistics();
-        } else {
-            alert('Failed to reject: ' + data.message);
+async function rejectOcr(id) {
+    const reason = prompt('Masukkan alasan penolakan OCR:');
+    if (reason === null) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${ocrBaseUrl}/reject/${id}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reason })
+        });
+
+        const payload = await response.json();
+        if (!payload.success) {
+            throw new Error(payload.message || 'Reject gagal');
         }
-    })
-    .fail(function() {
-        alert('Failed to reject OCR product');
-    });
+
+        await refreshOcrDashboard();
+        await loadOcrDetail(id);
+    } catch (error) {
+        alert(error.message || 'Gagal reject OCR');
+    }
 }
 
-// Filter OCR products
-function filterOCRProducts(status) {
-    currentFilter = status;
-    
-    // Update active tab
-    $('.nav-link').removeClass('active');
-    $(`.nav-link[data-status="${status}"]`).addClass('active');
-    
-    loadOCRProducts();
+function formatDate(value, withTime = false) {
+    if (!value) return '-';
+    const date = new Date(value);
+    return new Intl.DateTimeFormat('id-ID', withTime ? {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    } : {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    }).format(date);
 }
 
-// Refresh OCR data
-function refreshOCRData() {
-    loadOCRStatistics();
-    loadOCRProducts();
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
+
+document.addEventListener('DOMContentLoaded', refreshOcrDashboard);
 </script>
 @endpush

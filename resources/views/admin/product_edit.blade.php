@@ -36,7 +36,7 @@
                 </div>
                 <div class="text-right">
                     <span class="block text-xs text-slate-400">ID: {{ $product->id_product }}</span>
-                    <span class="block text-xs font-bold text-indigo-500 mt-1">Source: {{ $product->source ?? 'local' }}</span>
+                    <span class="block text-xs font-bold text-primary mt-1">Source: {{ $product->source ?? 'local' }}</span>
                 </div>
             </div>
         </div>
@@ -50,7 +50,7 @@
                     <label for="imageUpload" class="cursor-pointer">
                         <div id="imagePreview" class="mb-4">
                             @if($product->image)
-                                <img src="{{ asset($product->image) }}" class="w-32 h-32 object-cover rounded-lg mx-auto">
+                                <img src="{{ $product->image }}" class="w-32 h-32 object-cover rounded-lg mx-auto" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
                             @else
                                 <span class="material-icons-round text-4xl text-slate-400">image</span>
                             @endif
@@ -94,14 +94,14 @@
             
             <!-- AI Halal Analysis (Read Only Context) -->
             @if($product->halal_analysis)
-            <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-6 border border-indigo-100 dark:border-indigo-800/50 mb-6">
+            <div class="bg-primary/10 dark:bg-primary/10 rounded-xl p-6 border border-primary/15 dark:border-primary/20 mb-6">
                 <div class="flex items-center gap-2 mb-4">
-                    <span class="material-icons-round text-indigo-500">auto_awesome</span>
-                    <h3 class="text-sm font-bold text-indigo-900 dark:text-indigo-100 uppercase tracking-wider">AI Halal Analysis Insights</h3>
+                    <span class="material-icons-round text-primary">auto_awesome</span>
+                    <h3 class="text-sm font-bold text-primary uppercase tracking-wider">AI Halal Analysis Insights</h3>
                 </div>
                 <div class="space-y-4">
                     <div class="flex items-center gap-3">
-                        <div class="px-3 py-1 bg-indigo-500/10 text-indigo-500 rounded-full text-xs font-bold uppercase tracking-tighter">
+                        <div class="px-3 py-1 bg-primary/15 text-primary rounded-full text-xs font-bold uppercase tracking-tighter">
                             Status: {{ $product->halal_analysis['status'] ?? 'Unknown' }}
                         </div>
                         <div class="px-3 py-1 {{ ($product->halal_analysis['is_potentially_halal'] ?? false) ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500' }} rounded-full text-xs font-bold uppercase tracking-tighter">
@@ -109,8 +109,8 @@
                         </div>
                     </div>
                     <div>
-                        <p class="text-xs font-bold text-indigo-800 dark:text-indigo-200 mb-1">AI Recommendation:</p>
-                        <p class="text-sm text-indigo-950 dark:text-indigo-50/80 italic leading-relaxed">
+                        <p class="text-xs font-bold text-primary mb-1">AI Recommendation:</p>
+                        <p class="text-sm text-slate-700 dark:text-slate-100/80 italic leading-relaxed">
                             "{{ $product->halal_analysis['recommendation'] ?? 'No specific recommendation provided.' }}"
                         </p>
                     </div>

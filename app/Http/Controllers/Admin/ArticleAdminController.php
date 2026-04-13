@@ -4,11 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Article;
+use App\Services\ExternalHealthArticleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class ArticleAdminController extends Controller
 {
+    public function __construct(private ExternalHealthArticleService $externalArticles)
+    {
+    }
+
     public function index(Request $request)
     {
         $query = Article::query();
@@ -36,8 +41,10 @@ class ArticleAdminController extends Controller
         ];
 
         $categories = Article::select('category')->distinct()->pluck('category');
+        $externalQuery = trim((string) ($request->query('external_q') ?: $request->query('search') ?: 'halal food health'));
+        $externalArticles = $this->externalArticles->search($externalQuery, 9);
 
-        return view('admin.articles.index', compact('articles', 'stats', 'categories'));
+        return view('admin.articles.index', compact('articles', 'stats', 'categories', 'externalArticles', 'externalQuery'));
     }
 
     public function store(Request $request)

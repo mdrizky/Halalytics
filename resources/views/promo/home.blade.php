@@ -7,12 +7,12 @@
 @section('styles')
 <style>
     :root {
-        --brand-ink: #0f172a;
-        --brand-deep: #032d24;
-        --brand-main: #0ea56b;
-        --brand-soft: #d8f7ea;
-        --brand-alt: #1f4fd6;
-        --surface: #f4f6f8;
+        --brand-ink: #163832;
+        --brand-deep: #00372e;
+        --brand-main: #004D40;
+        --brand-soft: #E0F2F1;
+        --brand-alt: #26A69A;
+        --surface: #F4F9F8;
         --line: #dbe3ea;
     }
 
@@ -22,9 +22,9 @@
 
     .home-hero {
         background:
-            radial-gradient(1200px 500px at 100% -20%, rgba(31,79,214,.35), transparent 60%),
-            radial-gradient(900px 500px at -5% 5%, rgba(14,165,107,.35), transparent 55%),
-            linear-gradient(140deg, #06261f 0%, #0b3b2f 38%, #123f7d 100%);
+            radial-gradient(1200px 500px at 100% -20%, rgba(38,166,154,.30), transparent 60%),
+            radial-gradient(900px 500px at -5% 5%, rgba(224,242,241,.28), transparent 55%),
+            linear-gradient(145deg, #00372e 0%, #004D40 38%, #26A69A 100%);
     }
 
     .glass {
@@ -56,10 +56,11 @@
     .delay-3 { animation-delay: .24s; }
 
     .phone-frame {
-        background: linear-gradient(150deg, #101522, #0c0f18);
-        border: 4px solid #212a3a;
+        background: linear-gradient(150deg, #10342e, #0f1d1a);
+        border: 4px solid rgba(255,255,255,0.22);
         border-radius: 38px;
         box-shadow: 0 26px 60px rgba(0, 0, 0, .4);
+        transform: perspective(1200px) rotateY(-10deg) rotateX(4deg);
     }
 
     .phone-screen {
@@ -69,8 +70,12 @@
     }
 
     .ss-preview {
-        background: linear-gradient(135deg, #dff6eb, #e2ebff);
+        background: linear-gradient(135deg, #dff6eb, #ffffff);
         border: 1px dashed #9fb2c9;
+    }
+    .article-stack {
+        box-shadow: 0 26px 60px rgba(0, 77, 64, 0.14);
+        transform-style: preserve-3d;
     }
 
     @keyframes fadeUp {
@@ -139,10 +144,10 @@
                                     <p class="text-white text-lg font-bold mt-1">Indomie Goreng</p>
                                     <p class="text-emerald-200 text-xs">96% Verified</p>
                                 </div>
-                                <div class="bg-blue-500/15 border border-blue-400/35 rounded-2xl p-3">
-                                    <p class="text-[11px] text-blue-300 font-bold uppercase">Drug Interaction</p>
+                                <div class="bg-primary/20 border border-emerald-300/35 rounded-2xl p-3">
+                                    <p class="text-[11px] text-emerald-200 font-bold uppercase">Drug Interaction</p>
                                     <p class="text-white text-sm font-semibold mt-1">Paracetamol + Caffeine</p>
-                                    <p class="text-blue-200 text-xs">No major conflict</p>
+                                    <p class="text-emerald-100 text-xs">No major conflict</p>
                                 </div>
                                 <div class="bg-amber-500/15 border border-amber-400/35 rounded-2xl p-3">
                                     <p class="text-[11px] text-amber-300 font-bold uppercase">Health Score</p>
@@ -164,7 +169,7 @@
                     <div class="absolute -right-10 bottom-24 bg-white rounded-2xl p-3 w-28 shadow-xl text-center">
                         <p class="text-2xl">💊</p>
                         <p class="text-xs font-bold text-slate-700">Drug Safety</p>
-                        <p class="text-[11px] text-blue-600 font-semibold">Realtime</p>
+                        <p class="text-[11px] text-primary font-semibold">Realtime</p>
                     </div>
                 </div>
             </div>
@@ -280,24 +285,24 @@
     </div>
 </section>
 
-@if($latestBlogs->count() > 0)
+@if($latestBlogs->count() > 0 || ($externalArticles->count() ?? 0) > 0)
 <section class="py-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center mb-10">
             <div>
                 <h2 class="text-3xl font-extrabold text-slate-900">Artikel Terbaru</h2>
-                <p class="text-slate-500 mt-1">Insight halal, kesehatan, dan keamanan produk.</p>
+                <p class="text-slate-500 mt-1">Artikel lokal dan feed eksternal kesehatan yang tampil langsung di website promosi.</p>
             </div>
             <a href="{{ route('blog.index') }}" class="text-emerald-700 hover:text-emerald-800 font-bold">Lihat Semua</a>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-7">
             @foreach($latestBlogs as $blog)
-            <article class="pro-card overflow-hidden">
+            <article class="pro-card article-stack overflow-hidden">
                 @if($blog->image)
                 <img src="{{ $blog->image_url }}" alt="{{ $blog->title }}" class="w-full h-48 object-cover">
                 @else
-                <div class="h-48 bg-gradient-to-br from-emerald-200 to-blue-200"></div>
+                <div class="h-48 bg-gradient-to-br from-[#E0F2F1] to-white"></div>
                 @endif
                 <div class="p-6">
                     <span class="text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700">
@@ -307,6 +312,27 @@
                     <p class="text-slate-500 text-sm mt-2">{{ $blog->excerpt }}</p>
                     <a href="{{ route('blog.show', $blog->slug) }}" class="inline-flex mt-4 text-sm font-bold text-emerald-700 hover:text-emerald-800">
                         Baca Selengkapnya
+                    </a>
+                </div>
+            </article>
+            @endforeach
+
+            @foreach($externalArticles ?? collect() as $article)
+            <article class="pro-card article-stack overflow-hidden">
+                @if(!empty($article['image_url']))
+                <img src="{{ $article['image_url'] }}" alt="{{ $article['title'] }}" class="w-full h-48 object-cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                @endif
+                <div class="h-48 bg-gradient-to-br from-[#E0F2F1] to-white items-center justify-center hidden">
+                    <span class="text-sm font-bold text-[#004D40]">External Health Feed</span>
+                </div>
+                <div class="p-6">
+                    <span class="text-[11px] font-bold px-3 py-1 rounded-full bg-[#E0F2F1] text-[#004D40]">
+                        {{ $article['source'] }}
+                    </span>
+                    <h3 class="mt-3 font-extrabold text-slate-800 leading-snug">{{ $article['title'] }}</h3>
+                    <p class="text-slate-500 text-sm mt-2">{{ $article['excerpt'] }}</p>
+                    <a href="{{ $article['source_url'] }}" target="_blank" rel="noopener noreferrer" class="inline-flex mt-4 text-sm font-bold text-[#004D40] hover:text-[#00372e]">
+                        Buka Sumber
                     </a>
                 </div>
             </article>

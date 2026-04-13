@@ -51,7 +51,7 @@
     <!-- Card 3: Users -->
     <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-4">
-            <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+            <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                 <span class="material-icons-round">people</span>
             </div>
             <span class="text-[10px] font-extrabold px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-full">+8.1%</span>
@@ -195,7 +195,7 @@
                                     <div class="w-8 h-8 rounded bg-slate-100 dark:bg-slate-800 mr-3 flex items-center justify-center overflow-hidden">
                                         @if(!empty($scan->image))
                                         @php
-                                            $scanImage = str_starts_with((string) $scan->image, 'http') ? $scan->image : asset($scan->image);
+                                            $scanImage = $scan->image;
                                         @endphp
                                         <img src="{{ $scanImage }}" alt="{{ $scan->product_name ?? 'Product' }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                         <span class="material-icons-round text-sm text-slate-400" style="display:none">fastfood</span>
@@ -274,7 +274,7 @@
                     <div class="relative w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center transition-colors group-hover:bg-primary/10">
                         @if($product->image)
                         @php
-                            $topImage = str_starts_with((string) $product->image, 'http') ? $product->image : asset($product->image);
+                            $topImage = $product->image;
                         @endphp
                         <img src="{{ $topImage }}" alt="{{ $product->product_name }}" class="w-8 h-8 object-cover rounded shadow-sm" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <span class="material-icons-round text-slate-400" style="display:none">inventory_2</span>

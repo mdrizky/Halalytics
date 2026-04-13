@@ -55,7 +55,7 @@
                 <label class="text-sm font-bold text-slate-700 dark:text-slate-300">Food Image</label>
                 @if($streetFood->image_url)
                     <div class="mb-2">
-                        <img src="{{ asset($streetFood->image_url) }}" class="h-24 w-auto rounded-lg shadow-sm border border-slate-200">
+                        <img src="{{ $streetFood->image_url }}" class="h-24 w-auto rounded-lg shadow-sm border border-slate-200" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
                     </div>
                 @endif
                 <input type="file" name="image" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent">

@@ -36,23 +36,57 @@ class MedicineController extends Controller
         $limit = min(max((int) $request->query('limit', 20), 1), 50);
         $search = $request->query('search');
 
-        $query = Medicine::query();
+        try {
+            $query = Medicine::query();
 
-        if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('generic_name', 'like', "%{$search}%")
-                  ->orWhere('brand_name', 'like', "%{$search}%");
-            });
-        }
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('generic_name', 'like', "%{$search}%")
+                      ->orWhere('brand_name', 'like', "%{$search}%");
+                });
+            }
 
-        $medicines = $query->latest()->paginate($limit);
+            $medicines = $query->latest()->paginate($limit);
 
-        if ($medicines->total() === 0 && empty($search)) {
-            $fallbackItems = collect($this->fallbackMedicines())->take($limit)->values();
+            if ($medicines->total() === 0 && empty($search)) {
+                $fallbackItems = collect($this->fallbackMedicines())->take($limit)->values();
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Daftar obat fallback dimuat',
+                    'data' => $fallbackItems,
+                    'meta' => [
+                        'current_page' => 1,
+                        'last_page' => 1,
+                        'total' => $fallbackItems->count(),
+                        'fallback_mode' => true,
+                    ]
+                ]);
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => 'Daftar obat fallback dimuat',
+                'message' => 'Daftar obat berhasil dimuat',
+                'data' => $medicines->items(),
+                'meta' => [
+                    'current_page' => $medicines->currentPage(),
+                    'last_page' => $medicines->lastPage(),
+                    'total' => $medicines->total(),
+                    'fallback_mode' => false,
+                ]
+            ]);
+        } catch (\Throwable $throwable) {
+            Log::warning('MedicineController index fallback triggered', [
+                'search' => $search,
+                'limit' => $limit,
+                'error' => $throwable->getMessage(),
+            ]);
+
+            $fallbackItems = collect($this->fallbackMedicines())->take($limit)->values();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Daftar obat fallback dimuat karena layanan utama sedang bermasalah.',
                 'data' => $fallbackItems,
                 'meta' => [
                     'current_page' => 1,
@@ -62,18 +96,6 @@ class MedicineController extends Controller
                 ]
             ]);
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Daftar obat berhasil dimuat',
-            'data' => $medicines->items(),
-            'meta' => [
-                'current_page' => $medicines->currentPage(),
-                'last_page' => $medicines->lastPage(),
-                'total' => $medicines->total(),
-                'fallback_mode' => false,
-            ]
-        ]);
     }
 
     private function fallbackMedicines(): array
@@ -139,6 +161,7 @@ class MedicineController extends Controller
         $symptoms = $request->input('symptoms');
         $userId = auth()->user() ? auth()->user()->id_user : $request->input('user_id');
         $familyId = $request->input('family_id');
+        $userContext = [];
 
         try {
             // Step 1: Resolve health context for AI
@@ -152,6 +175,9 @@ class MedicineController extends Controller
             $medicines = $this->findMedicinesByIngredients($aiResult['recommended_ingredients'] ?? []);
             $triage = $this->buildTriageAdvice($symptoms, $aiResult);
             $possibleCauses = $this->buildPossibleCauses($symptoms, $aiResult);
+            $medicineDetails = $this->normalizeMedicineRecommendations($aiResult['recommended_medicines_list'] ?? []);
+            $medicineList = $this->flattenMedicineRecommendations($medicineDetails);
+            $whyItHappened = $this->buildWhyItHappened($symptoms, $aiResult);
 
             // Step 3: Halal Filter (Database level)
             $halalMedicines = $medicines->filter(function($medicine) {
@@ -161,12 +187,19 @@ class MedicineController extends Controller
             return response()->json([
                 'success' => true,
                 'symptoms_analysis' => [
+                    'ringkasan_keluhan' => $aiResult['ringkasan_keluhan'] ?? $symptoms,
                     'condition' => $aiResult['condition'] ?? 'Unknown',
+                    'severity_label' => $aiResult['tingkat_keparahan_label'] ?? ucfirst((string) ($aiResult['severity'] ?? 'mild')),
+                    'why_it_happened' => $whyItHappened,
                     'gejala_terkait' => $aiResult['gejala_terkait'] ?? [],
                     'active_ingredients' => $aiResult['recommended_ingredients'] ?? [],
                     'severity' => $aiResult['severity'] ?? 'mild',
+                    'alasan_keparahan' => $aiResult['alasan_keparahan'] ?? '',
                     'emergency_warning' => $aiResult['emergency_warning'] ?? null,
                     'possible_causes' => $possibleCauses,
+                    'possible_causes_detailed' => $aiResult['possible_causes'] ?? [],
+                    'disease_explanations' => $aiResult['disease_explanations'] ?? [],
+                    'trigger_factors' => $aiResult['trigger_factors'] ?? [],
                     'triage_action' => $triage['action'],
                     'doctor_recommendation' => $triage['doctor_recommendation'],
                     'should_seek_doctor' => $triage['should_seek_doctor'],
@@ -174,19 +207,75 @@ class MedicineController extends Controller
                     'usage_instructions' => $aiResult['usage_instructions'] ?? '',
                     'lifestyle_advice' => $aiResult['lifestyle_advice'] ?? '',
                     'dosage_guidelines' => $aiResult['dosage_guidelines'] ?? '',
-                    'recommended_medicines_list' => $aiResult['recommended_medicines_list'] ?? [],
-                    'recommendation' => $aiResult['recommendation'] ?? ''
+                    'recommended_medicine_details' => $medicineDetails,
+                    'recommended_medicines_list' => $medicineList,
+                    'drug_mechanism' => $aiResult['drug_mechanism'] ?? '',
+                    'first_aid_steps' => $aiResult['first_aid_steps'] ?? [],
+                    'prevention' => $aiResult['prevention'] ?? [],
+                    'follow_up_questions' => $aiResult['follow_up_questions'] ?? [],
+                    'confidence_level' => $aiResult['confidence_level'] ?? 'sedang',
+                    'recommendation' => $aiResult['recommendation'] ?? '',
+                    'tldr' => $aiResult['tldr'] ?? '',
+                    'health_profile_context' => $userContext,
                 ],
+                'full_analysis' => $aiResult,
                 'recommended_medicines' => $halalMedicines->values(),
                 'all_medicines' => $medicines->values()
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('Symptom analysis failed: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Symptom analysis failed, serving structured fallback', [
+                'symptoms' => $symptoms,
+                'user_id' => $userId,
+                'family_id' => $familyId,
+                'error' => $e->getMessage(),
+            ]);
+
+            $fallbackResult = $this->geminiService->analyzeSymptoms($symptoms, $userContext);
+            $triage = $this->buildTriageAdvice($symptoms, $fallbackResult);
+            $possibleCauses = $this->buildPossibleCauses($symptoms, $fallbackResult);
+            $medicineDetails = $this->normalizeMedicineRecommendations($fallbackResult['recommended_medicines_list'] ?? []);
+            $medicineList = $this->flattenMedicineRecommendations($medicineDetails);
+
             return response()->json([
-                'success' => false,
-                'message' => 'Failed to analyze symptoms: ' . $e->getMessage()
-            ], 500);
+                'success' => true,
+                'message' => 'Analisis fallback dimuat karena layanan utama sedang sibuk.',
+                'symptoms_analysis' => [
+                    'ringkasan_keluhan' => $fallbackResult['ringkasan_keluhan'] ?? $symptoms,
+                    'condition' => $fallbackResult['condition'] ?? 'Perlu evaluasi lebih lanjut',
+                    'severity_label' => $fallbackResult['tingkat_keparahan_label'] ?? ucfirst((string) ($fallbackResult['severity'] ?? 'mild')),
+                    'severity' => $fallbackResult['severity'] ?? 'mild',
+                    'why_it_happened' => $this->buildWhyItHappened($symptoms, $fallbackResult),
+                    'alasan_keparahan' => $fallbackResult['alasan_keparahan'] ?? '',
+                    'gejala_terkait' => $fallbackResult['gejala_terkait'] ?? [],
+                    'possible_causes' => $possibleCauses,
+                    'possible_causes_detailed' => $fallbackResult['possible_causes'] ?? [],
+                    'disease_explanations' => $fallbackResult['disease_explanations'] ?? [],
+                    'trigger_factors' => $fallbackResult['trigger_factors'] ?? [],
+                    'recommended_ingredients' => $fallbackResult['recommended_ingredients'] ?? [],
+                    'recommended_medicine_details' => $medicineDetails,
+                    'recommended_medicines_list' => $medicineList,
+                    'dosage_guidelines' => $fallbackResult['dosage_guidelines'] ?? '',
+                    'drug_mechanism' => $fallbackResult['drug_mechanism'] ?? '',
+                    'halal_check' => $fallbackResult['halal_check'] ?? ['status' => 'unknown', 'notes' => 'Perlu cek label atau sertifikasi resmi.'],
+                    'usage_instructions' => $fallbackResult['usage_instructions'] ?? '',
+                    'lifestyle_advice' => $fallbackResult['lifestyle_advice'] ?? '',
+                    'first_aid_steps' => $fallbackResult['first_aid_steps'] ?? [],
+                    'prevention' => $fallbackResult['prevention'] ?? [],
+                    'follow_up_questions' => $fallbackResult['follow_up_questions'] ?? [],
+                    'confidence_level' => $fallbackResult['confidence_level'] ?? 'Sedang',
+                    'recommendation' => $fallbackResult['recommendation'] ?? '',
+                    'tldr' => $fallbackResult['tldr'] ?? '',
+                    'triage_action' => $triage['action'],
+                    'doctor_recommendation' => $triage['doctor_recommendation'],
+                    'should_seek_doctor' => $triage['should_seek_doctor'],
+                    'emergency_warning' => $fallbackResult['emergency_warning'] ?? null,
+                    'health_profile_context' => $userContext,
+                ],
+                'full_analysis' => $fallbackResult,
+                'recommended_medicines' => [],
+                'all_medicines' => [],
+            ]);
         }
     }
 
@@ -867,5 +956,69 @@ class MedicineController extends Controller
         }
 
         return [];
+    }
+
+    private function normalizeMedicineRecommendations(array $items): array
+    {
+        return collect($items)
+            ->map(function ($item) {
+                if (!is_array($item)) {
+                    return [
+                        'name' => (string) $item,
+                        'function' => '',
+                        'dosage' => '',
+                        'how_to_take' => '',
+                        'duration' => '',
+                        'when_to_take' => '',
+                        'halal_status' => 'Perlu cek label',
+                        'safety_note' => '',
+                        'side_effects' => [],
+                    ];
+                }
+
+                return [
+                    'name' => (string) ($item['name'] ?? 'Obat tidak disebutkan'),
+                    'function' => (string) ($item['function'] ?? ''),
+                    'dosage' => (string) ($item['dosage'] ?? ''),
+                    'how_to_take' => (string) ($item['how_to_take'] ?? ''),
+                    'duration' => (string) ($item['duration'] ?? ''),
+                    'when_to_take' => (string) ($item['when_to_take'] ?? ''),
+                    'halal_status' => (string) ($item['halal_status'] ?? 'Perlu cek label'),
+                    'safety_note' => (string) ($item['safety_note'] ?? ''),
+                    'side_effects' => array_values(array_filter($item['side_effects'] ?? [])),
+                ];
+            })
+            ->filter(fn ($item) => !empty($item['name']))
+            ->values()
+            ->all();
+    }
+
+    private function flattenMedicineRecommendations(array $items): array
+    {
+        return collect($items)
+            ->map(function (array $item) {
+                return trim(implode(' - ', array_filter([
+                    $item['name'] ?? null,
+                    $item['dosage'] ?? null,
+                    $item['when_to_take'] ?? null,
+                ])));
+            })
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    private function buildWhyItHappened(string $symptoms, array $aiResult): string
+    {
+        $parts = array_filter([
+            trim((string) ($aiResult['ringkasan_keluhan'] ?? '')),
+            trim((string) ($aiResult['alasan_keparahan'] ?? '')),
+        ]);
+
+        if (!empty($parts)) {
+            return implode(' ', $parts);
+        }
+
+        return 'Keluhan yang kamu sampaikan kemungkinan dipengaruhi kombinasi gejala utama, kondisi tubuh saat ini, serta pola makan atau aktivitas harian. Pantau perubahan gejala dan gunakan rekomendasi ini sebagai edukasi awal.';
     }
 }

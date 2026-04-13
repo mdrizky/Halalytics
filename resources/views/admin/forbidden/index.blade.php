@@ -72,7 +72,7 @@
                     @endif
                 </td>
                 <td class="px-6 py-4 text-center">
-                    <span class="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">{{ $ing->code ?? '-' }}</span>
+                    <span class="text-xs font-mono font-bold text-primary">{{ $ing->code ?? '-' }}</span>
                 </td>
                 <td class="px-6 py-4 text-center">
                     @if($ing->type == 'halal_haram')
@@ -80,7 +80,7 @@
                     @elseif($ing->type == 'health_hazard')
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 border border-amber-200 dark:border-amber-800">Health Hazard</span>
                     @else
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border border-blue-200 dark:border-blue-800">Allergen</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">Allergen</span>
                     @endif
                 </td>
                 <td class="px-6 py-4 text-center">
@@ -89,13 +89,13 @@
                     @elseif($ing->risk_level == 'medium')
                     <span class="inline-flex items-center gap-0.5 text-xs font-bold text-amber-500"><span class="material-icons-round text-sm">warning</span> MED</span>
                     @else
-                    <span class="inline-flex items-center gap-0.5 text-xs font-bold text-blue-500"><span class="material-icons-round text-sm">info</span> LOW</span>
+                    <span class="inline-flex items-center gap-0.5 text-xs font-bold text-primary"><span class="material-icons-round text-sm">info</span> LOW</span>
                     @endif
                 </td>
                 <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 max-w-xs truncate">{{ $ing->reason }}</td>
                 <td class="px-6 py-4 text-right">
                     <div class="flex items-center justify-end gap-2">
-                        <button onclick="openEditModal({{ $ing->id }}, '{{ addslashes($ing->name) }}', '{{ $ing->code }}', '{{ $ing->type }}', '{{ $ing->risk_level }}', '{{ addslashes($ing->reason) }}', '{{ addslashes($ing->description) }}', '{{ $ing->aliases ? implode(', ', $ing->aliases) : '' }}')" class="p-1.5 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all">
+                        <button onclick="openEditModal({{ $ing->id }}, '{{ addslashes($ing->name) }}', '{{ $ing->code }}', '{{ $ing->type }}', '{{ $ing->risk_level }}', '{{ addslashes($ing->reason) }}', '{{ addslashes($ing->description) }}', '{{ $ing->aliases ? implode(', ', $ing->aliases) : '' }}')" class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all">
                             <span class="material-icons-round text-lg">edit</span>
                         </button>
                         <form action="{{ route('admin.forbidden.destroy', $ing->id) }}" method="POST" onsubmit="return confirm('Delete this ingredient?')">
@@ -198,7 +198,7 @@
             </div>
             <div class="p-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
                 <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')" class="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">Cancel</button>
-                <button type="submit" class="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm font-bold hover:bg-indigo-600 shadow-lg shadow-indigo-500/25">Save Changes</button>
+                <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary-dark shadow-lg shadow-primary/20">Save Changes</button>
             </div>
         </form>
     </div>

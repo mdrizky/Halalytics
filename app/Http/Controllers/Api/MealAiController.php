@@ -31,6 +31,8 @@ class MealAiController extends Controller
         }
 
         try {
+            $userId = $request->user()?->id_user ?? $request->user()?->id;
+
             // Step 1: Use centralized GeminiService for Visual AI Analysis
             $analysis = $this->geminiService->analyzeMealImage($base64Image);
 
@@ -40,7 +42,7 @@ class MealAiController extends Controller
 
             // Step 2: Log to Database
             $logId = DB::table('meal_logs')->insertGetId([
-                'user_id' => $request->user()->id,
+                'user_id' => $userId,
                 'meal_name' => $analysis['food_name'] ?? 'Unknown Meal',
                 'calories' => $analysis['nutrition']['calories'] ?? 0,
                 'protein' => $analysis['nutrition']['protein'] ?? 0,
@@ -54,7 +56,7 @@ class MealAiController extends Controller
             // Auto-update Activity Log with Risk Detection
             $isRisk = ($analysis['halal_analysis']['status'] === 'haram') || ($analysis['halal_analysis']['status'] === 'syubhat');
             DB::table('activity_logs')->insert([
-                'user_id' => $request->user()->id,
+                'user_id' => $userId,
                 'action' => 'SCAN_MEAL',
                 'description' => "Visual Scan: {$analysis['food_name']} ({$analysis['halal_analysis']['status']}).",
                 'is_risk_detected' => $isRisk,

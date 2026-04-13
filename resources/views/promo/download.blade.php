@@ -8,9 +8,9 @@
 <style>
     .download-hero {
         background:
-            radial-gradient(900px 420px at 100% -10%, rgba(31,79,214,.25), transparent 62%),
-            radial-gradient(800px 420px at -5% 0%, rgba(14,165,107,.25), transparent 60%),
-            linear-gradient(140deg, #06261f 0%, #0d3f33 48%, #173f81 100%);
+            radial-gradient(900px 420px at 100% -10%, rgba(38,166,154,.22), transparent 62%),
+            radial-gradient(800px 420px at -5% 0%, rgba(224,242,241,.24), transparent 60%),
+            linear-gradient(140deg, #0b3a32 0%, #004D40 46%, #13695e 100%);
     }
     .download-card {
         background: #fff;
@@ -21,6 +21,9 @@
         background: linear-gradient(145deg, #0f1420, #0c1018);
         border: 4px solid #1f2738;
         border-radius: 34px;
+        transform-style: preserve-3d;
+        transform: perspective(1400px) rotateY(-14deg) rotateX(8deg);
+        box-shadow: 0 40px 70px rgba(0, 0, 0, .24);
     }
     .device-screen {
         border-radius: 26px;
@@ -122,7 +125,7 @@
         <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900">Butuh Bantuan Sebelum Install?</h2>
         <p class="text-slate-600 mt-3">Cek halaman fitur atau hubungi kami dari form kontak di website.</p>
         <div class="mt-7 flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="{{ route('features') }}" class="bg-slate-900 text-white font-bold px-8 py-3 rounded-xl hover:bg-slate-800">Pelajari Fitur</a>
+            <a href="{{ route('features') }}" class="bg-[#004D40] text-white font-bold px-8 py-3 rounded-xl hover:bg-[#00372e]">Pelajari Fitur</a>
             <a href="{{ route('about') }}" class="border border-slate-300 text-slate-700 font-semibold px-8 py-3 rounded-xl hover:bg-slate-50">Tentang Kami</a>
         </div>
     </div>

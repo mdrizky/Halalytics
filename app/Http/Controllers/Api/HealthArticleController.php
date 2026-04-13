@@ -4,14 +4,21 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\PromoBlog;
+use App\Services\DisplayImageService;
+use App\Services\ExternalHealthArticleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class HealthArticleController extends Controller
 {
+    public function __construct(
+        private readonly ExternalHealthArticleService $externalArticles,
+        private readonly DisplayImageService $displayImageService
+    ) {
+    }
+
     public function index(Request $request): JsonResponse
     {
         $limit = min(max((int) $request->query('limit', 20), 1), 50);
@@ -47,9 +54,17 @@ class HealthArticleController extends Controller
             })
             ->values();
 
-        $externalArticles = collect();
-        if ($includeExternal) {
-            $externalArticles = $this->fetchExternalRss($query)->take($limit);
+        try {
+            $externalArticles = $includeExternal
+                ? $this->externalArticles->search($query, $limit)
+                : collect();
+        } catch (\Throwable $throwable) {
+            Log::warning('HealthArticleController external article fetch failed', [
+                'query' => $query,
+                'limit' => $limit,
+                'error' => $throwable->getMessage(),
+            ]);
+            $externalArticles = collect();
         }
 
         $articles = $localArticles
@@ -59,6 +74,7 @@ class HealthArticleController extends Controller
                 return $time ? strtotime((string) $time) : 0;
             })
             ->take($limit)
+            ->map(fn (array $article) => $this->normalizeArticlePayload($article))
             ->values();
 
         return response()->json([
@@ -77,18 +93,8 @@ class HealthArticleController extends Controller
             })
             ->first();
 
-        if (!$blog) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Artikel tidak ditemukan',
-                'data' => null,
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Detail artikel',
-            'data' => [
+        if ($blog) {
+            $payload = $this->normalizeArticlePayload([
                 'id' => (string) $blog->id,
                 'slug' => (string) $blog->slug,
                 'title' => (string) $blog->title,
@@ -99,70 +105,65 @@ class HealthArticleController extends Controller
                 'published_at' => optional($blog->created_at)->toIso8601String(),
                 'source' => 'halalytics',
                 'source_url' => route('blog.show', $blog->slug),
-            ],
-        ]);
-    }
+                'is_external' => false,
+            ]);
 
-    private function fetchExternalRss(string $query = '')
-    {
-        $feeds = [
-            'https://sehatnegeriku.kemkes.go.id/feed/',
-            'https://rss.detik.com/health',
-        ];
-
-        $result = collect();
-        foreach ($feeds as $feedUrl) {
-            try {
-                $response = Http::timeout(5)->get($feedUrl);
-                if (!$response->successful()) {
-                    continue;
-                }
-
-                $xml = @simplexml_load_string($response->body());
-                if (!$xml || !isset($xml->channel->item)) {
-                    continue;
-                }
-
-                foreach ($xml->channel->item as $item) {
-                    $title = trim((string) ($item->title ?? ''));
-                    $description = trim(strip_tags((string) ($item->description ?? '')));
-                    if ($query !== '') {
-                        $haystack = Str::lower($title . ' ' . $description);
-                        if (!Str::contains($haystack, Str::lower($query))) {
-                            continue;
-                        }
-                    }
-
-                    $link = trim((string) ($item->link ?? ''));
-                    $publishedAtRaw = (string) ($item->pubDate ?? '');
-                    $publishedAt = null;
-                    if ($publishedAtRaw !== '') {
-                        try {
-                            $publishedAt = Carbon::parse($publishedAtRaw)->toIso8601String();
-                        } catch (\Throwable $e) {
-                            $publishedAt = null;
-                        }
-                    }
-
-                    $result->push([
-                        'id' => 'ext_' . md5($link . $title),
-                        'slug' => 'ext_' . md5($link . $title),
-                        'title' => $title,
-                        'excerpt' => Str::limit($description, 180),
-                        'content' => $description,
-                        'category' => 'Berita Kesehatan',
-                        'image_url' => null,
-                        'published_at' => $publishedAt,
-                        'source' => parse_url($feedUrl, PHP_URL_HOST) ?: 'rss',
-                        'source_url' => $link,
-                    ]);
-                }
-            } catch (\Throwable $e) {
-                // Ignore external feed errors; local CMS articles still returned.
-            }
+            return response()->json([
+                'success' => true,
+                'message' => 'Detail artikel',
+                'data' => $payload,
+            ]);
         }
 
-        return $result;
+        try {
+            $externalArticle = $this->externalArticles->findBySlug($slug);
+        } catch (\Throwable $throwable) {
+            Log::warning('HealthArticleController external article detail failed', [
+                'slug' => $slug,
+                'error' => $throwable->getMessage(),
+            ]);
+            $externalArticle = null;
+        }
+        if ($externalArticle) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Detail artikel eksternal',
+                'data' => $this->normalizeArticlePayload($externalArticle),
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Artikel tidak ditemukan',
+            'data' => null,
+        ], 404);
+    }
+
+    private function normalizeArticlePayload(array $article): array
+    {
+        $title = trim((string) data_get($article, 'title', 'Artikel Kesehatan Halalytics'));
+        $excerpt = trim((string) data_get($article, 'excerpt', ''));
+        $content = trim((string) data_get($article, 'content', ''));
+
+        return [
+            'id' => (string) data_get($article, 'id', Str::slug($title)),
+            'slug' => (string) data_get($article, 'slug', Str::slug($title)),
+            'title' => $title,
+            'excerpt' => $excerpt !== '' ? $excerpt : Str::limit(strip_tags($content !== '' ? $content : $title), 170),
+            'content' => $content !== '' ? $content : 'Konten artikel sedang diperbarui. Silakan buka sumber artikel untuk membaca detail lengkap.',
+            'category' => (string) data_get($article, 'category', 'Kesehatan'),
+            'image_url' => $this->displayImageService->resolve(
+                data_get($article, 'image_url'),
+                [
+                    'name' => $title,
+                    'category' => data_get($article, 'category', 'article'),
+                ],
+                'article'
+            ),
+            'published_at' => data_get($article, 'published_at'),
+            'source' => (string) data_get($article, 'source', 'Halalytics'),
+            'source_url' => data_get($article, 'source_url'),
+            'is_external' => (bool) data_get($article, 'is_external', false),
+        ];
     }
 }
-

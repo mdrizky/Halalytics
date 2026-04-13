@@ -11,12 +11,17 @@ use Illuminate\Support\Facades\Auth;
 
 class UserPortalController extends Controller
 {
+    private function currentUserId(): ?int
+    {
+        return Auth::user()?->id_user;
+    }
+
     /**
      * Display user scan history
      */
     public function myScans()
     {
-        $scans = ScanModel::where('user_id', Auth::id())
+        $scans = ScanModel::where('user_id', $this->currentUserId())
             ->orderByDesc('tanggal_scan')
             ->paginate(10);
             
@@ -35,8 +40,8 @@ class UserPortalController extends Controller
                   ->orWhere('barcode', 'like', '%' . $request->search . '%');
         }
         
-        if ($request->has('category')) {
-            $query->where('id_kategori', $request->category);
+        if ($request->filled('category')) {
+            $query->where('kategori_id', $request->category);
         }
         
         $products = $query->paginate(12);
@@ -50,7 +55,7 @@ class UserPortalController extends Controller
      */
     public function reports()
     {
-        $reports = ReportModel::where('user_id', Auth::id())
+        $reports = ReportModel::where('user_id', $this->currentUserId())
             ->orderByDesc('created_at')
             ->paginate(10);
             
@@ -69,7 +74,7 @@ class UserPortalController extends Controller
         ]);
         
         ReportModel::create([
-            'user_id' => Auth::id(),
+            'user_id' => $this->currentUserId(),
             'product_id' => $request->product_id,
             'product_name' => $request->product_name,
             'laporan' => $request->laporan,

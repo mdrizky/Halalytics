@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Services\DisplayImageService;
 
 class OCRProduct extends Model
 {
@@ -47,7 +48,7 @@ class OCRProduct extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id_user');
     }
 
     /**
@@ -55,15 +56,7 @@ class OCRProduct extends Model
      */
     public function approver(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'approved_by');
-    }
-
-    /**
-     * Get the admin who rejected this product
-     */
-    public function rejecter(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'rejected_by');
+        return $this->belongsTo(User::class, 'verified_by', 'id_user');
     }
 
     /**
@@ -79,7 +72,7 @@ class OCRProduct extends Model
      */
     public function scopePending($query)
     {
-        return $query->where('status', 'pending');
+        return $query->whereIn('status', ['pending', 'pending_admin_review']);
     }
 
     /**
@@ -103,7 +96,11 @@ class OCRProduct extends Model
      */
     public function getFrontImageUrlAttribute()
     {
-        return $this->front_image ? asset('storage/' . $this->front_image) : null;
+        return app(DisplayImageService::class)->resolve($this->front_image_path, [
+            'name' => $this->product_name,
+            'brand' => $this->brand,
+            'category' => 'ocr',
+        ], 'product');
     }
 
     /**
@@ -111,7 +108,11 @@ class OCRProduct extends Model
      */
     public function getBackImageUrlAttribute()
     {
-        return $this->back_image ? asset('storage/' . $this->back_image) : null;
+        return app(DisplayImageService::class)->resolve($this->back_image_path, [
+            'name' => $this->product_name,
+            'brand' => $this->brand,
+            'category' => 'ocr',
+        ], 'product');
     }
 
     /**
@@ -119,7 +120,7 @@ class OCRProduct extends Model
      */
     public function isPending(): bool
     {
-        return $this->status === 'pending';
+        return in_array($this->status, ['pending', 'pending_admin_review'], true);
     }
 
     /**
@@ -156,12 +157,11 @@ class OCRProduct extends Model
      */
     public function getProcessingStepLabel(): string
     {
-        return match($this->processing_step) {
-            'front' => 'Front Image',
-            'back' => 'Back Image',
-            'processing' => 'Processing',
-            'complete' => 'Complete',
-            default => 'Unknown'
+        return match (true) {
+            filled($this->front_image_path) && filled($this->back_image_path) => 'Lengkap',
+            filled($this->front_image_path) => 'Menunggu gambar belakang',
+            filled($this->back_image_path) => 'Perlu gambar depan',
+            default => 'Belum lengkap',
         };
     }
 }

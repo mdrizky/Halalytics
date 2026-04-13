@@ -49,6 +49,8 @@ return [
 
     'google' => [
         'places_key' => env('GOOGLE_PLACES_API_KEY'),
+        'custom_search_key' => env('GOOGLE_CUSTOM_SEARCH_API_KEY'),
+        'custom_search_engine_id' => env('GOOGLE_CUSTOM_SEARCH_ENGINE_ID'),
     ],
 
     'midtrans' => [
