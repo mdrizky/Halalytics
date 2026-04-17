@@ -105,12 +105,13 @@
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                     <td class="px-5 py-4 flex items-center gap-3">
                         <div class="w-10 h-10 rounded-lg overflow-hidden bg-primary/10 text-primary border border-slate-100 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
-                            @if($item->image_url)
-                                <img src="{{ $item->image_url }}" class="w-full h-full object-cover" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                <span class="material-icons-round hidden">face_retouching_natural</span>
-                            @else
-                                <span class="material-icons-round">face_retouching_natural</span>
-                            @endif
+                            @php
+                                $imgSrc = $item->image_url;
+                                if (!$imgSrc || str_contains($imgSrc, 'placeholder.svg')) {
+                                    $imgSrc = 'https://images.unsplash.com/photo-1596462502278-27bf85033e5a?q=80&w=150'; // Default Cosmetic
+                                }
+                            @endphp
+                            <img src="{{ $imgSrc }}" class="w-full h-full object-cover" alt="" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name='+encodeURIComponent('{{ $item->nama_produk }}')+'&background=random';">
                         </div>
                         <div>
                             <div class="text-sm font-bold text-slate-800 dark:text-white line-clamp-1" title="{{ $item->nama_produk }}">{{ Str::limit($item->nama_produk, 35) }}</div>

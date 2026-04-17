@@ -107,8 +107,13 @@
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                     <td class="px-5 py-4 flex items-center gap-3">
                         <div class="w-12 h-12 rounded-2xl overflow-hidden bg-[#E0F2F1] border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
-                            <img src="{{ $med->image_url }}" alt="{{ $med->name }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <span class="material-icons-round hidden text-[#004D40]">medication</span>
+                            @php
+                                $imgSrc = $med->image_url;
+                                if (!$imgSrc || str_contains($imgSrc, 'placeholder.svg')) {
+                                    $imgSrc = 'https://images.unsplash.com/photo-1584308666744-24d5e478ac5c?q=80&w=150'; // Default Medicine
+                                }
+                            @endphp
+                            <img src="{{ $imgSrc }}" alt="{{ $med->name }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name='+encodeURIComponent('{{ $med->name }}')+'&background=random';">
                         </div>
                         <div>
                             <div class="text-sm font-bold text-slate-800 dark:text-white line-clamp-1" title="{{ $med->name }}">{{ Str::limit($med->name, 40) }}</div>

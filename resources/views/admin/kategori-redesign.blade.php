@@ -89,9 +89,21 @@
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
+                            @php
+                                $catImages = [
+                                    'Obat' => 'https://images.unsplash.com/photo-1584308666744-24d5e478ac5c?q=80&w=200',
+                                    'Kosmetik' => 'https://images.unsplash.com/photo-1596462502278-27bf85033e5a?q=80&w=200',
+                                    'Pangan Olahan' => 'https://images.unsplash.com/photo-1606859191214-25806e8e2423?q=80&w=200',
+                                    'Suplemen' => 'https://images.unsplash.com/photo-1550508003-8833cb9137d2?q=80&w=200',
+                                ];
+                                $defaultImg = 'https://images.unsplash.com/photo-1563240619-44ec0047592c?q=80&w=200';
+                                $imgSrc = $kat->thumbnail_url;
+                                if (!$imgSrc || str_contains($imgSrc, 'placeholder')) {
+                                    $imgSrc = $catImages[$kat->nama_kategori] ?? $defaultImg;
+                                }
+                            @endphp
                             <div class="h-12 w-12 rounded-2xl overflow-hidden bg-primary/10 flex items-center justify-center text-primary font-bold text-lg border border-slate-200 dark:border-slate-700">
-                                <img src="{{ $kat->thumbnail_url }}" alt="{{ $kat->nama_kategori }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <span class="hidden">{{ strtoupper(substr($kat->nama_kategori, 0, 1)) }}</span>
+                                <img src="{{ $imgSrc }}" alt="{{ $kat->nama_kategori }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name='+encodeURIComponent('{{ $kat->nama_kategori }}')+'&background=random';">
                             </div>
                             <span class="text-sm font-bold text-slate-900 dark:text-white">{{ $kat->nama_kategori }}</span>
                         </div>

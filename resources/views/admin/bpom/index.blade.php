@@ -86,12 +86,13 @@
                     <td class="px-5 py-4">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-lg bg-primary/10 flex-shrink-0 overflow-hidden flex items-center justify-center border border-slate-100 dark:border-slate-700">
-                                @if($data->image_url)
-                                    <img src="{{ $data->image_url }}" alt="{{ $data->nama_produk }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <span class="material-icons-round text-primary text-xl" style="display:none">inventory_2</span>
-                                @else
-                                    <span class="material-icons-round text-primary text-xl">inventory_2</span>
-                                @endif
+                                @php
+                                    $imgSrc = $data->image_url;
+                                    if (!$imgSrc || str_contains($imgSrc, 'placeholder.svg')) {
+                                        $imgSrc = 'https://images.unsplash.com/photo-1628771065518-0d82f1938462?q=80&w=150'; // Default BPOM/Product image
+                                    }
+                                @endphp
+                                <img src="{{ $imgSrc }}" alt="{{ $data->nama_produk }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name='+encodeURIComponent('{{ $data->nama_produk }}')+'&background=random';">
                             </div>
                             <div>
                                 <div class="text-sm font-bold text-slate-800 dark:text-white">{{ Str::limit($data->nama_produk, 40) }}</div>

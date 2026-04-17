@@ -45,11 +45,8 @@ class ExternalHealthArticleService
                 ->sortByDesc(fn (array $article) => strtotime((string) ($article['published_at'] ?? '')) ?: 0)
                 ->take($limit)
                 ->map(function (array $article, $index) {
-                    // Only hydrate the first 4 articles synchronously to prevent timeouts
-                    if ($index < 4) {
-                        return $this->hydrateArticleImage($article);
-                    }
-                    return $article;
+                    // Hydrate all articles. Relies on caching to avoid timeouts on subsequent calls.
+                    return $this->hydrateArticleImage($article);
                 })
                 ->values();
 
