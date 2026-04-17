@@ -31,8 +31,15 @@
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                 <td class="px-6 py-4 text-sm text-slate-400">{{ $product->id }}</td>
                 <td class="px-6 py-4">
-                    <div class="font-bold text-slate-800 dark:text-white text-sm">{{ $product->product_name }}</div>
-                    <div class="text-xs text-slate-500">{{ $product->brand ?? '-' }}</div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                            <img src="{{ $product->image_url }}" alt="{{ $product->product_name }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
+                        </div>
+                        <div>
+                            <div class="font-bold text-slate-800 dark:text-white text-sm">{{ $product->product_name }}</div>
+                            <div class="text-xs text-slate-500">{{ $product->brand ?? '-' }}</div>
+                        </div>
+                    </div>
                 </td>
                 <td class="px-6 py-4">
                     <span class="text-xs font-mono text-slate-600 dark:text-slate-400">{{ $product->product_barcode ?? '-' }}</span>

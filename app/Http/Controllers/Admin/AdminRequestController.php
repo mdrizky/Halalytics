@@ -9,6 +9,7 @@ use App\Models\BpomData;
 use App\Models\Notification;
 use App\Models\ProductModel;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class AdminRequestController extends Controller
 {
@@ -34,6 +35,8 @@ class AdminRequestController extends Controller
             return redirect()->back()->with('error', 'Request already processed');
         }
 
+        $adminId = Auth::user()?->id_user;
+
         // Create BPOM Data entry
         BpomData::create([
             'nama_produk' => $request->product_name,
@@ -43,8 +46,9 @@ class AdminRequestController extends Controller
             'barcode' => $request->barcode,
             'submitted_by' => $request->user_id,
             'verification_status' => 'verified',
-            'verified_by' => auth()->id(),
+            'verified_by' => (int) $adminId ?: null,
             'verified_at' => now(),
+            'is_verified_manually' => true,
             'sumber_data' => 'user_contribution'
         ]);
 

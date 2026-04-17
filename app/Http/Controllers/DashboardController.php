@@ -441,7 +441,7 @@ class DashboardController extends Controller
         
         // Add trend info
         return $topProducts->map(function ($product) use ($lastWeekStart, $lastWeekEnd) {
-            $lastWeekCount = ScanModel::where('nama_produk', $product->nama_produk)
+            $lastWeekCount = ScanModel::where('nama_produk', $product->nama_product)
                 ->whereBetween('tanggal_scan', [$lastWeekStart, $lastWeekEnd])
                 ->count();
             

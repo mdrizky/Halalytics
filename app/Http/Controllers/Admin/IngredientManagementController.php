@@ -54,8 +54,8 @@ class IngredientManagementController extends Controller
             ['name' => 'Lard', 'e_number' => null, 'halal_status' => 'haram', 'health_risk' => 'dangerous', 'description' => 'Lemak babi, tidak halal.'],
             ['name' => 'Carrageenan', 'e_number' => 'E407', 'halal_status' => 'halal', 'health_risk' => 'safe', 'description' => 'Pengental dari rumput laut.'],
             ['name' => 'Tartrazine', 'e_number' => 'E102', 'halal_status' => 'halal', 'health_risk' => 'low_risk', 'description' => 'Pewarna sintetis kuning.'],
-            ['name' => 'Rennet', 'e_number' => null, 'halal_status' => 'syubhat', 'health_risk' => 'low_risk', 'description' => 'Enzim untuk keju, sumber hewani perlu dicek.'],
-            ['name' => 'Titanium Dioxide', 'e_number' => 'E171', 'halal_status' => 'halal', 'health_risk' => 'high_risk', 'description' => 'Pewarna putih, dibatasi di beberapa negara.'],
+            ['name' => 'Rennet', 'e_number' => null, 'halal_status' => 'syubhat', 'health_risk' => 'low_risk', 'description' => 'Enzim untuk keju, sumber hewani perlu dicek.', 'image_url' => 'https://images.unsplash.com/photo-1552767059-ce182ead6c1b?auto=format&fit=crop&w=300'],
+            ['name' => 'Titanium Dioxide', 'e_number' => 'E171', 'halal_status' => 'halal', 'health_risk' => 'high_risk', 'description' => 'Pewarna putih, dibatasi di beberapa negara.', 'image_url' => 'https://images.unsplash.com/photo-1542310503-455b8046808a?auto=format&fit=crop&w=300'],
         ];
 
         foreach ($items as $item) {
@@ -85,7 +85,8 @@ class IngredientManagementController extends Controller
             'description' => 'nullable|string',
             'sources' => 'nullable|string',
             'notes' => 'nullable|string',
-            'active' => 'boolean'
+            'active' => 'boolean',
+            'image_url' => 'nullable|string'
         ]);
 
         Ingredient::create($validated);
@@ -111,7 +112,8 @@ class IngredientManagementController extends Controller
             'description' => 'nullable|string',
             'sources' => 'nullable|string',
             'notes' => 'nullable|string',
-            'active' => 'boolean'
+            'active' => 'boolean',
+            'image_url' => 'nullable|string'
         ]);
 
         $ingredient->update($validated);

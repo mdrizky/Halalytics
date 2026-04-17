@@ -3,124 +3,184 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\KategoriModel;
-use App\Models\ProductModel;
-use App\Models\User;
-use App\Models\ScanHistory;
 use App\Models\Banner;
+use App\Models\ProductModel;
+use App\Models\HalalProduct;
 use App\Models\Notification;
+use App\Models\KategoriModel;
+use App\Models\User;
 use App\Models\ScanModel;
-use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class DemoDataSeeder extends Seeder
 {
     public function run()
     {
-        // 1. CLEAR TABLES
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        KategoriModel::truncate();
-        ProductModel::truncate();
-        User::truncate();
-        ScanHistory::truncate();
-        ScanModel::truncate();
-        Banner::truncate();
-        Notification::truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        // 1. Categories
+        $categories = [
+            ['nama_kategori' => 'Makanan', 'description' => 'Produk makanan kemasan'],
+            ['nama_kategori' => 'Minuman', 'description' => 'Produk minuman kemasan'],
+            ['nama_kategori' => 'Obat', 'description' => 'Produk kesehatan dan obat-obatan'],
+            ['nama_kategori' => 'Kosmetik', 'description' => 'Produk kecantikan dan perawatan diri'],
+        ];
 
-        // 2. CREATE CATEGORIES
-        $cat1 = KategoriModel::create(['nama_kategori' => 'Minuman', 'description' => 'Aneka minuman kemasan']);
-        $cat2 = KategoriModel::create(['nama_kategori' => 'Makanan Ringan', 'description' => 'Camilan dan snack']);
-        $cat3 = KategoriModel::create(['nama_kategori' => 'Bumbu Dapur', 'description' => 'Bumbu masak dan saus']);
-        $cat4 = KategoriModel::create(['nama_kategori' => 'Kesehatan', 'description' => 'Obat-obatan dan suplemen']);
+        foreach ($categories as $cat) {
+            KategoriModel::firstOrCreate(['nama_kategori' => $cat['nama_kategori']], $cat);
+        }
 
-        // 3. CREATE USERS
-        $admin = User::create([
-            'username' => 'admin',
-            'full_name' => 'Super Admin',
-            'email' => 'admin@halalytics.com',
-            'password' => Hash::make('password'),
-            'role' => 'admin',
-            'phone' => '08123456789'
-        ]);
+        $foodId = KategoriModel::where('nama_kategori', 'Makanan')->first()->id_kategori;
+        $drinkId = KategoriModel::where('nama_kategori', 'Minuman')->first()->id_kategori;
 
-        $user = User::create([
-            'username' => 'daffa',
-            'full_name' => 'Daffa Rizky',
-            'email' => 'daffa@example.com',
-            'password' => Hash::make('password'),
-            'role' => 'user',
-            'phone' => '08987654321',
-            'blood_type' => 'O',
-            'allergy' => 'None',
-            'medical_history' => 'Healthy'
-        ]);
+        // 2. Banners (Campaigns)
+        $banners = [
+            [
+                'title' => 'Promo Ramadan Berkah',
+                'description' => 'Dapatkan info produk halal terlengkap selama bulan suci.',
+                'image' => 'images/promo/ss-home-1.jpg',
+                'is_active' => true,
+                'position' => 1
+            ],
+            [
+                'title' => 'Cek BPOM Kini Lebih Mudah',
+                'description' => 'Scan barcode dan langsung dapatkan status keamanan BPOM.',
+                'image' => 'images/promo/ss-home-2.jpg',
+                'is_active' => true,
+                'position' => 2
+            ],
+            [
+                'title' => 'Forum Komunitas Halal',
+                'description' => 'Tanyakan keaslian produk kepada ribuan kontributor lainnya.',
+                'image' => 'images/promo/ss-home-3.jpg',
+                'is_active' => true,
+                'position' => 3
+            ],
+        ];
 
-        // 4. CREATE PRODUCTS
-        $p1 = ProductModel::create([
-            'nama_product' => 'Indomie Goreng Special',
-            'barcode' => '089686010384',
-            'komposisi' => json_encode(['Tepung terigu', 'Minyak nabati', 'Garam', 'Gula', 'Bawang putih', 'Bawang merah']),
-            'status' => 'halal',
-            'active' => true,
-            'source' => 'local',
-            'kategori_id' => $cat2->id_kategori,
-            'image' => 'https://www.indomie.com/uploads/product/indomie-mi-goreng-special_detail_095627771.png',
-            'verification_status' => 'verified',
-            'sugar_g' => 5,
-            'calories' => 380,
-            'halal_certificate' => 'ID00110000000010121'
-        ]);
+        foreach ($banners as $banner) {
+            Banner::updateOrCreate(['title' => $banner['title']], $banner);
+        }
 
-        $p2 = ProductModel::create([
-            'nama_product' => 'Pocari Sweat 500ml',
-            'barcode' => '4987035131411',
-            'komposisi' => json_encode(['Air', 'Gula', 'Pengatur keasaman', 'Natrium klorida', 'Kalium klorida']),
-            'status' => 'halal',
-            'active' => true,
-            'source' => 'local',
-            'kategori_id' => $cat1->id_kategori,
-            'image' => 'https://pocarisweat.id/assets/img/product/product-500ml.png',
-            'verification_status' => 'verified',
-            'sugar_g' => 25,
-            'calories' => 120,
-            'halal_certificate' => 'ID00110000000020121'
-        ]);
+        // 3. Premium Products with Generated Images
+        $premiumProducts = [
+            [
+                'nama_product' => 'Kecap ABC Manis',
+                'barcode' => '8991004000004',
+                'komposisi' => 'Gula, air, kacang kedelai, gandum, garam.',
+                'status' => 'halal',
+                'image' => 'images/products/kecap_abc.png',
+                'kategori_id' => $foodId,
+                'source' => 'local',
+                'active' => true,
+                'verification_status' => 'verified'
+            ],
+            [
+                'nama_product' => 'Sari Gandum Sandwich',
+                'barcode' => '8996001300077',
+                'komposisi' => 'Tepung gandum, gula, minyak nabati, susu bubuk.',
+                'status' => 'halal',
+                'image' => 'images/products/sari_gandum.png',
+                'kategori_id' => $foodId,
+                'source' => 'local',
+                'active' => true,
+                'verification_status' => 'verified'
+            ],
+            [
+                'nama_product' => 'SilverQueen Cashew',
+                'barcode' => '8991001001851',
+                'komposisi' => 'Gula, kacang mete, lemak kakao, susu bubuk.',
+                'status' => 'halal',
+                'image' => 'images/products/silverqueen.png',
+                'kategori_id' => $foodId,
+                'source' => 'local',
+                'active' => true,
+                'verification_status' => 'verified'
+            ],
+            [
+                'nama_product' => 'Pocari Sweat 500ml',
+                'barcode' => '0498703513141',
+                'komposisi' => 'Air, gula, pengatur keasaman, natrium klorida.',
+                'status' => 'halal',
+                'image' => 'https://images.openfoodfacts.org/images/products/049/870/351/3141/front_en.85.400.jpg',
+                'kategori_id' => $drinkId,
+                'source' => 'local',
+                'active' => true,
+                'verification_status' => 'verified'
+            ],
+        ];
 
-        // 5. CREATE BANNERS
-        Banner::create([
-            'title' => 'Ramadhan Sehat with Halalytics',
-            'description' => 'Cek kehalalan takjilmu dengan fitur scan terbaru kami!',
-            'image' => 'https://img.freepik.com/free-vector/ramadan-kareem-sale-banner-template_23-2148873752.jpg',
-            'position' => 1,
-            'is_active' => true
-        ]);
+        foreach ($premiumProducts as $p) {
+            ProductModel::updateOrCreate(['barcode' => $p['barcode']], $p);
+        }
 
-        // 6. CREATE SCAN HISTORIES & SCAN MODELS (Dual Sync)
-        $h1 = ScanHistory::create([
-            'user_id' => $user->id_user,
-            'scannable_type' => 'App\Models\ProductModel',
-            'scannable_id' => $p1->id_product,
-            'product_name' => $p1->nama_product,
-            'product_image' => $p1->image,
-            'barcode' => $p1->barcode,
-            'halal_status' => $p1->status,
-            'scan_method' => 'barcode',
-            'source' => 'local',
-            'created_at' => now()->subHours(2)
-        ]);
+        // 4. Halal Products (Database) 
+        $halalProducts = [
+            [
+                'product_barcode' => '8991004000004',
+                'product_name' => 'Kecap ABC Manis',
+                'brand' => 'ABC',
+                'halal_certificate_number' => 'ID00110000012340122',
+                'halal_status' => 'halal',
+                'certification_body' => 'BPJPH',
+                'certificate_valid_until' => Carbon::now()->addYears(2),
+            ],
+            [
+                'product_barcode' => '8996001300077',
+                'product_name' => 'Sari Gandum Sandwich',
+                'brand' => 'Roma',
+                'halal_certificate_number' => 'ID00210000056780222',
+                'halal_status' => 'halal',
+                'certification_body' => 'MUI',
+                'certificate_valid_until' => Carbon::now()->addYear(),
+            ],
+        ];
 
-        ScanModel::create([
-            'user_id' => $user->id_user,
-            'product_id' => $p1->id_product,
-            'nama_produk' => $p1->nama_product,
-            'barcode' => $p1->barcode,
-            'kategori' => 'Sembako',
-            'status_halal' => 'halal',
-            'status_kesehatan' => 'sehat',
-            'tanggal_scan' => now()->subHours(2),
-        ]);
+        foreach ($halalProducts as $hp) {
+            HalalProduct::updateOrCreate(['product_barcode' => $hp['product_barcode']], $hp);
+        }
 
-        $this->command->info('Demo Data Seeded Successfully with Correct Schema!');
+        // 5. Notifications
+        $admin = User::where('role', 'admin')->first();
+        if ($admin) {
+            $notifications = [
+                [
+                    'user_id' => $admin->id_user,
+                    'title' => 'System Update Complete',
+                    'message' => 'Dashboard analytics have been successfully updated.',
+                    'type' => 'system',
+                    'is_read' => false,
+                    'sent_at' => now(),
+                ],
+                [
+                    'user_id' => $admin->id_user,
+                    'title' => 'New Product Request',
+                    'message' => 'A user has submitted a new product for verification: Indomie Goreng.',
+                    'type' => 'request',
+                    'is_read' => false,
+                    'sent_at' => now()->subHours(2),
+                ],
+            ];
+
+            foreach ($notifications as $n) {
+                Notification::create($n);
+            }
+        }
+
+        // 6. Sample Scans for Charts
+        $user = User::where('role', 'user')->first() ?? $admin;
+        if ($user) {
+            for ($i = 0; $i < 20; $i++) {
+                $p = $premiumProducts[array_rand($premiumProducts)];
+                ScanModel::create([
+                    'user_id' => $user->id_user,
+                    'product_id' => ProductModel::where('barcode', $p['barcode'])->first()->id_product,
+                    'nama_produk' => $p['nama_product'],
+                    'barcode' => $p['barcode'],
+                    'status_halal' => $p['status'],
+                    'status_kesehatan' => 'sehat', // Default status health
+                    'tanggal_scan' => Carbon::now()->subDays(rand(0, 30)),
+                ]);
+            }
+        }
     }
 }

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-label="Banner placeholder">
+  <rect width="640" height="360" rx="24" fill="#E0F2F1"/>
+  <rect x="48" y="60" width="544" height="60" rx="12" fill="#B2DFDB"/>
+  <rect x="48" y="140" width="360" height="32" rx="8" fill="#80CBC4"/>
+  <rect x="48" y="196" width="420" height="24" rx="8" fill="#A7FFEB"/>
+  <rect x="48" y="252" width="180" height="40" rx="20" fill="#26A69A"/>
+  <text x="320" y="330" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#004D40">PROMO BANNER</text>
+</svg>

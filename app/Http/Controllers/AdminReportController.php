@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\ReportModel;
 use App\Services\GeminiService;
 use Carbon\Carbon;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdminReportController extends Controller
 {
@@ -109,7 +109,7 @@ class AdminReportController extends Controller
             'reports' => $reports
         ];
           
-        $pdf = PDF::loadView('admin.reports.report_pdf', $data);
+        $pdf = Pdf::loadView('admin.reports.report_pdf', $data);
     
         return $pdf->download('product_reports_' . date('Y-m-d') . '.pdf');
     }
@@ -166,10 +166,14 @@ class AdminReportController extends Controller
         }
         
         $report->save();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Laporan pemalsuan berhasil diproses.'
-        ]);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Laporan pemalsuan berhasil diproses.'
+            ]);
+        }
+
+        return redirect()->route('admin.report.index')->with('success', 'Laporan pemalsuan berhasil diproses.');
     }
 }

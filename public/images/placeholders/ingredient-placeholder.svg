@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="Ingredient placeholder">
+  <rect width="240" height="240" rx="24" fill="#E8F5E9"/>
+  <circle cx="120" cy="92" r="40" fill="#A5D6A7"/>
+  <rect x="58" y="140" width="124" height="18" rx="9" fill="#81C784"/>
+  <rect x="78" y="168" width="84" height="12" rx="6" fill="#A5D6A7"/>
+  <text x="120" y="220" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#2E7D32">INGREDIENT</text>
+</svg>

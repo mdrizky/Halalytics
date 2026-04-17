@@ -12,7 +12,7 @@ class AdminKategoriController extends Controller
         $kategori = KategoriModel::withCount('products')
             ->with([
                 'products' => fn ($query) => $query
-                    ->select('id_product', 'kategori_id', 'image', 'nama_produk')
+                    ->select('id_product', 'kategori_id', 'image', 'nama_product')
                     ->whereNotNull('image')
                     ->latest('id_product')
                     ->limit(1),

@@ -55,7 +55,8 @@ class UserPortalController extends Controller
      */
     public function reports()
     {
-        $reports = ReportModel::where('user_id', $this->currentUserId())
+        $reports = ReportModel::with('product')
+            ->where('user_id', $this->currentUserId())
             ->orderByDesc('created_at')
             ->paginate(10);
             
@@ -70,13 +71,32 @@ class UserPortalController extends Controller
         $request->validate([
             'product_name' => 'required|string|max:255',
             'laporan' => 'required|string',
-            'product_id' => 'nullable|exists:products,id_product'
+            'product_id' => 'nullable|exists:products,id_product',
+            'reason' => 'nullable|string|max:100'
         ]);
-        
+
+        $productId = $request->product_id;
+        if (!$productId) {
+            $product = ProductModel::where('nama_product', $request->product_name)->first()
+                ?: ProductModel::where('nama_product', 'like', '%' . $request->product_name . '%')->first();
+
+            if (!$product) {
+                $product = ProductModel::create([
+                    'nama_product' => $request->product_name,
+                    'status' => 'unknown',
+                    'active' => false,
+                    'source' => 'user_report',
+                    'verification_status' => 'pending',
+                ]);
+            }
+
+            $productId = $product->id_product;
+        }
+
         ReportModel::create([
             'user_id' => $this->currentUserId(),
-            'product_id' => $request->product_id,
-            'product_name' => $request->product_name,
+            'product_id' => $productId,
+            'reason' => $request->input('reason', 'other'),
             'laporan' => $request->laporan,
             'status' => 'pending'
         ]);

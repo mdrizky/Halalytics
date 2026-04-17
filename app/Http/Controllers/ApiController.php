@@ -1,11 +1,13 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Services\DisplayImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\ProductModel;
 use App\Models\KategoriModel;
@@ -18,73 +20,122 @@ use Illuminate\Support\Facades\DB;
 class ApiController extends Controller
 {
     protected $universalService;
+    protected $displayImageService;
 
-    public function __construct(\App\Services\UniversalProductService $universalService)
+    public function __construct(
+        \App\Services\UniversalProductService $universalService,
+        DisplayImageService $displayImageService
+    )
     {
         $this->universalService = $universalService;
+        $this->displayImageService = $displayImageService;
     }
 
     // ... (rest of methods) ...
 
     public function scanProductByBarcode($barcode)
     {
-        // Use Universal Service
-        $result = $this->universalService->findProduct($barcode);
+        try {
+            $result = $this->universalService->findProduct($barcode);
 
-        if ($result['found']) {
-            $productData = $result['standardized'];
-            $source = $result['source'];
+            if (!empty($result['found'])) {
+                $productData = $result['standardized'] ?? [];
+                $source = $result['source'] ?? 'unknown';
+                $model = $result['data'] ?? null;
 
-            // Determine ID
-            $model = $result['data'];
-            $productId = 0;
-            if ($model instanceof \App\Models\BpomData) {
-                $productId = $model->id;
-            } elseif ($model instanceof \App\Models\ProductModel) {
-                $productId = $model->id_product;
-            }
-
-            // Construct Halal Info
-            $halalInfo = [
-                'halal_status' => $productData['status_halal'] ?? 'unknown',
-                'halal_certificate_number' => $productData['halal_certificate'],
-                'certification_body' => null,
-                'certificate_valid_until' => null,
-                'last_checked_at' => now(), // Mock
-                'source' => $source
-            ];
-
-            return response()->json([
-                'success' => true, // Standard format
-                'response_code' => 200, // Legacy support
-                'message' => 'Produk ditemukan',
-                'data' => [
-                    'product' => [
-                        'id' => $productId,
-                        'barcode' => $productData['barcode'],
-                        'name' => $productData['name'],
-                        'brand' => $productData['brand'],
-                        'image' => $productData['image_url'],
-                        'image_front_url' => $productData['image_url'],
-                        'ingredients_text' => $productData['ingredients_text'],
-                        'category' => $productData['category'],
-                        'nutriscore' => $productData['nutriscore'] ?? null,
-                        'additives' => $productData['additives'] ?? [],
-                        'allergens' => $productData['allergens'] ?? []
+                return response()->json([
+                    'success' => true,
+                    'response_code' => 200,
+                    'message' => 'Produk ditemukan',
+                    'data' => [
+                        'product' => $this->normalizeLegacyProductPayload($productData, $model),
+                        'halal_info' => $this->normalizeLegacyHalalInfo($productData, $source),
+                        'halal_source' => $source,
                     ],
-                    'halal_info' => $halalInfo,
-                    'halal_source' => $source
-                ],
-                // Legacy content for older apps (optional, but good for safety)
-                'content' => $result['data'] 
-            ], 200);
+                    'content' => $result['data'] ?? null,
+                    'meta' => [
+                        'fallback_mode' => false,
+                    ],
+                ], 200);
+            }
+        } catch (\Throwable $throwable) {
+            Log::warning('ApiController scanProductByBarcode fallback triggered', [
+                'barcode' => $barcode,
+                'error' => $throwable->getMessage(),
+            ]);
         }
 
         return response()->json([
-            'success' => false,
-            'response_code' => 404,
-            'message' => 'Produk tidak ditemukan'
-        ], 404);
+            'success' => true,
+            'response_code' => 200,
+            'message' => 'Produk belum ditemukan. Menampilkan data placeholder agar aplikasi tetap stabil.',
+            'data' => [
+                'product' => $this->normalizeLegacyProductPayload([
+                    'barcode' => $barcode,
+                    'name' => 'Produk belum ditemukan',
+                    'brand' => 'Merek belum tersedia',
+                    'ingredients_text' => 'Komposisi belum tersedia',
+                    'category' => 'Produk Umum',
+                    'status_halal' => 'unknown',
+                ]),
+                'halal_info' => $this->normalizeLegacyHalalInfo([
+                    'status_halal' => 'unknown',
+                ], 'fallback'),
+                'halal_source' => 'fallback',
+            ],
+            'content' => null,
+            'meta' => [
+                'fallback_mode' => true,
+            ],
+        ], 200);
+    }
+
+    private function normalizeLegacyProductPayload(array $productData, $model = null): array
+    {
+        $productId = 0;
+
+        if ($model instanceof \App\Models\BpomData) {
+            $productId = $model->id;
+        } elseif ($model instanceof \App\Models\ProductModel) {
+            $productId = $model->id_product;
+        }
+
+        $image = $this->displayImageService->resolve(
+            data_get($productData, 'image_url'),
+            [
+                'name' => data_get($productData, 'name'),
+                'brand' => data_get($productData, 'brand'),
+                'barcode' => data_get($productData, 'barcode'),
+                'category' => data_get($productData, 'category', 'product'),
+            ],
+            'product'
+        );
+
+        return [
+            'id' => $productId,
+            'barcode' => data_get($productData, 'barcode'),
+            'name' => data_get($productData, 'name', 'Produk tanpa nama'),
+            'brand' => data_get($productData, 'brand', 'Merek belum tersedia'),
+            'image' => $image,
+            'image_front_url' => $image,
+            'ingredients_text' => data_get($productData, 'ingredients_text', 'Komposisi belum tersedia'),
+            'category' => data_get($productData, 'category', 'Produk Umum'),
+            'nutriscore' => data_get($productData, 'nutriscore'),
+            'additives' => data_get($productData, 'additives', []),
+            'allergens' => data_get($productData, 'allergens', []),
+        ];
+    }
+
+    private function normalizeLegacyHalalInfo(array $productData, string $source): array
+    {
+        return [
+            'halal_status' => data_get($productData, 'status_halal', 'unknown'),
+            'halal_certificate_number' => data_get($productData, 'halal_certificate'),
+            'certification_body' => data_get($productData, 'certification_body'),
+            'certificate_valid_until' => data_get($productData, 'certificate_valid_until'),
+            'last_checked_at' => now(),
+            'source' => $source,
+        ];
     }
 
     // ==========================================================

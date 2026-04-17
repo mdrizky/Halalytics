@@ -105,9 +105,14 @@
                     @forelse($ingredients as $ingredient)
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
                         <td class="px-6 py-4">
-                            <div class="flex flex-col">
-                                <span class="text-sm font-bold text-slate-800 dark:text-white">{{ $ingredient->name }}</span>
-                                <span class="text-xs text-slate-400 font-medium">{{ $ingredient->e_number ?: 'Tanpa E-Number' }}</span>
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                    <img src="{{ $ingredient->image_url }}" alt="{{ $ingredient->name }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/ingredient-placeholder.svg') }}'">
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold text-slate-800 dark:text-white">{{ $ingredient->name }}</span>
+                                    <span class="text-xs text-slate-400 font-medium">{{ $ingredient->e_number ?: 'Tanpa E-Number' }}</span>
+                                </div>
                             </div>
                         </td>
                         <td class="px-6 py-4">

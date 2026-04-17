@@ -66,7 +66,17 @@
                                 @forelse($reports as $index => $report)
                                 <tr>
                                     <td class="ps-4">{{ $reports->firstItem() + $index }}</td>
-                                    <td class="font-weight-bold text-success">{{ $report->product_name }}</td>
+                                    <td class="font-weight-bold text-success">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div style="width:36px;height:36px;border-radius:10px;overflow:hidden;background:#1f2937;display:flex;align-items:center;justify-content:center;">
+                                                <img src="{{ $report->product?->image ?? asset('images/placeholders/product-placeholder.svg') }}" alt="Produk" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
+                                            </div>
+                                            <div>
+                                                <div>{{ $report->product?->nama_product ?? 'Produk tidak tersedia' }}</div>
+                                                <div class="text-muted small">ID: {{ $report->product_id }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
                                     <td style="max-width: 250px;"><div class="truncate">{{ $report->laporan }}</div></td>
                                     <td>
                                         @php

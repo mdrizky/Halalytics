@@ -18,6 +18,10 @@ class HalalProductController extends Controller
 
     public function index()
     {
+        if (HalalProduct::count() === 0) {
+            $this->seedFallbackHalalProducts();
+        }
+
         $products = HalalProduct::latest()->paginate(20);
         return view('admin.halal-products.index', compact('products'));
     }
@@ -117,5 +121,29 @@ class HalalProductController extends Controller
             'message' => 'Product updated successfully',
             'data' => $product
         ]);
+    }
+
+    private function seedFallbackHalalProducts(): void
+    {
+        $items = [
+            ['product_name' => 'Indomie Goreng Original', 'brand' => 'Indomie', 'product_barcode' => '089686010384', 'halal_status' => 'halal', 'certification_body' => 'MUI'],
+            ['product_name' => 'Pocari Sweat 500ml', 'brand' => 'Pocari', 'product_barcode' => '4987035131411', 'halal_status' => 'halal', 'certification_body' => 'MUI'],
+            ['product_name' => 'Teh Botol Sosro', 'brand' => 'Sosro', 'product_barcode' => '8991003000003', 'halal_status' => 'halal', 'certification_body' => 'MUI'],
+            ['product_name' => 'Bango Kecap Manis', 'brand' => 'Bango', 'product_barcode' => '8991004000004', 'halal_status' => 'halal', 'certification_body' => 'MUI'],
+            ['product_name' => 'Samyang Buldak Hot Chicken', 'brand' => 'Samyang', 'product_barcode' => '8801073311534', 'halal_status' => 'syubhat', 'certification_body' => 'Import'],
+        ];
+
+        foreach ($items as $item) {
+            HalalProduct::firstOrCreate(
+                ['product_barcode' => $item['product_barcode']],
+                [
+                    'product_name' => $item['product_name'],
+                    'brand' => $item['brand'],
+                    'halal_status' => $item['halal_status'],
+                    'certification_body' => $item['certification_body'],
+                    'certificate_valid_until' => now()->addYear(),
+                ]
+            );
+        }
     }
 }

@@ -140,13 +140,15 @@
                             <div class="h-10 w-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
                                 @php
                                     $productImage = $scan->product->image ?? $scan->product->image_url ?? null;
+                                    if (!$productImage) {
+                                        $productImage = app(\App\Services\DisplayImageService::class)->resolve(null, [
+                                            'name' => $scan->nama_produk,
+                                            'barcode' => $scan->barcode,
+                                            'category' => $scan->kategori ?? null,
+                                        ], 'product');
+                                    }
                                 @endphp
-                                @if($productImage)
-                                    <img src="{{ $productImage }}" alt="Product" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <span class="material-icons-round text-slate-400" style="display:none">fastfood</span>
-                                @else
-                                    <span class="material-icons-round text-slate-400">fastfood</span>
-                                @endif
+                                <img src="{{ $productImage }}" alt="Product" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
                             </div>
                             <div>
                                 <p class="text-sm font-bold text-slate-900 dark:text-white">{{ $scan->nama_produk ?? 'Unknown Product' }}</p>

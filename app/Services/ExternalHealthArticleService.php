@@ -44,7 +44,13 @@ class ExternalHealthArticleService
                 ->unique('source_url')
                 ->sortByDesc(fn (array $article) => strtotime((string) ($article['published_at'] ?? '')) ?: 0)
                 ->take($limit)
-                ->map(fn (array $article) => $this->hydrateArticleImage($article))
+                ->map(function (array $article, $index) {
+                    // Only hydrate the first 4 articles synchronously to prevent timeouts
+                    if ($index < 4) {
+                        return $this->hydrateArticleImage($article);
+                    }
+                    return $article;
+                })
                 ->values();
 
             if ($articles->count() < $limit && $query !== '') {

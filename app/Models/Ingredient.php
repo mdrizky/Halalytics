@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Services\DisplayImageService;
 
 class Ingredient extends Model
 {
@@ -21,7 +22,8 @@ class Ingredient extends Model
         'description',
         'sources',
         'notes',
-        'active'
+        'active',
+        'image_url'
     ];
 
     protected $casts = [
@@ -42,5 +44,14 @@ class Ingredient extends Model
     public function scopeByStatus($query, $status)
     {
         return $query->where('halal_status', $status);
+    }
+
+    public function getImageUrlAttribute(): string
+    {
+        return app(DisplayImageService::class)->resolve($this->attributes['image_url'] ?? null, [
+            'name' => $this->name,
+            'category' => 'ingredient',
+            'e_number' => $this->e_number,
+        ], 'ingredient');
     }
 }
