@@ -11,14 +11,17 @@ class AdminProductController extends Controller
 {
     protected $universalService;
     protected $notificationService;
+    protected $imageService;
 
     public function __construct(
         \App\Services\UniversalProductService $universalService,
-        \App\Services\AdminBroadcastNotificationService $notificationService
+        \App\Services\AdminBroadcastNotificationService $notificationService,
+        \App\Services\ProductImageService $imageService
     )
     {
         $this->universalService = $universalService;
         $this->notificationService = $notificationService;
+        $this->imageService = $imageService;
     }
 
     /**
@@ -183,7 +186,14 @@ class AdminProductController extends Controller
     {
         $product = ProductModel::findOrFail($id);
         $categories = KategoriModel::all();
-        return view('admin.product_edit', compact('product', 'categories'));
+        
+        $imageData = $this->imageService->getImages(
+            productName: $product->nama_product,
+            barcode: $product->barcode,
+            source: $product->source ?? 'local'
+        );
+        
+        return view('admin.product_edit', compact('product', 'categories', 'imageData'));
     }
 
     // update produk

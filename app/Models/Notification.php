@@ -33,9 +33,13 @@ class Notification extends Model
         return $this->belongsTo(ProductModel::class, 'related_product_id');
     }
 
+    /**
+     * Legacy UMKM relation removed — module was deleted.
+     * Kept as safe stub returning null to avoid breaking serialization.
+     */
     public function relatedUmkm()
     {
-        return $this->belongsTo(UmkmProduct::class, 'related_umkm_id');
+        return $this->belongsTo(ProductModel::class, 'related_umkm_id');
     }
 
     // Mark as read

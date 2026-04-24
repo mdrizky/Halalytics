@@ -223,11 +223,6 @@
                 <span class="text-sm flex-1">Banner Slider</span>
                 <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200 dark:border-slate-700">{{ number_format($global_banner_count) }}</span>
             </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.analytics*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.analytics.index') }}">
-                <span class="material-icons-round text-[20px]">query_stats</span>
-                <span class="text-sm flex-1">Analytics</span>
-                <span class="text-[10px] bg-sky-100 dark:bg-sky-900/30 px-1.5 py-0.5 rounded-md font-bold text-sky-600 border border-sky-200 dark:border-sky-700">REAL</span>
-            </a>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.campaigns*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.campaigns.index') }}">
                 <span class="material-icons-round text-[20px]">campaign</span>
                 <span class="text-sm flex-1">Campaigns</span>
@@ -557,7 +552,7 @@
 
     async function openNotification(id, targetUrl) {
         await markAsRead(id);
-        if (targetUrl) {
+        if (targetUrl && targetUrl !== '/admin' && targetUrl !== 'null' && targetUrl !== '') {
             window.location.href = targetUrl;
         }
     }

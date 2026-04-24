@@ -59,86 +59,68 @@
     </div>
 </div>
 
-<!-- Data Table -->
-<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm rounded-xl">
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest pl-10">Banner Image</th>
-                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Title & Description</th>
-                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Position</th>
-                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
-                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                @forelse($banners as $banner)
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
-                    <td class="px-6 py-4">
-                        <div class="w-32 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700 relative">
-                            @if($banner->image)
-                                @php
-                                    $bannerImage = str_starts_with((string) $banner->image, 'http')
-                                        ? $banner->image
-                                        : asset($banner->image);
-                                @endphp
-                                <img src="{{ $bannerImage }}" alt="Banner" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
-                            @else
-                                <img src="{{ asset('images/placeholders/product-placeholder.svg') }}" alt="Banner placeholder" class="w-full h-full object-cover">
-                            @endif
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div>
-                            <p class="text-sm font-bold text-slate-900 dark:text-white">{{ $banner->title }}</p>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
-                                {{ $banner->description ?? 'No description' }}
-                            </p>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300">
-                            {{ $banner->position }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                        @if($banner->is_active)
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                                Active
-                            </span>
-                        @else
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
-                                Inactive
-                            </span>
-                        @endif
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                        <div class="flex items-center justify-end gap-2">
-                            <button onclick='editBanner(@json($banner))' class="p-2 text-slate-400 hover:text-primary transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
-                                <span class="material-icons-round text-lg">edit</span>
-                            </button>
-                            <form action="{{ route('admin.banner.destroy', $banner->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this banner?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="p-2 text-slate-400 hover:text-red-500 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
-                                    <span class="material-icons-round text-lg">delete</span>
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="5" class="px-6 py-12 text-center text-slate-400">
-                        <span class="material-icons-round text-4xl mb-2">view_carousel</span>
-                        <p>No banners found. Start by adding one.</p>
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+<!-- Data Cards (Grid instead of Table for better visual) -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+    @forelse($banners as $banner)
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all overflow-hidden group">
+        <div class="aspect-video relative overflow-hidden bg-slate-100 dark:bg-slate-800">
+            @if($banner->image)
+                @php $bannerImg = str_starts_with((string)$banner->image, 'http') ? $banner->image : asset($banner->image); @endphp
+                <img src="{{ $bannerImg }}" alt="Banner" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://images.unsplash.com/photo-1505751172107-160fa86f2648?auto=format&fit=crop&q=80&w=800'">
+            @else
+                <div class="w-full h-full flex items-center justify-center text-slate-300">
+                    <span class="material-icons-round text-6xl">leak_add</span>
+                </div>
+            @endif
+            
+            <div class="absolute top-4 right-4">
+                <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $banner->is_active ? 'bg-emerald-500 text-white' : 'bg-slate-500 text-white' }} shadow-lg">
+                    {{ $banner->is_active ? 'Live' : 'Hidden' }}
+                </span>
+            </div>
+            
+            <div class="absolute bottom-4 left-4">
+                <span class="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-xs font-bold border border-white/30">
+                    #{{ $banner->position }}
+                </span>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <div class="flex justify-between items-start gap-4 mb-4">
+                <div>
+                    <h4 class="text-xl font-extrabold text-slate-800 dark:text-white tracking-tight">{{ $banner->title }}</h4>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ $banner->description ?? 'No description provided.' }}</p>
+                </div>
+                <div class="flex gap-1">
+                    <button onclick='editBanner(@json($banner))' class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-primary transition-colors border border-slate-200 dark:border-slate-700">
+                        <span class="material-icons-round text-lg">edit</span>
+                    </button>
+                    <form action="{{ route('admin.banner.destroy', $banner->id) }}" method="POST" onsubmit="return confirm('Delete banner?')">
+                        @csrf @method('DELETE')
+                        <button class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-red-500 transition-colors border border-slate-200 dark:border-slate-700">
+                            <span class="material-icons-round text-lg">delete</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4 pt-4 border-t border-slate-50 dark:border-slate-800">
+                <div class="flex -space-x-2">
+                    @for($i=0; $i<3; $i++)
+                        <div class="w-6 h-6 rounded-full border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-700"></div>
+                    @endfor
+                </div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Broadcast Visibility Active</p>
+            </div>
+        </div>
     </div>
+    @empty
+    <div class="col-span-full py-20 text-center bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+        <span class="material-icons-round text-6xl text-slate-200 mb-4">broken_image</span>
+        <p class="text-slate-400 font-medium">No banners designed yet. Click "Add New Banner" to start.</p>
+    </div>
+    @endforelse
 </div>
 
 <!-- Modal Add -->

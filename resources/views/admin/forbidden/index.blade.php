@@ -47,7 +47,7 @@
     <table class="w-full">
         <thead>
             <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
-                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-left">Ingredient</th>
+                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-left pl-10">Ingredient</th>
                 <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Code</th>
                 <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Type</th>
                 <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Risk</th>
@@ -59,17 +59,24 @@
             @forelse($ingredients as $ing)
             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-all">
                 <td class="px-6 py-4">
-                    <div class="font-bold text-sm text-slate-800 dark:text-white">{{ $ing->name }}</div>
-                    @if($ing->aliases && count($ing->aliases) > 0)
-                    <div class="flex flex-wrap gap-1 mt-1">
-                        @foreach(array_slice($ing->aliases, 0, 3) as $alias)
-                        <span class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded font-medium">{{ $alias }}</span>
-                        @endforeach
-                        @if(count($ing->aliases) > 3)
-                        <span class="text-[10px] text-slate-400">+{{ count($ing->aliases) - 3 }} more</span>
-                        @endif
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
+                            <img src="{{ $ing->image }}" alt="{{ $ing->name }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name='+encodeURIComponent('{{ $ing->name }}')+'&background=random';">
+                        </div>
+                        <div>
+                            <div class="font-bold text-sm text-slate-800 dark:text-white">{{ $ing->name }}</div>
+                            @if($ing->aliases && count($ing->aliases) > 0)
+                            <div class="flex flex-wrap gap-1 mt-1">
+                                @foreach(array_slice($ing->aliases, 0, 3) as $alias)
+                                <span class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded font-medium">{{ $alias }}</span>
+                                @endforeach
+                                @if(count($ing->aliases) > 3)
+                                <span class="text-[10px] text-slate-400">+{{ count($ing->aliases) - 3 }} more</span>
+                                @endif
+                            </div>
+                            @endif
+                        </div>
                     </div>
-                    @endif
                 </td>
                 <td class="px-6 py-4 text-center">
                     <span class="text-xs font-mono font-bold text-primary">{{ $ing->code ?? '-' }}</span>

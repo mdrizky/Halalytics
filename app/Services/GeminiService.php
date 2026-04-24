@@ -754,49 +754,98 @@ PROMPT;
     private function requestGemini(array $parts, float $temperature = 0.3, ?string $responseMimeType = null, int $maxTokens = 2048): ?string
     {
         if (!$this->hasApiKey()) {
+            Log::warning('Gemini: No API key configured. All AI features will use fallback templates.');
             return null;
         }
 
-        try {
-            $payload = [
-                'contents' => [
-                    [
-                        'parts' => $parts,
-                    ],
+        // Model fallback chain — if primary model is deprecated, try alternatives
+        $modelsToTry = array_unique(array_filter([
+            $this->model,
+            'gemini-2.0-flash-lite',
+            'gemini-2.0-flash',
+        ]));
+
+        $payload = [
+            'contents' => [
+                [
+                    'parts' => $parts,
                 ],
-                'generationConfig' => [
-                    'temperature' => $temperature,
-                    'maxOutputTokens' => $maxTokens,
-                ],
-            ];
+            ],
+            'generationConfig' => [
+                'temperature' => $temperature,
+                'maxOutputTokens' => $maxTokens,
+            ],
+        ];
 
-            if ($responseMimeType !== null) {
-                $payload['generationConfig']['response_mime_type'] = $responseMimeType;
-            }
+        if ($responseMimeType !== null) {
+            $payload['generationConfig']['response_mime_type'] = $responseMimeType;
+        }
 
-            $response = Http::timeout(45)
-                ->retry(1, 500)
-                ->post(
-                    "{$this->baseUrl}/models/{$this->model}:generateContent?key={$this->apiKey}",
-                    $payload
-                );
+        foreach ($modelsToTry as $model) {
+            try {
+                $response = Http::timeout(45)
+                    ->retry(1, 500)
+                    ->post(
+                        "{$this->baseUrl}/models/{$model}:generateContent?key={$this->apiKey}",
+                        $payload
+                    );
 
-            if (!$response->successful()) {
-                Log::warning('Gemini API failed', [
-                    'status' => $response->status(),
-                    'body' => Str::limit($response->body(), 500),
+                if ($response->successful()) {
+                    $text = $response->json('candidates.0.content.parts.0.text');
+
+                    // If we succeeded with a fallback model, update for future calls
+                    if ($model !== $this->model) {
+                        Log::info("Gemini: Model '{$this->model}' unavailable, succeeded with '{$model}'");
+                        $this->model = $model;
+                    }
+
+                    return is_string($text) ? trim($text) : null;
+                }
+
+                $status = $response->status();
+                $errorBody = $response->body();
+
+                // 404 = model deprecated/not found → try next model
+                if ($status === 404) {
+                    Log::warning("Gemini: Model '{$model}' not found (404), trying next model...", [
+                        'hint' => 'This model may have been deprecated. Update GEMINI_MODEL in .env',
+                    ]);
+                    continue;
+                }
+
+                // 403 = API key revoked/leaked → no point retrying
+                if ($status === 403) {
+                    Log::error('Gemini: API key is REVOKED or INVALID (403). Generate a new key at https://aistudio.google.com/apikey', [
+                        'body' => Str::limit($errorBody, 300),
+                    ]);
+                    return null;
+                }
+
+                // 429 = rate limit → try next model (different models may have separate quotas)
+                if ($status === 429) {
+                    Log::warning("Gemini: Rate limit exceeded for '{$model}' (429), trying next model...");
+                    continue;
+                }
+
+                // Other errors
+                Log::warning("Gemini: API call failed for model '{$model}'", [
+                    'status' => $status,
+                    'body' => Str::limit($errorBody, 500),
                 ]);
-                return null;
-            }
+                continue;
 
-            $text = $response->json('candidates.0.content.parts.0.text');
-            return is_string($text) ? trim($text) : null;
-        } catch (\Throwable $throwable) {
-            Log::warning('Gemini request exception', [
-                'message' => $throwable->getMessage(),
-            ]);
-            return null;
+            } catch (\Throwable $throwable) {
+                Log::warning("Gemini: Exception with model '{$model}'", [
+                    'message' => $throwable->getMessage(),
+                ]);
+                continue;
+            }
         }
+
+        Log::error('Gemini: ALL models failed. AI features will use fallback templates. Please check your API key and model settings.', [
+            'models_tried' => $modelsToTry,
+        ]);
+        return null;
     }
 
     private function decodeJson(?string $text): ?array
@@ -1143,6 +1192,12 @@ PROMPT;
             $cluster = 'headache';
         } elseif (Str::contains($normalized, ['batuk', 'pilek', 'demam', 'flu', 'tenggorokan'])) {
             $cluster = 'flu';
+        } elseif (Str::contains($normalized, ['terkilir', 'keseleo', 'jatuh', 'kecelakaan', 'patah', 'cedera', 'bengkak', 'memar', 'motor', 'terpeleset', 'benturan', 'tertabrak', 'kecelakaan', 'sprain', 'fraktur'])) {
+            $cluster = 'injury';
+        } elseif (Str::contains($normalized, ['luka', 'berdarah', 'lecet', 'sayat', 'tergores', 'robek', 'sobek', 'tertusuk', 'terpotong'])) {
+            $cluster = 'skin_wound';
+        } elseif (Str::contains($normalized, ['pegal', 'kram', 'otot', 'punggung', 'pinggang', 'leher kaku', 'nyeri otot', 'badan sakit', 'encok', 'rematik', 'sendi'])) {
+            $cluster = 'muscle_pain';
         } elseif (Str::contains($normalized, ['gatal', 'ruam', 'bentol', 'alergi'])) {
             $cluster = 'allergy';
         }
@@ -1152,11 +1207,11 @@ PROMPT;
         $severityReason = 'Belum tampak kata kunci gawat darurat pada keluhan yang disampaikan.';
         $emergencyWarning = 'Segera ke IGD jika muncul sesak napas, pingsan, kejang, muntah darah, BAB hitam, nyeri dada hebat, atau penurunan kesadaran.';
 
-        if (Str::contains($normalized, ['sesak napas', 'pingsan', 'kejang', 'muntah darah', 'bab hitam', 'nyeri dada'])) {
+        if (Str::contains($normalized, ['sesak napas', 'pingsan', 'kejang', 'muntah darah', 'bab hitam', 'nyeri dada', 'patah tulang', 'tulang menonjol', 'tidak bisa digerakkan', 'kelumpuhan'])) {
             $severity = 'emergency';
             $severityLabel = 'Perlu perhatian medis';
             $severityReason = 'Terdapat gejala red flag yang memerlukan evaluasi medis segera.';
-        } elseif (Str::contains($normalized, ['demam tinggi', 'lebih dari 2 hari', 'muntah terus', 'dehidrasi', 'sangat lemas'])) {
+        } elseif (Str::contains($normalized, ['demam tinggi', 'lebih dari 2 hari', 'muntah terus', 'dehidrasi', 'sangat lemas', 'kecelakaan', 'terkilir', 'bengkak parah', 'memar luas', 'jatuh dari motor', 'jatuh dari ketinggian'])) {
             $severity = 'moderate';
             $severityLabel = 'Sedang';
             $severityReason = 'Keluhan berpotensi memerlukan pemeriksaan dokter bila tidak membaik dalam waktu singkat.';
@@ -1838,45 +1893,265 @@ PROMPT;
                 'recommendation' => 'Kemungkinan besar reaksi alergi ringan. Hentikan pemicu, gunakan antihistamin sesuai label bila perlu, dan waspadai tanda anafilaksis.',
                 'tldr' => 'Keluhan paling sesuai dengan reaksi alergi ringan. Hindari pemicu, pantau sesak napas/bengkak, dan gunakan terapi simptomatik yang aman.',
             ],
-            default => [
-                'summary_prefix' => 'Keluhan yang kamu sampaikan perlu dianalisis lebih lanjut. Ringkasan awal yang saya tangkap: ',
-                'condition' => 'Keluhan umum yang memerlukan observasi',
+            'injury' => [
+                'summary_prefix' => 'Keluhan kamu paling mengarah ke cedera jaringan lunak akibat trauma fisik seperti jatuh atau benturan. Keluhan utama yang saya tangkap: ',
+                'condition' => 'Cedera jaringan lunak / sprain (keseleo/terkilir)',
                 'possible_causes' => [
-                    ['name' => 'Gangguan ringan sementara', 'percentage' => 45, 'reason' => 'Banyak keluhan awal membaik dengan istirahat dan observasi.'],
-                    ['name' => 'Reaksi terhadap makanan/aktivitas tertentu', 'percentage' => 30, 'reason' => 'Pemicu harian sering berperan pada gejala ringan.'],
-                    ['name' => 'Kondisi yang perlu evaluasi dokter', 'percentage' => 25, 'reason' => 'Jika gejala menetap, memburuk, atau berulang.'],
+                    ['name' => 'Sprain (keseleo/terkilir)', 'percentage' => 50, 'reason' => 'Cedera pada ligamen akibat gerakan mendadak atau benturan, menyebabkan bengkak dan nyeri di area sendi.'],
+                    ['name' => 'Strain (tarikan otot)', 'percentage' => 30, 'reason' => 'Otot atau tendon teregang berlebihan saat jatuh atau menerima tekanan mendadak.'],
+                    ['name' => 'Kontusi (memar)', 'percentage' => 20, 'reason' => 'Benturan langsung pada jaringan lunak menyebabkan memar dan pembengkakan lokal.'],
                 ],
-                'related_symptoms' => ['lemas', 'nyeri ringan', 'tidak nyaman', 'mual ringan'],
+                'related_symptoms' => ['bengkak', 'nyeri tekan', 'memar', 'keterbatasan gerak', 'kemerahan area cedera', 'nyeri saat digerakkan'],
                 'diseases' => [
                     [
-                        'name' => 'Keluhan non-spesifik',
-                        'description' => 'Sebagian gejala awal belum spesifik dan membutuhkan informasi tambahan seperti durasi, lokasi, pemicu, dan gejala penyerta.',
-                        'relation_to_case' => 'Masih perlu pertanyaan lanjutan untuk menentukan arah yang paling tepat.',
+                        'name' => 'Sprain (Keseleo)',
+                        'description' => 'Sprain adalah cedera pada ligamen — jaringan ikat yang menghubungkan tulang pada sendi. Terjadi saat sendi dipaksa bergerak di luar rentang normal, misalnya saat jatuh, terpeleset, atau kecelakaan.',
+                        'relation_to_case' => 'Keluhan terkilir setelah jatuh dari motor sangat khas untuk sprain, terutama di pergelangan tangan, pergelangan kaki, atau lutut.',
+                    ],
+                    [
+                        'name' => 'Strain (Tarikan Otot)',
+                        'description' => 'Strain adalah cedera pada otot atau tendon akibat tarikan atau tekanan berlebih. Berbeda dari sprain yang mengenai ligamen, strain mengenai otot dan/atau tendon penghubungnya.',
+                        'relation_to_case' => 'Saat jatuh dari motor, tubuh secara refleks menahan benturan sehingga otot bisa teregang melebihi batas normal.',
+                    ],
+                    [
+                        'name' => 'Fraktur ringan (retak tulang)',
+                        'description' => 'Fraktur adalah patahnya tulang akibat benturan keras. Fraktur ringan mungkin sulit dibedakan dari sprain berat tanpa rontgen.',
+                        'relation_to_case' => 'Jika bengkak sangat besar, nyeri hebat, atau tidak bisa digerakkan sama sekali, kemungkinan fraktur perlu dipertimbangkan dan segera rontgen.',
                     ],
                 ],
-                'triggers' => ['Kurang istirahat', 'Kurang minum', 'Pola makan tidak teratur', 'Stres'],
-                'active_ingredients' => ['paracetamol', 'oralit'],
+                'triggers' => ['Jatuh dari motor atau kendaraan', 'Terpeleset atau terjatuh', 'Benturan langsung pada sendi', 'Gerakan mendadak yang memaksa sendi', 'Aktivitas berat tanpa pemanasan'],
+                'active_ingredients' => ['ibuprofen', 'paracetamol', 'methyl salicylate'],
+                'medicines' => [
+                    [
+                        'name' => 'Ibuprofen',
+                        'function' => 'Obat anti-inflamasi non-steroid (NSAID) yang membantu mengurangi bengkak, nyeri, dan peradangan pada cedera jaringan lunak.',
+                        'dosage' => 'Ikuti dosis pada kemasan, umumnya 200-400 mg per dosis untuk dewasa',
+                        'how_to_take' => 'Diminum setelah makan untuk mengurangi iritasi lambung',
+                        'duration' => '3-5 hari atau sampai bengkak dan nyeri mereda',
+                        'when_to_take' => 'Setiap 6-8 jam sesuai kebutuhan',
+                        'halal_status' => 'Perlu cek label dan produsen',
+                        'safety_note' => 'Hindari jika ada riwayat maag atau gangguan ginjal. Jangan digunakan bersamaan dengan aspirin.',
+                        'side_effects' => ['gangguan lambung', 'mual ringan', 'pusing'],
+                    ],
+                    [
+                        'name' => 'Paracetamol',
+                        'function' => 'Membantu meredakan nyeri ringan hingga sedang akibat cedera.',
+                        'dosage' => 'Ikuti dosis pada kemasan, jangan melebihi dosis harian maksimum',
+                        'how_to_take' => 'Diminum sesuai label, boleh saat perut kosong',
+                        'duration' => '3-5 hari atau sampai nyeri mereda',
+                        'when_to_take' => 'Saat nyeri muncul, setiap 4-6 jam',
+                        'halal_status' => 'Mayoritas tablet generik aman, tetap cek label',
+                        'safety_note' => 'Jangan melebihi dosis maksimum harian dan hindari alkohol.',
+                        'side_effects' => ['mual ringan', 'reaksi alergi sangat jarang'],
+                    ],
+                    [
+                        'name' => 'Salep/Krim Pereda Nyeri (Counterpain/Salonpas/Voltaren Gel)',
+                        'function' => 'Pereda nyeri topikal yang membantu meredakan nyeri dan peradangan lokal pada area cedera.',
+                        'dosage' => 'Oleskan tipis pada area yang sakit 2-3 kali sehari',
+                        'how_to_take' => 'Untuk pemakaian luar saja, hindari area luka terbuka, mata, dan selaput lendir',
+                        'duration' => 'Beberapa hari sampai nyeri mereda',
+                        'when_to_take' => 'Saat nyeri muncul, bisa dikombinasi dengan obat minum',
+                        'halal_status' => 'Perlu cek komposisi dan produsen',
+                        'safety_note' => 'Hentikan jika muncul iritasi kulit atau ruam.',
+                        'side_effects' => ['rasa panas/dingin lokal', 'iritasi kulit ringan pada sebagian orang'],
+                    ],
+                ],
+                'drug_mechanism' => 'Ibuprofen menghambat enzim COX yang memproduksi prostaglandin (zat penyebab nyeri dan bengkak). Paracetamol bekerja di sistem saraf pusat untuk mengurangi persepsi nyeri. Salep topikal memberikan efek pereda nyeri langsung di area yang dioleskan.',
+                'usage_instructions' => 'Prioritaskan metode RICE (Rest, Ice, Compression, Elevation) dalam 48 jam pertama. Obat anti-nyeri membantu mengelola gejala, tetapi bukan pengganti evaluasi medis jika cedera berat.',
+                'diet_advice' => 'Perbanyak protein (telur, ikan, ayam) untuk perbaikan jaringan. Konsumsi makanan kaya vitamin C (jeruk, jambu) dan zinc untuk mempercepat penyembuhan. Hindari makanan yang memicu peradangan seperti gorengan berlebihan.',
+                'first_aid' => [
+                    'Rest — Istirahatkan bagian tubuh yang cedera, jangan dipaksakan bergerak',
+                    'Ice — Kompres es yang dibungkus kain selama 15-20 menit, setiap 2-3 jam',
+                    'Compression — Balut area cedera dengan perban elastis (tidak terlalu ketat)',
+                    'Elevation — Tinggikan bagian yang cedera di atas posisi jantung untuk mengurangi bengkak',
+                    'Jangan pijat atau urut area yang baru cedera dalam 48 jam pertama',
+                    'Bersihkan luka lecet jika ada dengan air bersih dan tutup dengan plester',
+                ],
+                'prevention' => ['Gunakan pelindung saat berkendara (sarung tangan, pelindung lutut/siku)', 'Pemanasan sebelum aktivitas berat', 'Pakai alas kaki yang stabil', 'Waspada di jalan licin atau tidak rata', 'Jaga keseimbangan tubuh saat beraktivitas'],
+                'follow_up_questions' => ['Apakah bagian yang cedera bisa digerakkan sama sekali?', 'Apakah bengkaknya sangat besar atau ada perubahan bentuk?', 'Apakah ada luka terbuka atau tulang yang tampak menonjol?', 'Sudah berapa jam sejak kejadian?'],
+                'recommendation' => 'Kemungkinan besar cedera jaringan lunak (sprain/strain). Terapkan RICE segera, gunakan anti-nyeri jika diperlukan, dan evaluasi ke dokter jika bengkak tidak membaik dalam 48 jam atau ada kecurigaan fraktur.',
+                'tldr' => 'Cedera jaringan lunak akibat jatuh/benturan. Lakukan RICE (Istirahat, Es, Kompres, Tinggikan), minum anti-nyeri sesuai kebutuhan, dan periksa ke dokter jika bengkak berat atau tidak membaik.',
+            ],
+            'skin_wound' => [
+                'summary_prefix' => 'Keluhan kamu mengarah ke luka terbuka atau abrasi pada kulit yang memerlukan perawatan luka yang tepat. Keluhan utama yang saya tangkap: ',
+                'condition' => 'Luka terbuka / abrasi kulit',
+                'possible_causes' => [
+                    ['name' => 'Abrasi (luka lecet)', 'percentage' => 45, 'reason' => 'Gesekan kulit dengan permukaan kasar menyebabkan lapisan kulit terkelupas.'],
+                    ['name' => 'Laserasi (luka robek)', 'percentage' => 35, 'reason' => 'Benturan atau benda tajam menyebabkan kulit robek atau terbuka.'],
+                    ['name' => 'Luka tusuk/sayat', 'percentage' => 20, 'reason' => 'Benda tajam menembus atau mengiris kulit.'],
+                ],
+                'related_symptoms' => ['perdarahan', 'nyeri area luka', 'kemerahan sekitar luka', 'bengkak ringan', 'cairan keluar dari luka'],
+                'diseases' => [
+                    [
+                        'name' => 'Luka terbuka',
+                        'description' => 'Luka terbuka adalah kerusakan pada kulit yang mengekspos jaringan di bawahnya. Risiko utama adalah infeksi jika tidak dibersihkan dan dirawat dengan benar.',
+                        'relation_to_case' => 'Luka dari jatuh atau kecelakaan perlu dibersihkan segera untuk mencegah infeksi.',
+                    ],
+                ],
+                'triggers' => ['Jatuh atau terpeleset', 'Kecelakaan lalu lintas', 'Terkena benda tajam', 'Gesekan dengan permukaan kasar'],
+                'active_ingredients' => ['povidone iodine', 'chlorhexidine', 'neomycin'],
+                'medicines' => [
+                    [
+                        'name' => 'Povidone Iodine (Betadine)',
+                        'function' => 'Antiseptik untuk membersihkan luka dan mencegah infeksi bakteri.',
+                        'dosage' => 'Oleskan tipis pada area luka 1-2 kali sehari',
+                        'how_to_take' => 'Bersihkan luka dengan air bersih terlebih dahulu, lalu oleskan antiseptik',
+                        'duration' => 'Sampai luka mulai kering dan menutup',
+                        'when_to_take' => 'Setelah membersihkan luka, saat ganti perban',
+                        'halal_status' => 'Perlu cek label produsen',
+                        'safety_note' => 'Hindari pada luka yang sangat dalam atau luka bakar luas. Hentikan jika iritasi.',
+                        'side_effects' => ['rasa perih sementara', 'perubahan warna kulit sementara'],
+                    ],
+                    [
+                        'name' => 'Salep Antibiotik (Neomycin/Gentamicin)',
+                        'function' => 'Mencegah dan mengatasi infeksi bakteri pada luka terbuka.',
+                        'dosage' => 'Oleskan tipis pada luka 2-3 kali sehari sesuai kemasan',
+                        'how_to_take' => 'Oleskan setelah luka dibersihkan, tutup dengan kasa steril',
+                        'duration' => '5-7 hari atau sampai luka menutup',
+                        'when_to_take' => 'Setiap kali ganti perban',
+                        'halal_status' => 'Perlu cek komposisi dan produsen',
+                        'safety_note' => 'Hentikan jika muncul ruam atau gatal berlebih di sekitar luka.',
+                        'side_effects' => ['iritasi lokal ringan', 'reaksi alergi jarang'],
+                    ],
+                    [
+                        'name' => 'Paracetamol',
+                        'function' => 'Membantu meredakan nyeri akibat luka.',
+                        'dosage' => 'Ikuti dosis pada kemasan',
+                        'how_to_take' => 'Diminum saat nyeri terasa mengganggu',
+                        'duration' => 'Beberapa hari sampai nyeri mereda',
+                        'when_to_take' => 'Saat diperlukan',
+                        'halal_status' => 'Perlu cek label produsen',
+                        'safety_note' => 'Jangan melebihi dosis maksimum harian.',
+                        'side_effects' => ['mual ringan'],
+                    ],
+                ],
+                'drug_mechanism' => 'Antiseptik membunuh bakteri pada permukaan luka. Salep antibiotik mencegah pertumbuhan bakteri lebih lanjut. Paracetamol mengurangi persepsi nyeri di sistem saraf pusat.',
+                'usage_instructions' => 'Cuci tangan sebelum merawat luka. Bersihkan luka dengan air mengalir, keringkan, oleskan antiseptik, lalu tutup dengan kasa steril. Ganti perban minimal 1-2 kali sehari.',
+                'diet_advice' => 'Perbanyak protein dan vitamin C untuk mempercepat penyembuhan luka. Minum air putih yang cukup. Hindari makanan yang mengganggu proses penyembuhan seperti alkohol.',
+                'first_aid' => [
+                    'Tekan luka dengan kain bersih jika berdarah',
+                    'Bersihkan luka dengan air mengalir bersih',
+                    'Oleskan antiseptik seperti Betadine',
+                    'Tutup luka dengan plester atau kasa steril',
+                    'Ke dokter jika luka dalam, lebar, atau tidak berhenti berdarah dalam 10 menit',
+                ],
+                'prevention' => ['Gunakan pelindung saat berkendara', 'Hati-hati dengan benda tajam', 'Pastikan vaksin tetanus masih berlaku', 'Simpan kotak P3K di rumah'],
+                'follow_up_questions' => ['Apakah pendarahannya sudah berhenti?', 'Seberapa dalam lukanya?', 'Apakah ada benda asing di dalam luka?', 'Kapan terakhir vaksin tetanus?'],
+                'recommendation' => 'Bersihkan luka segera dengan air bersih dan antiseptik, tutup dengan kasa steril. Ke dokter jika luka dalam, tidak berhenti berdarah, atau ada tanda infeksi (merah meluas, nanah, demam).',
+                'tldr' => 'Luka terbuka perlu dibersihkan segera dan ditutup steril. Gunakan antiseptik dan salep antibiotik untuk mencegah infeksi. Ke dokter jika luka dalam atau berdarah terus.',
+            ],
+            'muscle_pain' => [
+                'summary_prefix' => 'Keluhan kamu paling mengarah ke nyeri otot atau gangguan muskuloskeletal. Keluhan utama yang saya tangkap: ',
+                'condition' => 'Nyeri otot (myalgia) / gangguan muskuloskeletal',
+                'possible_causes' => [
+                    ['name' => 'Ketegangan otot (muscle strain)', 'percentage' => 45, 'reason' => 'Otot tegang akibat postur buruk, aktivitas berat, atau kurang peregangan.'],
+                    ['name' => 'Kelelahan otot', 'percentage' => 30, 'reason' => 'Penggunaan otot berlebihan atau aktivitas fisik yang tidak biasa.'],
+                    ['name' => 'Peradangan sendi ringan', 'percentage' => 25, 'reason' => 'Bila nyeri terlokalisir di area sendi dan disertai kaku.'],
+                ],
+                'related_symptoms' => ['pegal-pegal', 'kaku otot', 'nyeri saat bergerak', 'kram', 'keterbatasan gerak', 'nyeri menjalar'],
+                'diseases' => [
+                    [
+                        'name' => 'Myalgia',
+                        'description' => 'Myalgia adalah nyeri pada otot yang bisa disebabkan oleh kelelahan, postur yang buruk, stres, atau aktivitas fisik berlebihan.',
+                        'relation_to_case' => 'Keluhan pegal, kram, atau nyeri otot sangat umum dan biasanya membaik dengan istirahat dan terapi sederhana.',
+                    ],
+                    [
+                        'name' => 'Tension Myositis',
+                        'description' => 'Ketegangan kronis pada otot yang sering muncul di area leher, bahu, dan punggung, biasanya terkait stres dan postur.',
+                        'relation_to_case' => 'Jika nyeri dominan di leher, bahu, atau punggung dan memburuk saat bekerja lama.',
+                    ],
+                ],
+                'triggers' => ['Postur tubuh yang buruk saat duduk/bekerja', 'Aktivitas fisik berat tanpa pemanasan', 'Kurang olahraga atau terlalu banyak duduk', 'Stres dan ketegangan mental', 'Tidur dengan posisi yang salah'],
+                'active_ingredients' => ['paracetamol', 'methyl salicylate', 'ibuprofen'],
                 'medicines' => [
                     [
                         'name' => 'Paracetamol',
-                        'function' => 'Dapat membantu untuk nyeri atau demam ringan bila memang ada.',
-                        'dosage' => 'Ikuti aturan pakai pada kemasan',
-                        'how_to_take' => 'Gunakan hanya bila sesuai gejala',
-                        'duration' => 'Jangka pendek',
-                        'when_to_take' => 'Saat diperlukan',
+                        'function' => 'Membantu meredakan nyeri otot ringan hingga sedang.',
+                        'dosage' => 'Ikuti dosis pada kemasan',
+                        'how_to_take' => 'Diminum saat nyeri muncul',
+                        'duration' => '1-3 hari untuk keluhan akut',
+                        'when_to_take' => 'Saat diperlukan, setiap 4-6 jam',
                         'halal_status' => 'Perlu cek label produsen',
                         'safety_note' => 'Jangan melebihi dosis maksimum harian.',
                         'side_effects' => ['mual ringan', 'reaksi alergi jarang'],
                     ],
+                    [
+                        'name' => 'Koyo/Salep Methyl Salicylate (Salonpas/Counterpain)',
+                        'function' => 'Pereda nyeri topikal yang memberikan efek hangat dan mengurangi nyeri otot lokal.',
+                        'dosage' => 'Tempel koyo atau oleskan salep pada area nyeri 2-3 kali sehari',
+                        'how_to_take' => 'Untuk pemakaian luar saja, hindari area luka terbuka',
+                        'duration' => 'Beberapa hari sampai nyeri mereda',
+                        'when_to_take' => 'Saat nyeri muncul, terutama saat istirahat',
+                        'halal_status' => 'Perlu cek komposisi dan produsen',
+                        'safety_note' => 'Hentikan jika iritasi kulit. Jangan gunakan bersamaan dengan kompres panas.',
+                        'side_effects' => ['rasa panas/dingin lokal', 'iritasi kulit pada sebagian orang'],
+                    ],
+                    [
+                        'name' => 'Ibuprofen',
+                        'function' => 'Anti-inflamasi yang membantu jika nyeri otot disertai peradangan.',
+                        'dosage' => 'Ikuti dosis pada kemasan',
+                        'how_to_take' => 'Diminum setelah makan',
+                        'duration' => '3-5 hari jika ada peradangan',
+                        'when_to_take' => 'Setiap 6-8 jam sesuai kebutuhan',
+                        'halal_status' => 'Perlu cek label dan produsen',
+                        'safety_note' => 'Hindari jika ada riwayat maag. Konsultasi jika keluhan kronis.',
+                        'side_effects' => ['gangguan lambung', 'mual'],
+                    ],
                 ],
-                'drug_mechanism' => 'Obat simptomatik membantu meredakan gejala tertentu, tetapi tidak selalu menangani penyebab utama.',
-                'usage_instructions' => 'Prioritaskan observasi gejala, cairan cukup, dan catat pemicu atau durasi keluhan.',
-                'diet_advice' => 'Konsumsi makanan sederhana, cukup cairan, dan hindari pemicu yang terasa memperberat.',
-                'first_aid' => ['Istirahat cukup', 'Minum air', 'Catat gejala dan pemicu', 'Hindari aktivitas berat sementara'],
-                'prevention' => ['Pola hidup teratur', 'Tidur cukup', 'Makan seimbang', 'Pantau gejala bila berulang'],
-                'follow_up_questions' => ['Sudah berapa lama keluhan muncul?', 'Apakah ada demam, sesak, atau nyeri hebat?', 'Bagian tubuh mana yang paling terasa terganggu?'],
-                'recommendation' => 'Karena gejala masih umum, observasi singkat dan pertanyaan lanjutan sangat penting. Jika memburuk, konsultasi dokter.',
-                'tldr' => 'Keluhan masih non-spesifik dan butuh detail tambahan. Observasi gejala, hindari pemicu, dan cari bantuan medis bila memburuk.',
+                'drug_mechanism' => 'Paracetamol bekerja mengurangi persepsi nyeri di otak. Methyl salicylate memberikan efek counter-irritant (mengalihkan sinyal nyeri) dan vasodilatasi lokal untuk meningkatkan aliran darah. Ibuprofen menghambat prostaglandin yang menyebabkan nyeri dan peradangan.',
+                'usage_instructions' => 'Kombinasikan obat dengan stretching ringan, kompres hangat, dan perbaikan postur. Jangan hanya mengandalkan obat tanpa memperbaiki kebiasaan yang menjadi pemicu.',
+                'diet_advice' => 'Pastikan asupan magnesium cukup (pisang, kacang, sayuran hijau) untuk mencegah kram. Cukupi cairan dan protein untuk pemulihan otot. Kurangi kafein berlebihan yang bisa memperburuk kram.',
+                'first_aid' => [
+                    'Kompres hangat pada area yang nyeri selama 15-20 menit',
+                    'Lakukan stretching ringan dan perlahan',
+                    'Hindari aktivitas berat sementara',
+                    'Pijat ringan area sekitar yang tegang (bukan langsung di titik nyeri)',
+                    'Mandi air hangat untuk merelaksasi otot',
+                ],
+                'prevention' => ['Pemanasan sebelum olahraga', 'Perbaiki postur saat duduk dan bekerja', 'Olahraga rutin ringan', 'Stretching sebelum tidur dan setelah bangun', 'Jaga hidrasi yang cukup'],
+                'follow_up_questions' => ['Apakah nyeri muncul setelah aktivitas tertentu?', 'Apakah ada rasa kebas, kesemutan, atau nyeri menjalar ke kaki/tangan?', 'Sudah berapa lama keluhan berlangsung?', 'Apakah pernah mengalami cedera di area yang sama?'],
+                'recommendation' => 'Keluhan nyeri otot biasanya membaik dengan istirahat, stretching, dan obat pereda nyeri. Jika nyeri menjalar, disertai kebas, atau tidak membaik dalam 1 minggu, konsultasi dokter.',
+                'tldr' => 'Nyeri otot umumnya terkait postur, kelelahan, atau aktivitas. Kompres hangat, stretching, dan obat pereda nyeri biasanya cukup. Waspadai jika ada gejala saraf (kebas/kesemutan menjalar).',
+            ],
+            default => [
+                'summary_prefix' => 'Saya telah menganalisis input Anda, namun keluhan yang disampaikan belum cukup spesifik untuk mendiagnosis kondisi secara akurat. Input yang tercatat: ',
+                'condition' => 'Keluhan tidak spesifik / Perlu detail tambahan',
+                'possible_causes' => [
+                    ['name' => 'Gejala terlalu umum', 'percentage' => 45, 'reason' => 'Banyak kondisi kesehatan memiliki gejala awal yang serupa.'],
+                    ['name' => 'Informasi tidak lengkap', 'percentage' => 35, 'reason' => 'Membutuhkan detail seperti lokasi nyeri, durasi, dan tingkat keparahan.'],
+                    ['name' => 'Salah ketik / Input acak', 'percentage' => 20, 'reason' => 'Teks yang dimasukkan mungkin tidak mengandung kata kunci medis yang jelas.'],
+                ],
+                'related_symptoms' => ['lemas', 'tidak nyaman', 'nyeri ringan', 'kurang fit'],
+                'diseases' => [
+                    [
+                        'name' => 'Analisis Tertunda',
+                        'description' => 'Sebagai asisten medis AI, saya membutuhkan deskripsi gejala yang lebih detail. Misalnya: "kepala pusing sebelah kiri", "perut mual setelah makan pedas", atau "tangan terkilir jatuh dari motor".',
+                        'relation_to_case' => 'Mohon jelaskan kembali keluhan Anda dengan kalimat yang lebih deskriptif.',
+                    ]
+                ],
+                'triggers' => ['Kurang istirahat', 'Kelelahan ringan', 'Dehidrasi'],
+                'active_ingredients' => ['paracetamol', 'multivitamin'],
+                'medicines' => [
+                    [
+                        'name' => 'Paracetamol',
+                        'function' => 'Meredakan nyeri ringan atau demam jika ada.',
+                        'dosage' => '1 tablet 500mg, bila perlu',
+                        'how_to_take' => 'Sesudah makan',
+                        'duration' => 'Hanya jika timbul gejala',
+                        'when_to_take' => 'Sesuai kebutuhan',
+                        'halal_status' => 'Perlu cek sertifikasi halal pada kemasan (Titik kritis: Cangkang Kapsul/Gelatin)',
+                        'safety_note' => 'Hentikan penggunaan jika tidak ada perbaikan.',
+                        'side_effects' => ['mual ringan'],
+                    ]
+                ],
+                'drug_mechanism' => 'Obat simptomatik seperti Paracetamol bekerja dengan menghambat prostaglandin di otak untuk mengurangi sinyal nyeri.',
+                'usage_instructions' => 'Saat ini sebaiknya perbanyak istirahat dan minum air putih. Jika keluhan memburuk, segera perjelas gejala Anda atau konsultasi ke dokter.',
+                'diet_advice' => 'Konsumsi makanan bergizi dan pastikan hidrasi tubuh tercukupi (minimal 2 liter air per hari).',
+                'first_aid' => ['Istirahat yang cukup', 'Perbanyak minum air putih', 'Evaluasi gejala dalam 24 jam ke depan'],
+                'prevention' => ['Tidur 7-8 jam per hari', 'Olahraga teratur', 'Manajemen stres yang baik'],
+                'follow_up_questions' => ['Bisakah Anda mendeskripsikan ulang bagian tubuh mana yang sakit?', 'Sudah berapa hari Anda merasakan keluhan ini?', 'Apakah ada faktor pemicu tertentu (seperti makanan atau aktivitas)?'],
+                'recommendation' => 'Ketik ulang keluhan Anda dengan lebih rinci agar saya bisa memberikan analisis medis dan rekomendasi obat yang sangat akurat.',
+                'tldr' => 'Saya memerlukan detail lebih spesifik mengenai keluhan Anda (lokasi, durasi, dan rasa sakitnya) untuk memberikan analisis yang akurat.',
             ],
         };
     }
@@ -1890,6 +2165,9 @@ PROMPT;
             Str::contains($lower, ['batuk', 'pilek']) => ['dextromethorphan', 'cetirizine'],
             Str::contains($lower, ['demam', 'nyeri', 'sakit kepala']) => ['paracetamol'],
             Str::contains($lower, ['diare']) => ['oralit', 'zinc'],
+            Str::contains($lower, ['terkilir', 'keseleo', 'jatuh', 'cedera', 'bengkak', 'memar', 'motor']) => ['ibuprofen', 'paracetamol', 'methyl salicylate'],
+            Str::contains($lower, ['luka', 'berdarah', 'lecet', 'sayat', 'tergores']) => ['povidone iodine', 'neomycin', 'paracetamol'],
+            Str::contains($lower, ['pegal', 'kram', 'otot', 'punggung', 'pinggang', 'sendi']) => ['paracetamol', 'methyl salicylate', 'ibuprofen'],
             default => ['paracetamol'],
         };
     }

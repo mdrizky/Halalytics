@@ -34,4 +34,12 @@ class ReportModel extends Model
     {
         return $this->belongsTo(ProductModel::class, 'product_id', 'id_product');
     }
+
+    public function getImageAttribute(): string
+    {
+        return app(\App\Services\DisplayImageService::class)->resolve($this->evidence_image, [
+            'name' => optional($this->product)->nama_product,
+            'reason' => $this->reason,
+        ], 'product');
+    }
 }

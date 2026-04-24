@@ -299,15 +299,8 @@ Route::middleware('auth')->group(function () {
 
     // ═══ NEW ADMIN MODULES ═══
 
-    // Analytics Dashboard
-    Route::prefix('admin/analytics')->middleware('role:admin')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('admin.analytics.index');
-        Route::get('/users', [\App\Http\Controllers\Admin\AnalyticsController::class, 'users'])->name('admin.analytics.users');
-        Route::get('/products', [\App\Http\Controllers\Admin\AnalyticsController::class, 'products'])->name('admin.analytics.products');
-        Route::get('/ai', [\App\Http\Controllers\Admin\AnalyticsController::class, 'ai'])->name('admin.analytics.ai');
-        Route::get('/growth', [\App\Http\Controllers\Admin\AnalyticsController::class, 'growth'])->name('admin.analytics.growth');
-        Route::get('/export/{type}', [\App\Http\Controllers\Admin\AnalyticsController::class, 'export'])->name('admin.analytics.export');
-    });
+    // Analytics Export (Consolidated)
+    Route::get('admin/analytics/export/{type}', [\App\Http\Controllers\DashboardController::class, 'export'])->middleware('role:admin')->name('admin.analytics.export');
 
     // Halal Certificate Management
     Route::prefix('admin/certificates')->middleware('role:admin')->group(function () {

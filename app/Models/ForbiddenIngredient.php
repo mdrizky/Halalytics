@@ -27,4 +27,12 @@ class ForbiddenIngredient extends Model
         'aliases' => 'array',
         'is_active' => 'boolean',
     ];
+
+    public function getImageAttribute(): string
+    {
+        return app(\App\Services\DisplayImageService::class)->resolve(null, [
+            'name' => $this->name,
+            'category' => 'ingredient',
+        ], 'ingredient');
+    }
 }

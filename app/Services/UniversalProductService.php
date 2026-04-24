@@ -48,9 +48,11 @@ class UniversalProductService
             ];
         }
 
-        // 3. Check Open Food Facts
-        $offResponse = Http::get("https://world.openfoodfacts.org/api/v0/product/{$barcode}.json");
-        if ($offResponse->successful() && $offResponse->json('status') == 1) {
+        // 3. Check Open Food Facts API v2
+        $offResponse = Http::get("https://world.openfoodfacts.org/api/v2/product/{$barcode}.json", [
+            'fields' => 'product_name,code,image_url,image_front_url,ingredients_list,nutriments,_id,completeness'
+        ]);
+        if ($offResponse->successful() && $offResponse->json('status') === 'success') {
             $productData = $offResponse->json('product');
             // Cache to DB
             $savedProduct = $this->saveToLocalCache($productData, 'open_food_facts');
@@ -59,17 +61,19 @@ class UniversalProductService
                 'source' => 'open_food_facts',
                 'found' => true,
                 'data' => $savedProduct,
-                'standardized' => $this->standardizeLocal($savedProduct) // Use local standardization since we saved it
+                'standardized' => $this->standardizeLocal($savedProduct)
             ];
         }
 
-        // 4. Check Open Beauty Facts
-        $obfResponse = Http::get("https://world.openbeautyfacts.org/api/v0/product/{$barcode}.json");
-        if ($obfResponse->successful() && $obfResponse->json('status') == 1) {
+        // 4. Check Open Beauty Facts API v2
+        $obfResponse = Http::get("https://world.openbeautyfacts.org/api/v2/product/{$barcode}.json", [
+            'fields' => 'product_name,code,image_url,image_front_url,ingredients_list,nutriments,_id,completeness'
+        ]);
+        if ($obfResponse->successful() && $obfResponse->json('status') === 'success') {
             $productData = $obfResponse->json('product');
             // Cache to DB
             $savedProduct = $this->saveToLocalCache($productData, 'open_beauty_facts');
-
+            
             return [
                 'source' => 'open_beauty_facts',
                 'found' => true,
@@ -94,7 +98,7 @@ class UniversalProductService
         return ProductModel::create([
             'nama_product' => $data['product_name'] ?? 'Unknown Product',
             'barcode' => $data['code'] ?? '',
-            'image' => $data['image_url'] ?? $data['image_front_url'] ?? null,
+            'image' => $data['image_url'] ?? $data['image_front_url'] ?? $data['image_small_url'] ?? null,
             'komposisi' => isset($data['ingredients_list']) ? json_encode($data['ingredients_list']) : null,
             'info_gizi' => isset($data['nutriments']) ? json_encode($data['nutriments']) : null,
             'source' => $source,

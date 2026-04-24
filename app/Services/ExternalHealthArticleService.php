@@ -191,6 +191,14 @@ class ExternalHealthArticleService
                 if (preg_match('/<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $matches)) {
                     return $matches[1];
                 }
+
+                // Fallback: Look for the first large <img> tag
+                if (preg_match('/<img[^>]+src=["\']([^"\']+\.(?:jpg|jpeg|png|webp|avif)[^"\']*)["\']/i', $html, $matches)) {
+                    $img = $matches[1];
+                    if (!str_contains($img, 'icon') && !str_contains($img, 'logo')) {
+                        return $img;
+                    }
+                }
             } catch (\Throwable $throwable) {
                 Log::info('ExternalHealthArticleService image scrape failed', [
                     'url' => $url,

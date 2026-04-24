@@ -313,6 +313,9 @@ class MedicineController extends Controller
             'perdarahan',
             'kelumpuhan',
             'tidak sadar',
+            'patah tulang',
+            'tulang menonjol',
+            'tidak bisa digerakkan',
         ];
 
         $hasRedFlag = collect($redFlags)->contains(fn ($flag) => str_contains($symptomsLower, $flag));
@@ -354,6 +357,15 @@ class MedicineController extends Controller
         }
         if (str_contains($s, 'demam') || str_contains($s, 'batuk') || str_contains($s, 'pilek')) {
             $causes[] = 'Kemungkinan infeksi virus atau saluran napas.';
+        }
+        if (str_contains($s, 'terkilir') || str_contains($s, 'jatuh') || str_contains($s, 'kecelakaan') || str_contains($s, 'bengkak') || str_contains($s, 'memar') || str_contains($s, 'cedera') || str_contains($s, 'motor') || str_contains($s, 'keseleo')) {
+            $causes[] = 'Cedera jaringan lunak (sprain/strain) akibat trauma atau benturan fisik.';
+        }
+        if (str_contains($s, 'luka') || str_contains($s, 'berdarah') || str_contains($s, 'lecet') || str_contains($s, 'tergores') || str_contains($s, 'sayat')) {
+            $causes[] = 'Luka terbuka atau abrasi kulit akibat trauma fisik.';
+        }
+        if (str_contains($s, 'pegal') || str_contains($s, 'kram') || str_contains($s, 'otot') || str_contains($s, 'punggung') || str_contains($s, 'pinggang') || str_contains($s, 'sendi')) {
+            $causes[] = 'Nyeri otot atau gangguan muskuloskeletal akibat ketegangan, postur, atau kelelahan.';
         }
         if (empty($causes)) {
             $causes[] = 'Kemungkinan dipicu kombinasi pola makan, aktivitas, dan kondisi tubuh saat ini.';

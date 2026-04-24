@@ -32,89 +32,70 @@
     </button>
 </div>
 
-<!-- Local Articles Tab -->
-<div id="panelLocal">
-    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="bg-slate-50 dark:bg-slate-800/30 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                        <th class="px-5 py-4 w-16">#</th>
-                        <th class="px-5 py-4">Artikel</th>
-                        <th class="px-5 py-4">Kategori</th>
-                        <th class="px-5 py-4">Views</th>
-                        <th class="px-5 py-4">Status</th>
-                        <th class="px-5 py-4 text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @forelse($blogs as $key => $blog)
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                        <td class="px-5 py-4 text-sm text-slate-500">{{ $blogs->firstItem() + $key }}</td>
-                        <td class="px-5 py-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-14 h-14 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden flex items-center justify-center">
-                                    @if($blog->image)
-                                        <img src="{{ $blog->image_url }}" alt="{{ $blog->title }}" class="w-full h-full object-cover">
-                                    @else
-                                        <span class="material-icons-round text-slate-400">article</span>
-                                    @endif
-                                </div>
-                                <div class="min-w-0">
-                                    <div class="text-sm font-bold text-slate-800 dark:text-white truncate">{{ Str::limit($blog->title, 72) }}</div>
-                                    <div class="text-xs text-slate-500">{{ $blog->formatted_date }}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-5 py-4">
-                            <span class="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300">{{ $blog->category ?: '-' }}</span>
-                        </td>
-                        <td class="px-5 py-4 text-sm text-slate-700 dark:text-slate-300">{{ number_format($blog->views) }}</td>
-                        <td class="px-5 py-4">
-                            @if($blog->status == 'published')
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600">TERBIT</span>
-                            @else
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-600">DRAFT</span>
-                            @endif
-                        </td>
-                        <td class="px-5 py-4">
-                            <div class="flex items-center justify-end gap-2">
-                                <a href="{{ route('blog.show', $blog->slug) }}" target="_blank" class="p-2 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800" title="Lihat">
-                                    <span class="material-icons-round text-lg">visibility</span>
-                                </a>
-                                <a href="{{ route('admin.promo.blog.edit', $blog->id) }}" class="p-2 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800" title="Edit">
-                                    <span class="material-icons-round text-lg">edit</span>
-                                </a>
-                                <form action="{{ route('admin.promo.blog.toggle', $blog->id) }}" method="POST" class="inline">
-                                    @csrf
-                                    <button type="submit" class="p-2 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20" title="Toggle Status">
-                                        <span class="material-icons-round text-lg">sync</span>
-                                    </button>
-                                </form>
-                                <form action="{{ route('admin.promo.blog.destroy', $blog->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus artikel ini?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="p-2 rounded-lg text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" title="Hapus">
-                                        <span class="material-icons-round text-lg">delete</span>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="px-5 py-16 text-center">
-                            <div class="text-slate-400 text-sm">Belum ada artikel. Klik <strong>Artikel Baru</strong> untuk menambah konten.</div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+<!-- Local Articles Grid -->
+<div id="panelLocal" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+    @forelse($blogs as $blog)
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all overflow-hidden group flex flex-col">
+        <div class="aspect-video relative overflow-hidden bg-slate-100 dark:bg-slate-800">
+            @if($blog->image)
+                <img src="{{ $blog->image_url }}" alt="{{ $blog->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+            @else
+                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20">
+                    <span class="material-icons-round text-emerald-500/30 text-6xl">article</span>
+                </div>
+            @endif
+            <div class="absolute top-4 left-4">
+                <span class="px-2.5 py-1 rounded-lg bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-[10px] font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-sm uppercase tracking-wider">
+                    {{ $blog->category ?: 'Uncategorized' }}
+                </span>
+            </div>
+            <div class="absolute top-4 right-4">
+                @if($blog->status == 'published')
+                    <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]"></span>
+                @else
+                    <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                @endif
+            </div>
         </div>
-        <div class="px-5 py-4 border-t border-slate-100 dark:border-slate-800">
-            {{ $blogs->links() }}
+        
+        <div class="p-6 flex-1 flex flex-col">
+            <h4 class="text-base font-extrabold text-slate-800 dark:text-white leading-tight mb-2 line-clamp-2">{{ $blog->title }}</h4>
+            <div class="flex items-center gap-4 text-xs text-slate-400 mb-6">
+                <div class="flex items-center gap-1">
+                    <span class="material-icons-round text-sm">calendar_today</span>
+                    {{ $blog->formatted_date }}
+                </div>
+                <div class="flex items-center gap-1">
+                    <span class="material-icons-round text-sm">visibility</span>
+                    {{ number_format($blog->views) }}
+                </div>
+            </div>
+            
+            <div class="mt-auto pt-4 border-t border-slate-50 dark:border-slate-800 flex justify-between items-center">
+                <div class="flex gap-1">
+                    <a href="{{ route('admin.promo.blog.edit', $blog->id) }}" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-primary transition-colors border border-slate-200 dark:border-slate-700">
+                        <span class="material-icons-round text-[18px]">edit</span>
+                    </a>
+                    <form action="{{ route('admin.promo.blog.destroy', $blog->id) }}" method="POST" onsubmit="return confirm('Hapus artikel?');">
+                        @csrf @method('DELETE')
+                        <button class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-red-500 transition-colors border border-slate-200 dark:border-slate-700">
+                            <span class="material-icons-round text-[18px]">delete</span>
+                        </button>
+                    </form>
+                </div>
+                <a href="{{ route('blog.show', $blog->slug) }}" target="_blank" class="px-4 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold hover:bg-primary hover:text-white transition-all">Lihat</a>
+            </div>
         </div>
     </div>
+    @empty
+    <div class="col-span-full py-20 text-center bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+        <span class="material-icons-round text-5xl text-slate-200 mb-4">edit_note</span>
+        <p class="text-slate-400 font-medium">Belum ada artikel lokal. Mulai tulis sekarang!</p>
+    </div>
+    @endforelse
+</div>
+<div class="mb-8" id="paginationLocal">
+    {{ $blogs->links() }}
 </div>
 
 <!-- External Articles Tab -->
@@ -174,15 +155,17 @@ function showTab(tab) {
     const panelExternal = document.getElementById('panelExternal');
 
     if (tab === 'local') {
-        tabLocal.className = 'px-4 py-2 rounded-lg text-sm font-bold transition bg-primary text-white shadow-sm';
-        tabExternal.className = 'px-4 py-2 rounded-lg text-sm font-bold transition bg-primary/10 text-primary';
+        tabLocal.className = 'px-5 py-2.5 rounded-xl text-sm font-bold transition-all bg-primary text-white shadow-lg shadow-emerald-900/10';
+        tabExternal.className = 'px-5 py-2.5 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800';
         panelLocal.classList.remove('hidden');
+        document.getElementById('paginationLocal')?.classList.remove('hidden'); // Fix for pagination container
         panelExternal.classList.add('hidden');
     } else {
-        tabExternal.className = 'px-4 py-2 rounded-lg text-sm font-bold transition bg-primary text-white shadow-sm';
-        tabLocal.className = 'px-4 py-2 rounded-lg text-sm font-bold transition bg-primary/10 text-primary';
+        tabExternal.className = 'px-5 py-2.5 rounded-xl text-sm font-bold transition-all bg-primary text-white shadow-lg shadow-emerald-900/10';
+        tabLocal.className = 'px-5 py-2.5 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800';
         panelExternal.classList.remove('hidden');
         panelLocal.classList.add('hidden');
+        document.getElementById('paginationLocal')?.classList.add('hidden'); // Hide pagination on external tab
         
         // Auto-fetch on first tab open
         const grid = document.getElementById('externalArticlesGrid');

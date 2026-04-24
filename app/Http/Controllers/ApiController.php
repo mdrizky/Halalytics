@@ -13,7 +13,6 @@ use App\Models\ProductModel;
 use App\Models\KategoriModel;
 use App\Models\ScanModel;
 use App\Models\ReportModel;
-use App\Models\UmkmProduct;
 use App\Models\ProductVerificationRequest;
 use Illuminate\Support\Facades\DB;
 

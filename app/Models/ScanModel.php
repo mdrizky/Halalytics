@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Services\DisplayImageService;
 
 class ScanModel extends Model
 {
@@ -35,5 +36,14 @@ class ScanModel extends Model
     public function product()
     {
         return $this->belongsTo(ProductModel::class, 'product_id', 'id_product');
+    }
+
+    public function getImageAttribute($value): string
+    {
+        return app(DisplayImageService::class)->resolve($value, [
+            'name' => $this->nama_produk,
+            'barcode' => $this->barcode,
+            'category' => $this->kategori,
+        ], 'product');
     }
 }

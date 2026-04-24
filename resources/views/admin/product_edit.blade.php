@@ -42,21 +42,60 @@
         </div>
         
         <div class="p-6 space-y-6">
-            <!-- Product Image -->
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Product Image</label>
-                <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-6 text-center hover:border-primary transition-colors">
+            <!-- Product Image / External Images -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Product Images</label>
+                
+                @if(isset($imageData))
+                <div class="product-images bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    @if($imageData['source'] === 'placeholder')
+                        <div class="bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 p-3 rounded-lg flex items-center gap-2 mb-4 text-sm font-medium">
+                            <span class="material-icons-round text-lg">image_not_supported</span>
+                            Foto tidak ditemukan. Menampilkan placeholder.
+                        </div>
+                    @elseif($imageData['source'] === 'unsplash')
+                        <div class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 p-3 rounded-lg flex items-center gap-2 mb-4 text-sm font-medium">
+                            <span class="material-icons-round text-lg">image_search</span>
+                            Foto ilustrasi dari Unsplash (bukan foto produk asli).
+                        </div>
+                    @endif
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        @foreach($imageData['images'] as $image)
+                        <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden group">
+                            <div class="aspect-square relative">
+                                <img
+                                    src="{{ $image['url'] }}"
+                                    class="w-full h-full object-cover"
+                                    alt="{{ $image['label'] }}"
+                                    loading="lazy"
+                                    onerror="this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'"
+                                >
+                            </div>
+                            <div class="p-2 text-center bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700">
+                                <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">{{ $image['label'] }}</p>
+                                @if(isset($image['credit']))
+                                    <p class="text-[9px] text-slate-500 mt-0.5">📷 {{ $image['credit'] }}</p>
+                                @endif
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+                
+                <div class="mt-4 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-6 text-center hover:border-primary transition-colors">
                     <input type="file" name="image" accept="image/*" class="hidden" id="imageUpload" onchange="previewImage(event)">
                     <label for="imageUpload" class="cursor-pointer">
                         <div id="imagePreview" class="mb-4">
                             @if($product->image)
-                                <img src="{{ $product->image }}" class="w-32 h-32 object-cover rounded-lg mx-auto" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
+                                <img src="{{ $product->image }}" class="w-32 h-32 object-cover rounded-lg mx-auto shadow-sm" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
                             @else
-                                <span class="material-icons-round text-4xl text-slate-400">image</span>
+                                <span class="material-icons-round text-4xl text-slate-400">add_photo_alternate</span>
                             @endif
                         </div>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">Click to change product image</p>
-                        <p class="text-xs text-slate-400 mt-1">JPEG, PNG, JPG, GIF up to 5MB</p>
+                        <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Click to upload new local image</p>
+                        <p class="text-xs text-slate-400 mt-1">JPEG, PNG, JPG up to 5MB</p>
                     </label>
                 </div>
             </div>
