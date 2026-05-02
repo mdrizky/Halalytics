@@ -45,7 +45,11 @@ class MedicineAdminController extends Controller
         }
 
         if ($request->filled('source')) {
-            $query->where('source', $request->source);
+            if ($request->source === 'local') {
+                $query->where('source', '!=', 'openfda');
+            } else {
+                $query->where('source', $request->source);
+            }
         }
 
         $medicines = $query->latest()->paginate(20)->withQueryString();

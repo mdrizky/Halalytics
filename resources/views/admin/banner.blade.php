@@ -1,269 +1,236 @@
 @extends('admin.layouts.admin_layout')
 
-@section('title', 'Banner Management - Halalytics Admin')
-@section('breadcrumb-parent', 'App Management')
-@section('breadcrumb-current', 'Banners')
+@section('title', 'Banner Slider - Halalytics Admin')
+@section('breadcrumb-parent', 'Content')
+@section('breadcrumb-current', 'Banner Slider')
 
 @section('content')
-<!-- Header -->
-<div class="flex justify-between items-end mb-8">
-    <div class="max-w-2xl">
-        <h2 class="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight">Banner Slider</h2>
-        <p class="text-slate-500 dark:text-slate-400 mt-2">Manage the promotional banners displayed on the mobile app home screen.</p>
-    </div>
-    <div class="flex gap-3">
-        <button onclick="openModal('addBannerModal')" class="flex items-center gap-2 bg-primary px-4 py-2.5 rounded-lg text-sm font-bold text-white hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
-            <span class="material-icons-round text-[20px]">add_photo_alternate</span>
-            Add New Banner
+<div class="space-y-6">
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+        <div>
+            <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Banner Slider</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-2xl">
+                Kelola banner promosi dan informasi utama yang tampil di halaman home. Urutan tampil, status aktif, dan visual poster sekarang dipisahkan dengan lebih rapi.
+            </p>
+        </div>
+        <button onclick="openCreateModal()" class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:bg-primary-dark transition">
+            <span class="material-icons-round text-lg">add_photo_alternate</span>
+            Tambah Banner
         </button>
     </div>
-</div>
 
-<!-- Stats Overview -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <!-- Total Banners -->
-    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-            <span class="material-icons-round text-6xl text-primary">view_carousel</span>
-        </div>
-        <p class="text-slate-500 text-sm font-semibold uppercase tracking-wider">Total Banners</p>
-        <div class="flex items-baseline gap-3 mt-2">
-            <p class="text-3xl font-extrabold text-slate-900 dark:text-white">{{ number_format($banners->count()) }}</p>
-        </div>
-    </div>
-    
-    <!-- Active Banners -->
-    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-            <span class="material-icons-round text-6xl text-emerald-500">check_circle</span>
-        </div>
-        <p class="text-slate-500 text-sm font-semibold uppercase tracking-wider">Active & Visible</p>
-        <div class="flex items-baseline gap-3 mt-2">
-            <p class="text-3xl font-extrabold text-slate-900 dark:text-white">{{ number_format($banners->where('is_active', 1)->count()) }}</p>
-            <span class="text-emerald-500 text-sm font-bold flex items-center gap-0.5">
-                <span class="material-icons-round text-xs">visibility</span> Live
-            </span>
-        </div>
-    </div>
-
-    <!-- Estimated Reach -->
-    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-            <span class="material-icons-round text-6xl text-primary">people</span>
-        </div>
-        <p class="text-slate-500 text-sm font-semibold uppercase tracking-wider">Estimated Reach</p>
-        <div class="flex items-baseline gap-3 mt-2">
-            <p class="text-3xl font-extrabold text-slate-900 dark:text-white">{{ number_format($global_user_count ?? 0) }}</p>
-            <span class="text-slate-400 text-xs font-semibold">Users</span>
-        </div>
-    </div>
-</div>
-
-<!-- Data Cards (Grid instead of Table for better visual) -->
-<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
-    @forelse($banners as $banner)
-    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all overflow-hidden group">
-        <div class="aspect-video relative overflow-hidden bg-slate-100 dark:bg-slate-800">
-            @if($banner->image)
-                @php $bannerImg = str_starts_with((string)$banner->image, 'http') ? $banner->image : asset($banner->image); @endphp
-                <img src="{{ $bannerImg }}" alt="Banner" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://images.unsplash.com/photo-1505751172107-160fa86f2648?auto=format&fit=crop&q=80&w=800'">
-            @else
-                <div class="w-full h-full flex items-center justify-center text-slate-300">
-                    <span class="material-icons-round text-6xl">leak_add</span>
-                </div>
-            @endif
-            
-            <div class="absolute top-4 right-4">
-                <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $banner->is_active ? 'bg-emerald-500 text-white' : 'bg-slate-500 text-white' }} shadow-lg">
-                    {{ $banner->is_active ? 'Live' : 'Hidden' }}
-                </span>
-            </div>
-            
-            <div class="absolute bottom-4 left-4">
-                <span class="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-xs font-bold border border-white/30">
-                    #{{ $banner->position }}
-                </span>
-            </div>
-        </div>
-        
-        <div class="p-6">
-            <div class="flex justify-between items-start gap-4 mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="surface-card rounded-2xl p-5">
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Total Banner</p>
+            <div class="mt-3 flex items-end justify-between">
                 <div>
-                    <h4 class="text-xl font-extrabold text-slate-800 dark:text-white tracking-tight">{{ $banner->title }}</h4>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ $banner->description ?? 'No description provided.' }}</p>
+                    <p class="text-3xl font-extrabold text-slate-900 dark:text-white">{{ number_format($banners->count()) }}</p>
+                    <p class="text-sm text-slate-500">Seluruh campaign visual</p>
                 </div>
-                <div class="flex gap-1">
-                    <button onclick='editBanner(@json($banner))' class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-primary transition-colors border border-slate-200 dark:border-slate-700">
-                        <span class="material-icons-round text-lg">edit</span>
-                    </button>
-                    <form action="{{ route('admin.banner.destroy', $banner->id) }}" method="POST" onsubmit="return confirm('Delete banner?')">
-                        @csrf @method('DELETE')
-                        <button class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-red-500 transition-colors border border-slate-200 dark:border-slate-700">
-                            <span class="material-icons-round text-lg">delete</span>
-                        </button>
-                    </form>
+                <div class="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                    <span class="material-icons-round">view_carousel</span>
                 </div>
             </div>
-            
-            <div class="flex items-center gap-4 pt-4 border-t border-slate-50 dark:border-slate-800">
-                <div class="flex -space-x-2">
-                    @for($i=0; $i<3; $i++)
-                        <div class="w-6 h-6 rounded-full border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-700"></div>
-                    @endfor
+        </div>
+        <div class="surface-card rounded-2xl p-5">
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Active Banner</p>
+            <div class="mt-3 flex items-end justify-between">
+                <div>
+                    <p class="text-3xl font-extrabold text-slate-900 dark:text-white">{{ number_format($banners->where('is_active', true)->count()) }}</p>
+                    <p class="text-sm text-slate-500">Tampil ke user</p>
                 </div>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Broadcast Visibility Active</p>
+                <div class="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <span class="material-icons-round">campaign</span>
+                </div>
+            </div>
+        </div>
+        <div class="surface-card rounded-2xl p-5">
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Inactive Draft</p>
+            <div class="mt-3 flex items-end justify-between">
+                <div>
+                    <p class="text-3xl font-extrabold text-slate-900 dark:text-white">{{ number_format($banners->where('is_active', false)->count()) }}</p>
+                    <p class="text-sm text-slate-500">Masih bisa direvisi</p>
+                </div>
+                <div class="h-12 w-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center">
+                    <span class="material-icons-round">draft</span>
+                </div>
             </div>
         </div>
     </div>
-    @empty
-    <div class="col-span-full py-20 text-center bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
-        <span class="material-icons-round text-6xl text-slate-200 mb-4">broken_image</span>
-        <p class="text-slate-400 font-medium">No banners designed yet. Click "Add New Banner" to start.</p>
-    </div>
-    @endforelse
-</div>
 
-<!-- Modal Add -->
-<div id="addBannerModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeModal('addBannerModal')"></div>
-        <div class="relative inline-block align-bottom bg-white dark:bg-slate-800 rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-700">
-            <form action="{{ route('admin.banner.store') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="bg-white dark:bg-slate-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 sm:mx-0 sm:h-10 sm:w-10">
-                            <span class="material-icons-round text-primary">add_photo_alternate</span>
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+        @forelse($banners as $banner)
+            <article class="surface-card overflow-hidden rounded-3xl">
+                <div class="relative h-56 bg-slate-100 dark:bg-slate-800">
+                    <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/banner-placeholder.svg'">
+                    <div class="absolute left-4 top-4 flex items-center gap-2">
+                        <span class="inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase {{ $banner->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-900/80 text-white' }}">
+                            {{ $banner->is_active ? 'Active' : 'Inactive' }}
+                        </span>
+                        <span class="inline-flex rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold text-slate-700">
+                            Posisi {{ $banner->position }}
+                        </span>
+                    </div>
+                </div>
+                <div class="p-5">
+                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">{{ $banner->title }}</h3>
+                    <p class="mt-2 min-h-[48px] text-sm leading-6 text-slate-500 dark:text-slate-400">
+                        {{ $banner->description ?: 'Belum ada deskripsi. Tambahkan konteks campaign agar admin lain mudah memahaminya.' }}
+                    </p>
+                    <div class="mt-5 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4">
+                        <div>
+                            <p class="text-xs uppercase tracking-[0.16em] text-slate-400">Last update</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $banner->updated_at->diffForHumans() }}</p>
                         </div>
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                            <h3 class="text-lg leading-6 font-bold text-slate-900 dark:text-white" id="modal-title">Add New Banner</h3>
-                            <div class="mt-4 space-y-4">
-                                <div>
-                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Title</label>
-                                    <input type="text" name="title" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-primary focus:border-primary sm:text-sm">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Description</label>
-                                    <textarea name="description" rows="2" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-primary focus:border-primary sm:text-sm"></textarea>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Image</label>
-                                    <input type="file" name="image" required class="block w-full text-sm text-slate-500
-                                      file:mr-4 file:py-2 file:px-4
-                                      file:rounded-full file:border-0
-                                      file:text-sm file:font-semibold
-                                      file:bg-primary/10 file:text-primary
-                                      hover:file:bg-primary/20
-                                    "/>
-                                </div>
-                                <div class="flex gap-4">
-                                    <div class="w-1/3">
-                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Position</label>
-                                        <input type="number" name="position" value="0" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-primary focus:border-primary sm:text-sm">
-                                    </div>
-                                    <div class="flex items-center mt-6">
-                                        <input type="checkbox" name="is_active" id="is_active" value="1" checked class="h-4 w-4 text-primary focus:ring-primary border-slate-300 rounded">
-                                        <label for="is_active" class="ml-2 block text-sm text-slate-900 dark:text-slate-300">Active</label>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="flex gap-2">
+                            <button onclick="openEditModal({{ $banner->id }}, @js($banner->title), @js($banner->description), {{ (int) $banner->position }}, {{ $banner->is_active ? 'true' : 'false' }})" class="inline-flex items-center rounded-full border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary transition">
+                                Edit
+                            </button>
+                            <form action="{{ route('admin.banner.destroy', $banner->id) }}" method="POST" onsubmit="return confirm('Hapus banner ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="inline-flex items-center rounded-full border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition">
+                                    Hapus
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
-                <div class="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-slate-100 dark:border-slate-700">
-                    <button type="submit" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm">
-                        Create Banner
-                    </button>
-                    <button type="button" onclick="closeModal('addBannerModal')" class="mt-3 w-full inline-flex justify-center rounded-lg border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2 bg-white dark:bg-slate-700 text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Cancel
-                    </button>
+            </article>
+        @empty
+            <div class="surface-card col-span-full rounded-3xl px-6 py-16 text-center">
+                <div class="flex flex-col items-center text-slate-400">
+                    <span class="material-icons-round text-5xl mb-3">view_carousel</span>
+                    <p class="text-sm font-medium">Belum ada banner yang tersimpan.</p>
                 </div>
-            </form>
-        </div>
+            </div>
+        @endforelse
     </div>
 </div>
 
-<!-- Modal Edit -->
-<div id="editBannerModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeModal('editBannerModal')"></div>
-        <div class="relative inline-block align-bottom bg-white dark:bg-slate-800 rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-700">
-            <form action="#" method="POST" enctype="multipart/form-data" id="editBannerForm">
-                @csrf
-                @method('PUT')
-                <div class="bg-white dark:bg-slate-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 sm:mx-0 sm:h-10 sm:w-10">
-                            <span class="material-icons-round text-primary">edit</span>
-                        </div>
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                            <h3 class="text-lg leading-6 font-bold text-slate-900 dark:text-white">Edit Banner</h3>
-                            <div class="mt-4 space-y-4">
-                                <div>
-                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Title</label>
-                                    <input type="text" name="title" id="edit_title" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-primary focus:border-primary sm:text-sm">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Description</label>
-                                    <textarea name="description" id="edit_description" rows="2" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-primary focus:border-primary sm:text-sm"></textarea>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Image (Optional)</label>
-                                    <input type="file" name="image" class="block w-full text-sm text-slate-500
-                                      file:mr-4 file:py-2 file:px-4
-                                      file:rounded-full file:border-0
-                                      file:text-sm file:font-semibold
-                                      file:bg-primary/10 file:text-primary
-                                      hover:file:bg-primary/20
-                                    "/>
-                                    <p class="text-xs text-slate-400 mt-1">Leave empty to keep current image.</p>
-                                </div>
-                                <div class="flex gap-4">
-                                    <div class="w-1/3">
-                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Position</label>
-                                        <input type="number" name="position" id="edit_position" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-primary focus:border-primary sm:text-sm">
-                                    </div>
-                                    <div class="flex items-center mt-6">
-                                        <input type="checkbox" name="is_active" id="edit_is_active" value="1" class="h-4 w-4 text-primary focus:ring-primary border-slate-300 rounded">
-                                        <label for="edit_is_active" class="ml-2 block text-sm text-slate-900 dark:text-slate-300">Active</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-slate-100 dark:border-slate-700">
-                    <button type="submit" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm">
-                        Update Banner
-                    </button>
-                    <button type="button" onclick="closeModal('editBannerModal')" class="mt-3 w-full inline-flex justify-center rounded-lg border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2 bg-white dark:bg-slate-700 text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Cancel
-                    </button>
-                </div>
-            </form>
+<div id="createModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 px-4">
+    <div class="w-full max-w-2xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <h3 class="text-xl font-extrabold text-slate-900 dark:text-white">Tambah Banner Baru</h3>
+                <p class="mt-1 text-sm text-slate-500">Unggah banner dengan deskripsi, urutan tampil, dan status aktif.</p>
+            </div>
+            <button type="button" onclick="closeCreateModal()" class="rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                <span class="material-icons-round">close</span>
+            </button>
         </div>
+
+        <form action="{{ route('admin.banner.store') }}" method="POST" enctype="multipart/form-data" class="mt-6 space-y-4">
+            @csrf
+            <div>
+                <label class="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Judul banner</label>
+                <input type="text" name="title" required class="w-full rounded-2xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm">
+            </div>
+            <div>
+                <label class="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Deskripsi</label>
+                <textarea name="description" rows="3" class="w-full rounded-2xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm"></textarea>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Posisi urutan</label>
+                    <input type="number" name="position" min="1" value="1" class="w-full rounded-2xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm">
+                </div>
+                <div>
+                    <label class="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Gambar banner</label>
+                    <input type="file" name="image" class="w-full rounded-2xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm">
+                </div>
+            </div>
+            <label class="flex items-center gap-3 rounded-2xl bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                <input type="checkbox" name="is_active" checked class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary">
+                Aktifkan banner setelah disimpan
+            </label>
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeCreateModal()" class="rounded-full border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-300">
+                    Batal
+                </button>
+                <button type="submit" class="rounded-full bg-primary px-5 py-2 text-sm font-bold text-white hover:bg-primary-dark transition">
+                    Simpan Banner
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
-<script>
-    function openModal(id) {
-        document.getElementById(id).classList.remove('hidden');
-    }
-    
-    function closeModal(id) {
-        document.getElementById(id).classList.add('hidden');
-    }
+<div id="editModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 px-4">
+    <div class="w-full max-w-2xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <h3 class="text-xl font-extrabold text-slate-900 dark:text-white">Edit Banner</h3>
+                <p class="mt-1 text-sm text-slate-500">Perbarui judul, deskripsi, gambar, dan status banner.</p>
+            </div>
+            <button type="button" onclick="closeEditModal()" class="rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
 
-    function editBanner(banner) {
-        const form = document.getElementById('editBannerForm');
-        form.action = `/admin/banner/${banner.id}`;
-        
-        document.getElementById('edit_title').value = banner.title;
-        document.getElementById('edit_description').value = banner.description;
-        document.getElementById('edit_position').value = banner.position;
-        document.getElementById('edit_is_active').checked = banner.is_active ? true : false;
-        
-        openModal('editBannerModal');
-    }
-</script>
+        <form id="editForm" method="POST" enctype="multipart/form-data" class="mt-6 space-y-4">
+            @csrf
+            @method('PUT')
+            <div>
+                <label class="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Judul banner</label>
+                <input type="text" name="title" id="edit_title" required class="w-full rounded-2xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm">
+            </div>
+            <div>
+                <label class="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Deskripsi</label>
+                <textarea name="description" id="edit_desc" rows="3" class="w-full rounded-2xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm"></textarea>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Posisi urutan</label>
+                    <input type="number" name="position" id="edit_pos" min="1" class="w-full rounded-2xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm">
+                </div>
+                <div>
+                    <label class="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Ganti gambar</label>
+                    <input type="file" name="image" class="w-full rounded-2xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm">
+                </div>
+            </div>
+            <label class="flex items-center gap-3 rounded-2xl bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                <input type="checkbox" name="is_active" id="edit_active" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary">
+                Banner aktif
+            </label>
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeEditModal()" class="rounded-full border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-300">
+                    Batal
+                </button>
+                <button type="submit" class="rounded-full bg-primary px-5 py-2 text-sm font-bold text-white hover:bg-primary-dark transition">
+                    Update Banner
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+function openCreateModal() {
+    document.getElementById('createModal').classList.remove('hidden');
+    document.getElementById('createModal').classList.add('flex');
+}
+
+function closeCreateModal() {
+    document.getElementById('createModal').classList.add('hidden');
+    document.getElementById('createModal').classList.remove('flex');
+}
+
+function openEditModal(id, title, desc, pos, active) {
+    document.getElementById('edit_title').value = title || '';
+    document.getElementById('edit_desc').value = desc || '';
+    document.getElementById('edit_pos').value = pos || 1;
+    document.getElementById('edit_active').checked = !!active;
+    document.getElementById('editForm').action = `/admin/banner/${id}`;
+    document.getElementById('editModal').classList.remove('hidden');
+    document.getElementById('editModal').classList.add('flex');
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').classList.add('hidden');
+    document.getElementById('editModal').classList.remove('flex');
+}
+</script>
+@endpush

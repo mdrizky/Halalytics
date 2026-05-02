@@ -55,7 +55,7 @@ class BpomAdminController extends Controller
             'dangerous' => BpomData::where('status_keamanan', 'bahaya')->count(),
         ];
 
-        return view('admin.bpom.index', compact('bpom_data', 'stats'));
+        return view('admin.bpom', compact('bpom_data', 'stats'));
     }
 
     private function seedLocalFallbackBpom(): void

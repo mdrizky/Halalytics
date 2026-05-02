@@ -20,514 +20,319 @@ use App\Http\Controllers\Api\HalalAlternativeController;
 use App\Http\Controllers\Api\HealthMetricController;
 use App\Http\Controllers\Api\HealthArticleController;
 use App\Http\Controllers\Api\UserHealthInsightController;
-
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BannerController;
+use App\Http\Controllers\Api\HealthEncyclopediaController;
+use App\Http\Controllers\Api\MedicineController;
+use App\Http\Controllers\Api\OCRController;
+use App\Http\Controllers\Api\NutritionController;
+use App\Http\Controllers\Api\RecipeController;
+use App\Http\Controllers\Api\ExpertController;
+use App\Http\Controllers\Api\ConsultationController;
+use App\Http\Controllers\Api\MessageController;
+use App\Http\Controllers\Api\CommunityController;
+use App\Http\Controllers\Api\BpomController;
+use App\Http\Controllers\Api\SkincareController;
+use App\Http\Controllers\Api\WalletController;
+use App\Http\Controllers\Api\MentalHealthController;
+use App\Http\Controllers\Api\HelpCenterController;
 
 /*
 |--------------------------------------------------------------------------
-| API Routes - Halalytics
+| Halalytics API Routes - Consolidated & Cleaned
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('v1')->group(function () {
-    Route::get('products/popular', [ProductController::class, 'popular']);
-    Route::get('products/recent', [ProductController::class, 'recent']);
-    Route::get('products/{barcode}', [ProductController::class, 'show']);
-    Route::post('products/check-halal', [ProductController::class, 'checkHalal']);
-    Route::post('products/batch-check-halal', [ProductController::class, 'batchCheckHalal']);
-    Route::get('products/alternatives/{barcode}', [ProductController::class, 'alternatives']);
-});
-
-Route::post('halal/check', [\App\Http\Controllers\Api\HalalCheckController::class, 'check']);
-Route::get('food/search', [\App\Http\Controllers\Api\FoodSearchController::class, 'search']);
-
-// ==========================================================
-// 📱 ANDROID COMPATIBILITY ROUTES
-// ==========================================================
-// These routes handle legacy endpoints called by the current Android build
-Route::get('products/barcode/{barcode}', [ApiController::class, 'scanProductByBarcode']);
-Route::get('products/search', [ApiController::class, 'searchProduct']);
-
-// Temporary test route for AI Verification
-Route::post('/test-analyze-symptoms', [\App\Http\Controllers\Api\MedicineController::class, 'analyzeSymptoms']);
-
-// ==========================================================
 // 🔓 PUBLIC ROUTES
-// ==========================================================
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/auth/google', [AuthController::class, 'googleLogin']);
+Route::post('/auth/facebook', [AuthController::class, 'facebookLogin']);
+Route::get('/banners', [BannerController::class, 'index']);
 
-// AUTH
-Route::post('/register', [\App\Http\Controllers\Api\AuthController::class, 'register']);
-Route::post('/login', [\App\Http\Controllers\Api\AuthController::class, 'login']);
-Route::post('/forgot-password', [\App\Http\Controllers\Api\AuthController::class, 'forgotPassword']);
-
-// BANNERS
-Route::get('/banners', [\App\Http\Controllers\Api\BannerController::class, 'index']);
-
-Route::get('/health-encyclopedia', [\App\Http\Controllers\Api\HealthEncyclopediaController::class, 'index']);
-Route::get('/health-encyclopedia/{id}', [\App\Http\Controllers\Api\HealthEncyclopediaController::class, 'show']);
-
-// HEALTH ARTICLES (public)
+// HEALTH CONTENT
 Route::get('/articles', [HealthArticleController::class, 'index']);
+Route::get('/articles/recommended', [HealthArticleController::class, 'recommended']);
 Route::get('/articles/{slug}', [HealthArticleController::class, 'show']);
-
-// LOCAL PRODUCTS (from database)
-Route::prefix('local')->group(function () {
-    Route::get('/products', [ApiController::class, 'indexProduct']);
-    Route::get('/products/search', [ApiController::class, 'searchProduct']);
-    Route::get('/products/scan/{barcode}', [ApiController::class, 'scanProductByBarcode']);
-    Route::get('/products/{id}', [ApiController::class, 'showProduct']);
-    Route::get('/categories', [ApiController::class, 'indexKategori']);
-    
-    // ENCYCLOPEDIA
-    Route::get('/encyclopedia', [EncyclopediaController::class, 'index']);
-    Route::get('/encyclopedia/{id}', [EncyclopediaController::class, 'show']);
-    Route::get('/encyclopedia/e-number/{eNumber}', [EncyclopediaController::class, 'searchByENumber']);
+Route::get('/encyclopedia', [EncyclopediaController::class, 'index']);
+Route::get('/encyclopedia/{id}', [EncyclopediaController::class, 'show']);
+Route::prefix('mental-health')->group(function () {
+    Route::get('/topics', [MentalHealthController::class, 'topics']);
+    Route::get('/articles', [MentalHealthController::class, 'articles']);
+    Route::get('/questions/{type}', [MentalHealthController::class, 'getQuestions']);
+});
+Route::prefix('help')->group(function () {
+    Route::get('/categories', [HelpCenterController::class, 'categories']);
+    Route::get('/faq', [HelpCenterController::class, 'faq']);
 });
 
-// EXTERNAL PRODUCTS (OpenFoodFacts API)
-Route::prefix('external')->group(function () {
-    // Search endpoints
-    Route::get('/search', [ProductExternalController::class, 'search']);
-    Route::get('/halal', [ProductExternalController::class, 'halal']);
-    Route::get('/vegetarian', [ProductExternalController::class, 'vegetarian']);
-    Route::get('/vegan', [ProductExternalController::class, 'vegan']);
-    
-    // Search by attributes
-    Route::get('/brand/{brand}', [ProductExternalController::class, 'brand']);
-    Route::get('/category/{category}', [ProductExternalController::class, 'category']);
-    
-    // Product detail (must be last!)
-    Route::get('/product/{barcode}', [ProductExternalController::class, 'detail']);
+// PRODUCTS (Hybrid Search)
+Route::prefix('products')->group(function () {
+    Route::get('/barcode/{barcode}', [ProductController::class, 'show']);
+    Route::get('/search', [ProductController::class, 'search']);
+    Route::get('/popular', [ProductController::class, 'popular']);
+    Route::get('/external/{barcode}', [ProductExternalController::class, 'detail']);
+});
+Route::prefix('v1/products')->group(function () {
+    Route::get('/popular', [ProductController::class, 'popular']);
 });
 
-// ==========================================================
-// 🔒 PROTECTED ROUTES (Require Authentication Token)
-// ==========================================================
+// Product Comparison
+Route::middleware('auth:sanctum')->post('/products/compare', [\App\Http\Controllers\Api\ProductComparisonController::class, 'compare']);
+
+// 🔒 PROTECTED ROUTES
 Route::middleware('auth:sanctum')->group(function () {
-    // Advanced Health Suite Hub
-    Route::post("/lab-results/upload", [App\Http\Controllers\Api\LabResultController::class, "uploadAndAnalyze"]);
-    Route::post("/nutrition-scans", [App\Http\Controllers\Api\NutritionScanController::class, "scan"]);
-    Route::get("/medical-records", [App\Http\Controllers\Api\MedicalRecordController::class, "index"]);
-    Route::post("/medical-records", [App\Http\Controllers\Api\MedicalRecordController::class, "store"]);
-    Route::post("/emergency/trigger", [App\Http\Controllers\Api\EmergencyController::class, "triggerEmergency"]);
-
     
-    // AUTH LOGOUT
-    Route::post('/logout', [\App\Http\Controllers\Api\AuthController::class, 'logout']);
-
-    // ADMIN ROUTES
-    Route::prefix('admin')->middleware('admin')->group(function () {
-        Route::get('/dashboard/stats', [\App\Http\Controllers\Api\AdminController::class, 'getDashboardStats']);
-        Route::get('/products/pending', [\App\Http\Controllers\Api\AdminController::class, 'getPendingProducts']);
-        Route::put('/products/{id}/approve', [\App\Http\Controllers\Api\AdminController::class, 'approveProduct']);
-        Route::put('/products/{id}/reject', [\App\Http\Controllers\Api\AdminController::class, 'rejectProduct']);
-        Route::post('/export', [\App\Http\Controllers\Api\AdminController::class, 'exportData']);
-    });
-
-    // USER ROUTES (Health & Scan)
-    Route::prefix('user')->group(function () {
-        Route::post('/scan', [\App\Http\Controllers\Api\UserController::class, 'scanProduct']);
-        Route::get('/daily-intake', [\App\Http\Controllers\Api\UserController::class, 'getDailyIntake']);
-        
-        // FAMILY BOX (Multi-profile)
-        Route::prefix('family')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\FamilyController::class, 'index']);
-            Route::post('/', [\App\Http\Controllers\Api\FamilyController::class, 'store']);
-            Route::post('/{id}', [\App\Http\Controllers\Api\FamilyController::class, 'update']); // Use POST with _method=PUT for image upload support
-            Route::delete('/{id}', [\App\Http\Controllers\Api\FamilyController::class, 'destroy']);
-        });
-    });
-
-    // USER PROFILE
+    // USER & PROFILE
     Route::prefix('user')->group(function () {
         Route::get('/profile', [ApiController::class, 'profile']);
         Route::post('/profile', [ApiController::class, 'updateProfile']);
-        Route::post('/allergies', [ApiController::class, 'updateAllergies']);
-        Route::post('/password', [ApiController::class, 'updatePassword']);
+        Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/stats', [ApiController::class, 'getUserStats']);
-        Route::get('/stats/weekly', [ApiController::class, 'getWeeklyStats']);
-        Route::post('/logout', [ApiController::class, 'logout']);
-        Route::post('/sync', [\App\Http\Controllers\Api\AuthController::class, 'syncUser']);
-        
-        // NEW PROFILE FEATURES
-        Route::get('/achievements', [\App\Http\Controllers\Api\ProfileFeatureController::class, 'getAchievements']);
-        Route::post('/export-report', [\App\Http\Controllers\Api\ProfileFeatureController::class, 'exportMonthlyReport']);
-        Route::post('/report/export', [\App\Http\Controllers\Api\ReportExportController::class, 'export']);
-        
-        // Product specific user routes
-        Route::get('/products/scan-history', [ProductController::class, 'scanHistory']);
-        Route::get('/products/favorites', [ProductController::class, 'favorites']);
-    });
-    
-    // SCAN HISTORY
-    Route::prefix('scans')->group(function () {
-        Route::post('/', [ApiController::class, 'storeScan']);
-        Route::get('/', [ApiController::class, 'indexMyScans']);
-        Route::get('/history', [ApiController::class, 'getScanHistory']);
-        Route::post('/add', [ApiController::class, 'addScanHistory']); // New route for adding scan history
-    });
-    
-    // REPORTS
-    Route::prefix('reports')->group(function () {
-        Route::post('/', [ApiController::class, 'storeReport']);
-        Route::get('/', [ApiController::class, 'indexMyReports']);
-    });
-    
-    // NOTIFICATIONS
-    Route::get('/notifications', [ApiController::class, 'getNotifications']);
-    
-    // STREET FOOD RECOGNITION (AI)
-    Route::prefix('food')->group(function () {
-        Route::post('/search', [FoodRecognitionController::class, 'search']);
-        Route::post('/analyze', [FoodRecognitionController::class, 'analyze']);
-        Route::post('/recognize-image', [FoodRecognitionController::class, 'recognizeImage']); // NEW
-        Route::get('/popular', [FoodRecognitionController::class, 'popular']);
-        Route::get('/categories', [FoodRecognitionController::class, 'categories']);
-        Route::get('/user-logs', [FoodRecognitionController::class, 'userLogs']);
-        Route::get('/{id}', [FoodRecognitionController::class, 'show']);
-    });
-
-    // FCM TOKEN REGISTRATION
-    Route::post('/fcm/register', [\App\Http\Controllers\Api\FcmController::class, 'register']);
-    Route::delete('/fcm/register', [\App\Http\Controllers\Api\FcmController::class, 'destroy']);
-    Route::post('/fcm-token', [\App\Http\Controllers\Api\FcmController::class, 'store']);
-    Route::delete('/fcm-token', [\App\Http\Controllers\Api\FcmController::class, 'destroy']);
-
-    // OFFLINE BATCH SYNC
-    Route::post('/sync/scan-logs', [\App\Http\Controllers\Api\SyncController::class, 'syncScanLogs']);
-    Route::post('/sync/health-logs', [\App\Http\Controllers\Api\SyncController::class, 'syncHealthLogs']);
-
-    // SPECIALIST CHAT
-    Route::prefix('consultations')->group(function () {
-        Route::get('/specialists', [\App\Http\Controllers\Api\ChatController::class, 'specialists']);
-        Route::post('/sessions', [\App\Http\Controllers\Api\ChatController::class, 'startSession']);
-        Route::get('/sessions/{session}/messages', [\App\Http\Controllers\Api\ChatController::class, 'getMessages']);
-        Route::post('/sessions/{session}/messages', [\App\Http\Controllers\Api\ChatController::class, 'sendMessage']);
-        Route::post('/sessions/{session}/end', [\App\Http\Controllers\Api\ChatController::class, 'endSession']);
-    });
-
-
-
-    // VERIFICATION REQUESTS
-    Route::post('/products/request-verification', [ApiController::class, 'requestVerification']);
-
-    // RECOMMENDATIONS
-    Route::get('/products/recommendations', [ApiController::class, 'getRecommendations']);
-
-    // ========== NOTIFICATIONS ==========
-    Route::prefix('notifications')->group(function () {
-        Route::get('/', [NotificationController::class, 'index']);
-        Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
-        Route::get('/{id}', [NotificationController::class, 'show']);
-        Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
-        Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
-    });
-
-    // ========== SCAN HISTORY ==========
-    Route::prefix('scan-history')->group(function () {
-        Route::get('/', [ScanHistoryController::class, 'index']);
-        Route::get('/{id}', [ScanHistoryController::class, 'show']);
-        Route::post('/', [ScanHistoryController::class, 'recordScan']);
-        Route::delete('/{id}', [ScanHistoryController::class, 'destroy']);
-    });
-
-    // ========== FAVORITES ==========
-    Route::prefix('favorites')->group(function () {
-        Route::get('/', [FavoriteController::class, 'index']);
-        Route::post('/', [FavoriteController::class, 'store']);
-        Route::delete('/{id}', [FavoriteController::class, 'destroy']);
-        Route::put('/{id}/notes', [FavoriteController::class, 'updateNotes']);
-    });
-
-    // UNIFIED SCAN
-    Route::post('/scan/unified', [UnifiedScanController::class, 'scan']);
-
-    // AI ASSISTANT
-    Route::post('/ai/analyze', [AIAssistantController::class, 'analyzeIngredients']);
-    Route::get('/ai/weekly-report', [AIAssistantController::class, 'generateWeeklyReport']);
-    Route::get('/ai/daily-intake', [AIAssistantController::class, 'getDailyIntake']);
-    Route::get('/ai/personal-risk-score', [AIAssistantController::class, 'getPersonalRiskScore']);
-
-    // CONTRIBUTIONS
-    Route::prefix('contributions')->group(function () {
-        Route::post('/submit', [\App\Http\Controllers\Api\ContributionController::class, 'submit']);
-        Route::get('/my', [\App\Http\Controllers\Api\ContributionController::class, 'myContributions']);
-        Route::get('/admin/all', [\App\Http\Controllers\Api\ContributionController::class, 'indexAll']);
-    });
-
-    // Product Contributions (requires auth)
-    Route::post('/product-requests', [App\Http\Controllers\Api\ProductRequestController::class, 'store']);
-
-    // AI MEAL SCANNER
-    Route::post('/meal/analyze', [\App\Http\Controllers\Api\MealAiController::class, 'analyzeMeal']);
-
-    // MEDICINE REMINDER & CHECKER
-    Route::prefix('medicines')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Api\MedicineController::class, 'index']);
-        Route::post('/check', [\App\Http\Controllers\Api\MedicineController::class, 'checkHalal']);
-        Route::post('/schedule', [\App\Http\Controllers\Api\MedicineController::class, 'addToSchedule']);
-        Route::post('/safe-schedule', [\App\Http\Controllers\Api\MedicineController::class, 'generateSafeSchedule']);
-        Route::post('/drug-food-conflict', [\App\Http\Controllers\Api\MedicineController::class, 'checkDrugFoodConflict']);
-        Route::get('/my', [\App\Http\Controllers\Api\MedicineController::class, 'getUserMedicines']);
-        
-        // AI Health Assistant Routes
-        Route::post('/analyze-symptoms', [\App\Http\Controllers\Api\MedicineController::class, 'analyzeSymptoms']);
-        Route::post('/search', [\App\Http\Controllers\Api\MedicineController::class, 'searchMedicine']);
-        Route::post('/reminders', [\App\Http\Controllers\Api\MedicineController::class, 'createReminder']);
-        Route::get('/reminders/{userId}', [\App\Http\Controllers\Api\MedicineController::class, 'getUserReminders']);
-        Route::post('/reminders/mark-taken', [\App\Http\Controllers\Api\MedicineController::class, 'markAsTaken']);
-        Route::get('/reminders/{userId}/next-dose', [\App\Http\Controllers\Api\MedicineController::class, 'getNextDose']);
-        Route::get('/{id}', [\App\Http\Controllers\Api\MedicineController::class, 'show']);
-    });
-
-    // ADMIN MONITOR
-    Route::prefix('admin/monitor')->middleware('role:admin')->group(function () {
-        Route::get('/stats', [\App\Http\Controllers\Api\AdminMonitorController::class, 'getDashboardStats']);
-        Route::get('/feed', [\App\Http\Controllers\Api\AdminMonitorController::class, 'getActivityFeed']);
-        Route::put('/medicines/{id}/status', [\App\Http\Controllers\Api\AdminMonitorController::class, 'updateMedicineStatus']);
-    });
-
-    // HALAL CERTIFICATE VALIDATOR
-    Route::prefix('certificate')->group(function () {
-        Route::post('/verify', [\App\Http\Controllers\Api\CertificateValidatorController::class, 'verify']);
-        Route::get('/history', [\App\Http\Controllers\Api\CertificateValidatorController::class, 'history']);
-    });
-
-    // OCR SCANNER
-    Route::prefix('ocr')->group(function () {
-        Route::post('/submit', [\App\Http\Controllers\Api\OCRController::class, 'submitOCR']);
-        Route::get('/history/{id}', [\App\Http\Controllers\Api\OCRController::class, 'getUserOCRHistory']);
-        Route::get('/statistics', [\App\Http\Controllers\Api\OCRController::class, 'getOCRStatistics']);
-        
-        // Additional OCR Routes
-        Route::post('/check-duplicate', [\App\Http\Controllers\Api\OCRController::class, 'checkDuplicateOCR']);
-        Route::get('/admin/products', [\App\Http\Controllers\Api\OCRController::class, 'getAdminProducts']);
-        Route::post('/favorites', [\App\Http\Controllers\Api\OCRController::class, 'addToFavorites']);
-        Route::delete('/favorites/{id}', [\App\Http\Controllers\Api\OCRController::class, 'removeFromFavorites']);
-        Route::get('/favorites', [\App\Http\Controllers\Api\OCRController::class, 'getFavorites']);
-    });
-
-    // AI ADVANCED HEALTH FEATURES
-    Route::prefix('ai')->group(function () {
-        Route::post('/interactions', [DrugInteractionController::class, 'check']);
-        Route::get('/drugs/search', [DrugInteractionController::class, 'search']);
-        Route::post('/pill-identify', [PillIdentificationController::class, 'identify']);
-        Route::post('/lab-analysis', [LabAnalysisController::class, 'analyze']);
-        Route::get('/lab-history', [LabAnalysisController::class, 'history']);
-        Route::post('/reminders', [MedicationReminderController::class, 'store']);
-        Route::post('/reminders/log', [MedicationReminderController::class, 'log']);
-        Route::get('/reminders', [MedicationReminderController::class, 'index']);
-        Route::delete('/reminders/{id}', [MedicationReminderController::class, 'destroy']);
-        Route::get('/halal-alternatives', [HalalAlternativeController::class, 'getAlternatives']);
-        Route::post('/compare', [\App\Http\Controllers\Api\ComparisonController::class, 'compare']);
         Route::get('/daily-insight', [UserHealthInsightController::class, 'getDailyInsight']);
     });
 
-    // HEALTH TRACKING (Health Journey)
-    Route::prefix('health')->group(function () {
-        Route::get('/score', [UserHealthInsightController::class, 'getHealthScore']);
-        Route::post('/metrics', [HealthMetricController::class, 'store']);
-        Route::get('/metrics/history', [HealthMetricController::class, 'history']);
-        Route::get('/metrics/summary', [HealthMetricController::class, 'summary']);
-        Route::get('/diary', [HealthMetricController::class, 'diary']);
-        Route::post('/analyze', [HealthMetricController::class, 'analyze']);
+    // SCAN & HISTORY
+    Route::post('/scan/unified', [UnifiedScanController::class, 'scan']);
+    Route::prefix('scans')->group(function () {
+        Route::get('/history', [ScanHistoryController::class, 'index']);
+        Route::get('/{id}', [ScanHistoryController::class, 'show']);
+        Route::post('/record', [ScanHistoryController::class, 'recordScan']);
+        Route::delete('/{id}', [ScanHistoryController::class, 'destroy']);
     });
 
-    // ═══ HEALTH EXPANSION (Halodoc-Style) ═══
-
-    // Medical Profile (informasi medis user)
-    Route::prefix('medical-profile')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Api\MedicalProfileController::class, 'show']);
-        Route::post('/', [\App\Http\Controllers\Api\MedicalProfileController::class, 'store']);
-        Route::post('/bmi', [\App\Http\Controllers\Api\MedicalProfileController::class, 'calculateBmi']);
+    // OCR & INGREDIENTS (Consolidated)
+    Route::prefix('ocr')->group(function () {
+        Route::post('/submit', [OCRController::class, 'submitOCR']);
+        Route::get('/history', [OCRController::class, 'history']);
+        Route::get('/sync', [OCRController::class, 'syncIngredients']);
+        Route::post('/scan-result', [OCRController::class, 'scanResult']);
     });
 
-    // Mental Health
-    Route::prefix('mental-health')->group(function () {
-        Route::post('/quiz', [\App\Http\Controllers\Api\MentalHealthController::class, 'submitQuiz']);
-        Route::get('/quiz/history', [\App\Http\Controllers\Api\MentalHealthController::class, 'history']);
-        Route::get('/quiz/{type}/questions', [\App\Http\Controllers\Api\MentalHealthController::class, 'getQuestions']);
-        
-        Route::get('/topics', [\App\Http\Controllers\Api\MentalHealthController::class, 'topics']);
-        Route::get('/articles', [\App\Http\Controllers\Api\MentalHealthController::class, 'articles']);
-        Route::get('/experts', [\App\Http\Controllers\Api\MentalHealthController::class, 'experts']);
-        Route::post('/expert-request', [\App\Http\Controllers\Api\MentalHealthController::class, 'requestExpert']);
+    // MEDICINES & REMINDERS
+    Route::prefix('medicines')->group(function () {
+        Route::get('/', [MedicineController::class, 'index']);
+        Route::post('/search', [MedicineController::class, 'searchMedicine']);
+        Route::post('/analyze-symptoms', [MedicineController::class, 'analyzeSymptoms']);
+        Route::post('/schedule', [MedicineController::class, 'generateSafeSchedule']);
+        Route::post('/check', [MedicineController::class, 'checkHalal']);
+        Route::get('/reminders', [MedicationReminderController::class, 'index']);
+        Route::post('/reminders', [MedicationReminderController::class, 'store']);
+        Route::post('/reminders/log', [MedicationReminderController::class, 'log']);
+        Route::get('/reminders/next-dose', [MedicationReminderController::class, 'nextDose']);
+        Route::delete('/reminders/{id}', [MedicationReminderController::class, 'destroy']);
+        Route::get('/{id}', [MedicineController::class, 'show']);
     });
 
-    // Help Center
-    Route::prefix('help')->group(function () {
-        Route::get('/categories', [\App\Http\Controllers\Api\HelpCenterController::class, 'categories']);
-        Route::get('/faq', [\App\Http\Controllers\Api\HelpCenterController::class, 'faq']);
-        Route::post('/request', [\App\Http\Controllers\Api\HelpCenterController::class, 'submitRequest']);
-        Route::get('/requests', [\App\Http\Controllers\Api\HelpCenterController::class, 'myRequests']);
+    // NUTRITION & MEALS
+    Route::prefix('nutrition')->group(function () {
+        Route::post('/log', [NutritionController::class, 'logMeal']);
+        Route::get('/daily', [NutritionController::class, 'getDailyLog']);
+        Route::get('/history', [NutritionController::class, 'getHistory']);
+        Route::get('/goals', [NutritionController::class, 'getGoals']);
+        Route::post('/goals', [NutritionController::class, 'setGoals']);
     });
 
-    // ========== BPOM VERIFICATION ==========
+    // BPOM & SKINCARE
     Route::prefix('bpom')->group(function () {
-        Route::get('/search', [\App\Http\Controllers\Api\BpomController::class, 'searchBpom']);
-        Route::post('/check', [\App\Http\Controllers\Api\BpomController::class, 'checkRegistration']);
-        Route::post('/sync', [\App\Http\Controllers\Api\BpomController::class, 'sync'])->middleware('role:admin');
-        Route::post('/analyze', [\App\Http\Controllers\Api\BpomController::class, 'analyzeProduct']);
+        Route::get('/search', [BpomController::class, 'search']);
+        Route::post('/check', [BpomController::class, 'check']);
+        Route::post('/analyze', [BpomController::class, 'analyze']);
     });
-
-    // ========== SKINCARE / KOSMETIK ANALYSIS ==========
     Route::prefix('skincare')->group(function () {
-        Route::post('/analyze', [\App\Http\Controllers\Api\SkincareController::class, 'analyzeIngredients']);
-        Route::post('/safety', [\App\Http\Controllers\Api\SkincareController::class, 'checkSafety']);
-        Route::post('/halal', [\App\Http\Controllers\Api\SkincareController::class, 'getHalalStatus']);
+        Route::post('/analyze', [SkincareController::class, 'analyze']);
+        Route::post('/safety', [SkincareController::class, 'safetyCheck']);
     });
 
-    // ========== COSMETICS ==========
-    Route::prefix('cosmetics')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Api\BpomController::class, 'indexCosmetics']);
-        Route::get('/{id}', [\App\Http\Controllers\Api\BpomController::class, 'showCosmetics']);
+    // HALAL ALTERNATIVES
+    Route::get('/products/alternatives/{barcode}', [HalalAlternativeController::class, 'index']);
+
+    // COMMUNITY
+    Route::prefix('community')->group(function () {
+        Route::get('/posts', [CommunityController::class, 'index']);
+        Route::post('/posts', [CommunityController::class, 'store']);
+        Route::get('/posts/{id}', [CommunityController::class, 'show']);
+        Route::post('/posts/{id}/like', [CommunityController::class, 'likePost']);
+        Route::post('/posts/{id}/comment', [CommunityController::class, 'comment']);
+        Route::get('/leaderboard', [CommunityController::class, 'leaderboard']);
+    });
+
+    // HALOCODE (Expert Consultations)
+    Route::prefix('consultations')->group(function () {
+        Route::get('/experts', [ExpertController::class, 'index']);
+        Route::get('/experts/{id}', [ExpertController::class, 'show']);
+        Route::post('/start', [ConsultationController::class, 'store']);
+        Route::get('/history', [ConsultationController::class, 'history']);
+        Route::post('/{id}/end', [ConsultationController::class, 'end']);
+        Route::get('/messages/{consultationId}', [MessageController::class, 'index']);
+        Route::post('/messages/{consultationId}', [MessageController::class, 'store']);
+    });
+
+    // EXPERT DASHBOARD
+    Route::middleware('role:expert')->prefix('expert')->group(function () {
+        Route::post('/toggle-online', [ExpertController::class, 'toggleOnline']);
+        Route::get('/queue', [ConsultationController::class, 'expertQueue']);
+        Route::post('/consultations/{id}/start', [ConsultationController::class, 'start']);
+        Route::get('/wallet', [WalletController::class, 'balance']);
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // 📱 MOBILE APP ROUTES (Previously missing — causing APK 404s)
+    // ═══════════════════════════════════════════════════════════
+
+    // NOTIFICATIONS
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
+        Route::get('/unread-count', [\App\Http\Controllers\Api\NotificationController::class, 'unreadCount']);
+        Route::post('/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+        Route::post('/read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
+    });
+
+    // SCAN HISTORY (Realtime)
+    Route::prefix('scan-history')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\ScanHistoryController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Api\ScanHistoryController::class, 'recordScan']);
+        Route::get('/{id}', [\App\Http\Controllers\Api\ScanHistoryController::class, 'show']);
+        Route::delete('/{id}', [\App\Http\Controllers\Api\ScanHistoryController::class, 'destroy']);
+    });
+
+    // FAVORITES
+    Route::prefix('favorites')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\FavoriteController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Api\FavoriteController::class, 'store']);
+        Route::delete('/{id}', [\App\Http\Controllers\Api\FavoriteController::class, 'destroy']);
+        Route::put('/{id}/notes', [\App\Http\Controllers\Api\FavoriteController::class, 'updateNotes']);
+    });
+
+    Route::get('/user/stats/weekly', [\App\Http\Controllers\Api\AIAssistantController::class, 'generateWeeklyReport']);
+
+    // FOOD & RECOGNITION
+    Route::prefix('food')->group(function () {
+        Route::get('/search', [\App\Http\Controllers\Api\FoodRecognitionController::class, 'search']);
+        Route::get('/popular', [\App\Http\Controllers\Api\FoodRecognitionController::class, 'popular']);
+        Route::post('/analyze', [\App\Http\Controllers\Api\FoodRecognitionController::class, 'analyze']);
+        Route::post('/recognize-image', [\App\Http\Controllers\Api\FoodRecognitionController::class, 'recognizeImage']);
+    });
+
+    // HEALTH METRICS & SCORE
+    Route::get('/health/score', [\App\Http\Controllers\Api\HealthMetricController::class, 'summary']);
+    Route::post('/health/metrics', [\App\Http\Controllers\Api\HealthMetricController::class, 'store']);
+    Route::get('/health/metrics/history', [\App\Http\Controllers\Api\HealthMetricController::class, 'history']);
+    Route::get('/health/metrics/summary', [\App\Http\Controllers\Api\HealthMetricController::class, 'summary']);
+    Route::get('/health/diary', [\App\Http\Controllers\Api\HealthMetricController::class, 'diary']);
+    Route::post('/health/analyze', [\App\Http\Controllers\Api\HealthMetricController::class, 'analyze']);
+
+    // HEALTH ENCYCLOPEDIA
+    Route::get('/health-encyclopedia', [\App\Http\Controllers\Api\HealthEncyclopediaController::class, 'index']);
+    Route::get('/health-encyclopedia/{id}', [\App\Http\Controllers\Api\HealthEncyclopediaController::class, 'show']);
+
+    // PRODUCT REQUESTS (Crowdsourcing)
+    Route::post('/product-requests', [\App\Http\Controllers\Api\ProductRequestController::class, 'store']);
+    Route::post('/products/request-verification', [\App\Http\Controllers\Api\ProductRequestController::class, 'store']);
+
+    // CONTRIBUTIONS
+    Route::post('/contributions/submit', [\App\Http\Controllers\Api\ContributionController::class, 'submit']);
+    Route::get('/contributions/my', [\App\Http\Controllers\Api\ContributionController::class, 'myContributions']);
+
+    // CERTIFICATE VERIFICATION
+    Route::post('/certificate/verify', [\App\Http\Controllers\Api\CertificateValidatorController::class, 'verify']);
+    Route::get('/certificate/history', [\App\Http\Controllers\Api\CertificateValidatorController::class, 'history']);
+
+    // REPORTS
+    Route::post('/reports', [\App\Http\Controllers\ApiController::class, 'storeReport']);
+    Route::post('/export-report', [\App\Http\Controllers\Api\ReportExportController::class, 'export']);
+
+    // AI ASSISTANT SUITE
+    Route::prefix('ai')->group(function () {
+        Route::post('/analyze', [\App\Http\Controllers\Api\AIAssistantController::class, 'analyzeIngredients']);
+        Route::get('/weekly-report', [\App\Http\Controllers\Api\AIAssistantController::class, 'generateWeeklyReport']);
+        Route::get('/personal-risk-score', [\App\Http\Controllers\Api\AIAssistantController::class, 'getPersonalRiskScore']);
+        Route::get('/daily-intake', [\App\Http\Controllers\Api\AIAssistantController::class, 'getDailyIntake']);
+        Route::get('/daily-insight', [\App\Http\Controllers\Api\AIAssistantController::class, 'getPersonalHealthAdvice']);
+        Route::post('/interactions', [\App\Http\Controllers\Api\DrugInteractionController::class, 'check']);
+        Route::get('/drugs/search', [\App\Http\Controllers\Api\DrugInteractionController::class, 'search']);
+        Route::post('/pill-identify', [\App\Http\Controllers\Api\PillIdentificationController::class, 'identify']);
+        Route::get('/reminders', [\App\Http\Controllers\Api\MedicationReminderController::class, 'index']);
+        Route::post('/reminders', [\App\Http\Controllers\Api\MedicationReminderController::class, 'store']);
+        Route::post('/reminders/log', [\App\Http\Controllers\Api\MedicationReminderController::class, 'log']);
+        Route::get('/halal-alternatives', [\App\Http\Controllers\Api\HalalAlternativeController::class, 'getAlternatives']);
+        Route::post('/compare', [\App\Http\Controllers\Api\ComparisonController::class, 'compare']);
+    });
+
+    // MEAL AI
+    Route::post('/meal/analyze', [\App\Http\Controllers\Api\MealAiController::class, 'analyzeMeal']);
+
+    // HALAL CHECK
+    Route::post('/halal/check', [\App\Http\Controllers\Api\HalalCheckController::class, 'check']);
+
+    // NUTRITION SCAN
+    Route::post('/nutrition-scans', [\App\Http\Controllers\Api\NutritionScanController::class, 'scan']);
+
+    // MEDICAL RECORDS
+    Route::get('/medical-records', [\App\Http\Controllers\Api\MedicalRecordController::class, 'index']);
+    Route::post('/medical-records', [\App\Http\Controllers\Api\MedicalRecordController::class, 'store']);
+
+    // EMERGENCY
+    Route::post('/emergency/trigger', [\App\Http\Controllers\Api\EmergencyController::class, 'triggerEmergency']);
+
+    // EXTRA MEDICINE ROUTES
+    Route::post('/medicines/drug-food-conflict', [\App\Http\Controllers\Api\DrugInteractionController::class, 'check']);
+    Route::post('/medicines/safe-schedule', [MedicineController::class, 'generateSafeSchedule']);
+    Route::get('/medicines/my', [\App\Http\Controllers\Api\MedicationReminderController::class, 'index']);
+
+    // DAILY MISSIONS
+    Route::get('/dashboard/missions', [\App\Http\Controllers\Api\DashboardController::class, 'dailyMission']);
+    Route::post('/dashboard/missions/complete', [\App\Http\Controllers\Api\DashboardController::class, 'completeMission']);
+
+    // GAMIFICATION
+    Route::get('/user/points', [\App\Http\Controllers\Api\PointsController::class, 'myPoints']);
+    Route::get('/user/points/history', [\App\Http\Controllers\Api\PointsController::class, 'history']);
+    Route::get('/leaderboard', [\App\Http\Controllers\Api\LeaderboardController::class, 'index']);
+    Route::get('/leaderboard/my-rank', [\App\Http\Controllers\Api\LeaderboardController::class, 'myRank']);
+
+    // ACHIEVEMENTS & EXPORT
+    Route::get('/user/achievements', [\App\Http\Controllers\Api\ProfileFeatureController::class, 'getAchievements']);
+
+    // ADMIN MOBILE DASHBOARD
+    Route::middleware('role:admin')->prefix('admin')->group(function () {
+        Route::get('/stats', [MobileSyncController::class, 'getScanStats']);
+        Route::get('/users', [MobileSyncController::class, 'getUserStats']);
+        Route::get('/dashboard/stats', [\App\Http\Controllers\Api\AdminMonitorController::class, 'getDashboardStats']);
+        Route::get('/monitor/stats', [\App\Http\Controllers\Api\AdminMonitorController::class, 'getDashboardStats']);
+        Route::get('/monitor/feed', [\App\Http\Controllers\Api\AdminMonitorController::class, 'getActivityFeed']);
+        Route::get('/products/pending', [\App\Http\Controllers\Api\ContributionController::class, 'pending']);
     });
 });
 
-// ==========================================================
-// 🔧 UTILITY ENDPOINTS
-// ==========================================================
-
-// MOBILE SYNC ENDPOINTS (For Admin Integration)
-Route::prefix('mobile')->middleware('auth:sanctum')->group(function () {
-    Route::post('/sync/scans', [MobileSyncController::class, 'syncScanData']);
-    Route::post('/sync/users', [MobileSyncController::class, 'syncUserData']);
-    Route::get('/products', [MobileSyncController::class, 'getProducts']);
-    Route::get('/categories', [MobileSyncController::class, 'getCategories']);
-});
-
-// ADMIN STATISTICS ENDPOINTS
-Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
-    Route::get('/stats/users', [MobileSyncController::class, 'getUserStats']);
-    Route::get('/stats/scans', [MobileSyncController::class, 'getScanStats']);
-});
-
-    // ==========================================================
-    // 🤖 AI EXPANSION FEATURES (4-7)
-    // ==========================================================
-
-    Route::middleware('auth:sanctum')->group(function () {
-        // OFFLINE OCR (Feature 4)
-        Route::prefix('ocr-sync')->group(function () {
-            Route::get('/ingredients', [\App\Http\Controllers\Api\OcrController::class, 'syncIngredients']);
-            Route::post('/result', [\App\Http\Controllers\Api\OcrController::class, 'scanResult']);
-            Route::get('/history', [\App\Http\Controllers\Api\OcrController::class, 'history']);
-        });
-
-        // SMART NUTRITION (Feature 5)
-        Route::prefix('nutrition')->group(function () {
-            Route::post('/log-meal', [\App\Http\Controllers\Api\NutritionController::class, 'logMeal']);
-            Route::get('/daily-log', [\App\Http\Controllers\Api\NutritionController::class, 'getDailyLog']);
-            Route::get('/history', [\App\Http\Controllers\Api\NutritionController::class, 'getHistory']);
-            Route::post('/goals', [\App\Http\Controllers\Api\NutritionController::class, 'setGoals']);
-            Route::get('/goals', [\App\Http\Controllers\Api\NutritionController::class, 'getGoals']);
-        });
-
-        // RECIPE AI (Feature 6)
-        Route::prefix('recipes-ai')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\RecipeController::class, 'index']);
-            Route::get('/{id}', [\App\Http\Controllers\Api\RecipeController::class, 'show']);
-            Route::post('/', [\App\Http\Controllers\Api\RecipeController::class, 'store']);
-            Route::post('/{id}/halal-switch', [\App\Http\Controllers\Api\RecipeController::class, 'halalSwitch']);
-        });
-
-        // HALOCODE EXPERT CHAT (Expansion)
-        Route::prefix('halocode')->group(function () {
-            Route::get('/experts', [\App\Http\Controllers\Api\ExpertController::class, 'index']);
-            Route::get('/experts/{id}', [\App\Http\Controllers\Api\ExpertController::class, 'show']);
-            Route::post('/consultations', [\App\Http\Controllers\Api\ExpertController::class, 'startConsultation']);
-            Route::post('/consultations/{id}/messages', [\App\Http\Controllers\Api\ExpertController::class, 'sendMessage']);
-            Route::get('/consultations/{id}/messages', [\App\Http\Controllers\Api\ExpertController::class, 'getMessages']);
-            Route::post('/consultations/{id}/end', [\App\Http\Controllers\Api\ExpertController::class, 'endConsultation']);
-            Route::post('/consultations/{id}/review', [\App\Http\Controllers\Api\ExpertController::class, 'submitReview']);
-            Route::get('/my-consultations', [\App\Http\Controllers\Api\ExpertController::class, 'myConsultations']);
-        });
-
-        // MARKETPLACE & HEALTH FACILITIES
-        Route::prefix('market-exp')->group(function () {
-            Route::get('/merchants', [\App\Http\Controllers\Api\MarketplaceController::class, 'merchants']);
-            Route::get('/merchants/{id}', [\App\Http\Controllers\Api\MarketplaceController::class, 'merchantDetail']);
-            Route::get('/products', [\App\Http\Controllers\Api\MarketplaceController::class, 'products']);
-            Route::get('/nearby-health', [\App\Http\Controllers\Api\MarketplaceController::class, 'nearbyHealthFacilities']);
-        });
-
-        // COMMUNITY HUB (Expansion)
-        Route::prefix('community-exp')->group(function () {
-            Route::get('/posts', [\App\Http\Controllers\Api\CommunityController::class, 'posts']);
-            Route::get('/posts/{id}', [\App\Http\Controllers\Api\CommunityController::class, 'postDetail']);
-            Route::post('/posts', [\App\Http\Controllers\Api\CommunityController::class, 'createPost']);
-            Route::post('/posts/{id}/like', [\App\Http\Controllers\Api\CommunityController::class, 'toggleLike']);
-            Route::post('/posts/{id}/comment', [\App\Http\Controllers\Api\CommunityController::class, 'addComment']);
-            Route::post('/posts/{id}/report', [\App\Http\Controllers\Api\CommunityController::class, 'reportPost']);
-            Route::get('/leaderboard', [\App\Http\Controllers\Api\CommunityController::class, 'leaderboard']);
-            Route::get('/my-stats', [\App\Http\Controllers\Api\CommunityController::class, 'myStats']);
-        });
-
-        // AR FINDER (Feature 7)
-        Route::get('/ar/nearby', [\App\Http\Controllers\Api\ArController::class, 'nearbyForAr']);
-    });
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('ocr/ingredients/sync', [\App\Http\Controllers\Api\OcrController::class, 'syncIngredients']);
-    Route::post('ocr/scan-result', [\App\Http\Controllers\Api\OcrController::class, 'scanResult']);
-    Route::get('ocr/history', [\App\Http\Controllers\Api\OcrController::class, 'history']);
-
-    Route::post('nutrition/log', [\App\Http\Controllers\Api\NutritionController::class, 'logMeal']);
-    Route::get('nutrition/daily', [\App\Http\Controllers\Api\NutritionController::class, 'getDailyLog']);
-    Route::get('nutrition/history', [\App\Http\Controllers\Api\NutritionController::class, 'getHistory']);
-    Route::post('nutrition/goals', [\App\Http\Controllers\Api\NutritionController::class, 'setGoals']);
-    Route::get('nutrition/goals', [\App\Http\Controllers\Api\NutritionController::class, 'getGoals']);
-
-    Route::get('recipes', [\App\Http\Controllers\Api\RecipeController::class, 'index']);
-    Route::post('recipes', [\App\Http\Controllers\Api\RecipeController::class, 'store']);
-    Route::get('recipes/{id}', [\App\Http\Controllers\Api\RecipeController::class, 'show']);
-    Route::get('recipes/{id}/substitution', [\App\Http\Controllers\Api\RecipeController::class, 'getSubstitution']);
-    Route::post('recipes/{id}/halal-switch', [\App\Http\Controllers\Api\RecipeController::class, 'halalSwitch']);
-
-    Route::get('dashboard/daily-mission', [\App\Http\Controllers\Api\DashboardController::class, 'dailyMission']);
-    Route::post('dashboard/complete-mission', [\App\Http\Controllers\Api\DashboardController::class, 'completeMission']);
-
-    Route::get('experts', [\App\Http\Controllers\Api\ExpertController::class, 'index']);
-    Route::get('experts/{id}', [\App\Http\Controllers\Api\ExpertController::class, 'show']);
-
-    Route::post('consultations', [\App\Http\Controllers\Api\ConsultationController::class, 'store']);
-    Route::post('consultations/{id}/end', [\App\Http\Controllers\Api\ConsultationController::class, 'end']);
-    Route::get('consultations/history', [\App\Http\Controllers\Api\ConsultationController::class, 'history']);
-
-    Route::get('messages/{consultationId}', [\App\Http\Controllers\Api\MessageController::class, 'index']);
-    Route::post('messages/{consultationId}', [\App\Http\Controllers\Api\MessageController::class, 'store']);
-
-    Route::get('marketplace/nearby', [\App\Http\Controllers\Api\MarketplaceController::class, 'nearbyMerchants']);
-    Route::get('marketplace/health-facilities', [\App\Http\Controllers\Api\MarketplaceController::class, 'nearbyHealthFacilities']);
-    Route::get('marketplace/products', [\App\Http\Controllers\Api\MarketplaceController::class, 'products']);
-    Route::get('marketplace/products/{id}', [\App\Http\Controllers\Api\MarketplaceController::class, 'productDetail']);
-
-    Route::get('community/posts', [\App\Http\Controllers\Api\CommunityController::class, 'index']);
-    Route::post('community/posts', [\App\Http\Controllers\Api\CommunityController::class, 'store']);
-    Route::get('community/posts/{id}', [\App\Http\Controllers\Api\CommunityController::class, 'show']);
-    Route::post('community/posts/{id}/like', [\App\Http\Controllers\Api\CommunityController::class, 'likePost']);
-    Route::post('community/posts/{id}/comment', [\App\Http\Controllers\Api\CommunityController::class, 'comment']);
-    Route::post('community/posts/{id}/report', [\App\Http\Controllers\Api\CommunityController::class, 'reportPost']);
-    Route::get('community/user/{userId}/posts', [\App\Http\Controllers\Api\CommunityController::class, 'userPosts']);
-    Route::get('community/leaderboard', [\App\Http\Controllers\Api\CommunityController::class, 'leaderboard']);
-
-    Route::middleware('role:expert')->group(function () {
-        Route::post('expert/toggle-online', [\App\Http\Controllers\Api\ExpertController::class, 'toggleOnline']);
-        Route::put('expert/profile', [\App\Http\Controllers\Api\ExpertController::class, 'updateProfile']);
-        Route::get('expert/queue', [\App\Http\Controllers\Api\ConsultationController::class, 'expertQueue']);
-        Route::post('consultations/{id}/start', [\App\Http\Controllers\Api\ConsultationController::class, 'start']);
-        Route::get('wallet/balance', [\App\Http\Controllers\Api\WalletController::class, 'balance']);
-        Route::get('wallet/transactions', [\App\Http\Controllers\Api\WalletController::class, 'transactions']);
-        Route::post('wallet/withdraw', [\App\Http\Controllers\Api\WalletController::class, 'withdraw']);
-    });
-});
-
-Route::post('payment/callback', [\App\Http\Controllers\Api\ConsultationController::class, 'callback']);
-
+// UTILITY
 Route::get('/health', function () {
-    return response()->json([
-        'status' => 'ok',
-        'message' => 'Halalytics API is running',
-        'timestamp' => now()->toIso8601String(),
-        'version' => '2.1.0'
-    ]);
+    return response()->json(['status' => 'ok', 'version' => '2.5.0']);
+});
+
+// 🩸 BLOOD DONATION (AUTHENTICATED)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/blood-appointments', [\App\Http\Controllers\Api\DonorAppointmentController::class, 'store']);
+    Route::get('/blood-appointments/mine', [\App\Http\Controllers\Api\DonorAppointmentController::class, 'myHistory']);
+    Route::get('/blood-appointments/{id}/qr', [\App\Http\Controllers\Api\DonorAppointmentController::class, 'getQr']);
+    Route::delete('/blood-appointments/{id}', [\App\Http\Controllers\Api\DonorAppointmentController::class, 'cancel']);
+    Route::get('/donor-card', [\App\Http\Controllers\Api\DonorAppointmentController::class, 'donorCard']);
+    Route::post('/fcm-token', [\App\Http\Controllers\Api\UserController::class, 'updateFcmToken']);
+});
+
+// 🩸 BLOOD DONATION (PUBLIC)
+Route::get('/blood-events', [\App\Http\Controllers\Api\BloodEventController::class, 'index']);
+Route::get('/blood-events/{id}', [\App\Http\Controllers\Api\BloodEventController::class, 'show']);
+Route::get('/blood-stock', [\App\Http\Controllers\Api\BloodStockController::class, 'summary']);
+Route::get('/blood-emergency', [\App\Http\Controllers\Api\EmergencyController::class, 'activeList']);
+
+// 🩸 BLOOD DONATION (ADMIN ONLY)
+Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
+    Route::apiResource('blood-events', \App\Http\Controllers\Admin\AdminBloodEventController::class);
+    Route::get('appointments/{event_id}', [\App\Http\Controllers\Admin\AdminAppointmentController::class, 'byEvent']);
+    Route::post('appointments/scan-qr', [\App\Http\Controllers\Admin\AdminAppointmentController::class, 'scanQr']);
+    Route::post('appointments/{id}/verify', [\App\Http\Controllers\Admin\AdminAppointmentController::class, 'verify']);
+    Route::apiResource('blood-stocks', \App\Http\Controllers\Admin\AdminBloodStockController::class);
+    Route::post('emergency-requests', [\App\Http\Controllers\Admin\EmergencyController::class, 'store']);
+    Route::post('emergency-requests/{id}/notify', [\App\Http\Controllers\Admin\EmergencyController::class, 'sendNotification']);
 });

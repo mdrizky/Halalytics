@@ -27,7 +27,7 @@ class RoleMiddleware
                 ], 401);
             }
 
-            return redirect('/')->with('error', 'Anda harus login terlebih dahulu.');
+            return redirect()->route('login')->with('error', 'Anda harus login terlebih dahulu.');
         }
 
         $user = Auth::user();

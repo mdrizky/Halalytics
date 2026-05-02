@@ -79,6 +79,16 @@
                 </div>
 
                 <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">Or Upload Image</label>
+                    <input
+                        type="file"
+                        name="image_file"
+                        accept="image/*"
+                        class="w-full rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white text-sm"
+                    >
+                </div>
+
+                <div class="md:col-span-2">
                     <label class="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">Action URL / Deep Link</label>
                     <input
                         type="text"

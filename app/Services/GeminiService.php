@@ -81,6 +81,14 @@ class GeminiService
         return $decoded ?? $text;
     }
 
+    public function summarizeArticle(string $title, string $content): string
+    {
+        $prompt = "Buat ringkasan TL;DR (Maksimal 2-3 kalimat) dalam bahasa Indonesia yang menarik dan informatif untuk artikel kesehatan berikut:\n\nJudul: {$title}\nKonten: {$content}\n\nJawab HANYA dengan teks ringkasan tanpa tambahan apa pun.";
+        $summary = $this->callText($prompt, 0.3, 1024);
+        
+        return $summary ?: 'Ringkasan belum tersedia untuk artikel ini.';
+    }
+
     public function processImagePrompt(string $base64Image, string $prompt, string $mimeType = 'image/jpeg'): string
     {
         return $this->callVisionText($prompt, $base64Image, $mimeType, 0.2, 2048)

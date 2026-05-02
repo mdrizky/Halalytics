@@ -164,7 +164,7 @@
         <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeModal('addCategoryModal')"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         <div class="relative inline-block align-bottom bg-white dark:bg-slate-800 rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-700">
-            <form action="{{ route('admin.kategori.store') }}" method="POST">
+            <form action="{{ route('admin.kategori.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="bg-white dark:bg-slate-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start">
@@ -182,6 +182,11 @@
                                     <label for="description" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Description</label>
                                     <textarea name="description" id="description" rows="3" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-primary focus:border-primary sm:text-sm"></textarea>
                                 </div>
+                                <div>
+                                     <label for="image" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Category Image (Optional)</label>
+                                     <input type="file" name="image" id="image" accept="image/*" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-primary focus:border-primary sm:text-sm">
+                                     <p class="mt-1 text-[10px] text-slate-500">Recommended: Square image (1:1), Max 5MB</p>
+                                 </div>
                             </div>
                         </div>
                     </div>
@@ -205,7 +210,7 @@
         <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeModal('editCategoryModal')"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         <div class="relative inline-block align-bottom bg-white dark:bg-slate-800 rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-700">
-            <form action="#" method="POST" id="editCategoryForm">
+            <form action="#" method="POST" id="editCategoryForm" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 <div class="bg-white dark:bg-slate-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
@@ -221,9 +226,14 @@
                                     <input type="text" name="nama_kategori" id="edit_nama_kategori" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-primary focus:border-primary sm:text-sm">
                                 </div>
                                 <div>
-                                    <label for="edit_description" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Description</label>
-                                    <textarea name="description" id="edit_description" rows="3" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-primary focus:border-primary sm:text-sm"></textarea>
-                                </div>
+                                     <label for="edit_description" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Description</label>
+                                     <textarea name="description" id="edit_description" rows="3" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-primary focus:border-primary sm:text-sm"></textarea>
+                                 </div>
+                                 <div>
+                                     <label for="edit_image" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Change Image (Optional)</label>
+                                     <input type="file" name="image" id="edit_image" accept="image/*" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-primary focus:border-primary sm:text-sm">
+                                     <p class="mt-1 text-[10px] text-slate-500">Leave blank to keep current image</p>
+                                 </div>
                             </div>
                         </div>
                     </div>

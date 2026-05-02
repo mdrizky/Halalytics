@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\PromoBlog;
+use App\Models\Article;
 use App\Services\DisplayImageService;
 use App\Services\ExternalHealthArticleService;
 use Illuminate\Http\JsonResponse;
@@ -25,8 +25,8 @@ class HealthArticleController extends Controller
         $query = trim((string) $request->query('q', ''));
         $includeExternal = $request->boolean('include_external', true);
 
-        $localArticles = PromoBlog::query()
-            ->where('status', 'published')
+        $localArticles = Article::query()
+            ->where('is_published', true)
             ->when($query !== '', function ($q) use ($query) {
                 $q->where(function ($qq) use ($query) {
                     $qq->where('title', 'like', "%{$query}%")
@@ -38,18 +38,19 @@ class HealthArticleController extends Controller
             ->latest()
             ->limit($limit)
             ->get()
-            ->map(function (PromoBlog $blog) {
+            ->map(function (Article $article) {
                 return [
-                    'id' => (string) $blog->id,
-                    'slug' => (string) $blog->slug,
-                    'title' => (string) $blog->title,
-                    'excerpt' => (string) ($blog->excerpt ?: Str::limit(strip_tags((string) $blog->content), 170)),
-                    'content' => (string) $blog->content,
-                    'category' => (string) ($blog->category ?: 'Kesehatan'),
-                    'image_url' => $blog->image ? asset('storage/' . $blog->image) : null,
-                    'published_at' => optional($blog->created_at)->toIso8601String(),
+                    'id' => (string) $article->id,
+                    'slug' => (string) $article->slug,
+                    'title' => (string) $article->title,
+                    'excerpt' => (string) ($article->excerpt ?: Str::limit(strip_tags((string) $article->content), 170)),
+                    'content' => (string) $article->content,
+                    'ai_summary' => (string) $article->ai_summary,
+                    'category' => (string) ($article->category ?: 'Kesehatan'),
+                    'image_url' => $article->image,
+                    'published_at' => optional($article->created_at)->toIso8601String(),
                     'source' => 'halalytics',
-                    'source_url' => route('blog.show', $blog->slug),
+                    'source_url' => $article->source_url ?: route('blog.show', $article->slug),
                 ];
             })
             ->values();
@@ -86,25 +87,31 @@ class HealthArticleController extends Controller
 
     public function show(string $slug): JsonResponse
     {
-        $blog = PromoBlog::query()
-            ->where('status', 'published')
+        $article = Article::query()
+            ->where('is_published', true)
             ->where(function ($q) use ($slug) {
                 $q->where('slug', $slug)->orWhere('id', $slug);
             })
             ->first();
 
-        if ($blog) {
+        if ($article) {
+            // Trigger AI summary generation if missing
+            if (!$article->ai_summary) {
+                \Illuminate\Support\Facades\Artisan::queue('articles:summarize');
+            }
+
             $payload = $this->normalizeArticlePayload([
-                'id' => (string) $blog->id,
-                'slug' => (string) $blog->slug,
-                'title' => (string) $blog->title,
-                'excerpt' => (string) ($blog->excerpt ?: Str::limit(strip_tags((string) $blog->content), 170)),
-                'content' => (string) $blog->content,
-                'category' => (string) ($blog->category ?: 'Kesehatan'),
-                'image_url' => $blog->image ? asset('storage/' . $blog->image) : null,
-                'published_at' => optional($blog->created_at)->toIso8601String(),
+                'id' => (string) $article->id,
+                'slug' => (string) $article->slug,
+                'title' => (string) $article->title,
+                'excerpt' => (string) ($article->excerpt ?: Str::limit(strip_tags((string) $article->content), 170)),
+                'content' => (string) $article->content,
+                'ai_summary' => (string) $article->ai_summary,
+                'category' => (string) ($article->category ?: 'Kesehatan'),
+                'image_url' => $article->image,
+                'published_at' => optional($article->created_at)->toIso8601String(),
                 'source' => 'halalytics',
-                'source_url' => route('blog.show', $blog->slug),
+                'source_url' => $article->source_url ?: route('blog.show', $article->slug),
                 'is_external' => false,
             ]);
 
@@ -139,6 +146,64 @@ class HealthArticleController extends Controller
         ], 404);
     }
 
+    public function recommended(Request $request): JsonResponse
+    {
+        $user = auth('sanctum')->user();
+        $limit = min(max((int) $request->query('limit', 5), 1), 15);
+
+        // Get user's most scanned categories
+        $favoriteCategories = [];
+        if ($user) {
+            $favoriteCategories = \App\Models\ScanHistory::where('user_id', $user->id_user)
+                ->whereNotNull('category')
+                ->select('category')
+                ->selectRaw('COUNT(*) as count')
+                ->groupBy('category')
+                ->orderByDesc('count')
+                ->limit(3)
+                ->pluck('category')
+                ->toArray();
+        }
+
+        // If no user or no history, get random published articles
+        $query = Article::where('is_published', true);
+
+        if (!empty($favoriteCategories)) {
+            $query->where(function ($q) use ($favoriteCategories) {
+                foreach ($favoriteCategories as $cat) {
+                    $q->orWhere('category', 'like', "%{$cat}%")
+                      ->orWhere('title', 'like', "%{$cat}%")
+                      ->orWhere('excerpt', 'like', "%{$cat}%");
+                }
+            });
+        }
+
+        $recommendations = $query->inRandomOrder()
+            ->limit($limit)
+            ->get()
+            ->map(fn (Article $article) => $this->normalizeArticlePayload([
+                'id' => (string) $article->id,
+                'slug' => (string) $article->slug,
+                'title' => (string) $article->title,
+                'excerpt' => (string) ($article->excerpt ?: Str::limit(strip_tags((string) $article->content), 170)),
+                'content' => (string) $article->content,
+                'ai_summary' => (string) $article->ai_summary,
+                'category' => (string) ($article->category ?: 'Kesehatan'),
+                'image_url' => $article->image,
+                'published_at' => optional($article->created_at)->toIso8601String(),
+                'source' => 'halalytics',
+                'source_url' => $article->source_url ?: route('blog.show', $article->slug),
+                'is_external' => false,
+            ]))
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Rekomendasi artikel untuk Anda',
+            'data' => $recommendations,
+        ]);
+    }
+
     private function normalizeArticlePayload(array $article): array
     {
         $title = trim((string) data_get($article, 'title', 'Artikel Kesehatan Halalytics'));
@@ -151,6 +216,7 @@ class HealthArticleController extends Controller
             'title' => $title,
             'excerpt' => $excerpt !== '' ? $excerpt : Str::limit(strip_tags($content !== '' ? $content : $title), 170),
             'content' => $content !== '' ? $content : 'Konten artikel sedang diperbarui. Silakan buka sumber artikel untuk membaca detail lengkap.',
+            'ai_summary' => (string) data_get($article, 'ai_summary'),
             'category' => (string) data_get($article, 'category', 'Kesehatan'),
             'image_url' => $this->displayImageService->resolve(
                 data_get($article, 'image_url'),

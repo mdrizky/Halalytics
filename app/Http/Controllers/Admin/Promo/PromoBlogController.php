@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin\Promo;
 
 use App\Http\Controllers\Controller;
-use App\Models\PromoBlog;
+use App\Models\Article;
 use App\Services\ExternalHealthArticleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -18,7 +18,7 @@ class PromoBlogController extends Controller
 
     public function index()
     {
-        $blogs = PromoBlog::orderBy('created_at', 'desc')->paginate(10);
+        $blogs = Article::where('category', 'Promo')->orWhere('category', 'article')->orderBy('created_at', 'desc')->paginate(10);
         $externalArticles = $this->externalArticles->search('halal food health', 12);
 
         return view('admin.promo.blog.index', compact('blogs', 'externalArticles'));
@@ -48,19 +48,21 @@ class PromoBlogController extends Controller
         $slug = $baseSlug;
         $counter = 1;
 
-        while (PromoBlog::where('slug', $slug)->exists()) {
+        while (Article::where('slug', $slug)->exists()) {
             $slug = $baseSlug . '-' . $counter;
             $counter++;
         }
 
-        $blog = PromoBlog::create([
+        $blog = Article::create([
             'title' => $request->title,
             'slug' => $slug,
             'excerpt' => Str::limit(strip_tags($request->content), 150),
             'content' => $request->content,
-            'category' => $request->category,
+            'category' => $request->category ?: 'Promo',
             'status' => $request->status,
+            'is_published' => $request->status === 'published',
             'image' => $imagePath,
+            'author' => 'Admin',
         ]);
 
         if ($blog->status === 'published') {
@@ -82,13 +84,13 @@ class PromoBlogController extends Controller
 
     public function edit($id)
     {
-        $blog = PromoBlog::findOrFail($id);
+        $blog = Article::findOrFail($id);
         return view('admin.promo.blog.edit', compact('blog'));
     }
 
     public function update(Request $request, $id)
     {
-        $blog = PromoBlog::findOrFail($id);
+        $blog = Article::findOrFail($id);
 
         $request->validate([
             'title' => 'required|string|max:255',
@@ -102,8 +104,9 @@ class PromoBlogController extends Controller
             'title' => $request->title,
             'excerpt' => Str::limit(strip_tags($request->content), 150),
             'content' => $request->content,
-            'category' => $request->category,
+            'category' => $request->category ?: 'Promo',
             'status' => $request->status,
+            'is_published' => $request->status === 'published',
         ];
 
         // Only update slug if title changed significantly
@@ -111,7 +114,7 @@ class PromoBlogController extends Controller
             $baseSlug = Str::slug($request->title);
             $slug = $baseSlug;
             $counter = 1;
-            while (PromoBlog::where('slug', $slug)->where('id', '!=', $id)->exists()) {
+            while (Article::where('slug', $slug)->where('id', '!=', $id)->exists()) {
                 $slug = $baseSlug . '-' . $counter;
                 $counter++;
             }
@@ -146,8 +149,9 @@ class PromoBlogController extends Controller
 
     public function toggle($id)
     {
-        $blog = PromoBlog::findOrFail($id);
+        $blog = Article::findOrFail($id);
         $blog->status = $blog->status === 'published' ? 'draft' : 'published';
+        $blog->is_published = $blog->status === 'published';
         $blog->save();
 
         return redirect()->back()->with('success', 'Status artikel diubah');
@@ -155,7 +159,7 @@ class PromoBlogController extends Controller
 
     public function destroy($id)
     {
-        $blog = PromoBlog::findOrFail($id);
+        $blog = Article::findOrFail($id);
         if ($blog->image) {
             Storage::disk('public')->delete($blog->image);
         }

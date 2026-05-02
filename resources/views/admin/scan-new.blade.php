@@ -12,10 +12,10 @@
         <p class="text-slate-500 dark:text-slate-400 mt-2">Monitor product verification logs in real-time across all active user sessions.</p>
     </div>
     <div class="flex gap-3">
-        <button class="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2.5 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm">
+        <a href="{{ route('admin.scan.export_pdf') }}" class="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2.5 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm">
             <span class="material-icons-round text-[20px]">download</span>
-            Export CSV
-        </button>
+            Export PDF
+        </a>
         <button onclick="window.location.reload()" class="flex items-center gap-2 bg-primary px-4 py-2.5 rounded-lg text-sm font-bold text-white hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
             <span class="material-icons-round text-[20px]">refresh</span>
             Live Refresh
@@ -124,7 +124,7 @@
                         <div class="flex items-center gap-3">
                             <div class="h-9 w-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-400 text-xs overflow-hidden">
                                 @if(isset($scan->user) && $scan->user->profile_image)
-                                    <img src="{{ asset('storage/' . $scan->user->profile_image) }}" alt="Profile" class="w-full h-full object-cover">
+                                    <img src="/storage/{{ ltrim($scan->user->profile_image, '/') }}" alt="Profile" class="w-full h-full object-cover">
                                 @else
                                     {{ strtoupper(substr($scan->user->username ?? 'G', 0, 1)) }}
                                 @endif
@@ -148,7 +148,7 @@
                                         ], 'product');
                                     }
                                 @endphp
-                                <img src="{{ $productImage }}" alt="Product" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
+                                <img src="{{ $productImage }}" alt="Product" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/product-placeholder.svg'">
                             </div>
                             <div>
                                 <p class="text-sm font-bold text-slate-900 dark:text-white">{{ $scan->nama_produk ?? 'Unknown Product' }}</p>

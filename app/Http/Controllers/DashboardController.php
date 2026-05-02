@@ -240,23 +240,28 @@ class DashboardController extends Controller
             'syubhat' => $totalHalalStats > 0 ? round((($halalStatsData['syubhat'] ?? $halalStatsData['diragukan'] ?? 0) / $totalHalalStats) * 100, 1) : 0,
         ];
 
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Kirim ke view baru
-        |--------------------------------------------------------------------------
-        */
         return view('admin.dashboard-new', [
+            'totalUsers' => $totalUsers,
+            'totalProduk' => $totalProduk,
+            'localProduk' => $localProduk,
+            'totalScan' => $totalScan,
+            'scanToday' => $scanToday,
+            'laporanMasuk' => $laporanMasuk,
+            'pending_requests_count' => ReportModel::where('status', 'pending')->count(),
+            'recentScans' => $recentScans,
+            'topScannedProducts' => $topScannedProducts,
+            'data30Hari' => $data,
+            'labels30Hari' => $labels,
+            'produkHalal' => ProductModel::where('status', 'halal')->count(),
+            'produkDiragukan' => ProductModel::where('status', 'diragukan')->count(),
+            'produkHaram' => ProductModel::where('status', 'tidak halal')->count(),
             'stats' => $stats,
             'monitor_stats' => $monitorStats,
             'activity_feed' => $activityFeed,
-            'top_products' => $topScannedProducts,
             'recent_scans' => $recentScans,
+            'top_products' => $topScannedProducts,
             'expiring_certificates' => $expiring_certificates,
             'period_days' => $periodDays,
-            'chart_labels' => $labels,
-            'chart_data' => $data,
             'halal_stats' => $halalStats,
             'analytics' => [
                 'overview' => $this->getAnalyticsOverview(),

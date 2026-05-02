@@ -6,11 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\BpomData;
 use App\Models\StreetFood;
 use App\Models\FoodVariant;
+use App\Services\AIProductAnalysisService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class StreetFoodController extends Controller
 {
+    protected $aiService;
+
+    public function __construct(AIProductAnalysisService $aiService)
+    {
+        $this->aiService = $aiService;
+    }
     public function index()
     {
         // Auto-seed awal dari data BPOM pangan jika tabel street foods masih kosong.
@@ -44,7 +51,7 @@ class StreetFoodController extends Controller
         }
 
         $foods = StreetFood::withCount('variants')->paginate(10);
-        return view('admin.street-foods.index', compact('foods'));
+        return view('admin.street_foods', compact('foods'));
     }
 
     public function create()
@@ -143,5 +150,53 @@ class StreetFoodController extends Controller
     {
         $variant->delete();
         return back()->with('success', 'Variant deleted successfully');
+    }
+
+    /**
+     * Analyze street food using AI
+     */
+    public function analyze(Request $request, StreetFood $streetFood)
+    {
+        $request->validate([
+            'ingredients' => 'required|string',
+            'description' => 'nullable|string'
+        ]);
+
+        $ingredients = array_map('trim', explode(',', $request->ingredients));
+        $description = $request->description ?: $streetFood->description;
+
+        // Get AI analysis
+        $analysis = $this->aiService->analyzeStreetFood(
+            $streetFood->name,
+            $description,
+            $ingredients
+        );
+
+        // Update street food with AI analysis results
+        $updateData = [
+            'halal_status' => $analysis['halal_status'] ?? $streetFood->halal_status,
+            'halal_notes' => implode(', ', $analysis['halal_concerns'] ?? []),
+            'health_notes' => $analysis['recommendations'] ?? $streetFood->health_notes,
+            'common_ingredients' => $ingredients,
+        ];
+
+        // Update nutrition data if available
+        if (isset($analysis['nutrition_per_serving'])) {
+            $nutrition = $analysis['nutrition_per_serving'];
+            $updateData = array_merge($updateData, [
+                'calories_typical' => $nutrition['calories'] ?? $streetFood->calories_typical,
+                'protein' => $nutrition['protein_g'] ?? $streetFood->protein,
+                'carbs' => $nutrition['carbs_g'] ?? $streetFood->carbs,
+                'fat' => $nutrition['fat_g'] ?? $streetFood->fat,
+                'fiber' => $nutrition['fiber_g'] ?? $streetFood->fiber,
+                'sugar' => $nutrition['sugar_g'] ?? $streetFood->sugar,
+                'sodium' => $nutrition['sodium_mg'] ?? $streetFood->sodium,
+                'serving_size_grams' => $nutrition['serving_size_g'] ?? $streetFood->serving_size_grams,
+            ]);
+        }
+
+        $streetFood->update($updateData);
+
+        return back()->with('success', 'Street food analyzed and updated with AI insights');
     }
 }

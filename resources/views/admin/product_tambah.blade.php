@@ -1,194 +1,220 @@
-@extends('admin.layouts.admin_layout')
+@extends('admin.master')
 
-@section('title', 'Add Product - Halalytics Admin')
+@section('title', 'Register Asset - Halalytics Admin')
 
 @section('breadcrumb')
-<span class="text-slate-400">Dashboard</span>
+<span class="text-slate-400">Catalog</span>
 <span class="material-icons-round text-slate-300 text-sm">chevron_right</span>
-<span class="text-slate-400">Products</span>
+<a href="{{ route('admin.product.index') }}" class="text-slate-400 hover:text-primary transition-colors">Product Hub</a>
 <span class="material-icons-round text-slate-300 text-sm">chevron_right</span>
-<span class="font-semibold text-slate-700 dark:text-slate-200">Add New</span>
+<span class="font-semibold text-slate-700 dark:text-slate-200">Register Asset</span>
 @endsection
 
 @section('content')
-<!-- Page Title -->
-<div class="flex items-center justify-between mb-8">
-    <div class="flex items-center space-x-3">
-        <a href="{{ route('admin.product.index') }}" class="flex items-center space-x-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
-            <span class="material-icons-round text-lg">arrow_back</span>
-            <span class="text-sm font-medium">Back to Products</span>
-        </a>
-        <a href="{{ route('admin.product.ocr') }}" class="flex items-center space-x-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all shadow-sm">
-            <span class="material-icons-round text-lg">photo_camera</span>
-            <span class="text-sm font-bold">Smart Fill (OCR)</span>
-        </a>
+<div class="max-w-5xl">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Register New Asset</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Add a new verified product to the internal catalog registry.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{{ route('admin.product.index') }}" class="h-12 px-6 flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all font-bold text-sm">
+                <span class="material-icons-round text-lg">arrow_back</span>
+                BACK
+            </a>
+            <button type="button" onclick="openScanner()" class="h-12 px-6 flex items-center gap-2 rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 font-bold text-sm">
+                <span class="material-icons-round text-lg">document_scanner</span>
+                SMART FILL
+            </button>
+        </div>
     </div>
-</div>
 
-<!-- OCR Scanner Modal -->
-<div id="scannerModal" class="fixed inset-0 z-[60] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-slate-900/75 transition-opacity" aria-hidden="true" onclick="closeScanner()"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white dark:bg-slate-900 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full">
-            <div class="bg-white dark:bg-slate-900 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div class="sm:flex sm:items-start">
-                    <div class="w-full">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-bold text-slate-900 dark:text-white" id="modal-title">Scan Product Packaging</h3>
-                            <button onclick="closeScanner()" class="text-slate-400 hover:text-slate-500">
-                                <span class="material-icons-round">close</span>
-                            </button>
-                        </div>
-                        
-                        <div id="scannerView" class="relative bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden aspect-video flex items-center justify-center">
-                            <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
-                            <canvas id="canvas" class="hidden"></canvas>
-                            <div id="focusBracket" class="absolute inset-0 border-2 border-emerald-500/50 m-12 rounded-lg pointer-events-none"></div>
-                        </div>
+    <!-- Scanner Modal (Glassmorphic) -->
+    <div id="scannerModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
+        <div class="w-full max-w-2xl rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden relative">
+            <div class="p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-extrabold text-slate-900 dark:text-white">Vision Scanner</h3>
+                    <button onclick="closeScanner()" class="h-10 w-10 rounded-full flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-slate-600">
+                        <span class="material-icons-round">close</span>
+                    </button>
+                </div>
+                
+                <div class="relative bg-slate-900 rounded-[2rem] overflow-hidden aspect-video shadow-inner">
+                    <video id="video" class="w-full h-full object-cover opacity-80" autoplay playsinline></video>
+                    <canvas id="canvas" class="hidden"></canvas>
+                    <div class="absolute inset-0 border-2 border-emerald-500/30 m-8 rounded-3xl pointer-events-none"></div>
+                    <!-- Scanning line animation -->
+                    <div class="absolute inset-x-8 top-8 h-0.5 bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)] animate-scan-line"></div>
+                </div>
 
-                        <div class="mt-4 flex items-center justify-center space-x-4">
-                            <button type="button" onclick="capturePhoto('front')" class="flex flex-col items-center p-3 rounded-xl border-2 border-slate-100 dark:border-slate-800 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all group">
-                                <span class="material-icons-round text-emerald-500 mb-1">front_loader</span>
-                                <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Front View</span>
-                            </button>
-                            <button type="button" onclick="capturePhoto('back')" class="flex flex-col items-center p-3 rounded-xl border-2 border-slate-100 dark:border-slate-800 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all group">
-                                <span class="material-icons-round text-emerald-500 mb-1">back_loader</span>
-                                <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Back View</span>
-                            </button>
+                <div class="mt-8 flex items-center justify-center gap-4">
+                    <button type="button" onclick="capturePhoto('front')" class="flex-1 flex flex-col items-center gap-3 p-5 rounded-3xl border-2 border-slate-50 dark:border-slate-800 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all group">
+                        <div class="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <span class="material-icons-round">flip_to_front</span>
                         </div>
+                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Front Packaging</span>
+                    </button>
+                    <button type="button" onclick="capturePhoto('back')" class="flex-1 flex flex-col items-center gap-3 p-5 rounded-3xl border-2 border-slate-50 dark:border-slate-800 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all group">
+                        <div class="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <span class="material-icons-round">flip_to_back</span>
+                        </div>
+                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Ingredients List</span>
+                    </button>
+                </div>
 
-                        <div id="ocrStatus" class="mt-4 p-4 rounded-lg bg-slate-50 dark:bg-slate-800 hidden">
-                            <div class="flex items-center space-x-3">
-                                <div class="animate-spin rounded-full h-4 w-4 border-2 border-emerald-500 border-t-transparent"></div>
-                                <p class="text-sm text-slate-600 dark:text-slate-300">Analyzing packaging text...</p>
-                            </div>
+                <div id="ocrStatus" class="mt-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hidden">
+                    <div class="flex items-center gap-4">
+                        <div class="relative h-6 w-6">
+                            <div class="absolute inset-0 rounded-full border-2 border-emerald-500/20"></div>
+                            <div class="absolute inset-0 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin"></div>
                         </div>
+                        <p class="text-sm font-bold text-slate-600 dark:text-slate-300 tracking-tight">AI Vision is analyzing the packaging text...</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Form Card -->
-<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-    <form action="{{ route('admin.product.store') }}" method="POST" enctype="multipart/form-data">
+    <!-- Main Registration Form -->
+    <form action="{{ route('admin.product.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8 pb-12">
         @csrf
         
-        <div class="p-6 border-b border-slate-100 dark:border-slate-800">
-            <h3 class="text-lg font-bold text-slate-800 dark:text-white">Product Information</h3>
-            <p class="text-sm text-slate-500 mt-1">Enter the basic details of the product.</p>
-        </div>
-        
-        <div class="p-6 space-y-6">
-            <!-- Product Image -->
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Product Image</label>
-                <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-6 text-center hover:border-primary transition-colors">
-                    <input type="file" name="image" accept="image/*" class="hidden" id="imageUpload" onchange="previewImage(event)">
-                    <label for="imageUpload" class="cursor-pointer">
-                        <div id="imagePreview" class="mb-4">
-                            <span class="material-icons-round text-4xl text-slate-400">image</span>
-                        </div>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">Click to upload product image</p>
-                        <p class="text-xs text-slate-400 mt-1">JPEG, PNG, JPG, GIF up to 5MB</p>
-                    </label>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Column: Media & Primary Info -->
+            <div class="lg:col-span-4 space-y-8">
+                <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+                    <div class="absolute top-0 right-0 h-32 w-32 bg-primary/5 blur-3xl rounded-full"></div>
+                    
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6">Visual Identity</label>
+                    <div class="relative group">
+                        <input type="file" name="image" accept="image/*" class="hidden" id="imageUpload" onchange="previewImage(event)">
+                        <label for="imageUpload" class="block cursor-pointer">
+                            <div id="imagePreview" class="aspect-square rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center overflow-hidden group-hover:border-primary transition-all relative">
+                                <img src="/images/default/general.svg" id="currentPreviewImg" class="w-full h-full object-cover opacity-40 group-hover:opacity-100 transition-opacity" alt="Placeholder">
+                                <div class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/0 group-hover:bg-slate-900/40 transition-all opacity-0 group-hover:opacity-100">
+                                    <span class="material-icons-round text-white text-3xl mb-2">add_a_photo</span>
+                                    <span class="text-[10px] font-bold text-white uppercase tracking-widest">Change Visual</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    <p class="mt-4 text-[9px] font-medium text-slate-400 text-center leading-relaxed">
+                        JPG, PNG or WEBP. Max 5MB. Visuals will be synced automatically if left blank.
+                    </p>
                 </div>
-            </div>
-            
-            <!-- Product Name -->
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Product Name <span class="text-red-500">*</span></label>
-                <input type="text" name="nama_product" value="{{ old('nama_product') }}" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent @error('nama_product') border-red-500 @enderror" placeholder="Enter product name">
-                @error('nama_product')
-                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                @enderror
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Barcode -->
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Barcode <span class="text-red-500">*</span></label>
-                    <input type="text" name="barcode" value="{{ old('barcode') }}" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent @error('barcode') border-red-500 @enderror" placeholder="e.g., 8992388116014">
-                    @error('barcode')
-                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
-                
-                <!-- Category -->
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Category</label>
-                    <select name="kategori_id" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
-                        <option value="">Select Category</option>
-                        @foreach($categories as $category)
-                        <option value="{{ $category->id_kategori }}" {{ old('kategori_id') == $category->id_kategori ? 'selected' : '' }}>{{ $category->nama_kategori }}</option>
+
+                <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6">Halal Certification Status</label>
+                    <div class="space-y-3">
+                        @foreach(['halal' => ['icon' => 'verified', 'color' => 'text-emerald-500', 'bg' => 'peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20', 'border' => 'peer-checked:border-emerald-500'], 
+                                 'syubhat' => ['icon' => 'help', 'color' => 'text-amber-500', 'bg' => 'peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/20', 'border' => 'peer-checked:border-amber-500'], 
+                                 'tidak halal' => ['icon' => 'cancel', 'color' => 'text-rose-500', 'bg' => 'peer-checked:bg-rose-50 dark:peer-checked:bg-rose-900/20', 'border' => 'peer-checked:border-rose-500']] as $val => $cfg)
+                        <label class="relative block cursor-pointer group">
+                            <input type="radio" name="status" value="{{ $val }}" {{ old('status') == $val ? 'checked' : '' }} class="peer sr-only" required>
+                            <div class="flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-50 dark:border-slate-800 transition-all {{ $cfg['bg'] }} {{ $cfg['border'] }} group-hover:bg-slate-50 dark:group-hover:bg-slate-800/50">
+                                <div class="h-10 w-10 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center shadow-sm">
+                                    <span class="material-icons-round {{ $cfg['color'] }}">{{ $cfg['icon'] }}</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-tight">{{ $val == 'tidak halal' ? 'HARAM' : strtoupper($val) }}</p>
+                                    <p class="text-[10px] font-medium text-slate-400">{{ $val == 'halal' ? 'Certified by authorities' : ($val == 'syubhat' ? 'Inconclusive / Mixed' : 'Contains non-halal elements') }}</p>
+                                </div>
+                                <div class="h-5 w-5 rounded-full border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center peer-checked:border-primary transition-all">
+                                    <div class="h-2.5 w-2.5 rounded-full bg-primary scale-0 peer-checked:scale-100 transition-transform"></div>
+                                </div>
+                            </div>
+                        </label>
                         @endforeach
-                    </select>
+                    </div>
                 </div>
             </div>
-            
-            <!-- Halal Status -->
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Halal Status <span class="text-red-500">*</span></label>
-                <div class="grid grid-cols-3 gap-4">
-                    <label class="relative cursor-pointer">
-                        <input type="radio" name="status" value="halal" {{ old('status') == 'halal' ? 'checked' : '' }} class="peer sr-only" required>
-                        <div class="p-4 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-center peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
-                            <span class="material-icons-round text-emerald-500 text-2xl mb-2">verified</span>
-                            <p class="text-sm font-bold text-slate-800 dark:text-white">Halal</p>
-                            <p class="text-xs text-slate-400">Certified halal</p>
+
+            <!-- Right Column: Form Fields -->
+            <div class="lg:col-span-8 space-y-8">
+                <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <h3 class="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3 mb-8">
+                        <span class="h-8 w-1 bg-primary rounded-full"></span>
+                        General Information
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2 space-y-2">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Product Designation</label>
+                            <input type="text" name="nama_product" value="{{ old('nama_product') }}" required class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary transition-all" placeholder="e.g. Ultra Milk Full Cream 250ml">
+                            @error('nama_product') <p class="text-[10px] text-rose-500 font-bold mt-1 ml-1">{{ $message }}</p> @enderror
                         </div>
-                    </label>
-                    <label class="relative cursor-pointer">
-                        <input type="radio" name="status" value="syubhat" {{ old('status') == 'syubhat' ? 'checked' : '' }} class="peer sr-only">
-                        <div class="p-4 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-center peer-checked:border-amber-500 peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/20 transition-all">
-                            <span class="material-icons-round text-amber-500 text-2xl mb-2">help</span>
-                            <p class="text-sm font-bold text-slate-800 dark:text-white">Syubhat</p>
-                            <p class="text-xs text-slate-400">Needs verification</p>
+
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Universal Barcode (EAN/UPC)</label>
+                            <input type="text" name="barcode" value="{{ old('barcode') }}" required class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary transition-all" placeholder="8992388116014">
+                            @error('barcode') <p class="text-[10px] text-rose-500 font-bold mt-1 ml-1">{{ $message }}</p> @enderror
                         </div>
-                    </label>
-                    <label class="relative cursor-pointer">
-                        <input type="radio" name="status" value="tidak halal" {{ old('status') == 'tidak halal' ? 'checked' : '' }} class="peer sr-only">
-                        <div class="p-4 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-center peer-checked:border-red-500 peer-checked:bg-red-50 dark:peer-checked:bg-red-900/20 transition-all">
-                            <span class="material-icons-round text-red-500 text-2xl mb-2">cancel</span>
-                            <p class="text-sm font-bold text-slate-800 dark:text-white">Haram</p>
-                            <p class="text-xs text-slate-400">Not halal</p>
+
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Market Classification</label>
+                            <div class="relative">
+                                <select name="kategori_id" class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary appearance-none">
+                                    <option value="">Select Category</option>
+                                    @foreach($categories as $category)
+                                    <option value="{{ $category->id_kategori }}" {{ old('kategori_id') == $category->id_kategori ? 'selected' : '' }}>{{ $category->nama_kategori }}</option>
+                                    @endforeach
+                                </select>
+                                <span class="material-icons-round absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                            </div>
                         </div>
-                    </label>
+
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Base Price (Demo)</label>
+                            <div class="relative">
+                                <span class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rp</span>
+                                <input type="number" name="price" value="{{ old('price') }}" min="0" step="0.01" class="w-full pl-12 pr-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary transition-all" placeholder="12.000">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                @error('status')
-                <p class="mt-2 text-xs text-red-500">{{ $message }}</p>
-                @enderror
+
+                <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <h3 class="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3 mb-8">
+                        <span class="h-8 w-1 bg-emerald-500 rounded-full"></span>
+                        Ingredient & Nutritional Analysis
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Full Composition</label>
+                            <textarea name="komposisi" rows="4" class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm focus:ring-2 focus:ring-primary transition-all leading-relaxed" placeholder="List all ingredients found on the packaging...">{{ old('komposisi') }}</textarea>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Nutritional Values</label>
+                            <textarea name="info_gizi" rows="4" class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm focus:ring-2 focus:ring-primary transition-all leading-relaxed" placeholder="Energy, Fat, Protein, Carbohydrates, etc...">{{ old('info_gizi') }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-4 pt-4">
+                    <button type="submit" class="w-full md:w-auto px-12 py-5 bg-primary text-white rounded-[1.5rem] font-extrabold text-sm hover:bg-primary-dark transition-all transform hover:-translate-y-1 shadow-2xl shadow-primary/30 flex items-center justify-center gap-3">
+                        <span class="material-icons-round">save</span>
+                        SAVE PRODUCT TO REGISTRY
+                    </button>
+                </div>
             </div>
-            
-            <!-- Composition -->
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Composition / Ingredients</label>
-                <textarea name="komposisi" rows="4" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="List the ingredients or composition of the product">{{ old('komposisi') }}</textarea>
-            </div>
-            
-            <!-- Nutrition Info -->
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nutrition Information</label>
-                <textarea name="info_gizi" rows="4" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter nutrition facts (optional)">{{ old('info_gizi') }}</textarea>
-            </div>
-        </div>
-        
-        <div class="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-end space-x-3">
-            <a href="{{ route('admin.product.index') }}" class="px-6 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-all text-sm font-medium">
-                Cancel
-            </a>
-            <button type="submit" class="px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all text-sm font-bold flex items-center space-x-2">
-                <span class="material-icons-round text-lg">add</span>
-                <span>Add Product</span>
-            </button>
         </div>
     </form>
 </div>
 @endsection
 
 @push('scripts')
+<style>
+@keyframes scan-line {
+    0% { top: 32px; }
+    100% { top: calc(100% - 32px); }
+}
+.animate-scan-line {
+    animation: scan-line 2.5s linear infinite;
+}
+</style>
 <script>
     let stream = null;
     const video = document.getElementById('video');
@@ -198,6 +224,8 @@
 
     async function openScanner() {
         scannerModal.classList.remove('hidden');
+        scannerModal.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
         try {
             stream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: 'environment' } 
@@ -212,6 +240,8 @@
 
     function closeScanner() {
         scannerModal.classList.add('hidden');
+        scannerModal.classList.remove('flex');
+        document.body.classList.remove('overflow-hidden');
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
             stream = null;
@@ -225,8 +255,6 @@
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
         const imageData = canvas.toDataURL('image/jpeg');
-        
-        // Show status
         ocrStatus.classList.remove('hidden');
         
         try {
@@ -243,11 +271,9 @@
             const result = await response.json();
             
             if (result.success) {
-                // Auto-fill fields if data found
                 if (result.data && result.data.extracted_text) {
                     const text = result.data.extracted_text;
                     
-                    // Basic heuristic for product name if not already filled
                     if (!document.querySelector('input[name="nama_product"]').value) {
                         const lines = text.split('\n');
                         if (lines.length > 0) {
@@ -255,33 +281,27 @@
                         }
                     }
 
-                    // Fill ingredients
                     if (result.data.ingredients && result.data.ingredients.length > 0) {
                         const ingredientsText = result.data.ingredients.join(', ');
                         const currentKomposisi = document.querySelector('textarea[name="komposisi"]').value;
                         document.querySelector('textarea[name="komposisi"]').value = currentKomposisi ? currentKomposisi + '\n' + ingredientsText : ingredientsText;
                     }
 
-                    // Fill nutrition if found
                     if (text.toLowerCase().includes('nutrition') || text.toLowerCase().includes('gizi')) {
                         const currentGizi = document.querySelector('textarea[name="info_gizi"]').value;
                         document.querySelector('textarea[name="info_gizi"]').value = currentGizi ? currentGizi + '\n' + text : text;
                     }
 
+                    // Toast/Alert
                     alert('Data successfully extracted!');
-                } else {
-                    alert('Text detected but could not extract specific product details.');
                 }
-            } else {
-                alert('OCR failed: ' + result.message);
             }
         } catch (err) {
             console.error("OCR Error:", err);
-            alert('Failed to process image');
         } finally {
             ocrStatus.classList.add('hidden');
             if (step === 'back') {
-                setTimeout(closeScanner, 1000);
+                setTimeout(closeScanner, 500);
             }
         }
     }
@@ -299,12 +319,13 @@
 
     function previewImage(event) {
         const file = event.target.files[0];
-        const preview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('currentPreviewImg');
         
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                preview.innerHTML = `<img src="${e.target.result}" class="w-32 h-32 object-cover rounded-lg mx-auto">`;
+                previewImg.src = e.target.result;
+                previewImg.classList.remove('opacity-40');
             }
             reader.readAsDataURL(file);
         }

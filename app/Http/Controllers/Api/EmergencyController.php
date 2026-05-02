@@ -53,4 +53,18 @@ class EmergencyController extends Controller
             'data' => $emergencyLog
         ], 201);
     }
+
+    // 🩸 BLOOD DONATION: Active Emergency Requests
+    public function activeList(Request $request)
+    {
+        $requests = \App\Models\BloodEmergencyRequest::where('is_fulfilled', false)
+            ->orderByRaw("FIELD(urgency_level, 'critical', 'high', 'medium')")
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $requests
+        ]);
+    }
 }

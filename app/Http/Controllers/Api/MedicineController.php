@@ -155,18 +155,23 @@ class MedicineController extends Controller
         $request->validate([
             'symptoms' => 'required|string',
             'user_id' => 'nullable|exists:users,id_user', // Allow flexible user ID for API testing
-            'family_id' => 'nullable|integer'
         ]);
 
         $symptoms = $request->input('symptoms');
         $userId = auth()->user() ? auth()->user()->id_user : $request->input('user_id');
-        $familyId = $request->input('family_id');
         $userContext = [];
 
         try {
             // Step 1: Resolve health context for AI
             $user = \App\Models\User::find($userId);
-            $userContext = $this->resolveHealthContext($user, $familyId);
+            $userContext = [
+                'name' => $user->full_name,
+                'age' => $user->age,
+                'gender' => $user->gender,
+                'medical_history' => $user->medical_history,
+                'allergies' => $user->allergy,
+                'dietary_preference' => $user->diet_preference,
+            ];
 
             // Step 2: Use centralized GeminiService for AI Analysis with context
             $aiResult = $this->geminiService->analyzeSymptoms($symptoms, $userContext);
@@ -227,7 +232,6 @@ class MedicineController extends Controller
             Log::error('Symptom analysis failed, serving structured fallback', [
                 'symptoms' => $symptoms,
                 'user_id' => $userId,
-                'family_id' => $familyId,
                 'error' => $e->getMessage(),
             ]);
 
@@ -578,7 +582,6 @@ class MedicineController extends Controller
                 }
             }
         })->get()->map(function($m) {
-            $m->id_medicine = $m->id_medicine; // Ensure id_medicine is present
             $m->source = 'local';
             return $m;
         });
@@ -769,11 +772,9 @@ class MedicineController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after:start_date',
             'notes' => 'nullable|string',
-            'family_id' => 'nullable|integer'
         ]);
 
         $userId = auth()->user() ? auth()->user()->id_user : $request->input('id_user');
-        $familyId = $request->input('family_id');
         
         if (!$userId) {
             return response()->json(['success' => false, 'message' => 'User ID required'], 422);
@@ -794,7 +795,6 @@ class MedicineController extends Controller
             'end_date' => $request->end_date,
             'is_active' => true,
             'notes' => $request->notes,
-            'family_id' => $familyId
         ]);
 
         return response()->json([
@@ -939,37 +939,6 @@ class MedicineController extends Controller
     /**
      * Helper to resolve health context for either the main user or a family member
      */
-    private function resolveHealthContext($user, $familyId = null)
-    {
-        if ($familyId && $user) {
-            $family = \App\Models\FamilyProfile::where('user_id', $user->id_user)->find($familyId);
-            if ($family) {
-                return [
-                    'name' => $family->name,
-                    'is_family_member' => true,
-                    'age' => $family->age,
-                    'gender' => $family->gender,
-                    'medical_history' => $family->medical_history,
-                    'allergies' => $family->allergies,
-                ];
-            }
-        }
-
-        if ($user) {
-            return [
-                'name' => $user->full_name,
-                'is_family_member' => false,
-                'age' => $user->age,
-                'gender' => $user->gender,
-                'medical_history' => $user->medical_history,
-                'allergies' => $user->allergy,
-                'dietary_preference' => $user->diet_preference,
-            ];
-        }
-
-        return [];
-    }
-
     private function normalizeMedicineRecommendations(array $items): array
     {
         return collect($items)

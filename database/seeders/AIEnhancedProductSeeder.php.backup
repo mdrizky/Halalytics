@@ -1,0 +1,780 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use App\Models\ProductModel;
+use App\Models\KategoriModel;
+use App\Models\Ingredient;
+use App\Models\ForbiddenIngredient;
+
+class AIEnhancedProductSeeder extends Seeder
+{
+    public function run()
+    {
+        // Create comprehensive categories (12 categories as requested)
+        $categories = [
+            ['nama_kategori' => 'Makanan Kaleng & Kemasan', 'description' => 'Makanan dalam kemasan kaleng, botol, dan vakum'],
+            ['nama_kategori' => 'Minuman Ringan', 'description' => 'Minuman soda, jus buah, dan minuman bersoda'],
+            ['nama_kategori' => 'Makanan Ringan', 'description' => 'Snack, keripik, biskuit, dan makanan ringan'],
+            ['nama_kategori' => 'Bumbu & Saus', 'description' => 'Bumbu dapur, saus, kecap, dan penyedap rasa'],
+            ['nama_kategori' => 'Produk Susu', 'description' => 'Susu, yogurt, keju, dan produk olahan susu'],
+            ['nama_kategori' => 'Kosmetik & Perawatan', 'description' => 'Kosmetik, skincare, dan perawatan tubuh'],
+            ['nama_kategori' => 'Obat Bebas', 'description' => 'Obat-obatan bebas, vitamin, dan suplemen kesehatan'],
+            ['nama_kategori' => 'Makanan Bayi', 'description' => 'Makanan dan minuman khusus untuk bayi'],
+            ['nama_kategori' => 'Makanan Beku', 'description' => 'Makanan beku, es krim, dan olahan dingin'],
+            ['nama_kategori' => 'Minuman Berenergi', 'description' => 'Minuman energi, sport drink, dan minuman isotonik'],
+            ['nama_kategori' => 'Cokelat & Permen', 'description' => 'Cokelat, permen, dan makanan manis lainnya'],
+            ['nama_kategori' => 'Makanan Instan', 'description' => 'Mie instan, makanan cepat saji, dan instant food'],
+        ];
+
+        $categoryIds = [];
+        foreach ($categories as $category) {
+            $cat = KategoriModel::firstOrCreate(
+                ['nama_kategori' => $category['nama_kategori']],
+                ['description' => $category['description']]
+            );
+            $categoryIds[$category['nama_kategori']] = $cat->id_kategori;
+        }
+
+        // AI-generated comprehensive product data
+        $products = $this->generateAIProducts($categoryIds);
+
+        foreach ($products as $productData) {
+            ProductModel::create($productData);
+        }
+
+        // Create ingredients encyclopedia with images
+        $this->createIngredientsEncyclopedia();
+
+        // Create forbidden ingredients with images
+        $this->createForbiddenIngredientsWithImages();
+    }
+
+    private function generateAIProducts($categoryIds)
+    {
+        return [
+            // ===== MAKANAN KALENG & KEMASAN =====
+            [
+                'nama_product' => 'Sarden ABC Extra Pedas',
+                'barcode' => '8991002100001',
+                'komposisi' => json_encode(['Ikan Sarden', 'Minyak Kelapa Sawit', 'Garam', 'Pengawet Natrium Benzoat (E211)', 'Antioksidan TBHQ (E319)', 'Pasta Tomat', 'Bawang Putih Bubuk', 'Merica Putih', 'Cabai Merah', 'Jahe', 'Kunyit']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'local',
+                'kategori_id' => $categoryIds['Makanan Kaleng & Kemasan'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/1/1/abc-sarden-extra-pedas-425g.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 2.5,
+                'calories' => 220,
+                'protein_g' => 18.5,
+                'fat_g' => 15.2,
+                'halal_certificate' => 'ID00110000000010121',
+                'price' => 28500,
+                'brand' => 'ABC',
+                'quantity' => '425g',
+                'packaging' => 'Kaleng',
+                'labels' => json_encode(['Halal MUI', 'BPOM RI']),
+
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'Fish (Halal)',
+                    'cross_contamination_risk' => 'Low',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-01-10'
+                ])
+            ],
+            [
+                'nama_product' => 'Kacang Polong Del Monte',
+                'barcode' => '024000001234',
+                'komposisi' => json_encode(['Kacang Polong', 'Air', 'Garam Meja', 'Pengawet Natrium Benzoat (E211)', 'Antioksidan Asam Askorbat (E300)', 'Gula Pasir']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'import',
+                'kategori_id' => $categoryIds['Makanan Kaleng & Kemasan'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/4/25/del-monte-kacang-polong-400g.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 3.2,
+                'calories' => 85,
+                'protein_g' => 5.8,
+                'fat_g' => 0.4,
+                'halal_certificate' => 'ID00220000000020222',
+                'price' => 19500,
+                'brand' => 'Del Monte',
+                'quantity' => '400g',
+                'packaging' => 'Kaleng',
+                'labels' => json_encode(['Halal MUI', 'Imported']),
+
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'None',
+                    'cross_contamination_risk' => 'Low',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-01-25'
+                ])
+            ],
+            [
+                'nama_product' => 'Sosis So Good Sapi Premium',
+                'barcode' => '8991002300002',
+                'komposisi' => json_encode(['Daging Sapi Halal', 'Lemak Sapi', 'Tepung Terigu', 'Garam', 'Merica Putih', 'Pengawet Natrium Nitrit (E250)', 'Antioksidan Natrium Isoaskorbat (E316)', 'Penguat Rasa Mononatrium Glutamat (E621)', 'Ekstrak Daging Sapi']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'local',
+                'kategori_id' => $categoryIds['Makanan Kaleng & Kemasan'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/5/1/so-good-sosis-sapi-premium-500g.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 1.8,
+                'calories' => 280,
+                'protein_g' => 12.5,
+                'fat_g' => 22.0,
+                'halal_certificate' => 'ID00330000000030333',
+                'price' => 42500,
+                'brand' => 'So Good',
+                'quantity' => '500g',
+                'packaging' => 'Plastik Vakum',
+                'labels' => json_encode(['Halal MUI', 'Premium Quality']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'Beef (Halal Certified)',
+                    'cross_contamination_risk' => 'Low',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-01-15'
+                ])
+            ],
+            [
+                'nama_product' => 'Kornet Beef Luncheon Meat',
+                'barcode' => '8991002400003',
+                'komposisi' => json_encode(['Daging Sapi Halal', 'Lemak Sapi', 'Tepung Terigu', 'Garam', 'Merica', 'Pengawet (E250)', 'Antioksidan (E316)', 'Penguat Rasa (E621)', 'Bawang Putih', 'Jahe']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'local',
+                'kategori_id' => $categoryIds['Makanan Kaleng & Kemasan'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/6/1/kornet-beef-luncheon-meat-200g.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 1.2,
+                'calories' => 320,
+                'protein_g' => 15.8,
+                'fat_g' => 26.5,
+                'halal_certificate' => 'ID00440000000040444',
+                'price' => 35500,
+                'brand' => 'Kornet',
+                'quantity' => '200g',
+                'packaging' => 'Kaleng',
+                'labels' => json_encode(['Halal MUI', 'High Protein']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'Beef (Halal Certified)',
+                    'cross_contamination_risk' => 'Low',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-02-05'
+                ])
+            ],
+
+            // ===== MINUMAN RINGAN =====
+            [
+                'nama_product' => 'Coca Cola Original',
+                'barcode' => '5449000000996',
+                'komposisi' => json_encode(['Air Berkarbonasi', 'Gula', 'Warna Karamel (E150d)', 'Asam Fosfat (E338)', 'Kafein', 'Pengatur Keasaman Natrium Benzoat (E211)', 'Penguat Rasa (Natural Identical Flavor)']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'import',
+                'kategori_id' => $categoryIds['Minuman Ringan'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/7/1/coca-cola-original-390ml.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 39.0,
+                'caffeine_mg' => 34,
+                'volume_ml' => 390,
+                'calories' => 140,
+                'halal_certificate' => 'ID00550000000050555',
+                'price' => 8500,
+                'brand' => 'Coca Cola',
+                'quantity' => '390ml',
+                'packaging' => 'Botol Kaca',
+                'labels' => json_encode(['Halal MUI', 'Contains Caffeine']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'None',
+                    'cross_contamination_risk' => 'None',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-02-25'
+                ])
+            ],
+            [
+                'nama_product' => 'Sprite Lemon Lime',
+                'barcode' => '5449000012345',
+                'komposisi' => json_encode(['Air Berkarbonasi', 'Gula', 'Asam Sitrat (E330)', 'Pengatur Keasaman Natrium Benzoat (E211)', 'Antioksidan Asam Askorbat (E300)', 'Penguat Rasa Lemon-Lime']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'import',
+                'kategori_id' => $categoryIds['Minuman Ringan'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/7/2/sprite-lemon-lime-390ml.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 38.5,
+                'volume_ml' => 390,
+                'calories' => 135,
+                'halal_certificate' => 'ID00660000000060666',
+                'price' => 8200,
+                'brand' => 'Sprite',
+                'quantity' => '390ml',
+                'packaging' => 'Botol Kaca',
+                'labels' => json_encode(['Halal MUI', 'No Caffeine']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'None',
+                    'cross_contamination_risk' => 'None',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-02-28'
+                ])
+            ],
+            [
+                'nama_product' => 'Fanta Strawberry',
+                'barcode' => '5449000023456',
+                'komposisi' => json_encode(['Air Berkarbonasi', 'Gula', 'Asam Sitrat (E330)', 'Pengatur Keasaman Natrium Benzoat (E211)', 'Warna Merah Alami (E163)', 'Penguat Rasa Strawberry', 'Antioksidan Asam Askorbat (E300)']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'import',
+                'kategori_id' => $categoryIds['Minuman Ringan'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/7/3/fanta-strawberry-390ml.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 37.8,
+                'volume_ml' => 390,
+                'calories' => 132,
+                'halal_certificate' => 'ID00770000000070777',
+                'price' => 8100,
+                'brand' => 'Fanta',
+                'quantity' => '390ml',
+                'packaging' => 'Botol Kaca',
+                'labels' => json_encode(['Halal MUI', 'Natural Colors']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'None',
+                    'cross_contamination_risk' => 'None',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-03-01'
+                ])
+            ],
+
+            // ===== MAKANAN RINGAN =====
+            [
+                'nama_product' => 'Lay\'s Potato Chips Original',
+                'barcode' => '028400001234',
+                'komposisi' => json_encode(['Kentang', 'Minyak Nabati (Kelapa Sawit)', 'Garam']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'import',
+                'kategori_id' => $categoryIds['Makanan Ringan'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/8/1/lays-potato-chips-original-150g.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 0.5,
+                'calories' => 536,
+                'protein_g' => 6.6,
+                'fat_g' => 34.0,
+                'halal_certificate' => 'ID00880000000080888',
+                'price' => 18500,
+                'brand' => 'Lay\'s',
+                'quantity' => '150g',
+                'packaging' => 'Kantong Plastik',
+                'labels' => json_encode(['Halal MUI', 'No Preservatives']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'None',
+                    'cross_contamination_risk' => 'Low',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-03-10'
+                ])
+            ],
+            [
+                'nama_product' => 'Chitato Lite Sapi Panggang',
+                'barcode' => '8991111000001',
+                'komposisi' => json_encode(['Kentang', 'Minyak Kelapa Sawit', 'Bumbu Sapi Panggang', 'Penguat Rasa (E621)', 'Garam', 'Gula', 'Antioksidan (E320)', 'Pengawet (E211)']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'local',
+                'kategori_id' => $categoryIds['Makanan Ringan'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/8/2/chitato-lite-sapi-panggang-75g.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 2.1,
+                'calories' => 145,
+                'protein_g' => 2.8,
+                'fat_g' => 8.5,
+                'halal_certificate' => 'ID00990000000090999',
+                'price' => 12500,
+                'brand' => 'Chitato',
+                'quantity' => '75g',
+                'packaging' => 'Kantong Plastik',
+                'labels' => json_encode(['Halal MUI', 'Lite Version']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'None (Flavoring)',
+                    'cross_contamination_risk' => 'Low',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-03-15'
+                ])
+            ],
+
+            // ===== BUMBU & SAUS =====
+            [
+                'nama_product' => 'Kecap Manis ABC',
+                'barcode' => '8991002500004',
+                'komposisi' => json_encode(['Gula Merah', 'Air', 'Kecap Fermentasi', 'Garam', 'Pengawet Natrium Benzoat (E211)', 'Penguat Rasa (E621)', 'Antioksidan (E316)']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'local',
+                'kategori_id' => $categoryIds['Bumbu & Saus'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/9/1/abc-kecap-manis-520ml.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 65.0,
+                'calories' => 260,
+                'halal_certificate' => 'ID01010000000101011',
+                'price' => 15200,
+                'brand' => 'ABC',
+                'quantity' => '520ml',
+                'packaging' => 'Botol Plastik',
+                'labels' => json_encode(['Halal MUI', 'Traditional Recipe']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'None',
+                    'cross_contamination_risk' => 'Low',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-03-25'
+                ])
+            ],
+            [
+                'nama_product' => 'Saus Tomat Del Monte',
+                'barcode' => '024000002345',
+                'komposisi' => json_encode(['Pasta Tomat', 'Air', 'Gula', 'Cuka', 'Garam', 'Pengawet (E211)', 'Penguat Rasa (E621)', 'Antioksidan (E300)', 'Bawang Putih', 'Merica']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'import',
+                'kategori_id' => $categoryIds['Bumbu & Saus'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/9/2/del-monte-saus-tomat-500g.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 22.5,
+                'calories' => 85,
+                'halal_certificate' => 'ID01110000000111111',
+                'price' => 22500,
+                'brand' => 'Del Monte',
+                'quantity' => '500g',
+                'packaging' => 'Botol Kaca',
+                'labels' => json_encode(['Halal MUI', 'No Artificial Colors']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'None',
+                    'cross_contamination_risk' => 'Low',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-03-28'
+                ])
+            ],
+
+            // ===== PRODUK SUSU =====
+            [
+                'nama_product' => 'Ultra Milk Full Cream',
+                'barcode' => '8991002600005',
+                'komposisi' => json_encode(['Susu Sapi Segar', 'Vitamin A', 'Vitamin D3', 'Stabilisator (Carrageenan)', 'Pengemulsi (Mono dan Digliserida)', 'Pengawet (E211)']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'local',
+                'kategori_id' => $categoryIds['Produk Susu'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/10/1/ultra-milk-full-cream-1l.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 5.2,
+                'calories' => 65,
+                'protein_g' => 3.2,
+                'fat_g' => 3.5,
+                'halal_certificate' => 'ID01210000000121212',
+                'price' => 18500,
+                'brand' => 'Ultra Milk',
+                'quantity' => '1L',
+                'packaging' => 'Karton',
+                'labels' => json_encode(['Halal MUI', 'Full Cream', 'Vitamin Enriched']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'Cow Milk (Halal)',
+                    'cross_contamination_risk' => 'Low',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-04-05'
+                ])
+            ],
+            [
+                'nama_product' => 'Yogurt Cimory Strawberry',
+                'barcode' => '8991002700006',
+                'komposisi' => json_encode(['Susu Sapi Segar', 'Gula', 'Buah Strawberry', 'Pengental (Pektin)', 'Pengawet (E211)', 'Penguat Rasa Alami', 'Kultur Yogurt (Lactobacillus)', 'Vitamin C']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'local',
+                'kategori_id' => $categoryIds['Produk Susu'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/10/2/cimory-yogurt-strawberry-150g.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 18.5,
+                'calories' => 95,
+                'protein_g' => 2.8,
+                'fat_g' => 2.1,
+                'halal_certificate' => 'ID01310000000131313',
+                'price' => 8500,
+                'brand' => 'Cimory',
+                'quantity' => '150g',
+                'packaging' => 'Pot Plastik',
+                'labels' => json_encode(['Halal MUI', 'Probiotic', 'Real Fruit']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'Cow Milk (Halal)',
+                    'cross_contamination_risk' => 'Low',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-04-10'
+                ])
+            ],
+
+            // ===== KOSMETIK & PERAWATAN =====
+            [
+                'nama_product' => 'Wardah Lightening Face Cream',
+                'barcode' => '8991002800007',
+                'komposisi' => json_encode(['Aqua', 'Glycerin', 'Niacinamide', 'Butylene Glycol', 'Dimethicone', 'Cetyl Alcohol', 'Glyceryl Stearate', 'PEG-100 Stearate', 'Phenonip', 'Parfum', 'CI 77891', 'CI 77492']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'local',
+                'kategori_id' => $categoryIds['Kosmetik & Perawatan'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/11/1/wardah-lightening-face-cream-30g.jpg',
+                'verification_status' => 'verified',
+                'halal_certificate' => 'ID01410000000141414',
+                'price' => 45000,
+                'brand' => 'Wardah',
+                'quantity' => '30g',
+                'packaging' => 'Tube Plastik',
+                'labels' => json_encode(['Halal MUI', 'Dermatologist Tested', 'SPF 15']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'None',
+                    'cross_contamination_risk' => 'None',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-04-25'
+                ])
+            ],
+            [
+                'nama_product' => 'Ponds White Beauty Facial Foam',
+                'barcode' => '8991389200008',
+                'komposisi' => json_encode(['Aqua', 'Sodium Laureth Sulfate', 'Cocamide DEA', 'Glycerin', 'Sodium Chloride', 'PEG-120 Methyl Glucose Dioleate', 'Acrylates/Steareth-20 Methacrylate Copolymer', 'Phenonip', 'Parfum', 'CI 77891']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'local',
+                'kategori_id' => $categoryIds['Kosmetik & Perawatan'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/11/2/ponds-white-beauty-facial-foam-100g.jpg',
+                'verification_status' => 'verified',
+                'halal_certificate' => 'ID01510000000151515',
+                'price' => 28500,
+                'brand' => 'Ponds',
+                'quantity' => '100g',
+                'packaging' => 'Tube Plastik',
+                'labels' => json_encode(['Halal MUI', 'Gentle Formula', 'For All Skin Types']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'None',
+                    'cross_contamination_risk' => 'None',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-04-28'
+                ])
+            ],
+
+            // ===== OBAT BEBAS =====
+            [
+                'nama_product' => 'Paracetamol 500mg',
+                'barcode' => '8991002900009',
+                'komposisi' => json_encode(['Paracetamol 500mg', 'Laktosa Monohidrat', 'Povidone', 'Natrium Starch Glycolate', 'Magnesium Stearate', 'Aerosil', 'Talk', 'Gelatin']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'local',
+                'kategori_id' => $categoryIds['Obat Bebas'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/12/1/paracetamol-500mg-10-tablet.jpg',
+                'verification_status' => 'verified',
+                'halal_certificate' => 'ID01610000000161616',
+                'price' => 2500,
+                'brand' => 'Kimia Farma',
+                'quantity' => '10 tablet',
+                'packaging' => 'Strip Blister',
+                'labels' => json_encode(['Halal MUI', 'BPOM Approved', 'For Fever & Pain']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'Gelatin (Halal Source)',
+                    'cross_contamination_risk' => 'Low',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-05-25'
+                ])
+            ],
+            [
+                'nama_product' => 'Vitamin C 500mg',
+                'barcode' => '8991003000010',
+                'komposisi' => json_encode(['Asam Askorbat 500mg', 'Laktosa', 'Magnesium Stearate', 'Aerosil', 'Natrium Starch Glycolate', 'Povidone', 'Gelatin']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'local',
+                'kategori_id' => $categoryIds['Obat Bebas'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2023/12/2/vitamin-c-500mg-30-kapsul.jpg',
+                'verification_status' => 'verified',
+                'halal_certificate' => 'ID01710000000171717',
+                'price' => 15000,
+                'brand' => 'Ultra',
+                'quantity' => '30 kapsul',
+                'packaging' => 'Botol Plastik',
+                'labels' => json_encode(['Halal MUI', 'BPOM Approved', 'Immune Support']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'Gelatin (Halal Source)',
+                    'cross_contamination_risk' => 'Low',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-05-28'
+                ])
+            ],
+
+            // ===== MAKANAN BAYI =====
+            [
+                'nama_product' => 'Susu Formula Bayi Premium',
+                'barcode' => '8991003100011',
+                'komposisi' => json_encode(['Susu Skim Bubuk', 'Minyak Nabati', 'Laktosa', 'Protein Whey', 'Vitamin Premix', 'Mineral Premix', 'DHA', 'ARA', 'Nukleotida', 'Prebiotik', 'Probiotik']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'local',
+                'kategori_id' => $categoryIds['Makanan Bayi'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2024/1/1/susu-formula-bayi-premium-400g.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 8.5,
+                'calories' => 480,
+                'protein_g' => 12.5,
+                'fat_g' => 24.0,
+                'halal_certificate' => 'ID01810000000181818',
+                'price' => 125000,
+                'brand' => 'Bebelac',
+                'quantity' => '400g',
+                'packaging' => 'Kalian Plastik',
+                'labels' => json_encode(['Halal MUI', 'BPOM Approved', 'For 0-6 Months']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'Cow Milk (Halal)',
+                    'cross_contamination_risk' => 'Low',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-06-25'
+                ])
+            ],
+
+            // ===== MAKANAN BEKU =====
+            [
+                'nama_product' => 'Nugget Ayam Crispy',
+                'barcode' => '8991003200012',
+                'komposisi' => json_encode(['Daging Ayam Halal', 'Tepung Terigu', 'Minyak Nabati', 'Garam', 'Merica', 'Penguat Rasa (E621)', 'Antioksidan (E320)', 'Pengawet (E211)', 'Bawang Putih', 'Jahe']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'local',
+                'kategori_id' => $categoryIds['Makanan Beku'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2024/1/2/nugget-ayam-crispy-500g.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 1.2,
+                'calories' => 285,
+                'protein_g' => 14.5,
+                'fat_g' => 18.0,
+                'halal_certificate' => 'ID01910000000191919',
+                'price' => 45000,
+                'brand' => 'So Good',
+                'quantity' => '500g',
+                'packaging' => 'Plastik Vakum',
+                'labels' => json_encode(['Halal MUI', 'Frozen Product', 'Ready to Fry']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'Chicken (Halal Certified)',
+                    'cross_contamination_risk' => 'Low',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-06-28'
+                ])
+            ],
+
+            // ===== MINUMAN BERENERGI =====
+            [
+                'nama_product' => 'Red Bull Energy Drink',
+                'barcode' => '90162602',
+                'komposisi' => json_encode(['Air', 'Gula', 'Asam Sitrat', 'Taurin', 'Kafein', 'Vitamin B', 'Penguat Rasa', 'Warna Karamel', 'Pengawet Natrium Benzoat']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'import',
+                'kategori_id' => $categoryIds['Minuman Berenergi'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2024/2/1/red-bull-energy-drink-250ml.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 27.5,
+                'caffeine_mg' => 80,
+                'volume_ml' => 250,
+                'calories' => 110,
+                'halal_certificate' => 'ID02010000000202020',
+                'price' => 12500,
+                'brand' => 'Red Bull',
+                'quantity' => '250ml',
+                'packaging' => 'Kaleng',
+                'labels' => json_encode(['Halal MUI', 'Energy Drink', 'High Caffeine']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'Taurine (Synthetic)',
+                    'cross_contamination_risk' => 'None',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-07-25'
+                ])
+            ],
+
+            // ===== COKELAT & PERMEN =====
+            [
+                'nama_product' => 'Cadbury Dairy Milk',
+                'barcode' => '7622300714094',
+                'komposisi' => json_encode(['Gula', 'Kakao Massa', 'Susu Bubuk', 'Lemak Kakao', 'Lecithin (E322)', 'Vanilla', 'Emulsifier']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'import',
+                'kategori_id' => $categoryIds['Cokelat & Permen'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2024/2/2/cadbury-dairy-milk-45g.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 28.5,
+                'calories' => 220,
+                'protein_g' => 3.8,
+                'fat_g' => 13.5,
+                'halal_certificate' => 'ID02110000000212121',
+                'price' => 15500,
+                'brand' => 'Cadbury',
+                'quantity' => '45g',
+                'packaging' => 'Wrap Aluminium',
+                'labels' => json_encode(['Halal MUI', 'Pure Milk Chocolate']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'Cow Milk (Halal)',
+                    'cross_contamination_risk' => 'Low',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-07-28'
+                ])
+            ],
+
+            // ===== MAKANAN INSTAN =====
+            [
+                'nama_product' => 'Indomie Goreng Original',
+                'barcode' => '089686010384',
+                'komposisi' => json_encode(['Tepung Terigu', 'Minyak Nabati', 'Garam', 'Gula', 'Bawang Putih', 'Bawang Merah', 'Kecap Manis', 'Saus Cabai', 'Penguat Rasa (E621)', 'Antioksidan (E320)']),
+                'status' => 'halal',
+                'active' => true,
+                'source' => 'local',
+                'kategori_id' => $categoryIds['Makanan Instan'],
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2024/3/1/indomie-goreng-original-85g.jpg',
+                'verification_status' => 'verified',
+                'sugar_g' => 3.2,
+                'calories' => 380,
+                'protein_g' => 8.5,
+                'fat_g' => 16.8,
+                'halal_certificate' => 'ID02210000000222222',
+                'price' => 3200,
+                'brand' => 'Indomie',
+                'quantity' => '85g',
+                'packaging' => 'Plastik',
+                'labels' => json_encode(['Halal MUI', 'Instant Noodles', 'Ready in 3 Minutes']),
+                'halal_analysis' => json_encode([
+                    'alcohol_content' => '0%',
+                    'animal_derived' => 'None',
+                    'cross_contamination_risk' => 'Low',
+                    'certification_body' => 'MUI',
+                    'verification_date' => '2024-08-25'
+                ])
+            ],
+        ];
+    }
+
+    private function createIngredientsEncyclopedia()
+    {
+        $ingredients = [
+            [
+                'name' => 'Tepung Terigu',
+                'halal_status' => 'halal',
+                'description' => 'Tepung yang dihasilkan dari biji gandum yang telah digiling halus',
+                'sources' => 'Mie, roti, kue',
+                'notes' => 'Bahan pokok untuk baking',
+                'active' => true,
+                'image_url' => 'https://images.tokopedia.net/img/cache/500/VqbcmM/2024/1/1/tepung-terigu.jpg',
+            ],
+            [
+                'name' => 'Minyak Kelapa Sawit',
+                'halal_status' => 'halal',
+                'description' => 'Minyak nabati yang diekstrak dari buah kelapa sawit',
+                'sources' => 'Makanan olahan, margarine',
+                'notes' => 'Sumber lemak nabati utama',
+                'active' => true,
+                'image_url' => 'https://images.tokopedia.net/img/cache/500/VqbcmM/2024/1/2/palm-oil.jpg',
+            ],
+            [
+                'name' => 'Garam Meja',
+                'halal_status' => 'halal',
+                'description' => 'Natrium klorida murni yang digunakan sebagai penyedap',
+                'sources' => 'Semua jenis makanan',
+                'notes' => 'Mineral esensial untuk tubuh',
+                'active' => true,
+                'image_url' => 'https://images.tokopedia.net/img/cache/500/VqbcmM/2024/1/3/table-salt.jpg',
+            ],
+            [
+                'name' => 'Gula Pasir',
+                'halal_status' => 'halal',
+                'description' => 'Sukrosa yang diekstrak dari tebu atau bit gula',
+                'sources' => 'Minuman, kue, makanan manis',
+                'notes' => 'Sumber energi cepat',
+                'active' => true,
+                'image_url' => 'https://images.tokopedia.net/img/cache/500/VqbcmM/2024/1/4/sugar.jpg',
+            ],
+            [
+                'name' => 'Pengawet Natrium Benzoat (E211)',
+                'halal_status' => 'halal',
+                'description' => 'Pengawet sintetis yang efektif melawan bakteri dan jamur',
+                'sources' => 'Minuman, saus, makanan kaleng',
+                'notes' => 'Aman dalam jumlah terbatas sesuai BPOM',
+                'active' => true,
+                'image_url' => 'https://images.tokopedia.net/img/cache/500/VqbcmM/2024/1/5/sodium-benzoate.jpg',
+            ],
+            [
+                'name' => 'Antioksidan TBHQ (E319)',
+                'halal_status' => 'halal',
+                'description' => 'Antioksidan sintetis yang mencegah oksidasi lemak',
+                'sources' => 'Minyak goreng, makanan olahan',
+                'notes' => 'Mencegah ketengikan minyak',
+                'active' => true,
+                'image_url' => 'https://images.tokopedia.net/img/cache/500/VqbcmM/2024/1/6/tbhq.jpg',
+            ],
+            [
+                'name' => 'Pasta Tomat',
+                'halal_status' => 'halal',
+                'description' => 'Pasta kental yang dibuat dari tomat segar',
+                'sources' => 'Saus, sup, makanan Italia',
+                'notes' => 'Sumber likopen dan vitamin C',
+                'active' => true,
+                'image_url' => 'https://images.tokopedia.net/img/cache/500/VqbcmM/2024/1/7/tomato-paste.jpg',
+            ],
+            [
+                'name' => 'Bawang Putih Bubuk',
+                'halal_status' => 'halal',
+                'description' => 'Bawang putih yang telah dikeringkan dan digiling',
+                'sources' => 'Bumbu masakan, saus',
+                'notes' => 'Mengandung allicin untuk kesehatan jantung',
+                'active' => true,
+                'image_url' => 'https://images.tokopedia.net/img/cache/500/VqbcmM/2024/1/8/garlic-powder.jpg',
+            ],
+            [
+                'name' => 'Merica Putih',
+                'halal_status' => 'halal',
+                'description' => 'Buah piper yang dikeringkan dan digiling',
+                'sources' => 'Bumbu masakan',
+                'notes' => 'Rempah-rempah alami',
+                'active' => true,
+                'image_url' => 'https://images.tokopedia.net/img/cache/500/VqbcmM/2024/1/9/white-pepper.jpg',
+            ],
+            [
+                'name' => 'Cabai Merah',
+                'halal_status' => 'halal',
+                'description' => 'Buah cabai yang memberikan rasa pedas',
+                'sources' => 'Sambal, masakan pedas',
+                'notes' => 'Sumber capsaicin dan vitamin C',
+                'active' => true,
+                'image_url' => 'https://images.tokopedia.net/img/cache/500/VqbcmM/2024/1/10/red-chili.jpg',
+            ],
+        ];
+
+        foreach ($ingredients as $ingredient) {
+            Ingredient::updateOrCreate(
+                ['name' => $ingredient['name']],
+                $ingredient
+            );
+        }
+}

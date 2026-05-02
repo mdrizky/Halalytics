@@ -1,253 +1,254 @@
-@extends('admin.layouts.admin_layout')
+@extends('admin.master')
 
-@section('title', 'Edit Product - Halalytics Admin')
+@section('title', 'Refine Asset - Halalytics Admin')
 
 @section('breadcrumb')
-<span class="text-slate-400">Dashboard</span>
+<span class="text-slate-400">Catalog</span>
 <span class="material-icons-round text-slate-300 text-sm">chevron_right</span>
-<span class="text-slate-400">Products</span>
+<a href="{{ route('admin.product.index') }}" class="text-slate-400 hover:text-primary transition-colors">Product Hub</a>
 <span class="material-icons-round text-slate-300 text-sm">chevron_right</span>
-<span class="font-semibold text-slate-700 dark:text-slate-200">Edit Product</span>
+<span class="font-semibold text-slate-700 dark:text-slate-200">Refine Asset</span>
 @endsection
 
 @section('content')
-<!-- Page Title -->
-<div class="flex items-center justify-between mb-8">
-    <div>
-        <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Edit Product</h2>
-        <p class="text-slate-500 text-sm mt-1">Update product information in the halal verification database.</p>
+<div class="max-w-5xl">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Refine Asset</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Update verified product data and AI analysis insights.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{{ route('admin.product.index') }}" class="h-12 px-6 flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all font-bold text-sm">
+                <span class="material-icons-round text-lg">arrow_back</span>
+                BACK
+            </a>
+            <form action="{{ route('admin.product.destroy', $product->id_product) }}" method="POST" onsubmit="return confirm('Archive this asset permanently?')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="h-12 px-6 flex items-center gap-2 rounded-2xl bg-rose-50 dark:bg-rose-900/20 text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-all font-bold text-sm">
+                    <span class="material-icons-round text-lg">delete_outline</span>
+                    DELETE
+                </button>
+            </form>
+        </div>
     </div>
-    <a href="{{ route('admin.product.index') }}" class="flex items-center space-x-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
-        <span class="material-icons-round text-lg">arrow_back</span>
-        <span class="text-sm font-medium">Back to Products</span>
-    </a>
-</div>
 
-<!-- Form Card -->
-<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-    <form action="{{ route('admin.product.update', $product->id_product) }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('admin.product.update', $product->id_product) }}" method="POST" enctype="multipart/form-data" class="space-y-8 pb-12">
         @csrf
         
-        <div class="p-6 border-b border-slate-100 dark:border-slate-800">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-lg font-bold text-slate-800 dark:text-white">Product Information</h3>
-                    <p class="text-sm text-slate-500 mt-1">Update the details of this product.</p>
-                </div>
-                <div class="text-right">
-                    <span class="block text-xs text-slate-400">ID: {{ $product->id_product }}</span>
-                    <span class="block text-xs font-bold text-primary mt-1">Source: {{ $product->source ?? 'local' }}</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="p-6 space-y-6">
-            <!-- Product Image / External Images -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Product Images</label>
-                
-                @if(isset($imageData))
-                <div class="product-images bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
-                    @if($imageData['source'] === 'placeholder')
-                        <div class="bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 p-3 rounded-lg flex items-center gap-2 mb-4 text-sm font-medium">
-                            <span class="material-icons-round text-lg">image_not_supported</span>
-                            Foto tidak ditemukan. Menampilkan placeholder.
-                        </div>
-                    @elseif($imageData['source'] === 'unsplash')
-                        <div class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 p-3 rounded-lg flex items-center gap-2 mb-4 text-sm font-medium">
-                            <span class="material-icons-round text-lg">image_search</span>
-                            Foto ilustrasi dari Unsplash (bukan foto produk asli).
-                        </div>
-                    @endif
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Column: Visuals & AI -->
+            <div class="lg:col-span-4 space-y-8">
+                <!-- Visual Identity -->
+                <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+                    <div class="absolute top-0 right-0 h-32 w-32 bg-primary/5 blur-3xl rounded-full"></div>
+                    
+                    <div class="flex items-center justify-between mb-6">
+                        <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400">Visual Identity</label>
+                        <span class="text-[9px] font-bold text-primary uppercase tracking-tighter">{{ $product->source ?? 'local' }} source</span>
+                    </div>
 
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        @foreach($imageData['images'] as $image)
-                        <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden group">
-                            <div class="aspect-square relative">
-                                <img
-                                    src="{{ $image['url'] }}"
-                                    class="w-full h-full object-cover"
-                                    alt="{{ $image['label'] }}"
-                                    loading="lazy"
-                                    onerror="this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'"
-                                >
+                    @if(isset($imageData))
+                    <div class="space-y-4 mb-6">
+                        @if($imageData['source'] === 'placeholder')
+                            <div class="p-3 rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 border border-amber-100 dark:border-amber-900/30 flex items-center gap-2 text-[10px] font-bold uppercase tracking-tight">
+                                <span class="material-icons-round text-base">image_not_supported</span>
+                                Using generic placeholder
                             </div>
-                            <div class="p-2 text-center bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700">
-                                <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">{{ $image['label'] }}</p>
-                                @if(isset($image['credit']))
-                                    <p class="text-[9px] text-slate-500 mt-0.5">📷 {{ $image['credit'] }}</p>
+                        @elseif($imageData['source'] === 'unsplash')
+                            <div class="p-3 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 border border-blue-100 dark:border-blue-900/30 flex items-center gap-2 text-[10px] font-bold uppercase tracking-tight">
+                                <span class="material-icons-round text-base">image_search</span>
+                                Illustrative visual (Unsplash)
+                            </div>
+                        @endif
+
+                        <div class="grid grid-cols-2 gap-3">
+                            @foreach(array_slice($imageData['images'], 0, 2) as $image)
+                            <div class="aspect-square rounded-2xl overflow-hidden border-2 border-slate-50 dark:border-slate-800 shadow-sm relative group/thumb">
+                                <img src="{{ $image['url'] }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ $product->image_fallback_url }}'">
+                                @if($image['type'] !== 'fallback' && $image['type'] !== 'existing_image' && $image['type'] !== 'local_match')
+                                <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
+                                    <button type="button" onclick="document.getElementById('currentPreviewImg').src='{{ $image['url'] }}'; document.getElementById('imageUrlInput').value='{{ $image['url'] }}'; document.getElementById('imageUpload').value='';" class="bg-primary hover:bg-primary-dark text-white text-[9px] font-bold py-1.5 px-3 rounded-lg w-full mb-1">
+                                        Use Image
+                                    </button>
+                                </div>
                                 @endif
                             </div>
+                            @endforeach
                         </div>
-                        @endforeach
+                    </div>
+                    @endif
+                    
+                    <div class="relative group mt-4">
+                        <input type="hidden" name="image_url" id="imageUrlInput" value="">
+                        <input type="file" name="image" accept="image/*" class="hidden" id="imageUpload" onchange="previewImage(event); document.getElementById('imageUrlInput').value='';">
+                        <label for="imageUpload" class="block cursor-pointer">
+                            <div id="imagePreview" class="aspect-square rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center overflow-hidden group-hover:border-primary transition-all relative">
+                                <img src="{{ $product->image ?: '/images/default/general.svg' }}" id="currentPreviewImg" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.onerror=null;this.src='{{ $product->image_fallback_url }}'">
+                                <div class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span class="material-icons-round text-white text-3xl mb-2">cloud_upload</span>
+                                    <span class="text-[10px] font-bold text-white uppercase tracking-widest">Update Photo</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    <p class="mt-4 text-[9px] font-medium text-slate-400 text-center leading-relaxed">
+                        ID: {{ $product->id_product }} • Last modified: {{ $product->updated_at->format('d M Y') }}
+                    </p>
+                </div>
+
+                <!-- AI Insights -->
+                @if($product->halal_analysis)
+                <div class="bg-primary/5 rounded-[2.5rem] p-8 border border-primary/10 relative overflow-hidden">
+                    <div class="absolute -right-8 -bottom-8 h-32 w-32 bg-primary/10 blur-3xl rounded-full"></div>
+                    
+                    <div class="flex items-center gap-2 mb-6">
+                        <div class="h-8 w-8 rounded-xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20">
+                            <span class="material-icons-round text-sm">auto_awesome</span>
+                        </div>
+                        <h3 class="text-[10px] font-bold text-primary uppercase tracking-widest">AI Intelligence</h3>
+                    </div>
+
+                    <div class="space-y-6 relative z-10">
+                        <div class="flex items-center gap-3">
+                            <span class="px-3 py-1 bg-white/80 dark:bg-slate-900/80 rounded-lg text-[10px] font-extrabold text-primary border border-primary/10 shadow-sm uppercase tracking-tighter">
+                                {{ $product->halal_analysis['status'] ?? 'Unknown' }}
+                            </span>
+                            <span class="px-3 py-1 {{ ($product->halal_analysis['is_potentially_halal'] ?? false) ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white' }} rounded-lg text-[10px] font-extrabold shadow-sm uppercase tracking-tighter">
+                                {{ ($product->halal_analysis['is_potentially_halal'] ?? false) ? 'SAFE' : 'RISK FOUND' }}
+                            </span>
+                        </div>
+
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Recommendation</p>
+                            <p class="text-xs text-slate-700 dark:text-slate-300 italic leading-relaxed">
+                                "{{ $product->halal_analysis['recommendation'] ?? 'No specific recommendation provided.' }}"
+                            </p>
+                        </div>
+
+                        @if(!empty($product->halal_analysis['suspicious_ingredients']))
+                        <div>
+                            <p class="text-[10px] font-bold text-rose-500 uppercase tracking-widest mb-2">Flagged Ingredients</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach($product->halal_analysis['suspicious_ingredients'] as $ingredient)
+                                <span class="px-2 py-0.5 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded text-[9px] font-bold border border-rose-100 dark:border-rose-800">
+                                    {{ $ingredient }}
+                                </span>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
                 @endif
-                
-                <div class="mt-4 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-6 text-center hover:border-primary transition-colors">
-                    <input type="file" name="image" accept="image/*" class="hidden" id="imageUpload" onchange="previewImage(event)">
-                    <label for="imageUpload" class="cursor-pointer">
-                        <div id="imagePreview" class="mb-4">
-                            @if($product->image)
-                                <img src="{{ $product->image }}" class="w-32 h-32 object-cover rounded-lg mx-auto shadow-sm" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
-                            @else
-                                <span class="material-icons-round text-4xl text-slate-400">add_photo_alternate</span>
-                            @endif
-                        </div>
-                        <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Click to upload new local image</p>
-                        <p class="text-xs text-slate-400 mt-1">JPEG, PNG, JPG up to 5MB</p>
-                    </label>
-                </div>
-            </div>
-            
-            <!-- Product Name -->
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Product Name <span class="text-red-500">*</span></label>
-                <input type="text" name="nama_product" value="{{ old('nama_product', $product->nama_product) }}" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent @error('nama_product') border-red-500 @enderror" placeholder="Enter product name">
-                @error('nama_product')
-                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                @enderror
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Barcode -->
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Barcode <span class="text-red-500">*</span></label>
-                    <input type="text" name="barcode" value="{{ old('barcode', $product->barcode) }}" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent @error('barcode') border-red-500 @enderror" placeholder="e.g., 8992388116014">
-                    @error('barcode')
-                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
-                
-                <!-- Category -->
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Category</label>
-                    <select name="kategori_id" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
-                        <option value="">Select Category</option>
-                        @foreach($categories as $category)
-                        <option value="{{ $category->id_kategori }}" {{ old('kategori_id', $product->kategori_id) == $category->id_kategori ? 'selected' : '' }}>{{ $category->nama_kategori }}</option>
+
+                <!-- Halal Status -->
+                <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6">Assessed Status</label>
+                    <div class="space-y-3">
+                        @foreach(['halal' => ['icon' => 'verified', 'color' => 'text-emerald-500', 'bg' => 'peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20', 'border' => 'peer-checked:border-emerald-500'], 
+                                 'syubhat' => ['icon' => 'help', 'color' => 'text-amber-500', 'bg' => 'peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/20', 'border' => 'peer-checked:border-amber-500'], 
+                                 'tidak halal' => ['icon' => 'cancel', 'color' => 'text-rose-500', 'bg' => 'peer-checked:bg-rose-50 dark:peer-checked:bg-rose-900/20', 'border' => 'peer-checked:border-rose-500']] as $val => $cfg)
+                        <label class="relative block cursor-pointer group">
+                            <input type="radio" name="status" value="{{ $val }}" {{ old('status', $product->status) == $val ? 'checked' : '' }} class="peer sr-only" required>
+                            <div class="flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-50 dark:border-slate-800 transition-all {{ $cfg['bg'] }} {{ $cfg['border'] }} group-hover:bg-slate-50 dark:group-hover:bg-slate-800/50">
+                                <div class="h-10 w-10 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center shadow-sm">
+                                    <span class="material-icons-round {{ $cfg['color'] }}">{{ $cfg['icon'] }}</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-tight">{{ $val == 'tidak halal' ? 'HARAM' : strtoupper($val) }}</p>
+                                </div>
+                                <div class="h-5 w-5 rounded-full border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center peer-checked:border-primary transition-all">
+                                    <div class="h-2.5 w-2.5 rounded-full bg-primary scale-0 peer-checked:scale-100 transition-transform"></div>
+                                </div>
+                            </div>
+                        </label>
                         @endforeach
-                    </select>
-                </div>
-            </div>
-            
-            <!-- AI Halal Analysis (Read Only Context) -->
-            @if($product->halal_analysis)
-            <div class="bg-primary/10 dark:bg-primary/10 rounded-xl p-6 border border-primary/15 dark:border-primary/20 mb-6">
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="material-icons-round text-primary">auto_awesome</span>
-                    <h3 class="text-sm font-bold text-primary uppercase tracking-wider">AI Halal Analysis Insights</h3>
-                </div>
-                <div class="space-y-4">
-                    <div class="flex items-center gap-3">
-                        <div class="px-3 py-1 bg-primary/15 text-primary rounded-full text-xs font-bold uppercase tracking-tighter">
-                            Status: {{ $product->halal_analysis['status'] ?? 'Unknown' }}
-                        </div>
-                        <div class="px-3 py-1 {{ ($product->halal_analysis['is_potentially_halal'] ?? false) ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500' }} rounded-full text-xs font-bold uppercase tracking-tighter">
-                            Confidence: {{ ($product->halal_analysis['is_potentially_halal'] ?? false) ? 'Potentially Halal' : 'Potentially Non-Halal' }}
-                        </div>
                     </div>
-                    <div>
-                        <p class="text-xs font-bold text-primary mb-1">AI Recommendation:</p>
-                        <p class="text-sm text-slate-700 dark:text-slate-100/80 italic leading-relaxed">
-                            "{{ $product->halal_analysis['recommendation'] ?? 'No specific recommendation provided.' }}"
-                        </p>
-                    </div>
-                    @if(!empty($product->halal_analysis['suspicious_ingredients']))
-                    <div>
-                        <p class="text-xs font-bold text-rose-600 dark:text-rose-400 mb-1">Suspicious Ingredients Flagged:</p>
-                        <ul class="flex flex-wrap gap-2">
-                            @foreach($product->halal_analysis['suspicious_ingredients'] as $ingredient)
-                            <li class="px-2 py-0.5 bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 rounded text-[10px] font-bold">{{ $ingredient }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    @endif
                 </div>
-            </div>
-            @endif
-
-            <!-- Halal Status -->
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Halal Status <span class="text-red-500">*</span></label>
-                <div class="grid grid-cols-3 gap-4">
-                    <label class="relative cursor-pointer">
-                        <input type="radio" name="status" value="halal" {{ old('status', $product->status) == 'halal' ? 'checked' : '' }} class="peer sr-only" required>
-                        <div class="p-4 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-center peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
-                            <span class="material-icons-round text-emerald-500 text-2xl mb-2">verified</span>
-                            <p class="text-sm font-bold text-slate-800 dark:text-white">Halal</p>
-                            <p class="text-xs text-slate-400">Certified halal</p>
-                        </div>
-                    </label>
-                    <label class="relative cursor-pointer">
-                        <input type="radio" name="status" value="syubhat" {{ old('status', $product->status) == 'syubhat' ? 'checked' : '' }} class="peer sr-only">
-                        <div class="p-4 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-center peer-checked:border-amber-500 peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/20 transition-all">
-                            <span class="material-icons-round text-amber-500 text-2xl mb-2">help</span>
-                            <p class="text-sm font-bold text-slate-800 dark:text-white">Syubhat</p>
-                            <p class="text-xs text-slate-400">Needs verification</p>
-                        </div>
-                    </label>
-                    <label class="relative cursor-pointer">
-                        <input type="radio" name="status" value="tidak halal" {{ old('status', $product->status) == 'tidak halal' ? 'checked' : '' }} class="peer sr-only">
-                        <div class="p-4 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-center peer-checked:border-red-500 peer-checked:bg-red-50 dark:peer-checked:bg-red-900/20 transition-all">
-                            <span class="material-icons-round text-red-500 text-2xl mb-2">cancel</span>
-                            <p class="text-sm font-bold text-slate-800 dark:text-white">Haram</p>
-                            <p class="text-xs text-slate-400">Not halal</p>
-                        </div>
-                    </label>
-                </div>
-                @error('status')
-                <p class="mt-2 text-xs text-red-500">{{ $message }}</p>
-                @enderror
             </div>
 
-            <!-- Verification Status -->
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Verification Status</label>
-                <select name="verification_status" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
-                    <option value="needs_review" {{ old('verification_status', $product->verification_status) == 'needs_review' ? 'selected' : '' }}>Needs Review</option>
-                    <option value="verified" {{ old('verification_status', $product->verification_status) == 'verified' ? 'selected' : '' }}>Verified</option>
-                    <option value="rejected" {{ old('verification_status', $product->verification_status) == 'rejected' ? 'selected' : '' }}>Rejected</option>
-                </select>
-            </div>
-            
-            <!-- Composition -->
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Composition / Ingredients</label>
-                <textarea name="komposisi" rows="4" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="List the ingredients or composition of the product">{{ old('komposisi', $product->komposisi) }}</textarea>
-            </div>
-            
-            <!-- Nutrition Info -->
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nutrition Information</label>
-                <textarea name="info_gizi" rows="4" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter nutrition facts (optional)">{{ old('info_gizi', $product->info_gizi) }}</textarea>
-            </div>
-        </div>
-        
-        <div class="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-end">
-            <div class="flex items-center space-x-3">
-                <a href="{{ route('admin.product.index') }}" class="px-6 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-all text-sm font-medium">
-                    Cancel
-                </a>
-                <button type="submit" class="px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all text-sm font-bold flex items-center space-x-2">
-                    <span class="material-icons-round text-lg">save</span>
-                    <span>Save Changes</span>
-                </button>
+            <!-- Right Column: Form Fields -->
+            <div class="lg:col-span-8 space-y-8">
+                <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <h3 class="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3 mb-8">
+                        <span class="h-8 w-1 bg-primary rounded-full"></span>
+                        Asset Characteristics
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2 space-y-2">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Official Name</label>
+                            <input type="text" name="nama_product" value="{{ old('nama_product', $product->nama_product) }}" required class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary transition-all">
+                            @error('nama_product') <p class="text-[10px] text-rose-500 font-bold mt-1 ml-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">EAN/Barcode</label>
+                            <input type="text" name="barcode" value="{{ old('barcode', $product->barcode) }}" required class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary transition-all">
+                            @error('barcode') <p class="text-[10px] text-rose-500 font-bold mt-1 ml-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Taxonomy Category</label>
+                            <div class="relative">
+                                <select name="kategori_id" class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary appearance-none">
+                                    <option value="">Select Category</option>
+                                    @foreach($categories as $category)
+                                    <option value="{{ $category->id_kategori }}" {{ old('kategori_id', $product->kategori_id) == $category->id_kategori ? 'selected' : '' }}>{{ $category->nama_kategori }}</option>
+                                    @endforeach
+                                </select>
+                                <span class="material-icons-round absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Registry Value (Rp)</label>
+                            <input type="number" name="price" value="{{ old('price', $product->price) }}" min="0" step="0.01" class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary transition-all">
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Workflow Status</label>
+                            <div class="relative">
+                                <select name="verification_status" class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary appearance-none">
+                                    <option value="needs_review" {{ old('verification_status', $product->verification_status) == 'needs_review' ? 'selected' : '' }}>Needs Review</option>
+                                    <option value="verified" {{ old('verification_status', $product->verification_status) == 'verified' ? 'selected' : '' }}>Verified Asset</option>
+                                    <option value="rejected" {{ old('verification_status', $product->verification_status) == 'rejected' ? 'selected' : '' }}>Rejected / Archival</option>
+                                </select>
+                                <span class="material-icons-round absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">rule</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <h3 class="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3 mb-8">
+                        <span class="h-8 w-1 bg-emerald-500 rounded-full"></span>
+                        Technical Details
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Chemical / Ingredient Composition</label>
+                            <textarea name="komposisi" rows="5" class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm focus:ring-2 focus:ring-primary transition-all leading-relaxed">{{ old('komposisi', $product->komposisi) }}</textarea>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Nutritional Values Registry</label>
+                            <textarea name="info_gizi" rows="4" class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm focus:ring-2 focus:ring-primary transition-all leading-relaxed">{{ old('info_gizi', $product->info_gizi) }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-4 pt-4">
+                    <button type="submit" class="w-full md:w-auto px-12 py-5 bg-primary text-white rounded-[1.5rem] font-extrabold text-sm hover:bg-primary-dark transition-all transform hover:-translate-y-1 shadow-2xl shadow-primary/30 flex items-center justify-center gap-3">
+                        <span class="material-icons-round">publish</span>
+                        COMMIT REFINEMENTS
+                    </button>
+                </div>
             </div>
         </div>
     </form>
-    
-    <!-- Delete Form (Outside main form to prevent conflicts) -->
-    <div class="p-6 pt-0 border-t-0 bg-slate-50 dark:bg-slate-800/50">
-        <form action="{{ route('admin.product.destroy', $product->id_product) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?')">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all text-sm font-medium flex items-center space-x-1">
-                <span class="material-icons-round text-lg">delete</span>
-                <span>Delete Product</span>
-            </button>
-        </form>
-    </div>
 </div>
 @endsection
 
@@ -255,15 +256,17 @@
 <script>
     function previewImage(event) {
         const file = event.target.files[0];
-        const preview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('currentPreviewImg');
         
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                preview.innerHTML = `<img src="${e.target.result}" class="w-32 h-32 object-cover rounded-lg mx-auto">`;
+                previewImg.src = e.target.result;
+                previewImg.classList.remove('opacity-40');
             }
             reader.readAsDataURL(file);
         }
     }
 </script>
 @endpush
+

@@ -1,0 +1,175 @@
+@extends('admin.master')
+
+@section('title', 'User Management | Halalytics')
+
+@section('breadcrumb-items')
+    <i class="fas fa-chevron-right" style="font-size: 10px; color: var(--text-muted);"></i>
+    <span style="color: var(--primary-color); font-weight: 700;">Users</span>
+@endsection
+
+@section('content')
+<div class="dashboard-header" style="margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-end;">
+    <div>
+        <h1 style="margin: 0; font-size: 28px; color: var(--primary-color);">User Management</h1>
+        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 14px;">Kelola akun pengguna, atur role, dan pantau aktivitas scan komunitas.</p>
+    </div>
+    <div style="display: flex; gap: 12px;">
+        <a href="{{ route('admin.user.export') }}" class="btn btn-outline">
+            <i class="fas fa-file-export"></i> Export CSV
+        </a>
+        <a href="{{ route('admin.user.create') }}" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Add New User
+        </a>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 32px;">
+    <div class="card stat-card">
+        <div class="card-body">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Total Registrations</div>
+            <div style="display: flex; align-items: baseline; gap: 12px;">
+                <div style="font-size: 28px; font-weight: 800; color: var(--text-main);">{{ number_format($stats['total_users']) }}</div>
+                <div style="font-size: 12px; color: var(--success); font-weight: 700;"><i class="fas fa-arrow-up"></i> {{ $stats['user_change'] }}%</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card stat-card">
+        <div class="card-body">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Active Accounts</div>
+            <div style="font-size: 28px; font-weight: 800; color: var(--primary-color);">{{ number_format($stats['active_users']) }}</div>
+        </div>
+    </div>
+    
+    <div class="card stat-card">
+        <div class="card-body">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Community Scans</div>
+            <div style="font-size: 28px; font-weight: 800; color: var(--accent-color);">{{ number_format($stats['total_scans']) }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Search & Filters -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-body">
+        <form action="{{ url('/admin/user') }}" method="GET" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 16px; align-items: center;">
+            <div class="input-group" style="position: relative; margin-bottom: 0;">
+                <i class="fas fa-search" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, email, or username..." style="width: 100%; padding: 12px 12px 12px 48px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light); outline: none;">
+            </div>
+            
+            <select name="status" style="padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light);">
+                <option value="all">All Status</option>
+                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                <option value="blocked" {{ request('status') == 'blocked' ? 'selected' : '' }}>Blocked</option>
+            </select>
+            
+            <select name="sort" style="padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light);">
+                <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Sort by Joined Date</option>
+                <option value="username" {{ request('sort') == 'username' ? 'selected' : '' }}>Sort by Username</option>
+                <option value="scans_count" {{ request('sort') == 'scans_count' ? 'selected' : '' }}>Sort by Scan Count</option>
+            </select>
+            
+            <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">
+                <i class="fas fa-filter"></i> Apply
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- User Table -->
+<div class="card">
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table style="border-collapse: collapse; width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="padding: 16px 24px;">User Information</th>
+                        <th style="padding: 16px;">Contact</th>
+                        <th style="padding: 16px;">Role</th>
+                        <th style="padding: 16px;">Status</th>
+                        <th style="padding: 16px; text-align: center;">Scans</th>
+                        <th style="padding: 16px;">Joined Date</th>
+                        <th style="padding: 16px 24px; text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($users as $user)
+                    <tr>
+                        <td style="padding: 16px 24px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--bg-light); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); overflow: hidden;">
+                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($user->full_name) }}&background=random&color=fff" style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; color: var(--text-main);">{{ $user->full_name }}</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">{{ '@' . $user->username }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding: 16px;">
+                            <div style="font-size: 13px; color: var(--text-main);">{{ $user->email }}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">{{ $user->phone ?: 'No phone' }}</div>
+                        </td>
+                        <td style="padding: 16px;">
+                            @if($user->role == 'admin')
+                                <span class="badge" style="background: rgba(45, 106, 79, 0.1); color: var(--primary-color); border: 1px solid var(--primary-color);">ADMIN</span>
+                            @else
+                                <span class="badge" style="background: rgba(0, 0, 0, 0.05); color: var(--text-muted); border: 1px solid var(--border-color);">USER</span>
+                            @endif
+                        </td>
+                        <td style="padding: 16px;">
+                            @if($user->active)
+                                <span style="display: flex; align-items: center; gap: 6px; color: var(--success); font-size: 12px; font-weight: 700;">
+                                    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--success);"></span> Active
+                                </span>
+                            @else
+                                <span style="display: flex; align-items: center; gap: 6px; color: var(--danger); font-size: 12px; font-weight: 700;">
+                                    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--danger);"></span> Blocked
+                                </span>
+                            @endif
+                        </td>
+                        <td style="padding: 16px; text-align: center;">
+                            <div style="font-weight: 800; color: var(--primary-color);">{{ number_format(($user->scans_count ?? 0) + ($user->scan_histories_count ?? 0)) }}</div>
+                        </td>
+                        <td style="padding: 16px; font-size: 12px; color: var(--text-muted);">
+                            {{ $user->created_at->format('d M Y') }}
+                        </td>
+                        <td style="padding: 16px 24px; text-align: right;">
+                            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                                <a href="{{ route('admin.user.edit', $user->id_user) }}" class="btn btn-outline" style="padding: 8px; color: var(--primary-color); border-color: var(--primary-color);"><i class="fas fa-user-edit"></i></a>
+                                
+                                <form action="{{ route('admin.user.toggle', $user->id_user) }}" method="POST" style="display: inline;">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="btn btn-outline" style="padding: 8px; color: {{ $user->active ? 'var(--danger)' : 'var(--success)' }}; border-color: var(--border-color);" title="{{ $user->active ? 'Block User' : 'Unblock User' }}">
+                                        <i class="fas fa-{{ $user->active ? 'ban' : 'check' }}"></i>
+                                    </button>
+                                </form>
+                                
+                                @if($user->role != 'admin')
+                                <form action="{{ route('admin.user.destroy', $user->id_user) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini selamanya?');" style="display: inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-outline" style="padding: 8px; color: var(--danger); border-color: var(--danger);"><i class="fas fa-trash"></i></button>
+                                </form>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 48px; color: var(--text-muted);">No users found.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer" style="padding: 16px 24px;">
+        {{ $users->links() }}
+    </div>
+</div>
+
+@endsection

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Promo;
 
 use App\Http\Controllers\Controller;
-use App\Models\PromoBlog;
+use App\Models\Article;
 use App\Models\PromoSetting;
 use App\Services\ExternalHealthArticleService;
 
@@ -17,7 +17,7 @@ class PageController extends Controller
     public function home()
     {
         $settings = PromoSetting::getAllSettings();
-        $latestBlogs = PromoBlog::where('status', 'published')
+        $latestBlogs = Article::where('status', 'published')
             ->orderBy('created_at', 'desc')
             ->take(3)
             ->get();

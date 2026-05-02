@@ -22,6 +22,7 @@ class ProductModel extends Model
         'active',
         'source',
         'info_gizi',
+        'price',
         'kategori_id',
         'image',
         'off_product_id',
@@ -29,7 +30,6 @@ class ProductModel extends Model
         'is_imported_from_off',
         'auto_imported_at',
         'verification_status',
-        'data_completeness_score',
         'data_completeness_score',
         'needs_manual_review',
 
@@ -45,7 +45,17 @@ class ProductModel extends Model
         'approved_by',
         'approved_at',
         'rejection_reason',
-        'halal_analysis'
+        'halal_analysis',
+
+        // New metadata fields
+        'brand',
+        'quantity',
+        'packaging',
+        'labels',
+        'nutriscore_grade',
+        'nova_group',
+        'stores',
+        'countries',
     ];
 
     protected $casts = [
@@ -53,7 +63,8 @@ class ProductModel extends Model
         'off_last_synced' => 'datetime',
         'auto_imported_at' => 'datetime',
         'approved_at' => 'datetime',
-        'active' => 'boolean'
+        'active' => 'boolean',
+        'price' => 'decimal:2',
     ];
 
     // Relasi ke Kategori
@@ -81,5 +92,30 @@ class ProductModel extends Model
             'barcode' => $this->barcode,
             'category' => optional($this->kategori)->nama_kategori,
         ], 'product');
+    }
+
+    public function getImageFallbackUrlAttribute(): string
+    {
+        return app(DisplayImageService::class)->fallbackUrl(
+            optional($this->kategori)->nama_kategori,
+            'product'
+        );
+    }
+
+    public function getSourceLabelAttribute(): string
+    {
+        return match ($this->source) {
+            'open_food_facts' => 'Open Food Facts',
+            'open_beauty_facts' => 'Open Beauty Facts',
+            'bpom' => 'BPOM',
+            'local_cache' => 'Local Cache',
+            'internal', null => 'Internal DB',
+            default => ucfirst(str_replace('_', ' ', $this->source)),
+        };
+    }
+
+    public function getCategoryNameAttribute(): string
+    {
+        return optional($this->kategori)->nama_kategori ?? 'Umum';
     }
 }

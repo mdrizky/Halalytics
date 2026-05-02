@@ -42,7 +42,7 @@ class AdminRequestController extends Controller
             'nama_produk' => $request->product_name,
             'kategori' => 'umum', // Default, admin can edit later
             'ingredients_text' => $request->ocr_text,
-            'image_url' => $request->image_front, // Use front image as main image
+            'image_url' => $request->getRawOriginal('image_front') ?: $request->image_front,
             'barcode' => $request->barcode,
             'submitted_by' => $request->user_id,
             'verification_status' => 'verified',

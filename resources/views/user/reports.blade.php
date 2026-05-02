@@ -1,118 +1,75 @@
-@extends('master')
-@section('isi')
-<div class="container py-5" style="background-color: #121212; min-height: 100vh; color: #E0E0E0;">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 style="color: #3A9D66; font-weight: 700;"><i class="fas fa-flag me-3"></i>Laporan & Pengaduan</h2>
-        <a href="{{ url('/user') }}" class="btn btn-outline-success"><i class="fas fa-arrow-left me-2"></i>Kembali ke Dashboard</a>
-    </div>
+@extends('user.layouts.app')
 
-    @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show bg-success text-white border-0 mb-4" role="alert">
-        <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    @endif
+@section('title', 'Laporan Produk - Halalytics')
 
-    <div class="row">
-        <!-- New Report Form -->
-        <div class="col-lg-4">
-            <div class="card bg-dark border-secondary shadow mb-4">
-                <div class="card-header bg-secondary text-white font-weight-bold">
-                    <i class="fas fa-paper-plane me-2"></i>Kirim Laporan Baru
+@section('content')
+<section class="page-hero mb-4">
+    <h1 class="display-6 fw-bold mb-2">Laporan & Pengaduan Produk</h1>
+    <p class="mb-0 text-white-50">User bisa mengirim laporan baru dan melihat progres review dari admin.</p>
+</section>
+
+<section class="row g-4">
+    <div class="col-lg-4">
+        <div class="surface-card p-4">
+            <h2 class="h4 fw-bold mb-3">Kirim Laporan Baru</h2>
+            <form action="{{ route('user.reports.store') }}" method="POST" class="d-grid gap-3">
+                @csrf
+                <div>
+                    <label class="form-label fw-semibold">Nama produk</label>
+                    <input type="text" name="product_name" class="form-control rounded-4" value="{{ old('product_name') }}" required>
                 </div>
-                <div class="card-body">
-                    <form action="{{ url('/reports') }}" method="POST">
-                        @csrf
-                        <div class="mb-3">
-                            <label class="form-label text-muted">Nama Produk</label>
-                            <input type="text" name="product_name" class="form-control bg-dark border-secondary text-white" placeholder="Contoh: Indomie Goreng" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-muted">Detail Laporan</label>
-                            <textarea name="laporan" class="form-control bg-dark border-secondary text-white" rows="5" placeholder="Jelaskan masalah halal atau keraguan Anda pada produk ini..." required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-success w-100 font-weight-bold">Kirim Laporan</button>
-                    </form>
+                <div>
+                    <label class="form-label fw-semibold">Alasan singkat</label>
+                    <input type="text" name="reason" class="form-control rounded-4" value="{{ old('reason') }}" placeholder="mis. label meragukan">
                 </div>
-            </div>
-            
-            <div class="card bg-dark border-secondary shadow">
-                <div class="card-body text-center p-4">
-                    <i class="fas fa-info-circle fa-2x text-info mb-3"></i>
-                    <p class="small text-muted mb-0">Laporan Anda sangat berharga bagi komunitas Halalytics. Setiap laporan akan ditinjau oleh tim ahli kami.</p>
+                <div>
+                    <label class="form-label fw-semibold">Detail laporan</label>
+                    <textarea name="laporan" rows="6" class="form-control rounded-4" required>{{ old('laporan') }}</textarea>
                 </div>
-            </div>
+                <button class="btn btn-brand rounded-pill" type="submit">Kirim Laporan</button>
+            </form>
         </div>
+    </div>
 
-        <!-- Reports List -->
-        <div class="col-lg-8">
-            <div class="card bg-dark border-secondary shadow h-100">
-                <div class="card-header bg-dark border-secondary text-success font-weight-bold">
-                    Riwayat Laporan Saya
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-dark table-hover mb-0">
-                            <thead>
-                                <tr class="text-muted small uppercase">
-                                    <th class="ps-4">No</th>
-                                    <th>Produk</th>
-                                    <th>Detail</th>
-                                    <th>Status</th>
-                                    <th>Tanggal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($reports as $index => $report)
-                                <tr>
-                                    <td class="ps-4">{{ $reports->firstItem() + $index }}</td>
-                                    <td class="font-weight-bold text-success">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div style="width:36px;height:36px;border-radius:10px;overflow:hidden;background:#1f2937;display:flex;align-items:center;justify-content:center;">
-                                                <img src="{{ $report->product?->image ?? asset('images/placeholders/product-placeholder.svg') }}" alt="Produk" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
-                                            </div>
-                                            <div>
-                                                <div>{{ $report->product?->nama_product ?? 'Produk tidak tersedia' }}</div>
-                                                <div class="text-muted small">ID: {{ $report->product_id }}</div>
-                                            </div>
+    <div class="col-lg-8">
+        <div class="surface-card p-4">
+            <h2 class="h4 fw-bold mb-3">Riwayat Laporan Saya</h2>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Produk</th>
+                            <th>Detail</th>
+                            <th>Status</th>
+                            <th>Tanggal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($reports as $report)
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="{{ $report->product?->image ?? asset('images/default/general.svg') }}" alt="Produk" width="48" height="48" class="rounded-4 object-fit-cover border" onerror="this.onerror=null;this.src='{{ $report->product?->image_fallback_url ?? asset('images/default/general.svg') }}'">
+                                        <div>
+                                            <div class="fw-bold">{{ $report->product?->nama_product ?? 'Produk tidak tersedia' }}</div>
+                                            <div class="small text-secondary">{{ $report->reason ?? 'Laporan umum' }}</div>
                                         </div>
-                                    </td>
-                                    <td style="max-width: 250px;"><div class="truncate">{{ $report->laporan }}</div></td>
-                                    <td>
-                                        @php
-                                            $badgeClass = 'bg-secondary';
-                                            if($report->status == 'approved') $badgeClass = 'bg-success';
-                                            else if($report->status == 'rejected') $badgeClass = 'bg-danger';
-                                            else if($report->status == 'pending') $badgeClass = 'bg-warning text-dark';
-                                        @endphp
-                                        <span class="badge {{ $badgeClass }} px-2 py-1">{{ strtoupper($report->status) }}</span>
-                                    </td>
-                                    <td class="small">{{ $report->created_at->format('d/m/Y') }}</td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="5" class="text-center py-5 text-muted"> Belum ada laporan yang diajukan. </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                @if($reports->hasPages())
-                <div class="card-footer bg-transparent border-secondary py-3">
-                    {{ $reports->links() }}
-                </div>
-                @endif
+                                    </div>
+                                </td>
+                                <td class="text-secondary">{{ \Illuminate\Support\Str::limit($report->laporan, 120) }}</td>
+                                <td><span class="status-pill status-{{ strtolower($report->status) }}">{{ strtoupper($report->status) }}</span></td>
+                                <td>{{ $report->created_at->format('d M Y') }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-secondary">Belum ada laporan yang dikirim.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
+            {{ $reports->links() }}
         </div>
     </div>
-</div>
-
-<style>
-    .truncate {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-</style>
+</section>
 @endsection

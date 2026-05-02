@@ -49,18 +49,18 @@
                 <input type="text" name="search" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white" placeholder="Cari merk atau nama produk kosmetik..." value="{{ request('search') }}">
             </div>
             <div class="md:col-span-5">
-                <select name="status_keamanan" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white">
+                <select name="status" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white">
                     <option value="">Semua Status Keamanan</option>
-                    <option value="aman" {{ request('status_keamanan') == 'aman' ? 'selected' : '' }}>Aman</option>
-                    <option value="waspada" {{ request('status_keamanan') == 'waspada' ? 'selected' : '' }}>Waspada</option>
-                    <option value="bahaya" {{ request('status_keamanan') == 'bahaya' ? 'selected' : '' }}>Bahaya</option>
+                    <option value="aman" {{ request('status') == 'aman' ? 'selected' : '' }}>Aman</option>
+                    <option value="waspada" {{ request('status') == 'waspada' ? 'selected' : '' }}>Waspada</option>
+                    <option value="bahaya" {{ request('status') == 'bahaya' ? 'selected' : '' }}>Bahaya</option>
                 </select>
             </div>
             <div class="md:col-span-4">
-                <select name="sumber_data" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white">
+                <select name="source" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white">
                     <option value="">Semua Sumber</option>
-                    <option value="sistem" {{ request('sumber_data') == 'sistem' ? 'selected' : '' }}>BPOM (Sistem)</option>
-                    <option value="open_beauty_facts" {{ request('sumber_data') == 'open_beauty_facts' ? 'selected' : '' }}>OpenBeautyFacts</option>
+                    <option value="lokal" {{ request('source') == 'lokal' ? 'selected' : '' }}>BPOM / Lokal</option>
+                    <option value="open_beauty_facts" {{ request('source') == 'open_beauty_facts' ? 'selected' : '' }}>OpenBeautyFacts</option>
                 </select>
             </div>
             <div class="md:col-span-3">
@@ -105,13 +105,7 @@
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                     <td class="px-5 py-4 flex items-center gap-3">
                         <div class="w-10 h-10 rounded-lg overflow-hidden bg-primary/10 text-primary border border-slate-100 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
-                            @php
-                                $imgSrc = $item->image_url;
-                                if (!$imgSrc || str_contains($imgSrc, 'placeholder.svg')) {
-                                    $imgSrc = 'https://images.unsplash.com/photo-1596462502278-27bf85033e5a?q=80&w=150'; // Default Cosmetic
-                                }
-                            @endphp
-                            <img src="{{ $imgSrc }}" class="w-full h-full object-cover" alt="" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name='+encodeURIComponent('{{ $item->nama_produk }}')+'&background=random';">
+                            <img src="{{ $item->image_url }}" class="w-full h-full object-cover" alt="{{ $item->nama_produk }}" onerror="this.onerror=null; this.src='/images/placeholders/cosmetic-placeholder.svg';">
                         </div>
                         <div>
                             <div class="text-sm font-bold text-slate-800 dark:text-white line-clamp-1" title="{{ $item->nama_produk }}">{{ Str::limit($item->nama_produk, 35) }}</div>
@@ -236,7 +230,11 @@ async function searchOBF() {
                     </div>
                     <form action="{{ route('admin.cosmetics.import') }}" method="POST" class="flex-shrink-0">
                         @csrf
-                        <input type="hidden" name="identifier" value="${r.barcode || name}">
+                        <input type="hidden" name="name" value="${name}">
+                        <input type="hidden" name="brand" value="${merk}">
+                        <input type="hidden" name="barcode" value="${r.barcode || ''}">
+                        <input type="hidden" name="ingredients" value="${(r.ingredients || r.ingredients_text || '').replace(/"/g, '&quot;')}">
+                        <input type="hidden" name="image_url" value="${r.image_url || ''}">
                         <button type="submit" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 transition">
                             <i class="fas fa-download mr-1"></i> Import
                         </button>

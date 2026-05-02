@@ -112,6 +112,19 @@ class FDAService
             'active' => true,
         ];
 
+        // Fetch image if not exists
+        if (empty($externalMedicine['image_url'])) {
+            $imageResult = app(\App\Services\ProductImageService::class)->getImages($name, null, 'internal', [
+                'brand' => $attributes['brand_name'],
+                'category' => 'medicine'
+            ]);
+            if (!empty($imageResult['images'])) {
+                $attributes['image_url'] = $imageResult['images'][0]['url'];
+            }
+        } else {
+            $attributes['image_url'] = $externalMedicine['image_url'];
+        }
+
         return Medicine::updateOrCreate(
             ['name' => $name],
             $attributes

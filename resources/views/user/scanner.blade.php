@@ -1,45 +1,41 @@
-@extends('master')
-@section('isi')
-<div class="container py-5" style="background-color: #121212; min-height: 100vh; color: #E0E0E0;">
-    <div class="text-center mb-5">
-        <h2 style="color: #3A9D66; font-weight: 700;"><i class="fas fa-qrcode fa-2x mb-3"></i><br>Web Scanner</h2>
-        <p class="text-muted">Gunakan fitur scanner kami untuk verifikasi kehalalan produk secara instan.</p>
-    </div>
+@extends('user.layouts.app')
 
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card bg-dark border-secondary shadow-lg overflow-hidden">
-                <div class="bg-primary text-white p-5 text-center">
-                    <h3 class="font-weight-bold mb-4">Pengalaman Terbaik di Aplikasi Mobile</h3>
-                    <p class="mb-4">Untuk pemindaian barcode yang lebih cepat dan akurat menggunakan kamera smartphone Anda, kami merekomendasikan penggunaan aplikasi Halalytics Mobile.</p>
-                    <div class="d-flex justify-content-center gap-3">
-                        <button class="btn btn-light btn-lg rounded-pill px-4"><i class="fab fa-google-play me-2"></i>Play Store</button>
-                        <button class="btn btn-outline-light btn-lg rounded-pill px-4"><i class="fab fa-apple me-2"></i>App Store</button>
-                    </div>
+@section('title', 'Scanner Web - Halalytics')
+
+@section('content')
+<section class="page-hero mb-4">
+    <h1 class="display-6 fw-bold mb-2">Scanner Web & Akses Cepat ke Katalog</h1>
+    <p class="mb-0 text-white-50">Untuk demo web, gunakan pencarian barcode atau nama produk. Untuk pengalaman scan kamera terbaik, gunakan aplikasi Android.</p>
+</section>
+
+<section class="row g-4">
+    <div class="col-lg-7">
+        <div class="surface-card p-4 h-100">
+            <h2 class="h4 fw-bold mb-3">Cari Produk Manual</h2>
+            <form action="{{ route('user.products') }}" method="GET" class="row g-3">
+                <div class="col-sm-9">
+                    <input type="text" name="search" class="form-control rounded-4" placeholder="Masukkan barcode atau nama produk">
                 </div>
-                <div class="card-body p-5">
-                    <h4 class="text-secondary mb-4"><i class="fas fa-keyboard me-2"></i>Atau Cek Manual di Web</h4>
-                    <form action="{{ url('/products') }}" method="GET">
-                        <div class="input-group input-group-lg">
-                            <input type="text" name="search" class="form-control bg-dark border-secondary text-white" placeholder="Masukkan Nomor Barcode atau Nama Produk...">
-                            <button class="btn btn-success px-4" type="submit">Cari Produk</button>
-                        </div>
-                    </form>
-                    <div class="mt-4">
-                        <p class="small text-muted mb-2">Tersedia untuk:</p>
-                        <div class="d-flex flex-wrap gap-2">
-                            <span class="badge bg-secondary">Produk Kemasan</span>
-                            <span class="badge bg-secondary">Street Food (UMKM)</span>
-                            <span class="badge bg-secondary">Bahan Baku</span>
-                        </div>
-                    </div>
+                <div class="col-sm-3 d-grid">
+                    <button class="btn btn-brand rounded-4" type="submit">Cari</button>
                 </div>
-            </div>
-            
-            <div class="mt-4 text-center">
-                <a href="{{ url('/user') }}" class="btn btn-link text-success text-decoration-none"><i class="fas fa-arrow-left me-2"></i>Kembali ke Dashboard</a>
+            </form>
+            <div class="mt-4 d-flex flex-wrap gap-2">
+                <span class="badge text-bg-light border rounded-pill px-3 py-2">Barcode Search</span>
+                <span class="badge text-bg-light border rounded-pill px-3 py-2">Image Sync Aktif</span>
+                <span class="badge text-bg-light border rounded-pill px-3 py-2">Catalog Demo Siap</span>
             </div>
         </div>
     </div>
-</div>
+    <div class="col-lg-5">
+        <div class="surface-card p-4 h-100">
+            <h2 class="h4 fw-bold mb-3">Direkomendasikan untuk Android</h2>
+            <p class="text-secondary">Aplikasi Android akan memakai loader gambar dengan placeholder dan error fallback, jadi pengalaman scan serta katalog akan tetap stabil saat presentasi.</p>
+            <div class="d-grid gap-2">
+                <a href="{{ route('user.compose') }}" class="btn btn-brand rounded-pill">Buka Compose</a>
+                <a href="{{ route('user.cart.index') }}" class="btn btn-outline-dark rounded-pill">Lihat Keranjang</a>
+            </div>
+        </div>
+    </div>
+</section>
 @endsection

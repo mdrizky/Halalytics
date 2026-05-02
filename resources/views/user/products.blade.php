@@ -1,87 +1,76 @@
-@extends('master')
-@section('isi')
-<div class="container py-5" style="background-color: #F4F9F8; min-height: 100vh; color: #163832;">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 style="color: #004D40; font-weight: 700;"><i class="fas fa-box-open me-3"></i>Katalog Produk</h2>
-        <a href="{{ url('/user') }}" class="btn btn-outline-success" style="border-color:#26A69A;color:#004D40;"><i class="fas fa-arrow-left me-2"></i>Kembali ke Dashboard</a>
-    </div>
+@extends('user.layouts.app')
 
-    <!-- Filters & Search -->
-    <div class="card border-0 mb-4 shadow-sm" style="border-radius:20px;background:#ffffff;">
-        <div class="card-body">
-            <form action="{{ url('/products') }}" method="GET" class="row g-3">
-                <div class="col-md-6">
-                    <div class="input-group">
-                        <span class="input-group-text border-0" style="background:#E0F2F1;color:#004D40;"><i class="fas fa-search"></i></span>
-                        <input type="text" name="search" class="form-control border-0" style="background:#F7FBFA;color:#163832;" placeholder="Cari nama produk atau barcode..." value="{{ request('search') }}">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <select name="category" class="form-select border-0" style="background:#F7FBFA;color:#163832;">
-                        <option value="">Semua Kategori</option>
-                        @foreach($categories as $category)
-                        <option value="{{ $category->id_kategori }}" {{ request('category') == $category->id_kategori ? 'selected' : '' }}>{{ $category->nama_kategori }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn w-100" style="background:#004D40;color:#fff;">Filter</button>
-                </div>
-            </form>
+@section('title', 'Katalog Produk - Halalytics')
+
+@section('content')
+<section class="page-hero mb-4">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3">
+        <div>
+            <span class="badge badge-soft rounded-pill px-3 py-2 mb-3">Katalog Produk Demo</span>
+            <h1 class="display-6 fw-bold mb-2">Semua produk tampil dengan gambar aktif, status halal, dan harga demo.</h1>
+            <p class="mb-0 text-white-50">Katalog ini sudah sinkron dengan data produk admin dan image resolver yang sama.</p>
         </div>
+        <a href="{{ route('user.compose') }}" class="btn btn-light rounded-pill px-4 fw-bold">Compose Order</a>
     </div>
+</section>
 
-    <!-- Products Grid -->
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-        @forelse($products as $product)
-        <div class="col">
-            <div class="card h-100 border-0 product-card shadow-sm" style="border-radius:20px;background:#ffffff;">
-                <div class="position-relative">
-                    <img src="{{ $product->image }}" class="card-img-top" alt="{{ $product->nama_product }}" style="height: 200px; object-fit: cover;" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
-                    
-                    @php
-                        $statusBadge = 'bg-secondary';
-                        if(strtolower($product->status) == 'halal') $statusBadge = 'bg-success';
-                        else if(strtolower($product->status) == 'tidak halal') $statusBadge = 'bg-danger';
-                        else if(strtolower($product->status) == 'diragukan') $statusBadge = 'bg-warning text-dark';
-                    @endphp
-                    <span class="badge {{ $statusBadge }} position-absolute top-0 end-0 m-2">{{ strtoupper($product->status) }}</span>
-                </div>
-                <div class="card-body">
-                    <h5 class="card-title truncate" style="color:#004D40;">{{ $product->nama_product }}</h5>
-                    <p class="card-text text-muted small mb-1"><i class="fas fa-tag me-2"></i>{{ $product->kategori->nama_kategori ?? 'Uncategorized' }}</p>
-                    <p class="card-text text-muted small"><i class="fas fa-barcode me-2"></i>{{ $product->barcode ?: 'No barcode' }}</p>
-                </div>
-                <div class="card-footer bg-transparent border-0 text-center">
-                    <button class="btn btn-sm w-100" style="border:1px solid #26A69A;color:#004D40;">Lihat Detail</button>
+<section class="surface-card p-4 mb-4">
+    <form method="GET" action="{{ route('user.products') }}" class="row g-3 align-items-end">
+        <div class="col-lg-6">
+            <label class="form-label fw-semibold">Cari produk</label>
+            <input type="text" name="search" value="{{ request('search') }}" class="form-control rounded-4" placeholder="Cari nama produk atau barcode">
+        </div>
+        <div class="col-lg-4">
+            <label class="form-label fw-semibold">Kategori</label>
+            <select name="category" class="form-select rounded-4">
+                <option value="">Semua kategori</option>
+                @foreach($categories as $category)
+                    <option value="{{ $category->id_kategori }}" @selected((string) request('category') === (string) $category->id_kategori)>{{ $category->nama_kategori }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-lg-2 d-grid">
+            <button class="btn btn-brand rounded-4" type="submit">Filter</button>
+        </div>
+    </form>
+</section>
+
+<section class="row g-4">
+    @forelse($products as $product)
+        <div class="col-md-6 col-xl-3">
+            <div class="product-card h-100 overflow-hidden">
+                <img src="{{ $product->image }}" alt="{{ $product->nama_product }}" class="product-thumb" onerror="this.onerror=null;this.src='{{ $product->image_fallback_url }}'">
+                <div class="p-3">
+                    <div class="d-flex justify-content-between gap-2 mb-2">
+                        <span class="badge badge-soft rounded-pill">{{ data_get($product, 'category_name', $product->kategori->nama_kategori ?? 'Umum') }}</span>
+                        <span class="badge badge-soft rounded-pill">{{ data_get($product, 'source_label', 'Internal DB') }}</span>
+                    </div>
+                    <h2 class="h6 fw-bold mb-2">{{ $product->nama_product }}</h2>
+                    <div class="small text-secondary mb-1">{{ $product->barcode ?: 'Tanpa barcode' }}</div>
+                    <div class="fs-5 fw-bold mb-3">Rp{{ number_format((float) ($product->price ?? 0), 0, ',', '.') }}</div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('user.products.show', $product) }}" class="btn btn-outline-dark rounded-pill flex-fill">Detail</a>
+                        <form action="{{ route('user.cart.add') }}" method="POST" class="flex-fill">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $product->id_product }}">
+                            <input type="hidden" name="quantity" value="1">
+                            <button class="btn btn-brand rounded-pill w-100" type="submit">Tambah</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-        @empty
-        <div class="col-12 text-center py-5">
-            <i class="fas fa-box-open fa-4x mb-3 text-muted"></i>
-            <p class="text-muted">Tidak ada produk ditemukan.</p>
+    @empty
+        <div class="col-12">
+            <div class="surface-card p-5 text-center">
+                <div class="fw-bold h4 mb-2">Produk tidak ditemukan</div>
+                <p class="text-secondary mb-0">Coba ubah kata kunci pencarian atau kategori.</p>
+            </div>
         </div>
-        @endforelse
-    </div>
+    @endforelse
+</section>
 
-    <div class="mt-5 d-flex justify-content-center">
-        {{ $products->links() }}
-    </div>
+<div class="mt-4">
+    {{ $products->links() }}
 </div>
-
-<style>
-    .product-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .product-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 14px 28px rgba(0, 77, 64, 0.14) !important;
-    }
-    .truncate {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-</style>
 @endsection

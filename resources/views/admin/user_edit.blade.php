@@ -11,6 +11,17 @@
 @endsection
 
 @section('content')
+@if ($errors->any())
+<div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+    <p class="font-semibold mb-1">Periksa kembali data user:</p>
+    <ul class="list-disc list-inside space-y-1">
+        @foreach ($errors->all() as $error)
+        <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
+
 <!-- Page Title -->
 <div class="flex items-center justify-between mb-8">
     <div>
@@ -131,28 +142,51 @@
                             </select>
                         </div>
                     </div>
-                </div>
-                
-                <div class="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
-                    <form action="{{ route('admin.user.destroy', $user->id_user) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all text-sm font-medium flex items-center space-x-1">
-                            <span class="material-icons-round text-lg">delete</span>
-                            <span>Delete User</span>
-                        </button>
-                    </form>
-                    <div class="flex items-center space-x-3">
-                        <a href="{{ route('admin.user.index') }}" class="px-6 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-all text-sm font-medium">
-                            Cancel
-                        </a>
-                        <button type="submit" class="px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all text-sm font-bold flex items-center space-x-2">
-                            <span class="material-icons-round text-lg">save</span>
-                            <span>Save Changes</span>
-                        </button>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Blood Type</label>
+                            <select name="blood_type" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="">Select blood type</option>
+                                @foreach (['A', 'B', 'AB', 'O', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as $bloodType)
+                                <option value="{{ $bloodType }}" {{ old('blood_type', $user->blood_type) === $bloodType ? 'selected' : '' }}>{{ $bloodType }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Allergies</label>
+                            <input type="text" name="allergy" value="{{ old('allergy', $user->allergy) }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="e.g. Penicillin, seafood">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Medical History</label>
+                        <textarea name="medical_history" rows="4" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Add chronic illnesses or important medical notes">{{ old('medical_history', $user->medical_history) }}</textarea>
                     </div>
                 </div>
+                
+                <div class="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-end space-x-3">
+                    <a href="{{ route('admin.user.index') }}" class="px-6 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-all text-sm font-medium">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all text-sm font-bold flex items-center space-x-2">
+                        <span class="material-icons-round text-lg">save</span>
+                        <span>Save Changes</span>
+                    </button>
+                </div>
             </form>
+            
+            <div class="p-6 border-t border-slate-100 dark:border-slate-800 flex justify-start">
+                <form action="{{ route('admin.user.destroy', $user->id_user) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all text-sm font-medium flex items-center space-x-1">
+                        <span class="material-icons-round text-lg">delete</span>
+                        <span>Delete User</span>
+                    </button>
+                </form>
+            </div>
         </div>
         
         <!-- Recent Scans -->

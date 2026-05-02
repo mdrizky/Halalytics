@@ -12,10 +12,10 @@
         <p class="text-slate-500 dark:text-slate-400 max-w-xl">Monitor and validate integrity reports submitted by the community to ensure product status accuracy.</p>
     </div>
     <div class="flex items-center gap-2">
-        <button class="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 transition-all flex items-center gap-2">
+        <a href="{{ route('admin.report.export_pdf') }}" class="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 transition-all flex items-center gap-2">
             <span class="material-icons-round text-lg">download</span>
             Export
-        </button>
+        </a>
     </div>
 </div>
 
@@ -97,9 +97,9 @@
                                     @php
                                         $reportImage = $report->product->image;
                                     @endphp
-                                    <img src="{{ $reportImage }}" alt="Product" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
+                                    <img src="{{ $reportImage }}" alt="Product" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/product-placeholder.svg'">
                                 @else
-                                    <img src="{{ asset('images/placeholders/product-placeholder.svg') }}" alt="No product image" class="w-full h-full object-cover">
+                                    <img src="/images/placeholders/product-placeholder.svg" alt="No product image" class="w-full h-full object-cover">
                                 @endif
                             </div>
                             <div>
@@ -125,8 +125,8 @@
                         @endif
                         @if($report->evidence_image)
                         <div class="mt-2">
-                            <a href="{{ asset('storage/' . $report->evidence_image) }}" target="_blank" class="group relative flex items-center justify-center w-16 h-16 rounded-lg border-2 border-dashed border-slate-200 hover:border-primary transition-all overflow-hidden bg-slate-50">
-                                <img src="{{ asset('storage/' . $report->evidence_image) }}" class="w-full h-full object-cover">
+                            <a href="{{ $report->image }}" target="_blank" class="group relative flex items-center justify-center w-16 h-16 rounded-lg border-2 border-dashed border-slate-200 hover:border-primary transition-all overflow-hidden bg-slate-50">
+                                <img src="{{ $report->image }}" class="w-full h-full object-cover">
                                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                     <span class="material-icons-round text-white text-xs">visibility</span>
                                 </div>

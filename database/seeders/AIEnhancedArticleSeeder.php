@@ -1,0 +1,162 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use App\Models\Article;
+
+class AIEnhancedArticleSeeder extends Seeder
+{
+    public function run()
+    {
+        $articles = [
+            [
+                'title' => 'Panduan Lengkap Memilih Produk Halal untuk Keluarga',
+                'slug' => 'panduan-lengkap-memilih-produk-halal-keluarga',
+                'excerpt' => 'Pelajari cara memilih produk halal yang aman dan berkualitas untuk konsumsi sehari-hari keluarga Anda.',
+                'content' => '<h2>Mengenal Label Halal</h2><p>Label halal adalah tanda yang menunjukkan bahwa suatu produk telah melalui proses sertifikasi halal oleh lembaga yang berwenang seperti MUI (Majelis Ulama Indonesia).</p><h3>Jenis Label Halal</h3><ul><li>Label Bulat Merah - Produk makanan dan minuman</li><li>Label Bulat Biru - Produk kosmetik dan obat</li><li>Label Hijau - Produk jasa</li></ul><h2>Tips Memilih Produk Halal</h2><p>Selalu periksa komposisi bahan, cari logo halal, dan gunakan aplikasi verifikasi halal untuk memastikan keamanan produk.</p>',
+                'ai_summary' => 'Artikel ini memberikan panduan komprehensif tentang cara memilih produk halal untuk keluarga, termasuk pengenalan label halal dan tips praktis.',
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2024/1/1/halal-product-guide.jpg',
+                'category' => 'Panduan Halal',
+                'source' => 'Internal',
+                'author' => 'Tim Halalytics',
+                'is_published' => true,
+                'status' => 'published',
+                'views' => 1250,
+            ],
+            [
+                'title' => 'Bahaya Bahan Pengawet dalam Makanan Olahan',
+                'slug' => 'bahaya-bahan-pengawet-makanan-olahan',
+                'excerpt' => 'Pelajari tentang berbagai jenis bahan pengawet yang umum digunakan dalam makanan olahan dan potensi risikonya.',
+                'content' => '<h2>Jenis Bahan Pengawet</h2><p>Bahan pengawet adalah zat yang ditambahkan ke makanan untuk mencegah pertumbuhan bakteri dan memperpanjang umur simpan.</p><h3>Bahan Pengawet Umum</h3><ul><li>Natrium Benzoat (E211) - Aman dalam jumlah terbatas</li><li>Kalium Sorbat (E202) - Efektif melawan jamur</li><li>Natrium Nitrit (E250) - Digunakan dalam daging olahan</li></ul><h2>Risiko Kesehatan</h2><p>Beberapa bahan pengawet dapat menyebabkan alergi, masalah pencernaan, dan dalam jangka panjang dapat meningkatkan risiko kanker.</p>',
+                'ai_summary' => 'Artikel ini membahas bahaya bahan pengawet dalam makanan olahan, jenis-jenisnya, dan risiko kesehatan yang mungkin timbul.',
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2024/1/2/preservatives-danger.jpg',
+                'category' => 'Kesehatan',
+                'source' => 'Internal',
+                'author' => 'Dr. Halal Expert',
+                'is_published' => true,
+                'status' => 'published',
+                'views' => 890,
+            ],
+            [
+                'title' => 'Kosmetik Halal: Tren Baru dalam Industri Kecantikan',
+                'slug' => 'kosmetik-halal-tren-baru-industri-kecantikan',
+                'excerpt' => 'Eksplorasi dunia kosmetik halal yang semakin populer di kalangan muslimah modern.',
+                'content' => '<h2>Apa Itu Kosmetik Halal?</h2><p>Kosmetik halal adalah produk perawatan tubuh yang bahan-bahannya tidak mengandung zat haram dan proses produksinya sesuai syariat Islam.</p><h3>Standar Halal Kosmetik</h3><ul><li>Tidak mengandung alkohol</li><li>Tidak menggunakan bahan dari hewan haram</li><li>Proses produksi terpisah dari produk non-halal</li></ul><h2>Manfaat Kosmetik Halal</h2><p>Selain sesuai syariat, kosmetik halal juga cenderung lebih aman karena menggunakan bahan-bahan alami dan bebas dari zat berbahaya.</p>',
+                'ai_summary' => 'Artikel ini mengupas tren kosmetik halal yang sedang berkembang, definisi, standar, dan manfaatnya bagi konsumen muslim.',
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2024/1/3/halal-cosmetics.jpg',
+                'category' => 'Kosmetik',
+                'source' => 'Internal',
+                'author' => 'Beauty Expert',
+                'is_published' => true,
+                'status' => 'published',
+                'views' => 1450,
+            ],
+            [
+                'title' => 'Mengenal Bahan Tambahan Pangan (BTP) dalam Makanan',
+                'slug' => 'mengenal-bahan-tambahan-pangan-btp-makanan',
+                'excerpt' => 'Panduan lengkap memahami kode BTP dan fungsinya dalam industri makanan modern.',
+                'content' => '<h2>Apa Itu BTP?</h2><p>Bahan Tambahan Pangan (BTP) adalah bahan yang ditambahkan ke makanan untuk tujuan tertentu seperti pengawet, pewarna, atau penyedap.</p><h3>Kode BTP Umum</h3><ul><li>E100-E199: Pewarna</li><li>E200-E299: Pengawet</li><li>E300-E399: Antioksidan</li><li>E400-E499: Emulsifier</li></ul><h2>Klasifikasi BTP</h2><p>BTP diklasifikasikan berdasarkan fungsi dan keamanannya. Beberapa BTP alami, lainnya sintetis, namun semuanya telah melalui uji keamanan BPOM.</p>',
+                'ai_summary' => 'Artikel ini menjelaskan tentang Bahan Tambahan Pangan (BTP), kode-kodenya, klasifikasi, dan pentingnya pemahaman konsumen.',
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2024/1/4/food-additives.jpg',
+                'category' => 'Edukasi',
+                'source' => 'Internal',
+                'author' => 'Food Scientist',
+                'is_published' => true,
+                'status' => 'published',
+                'views' => 720,
+            ],
+            [
+                'title' => 'Panduan Aman Menggunakan Suplemen Kesehatan',
+                'slug' => 'panduan-aman-menggunakan-suplement-kesehatan',
+                'excerpt' => 'Tips penting sebelum mengonsumsi suplemen kesehatan untuk menjaga kebugaran tubuh.',
+                'content' => '<h2>Jenis Suplemen Kesehatan</h2><p>Suplemen kesehatan meliputi vitamin, mineral, herbal, dan nutrisi lainnya yang mendukung fungsi tubuh.</p><h3>Tips Aman Menggunakan Suplemen</h3><ul><li>Konsultasi dengan dokter</li><li>Pilih produk berlabel halal</li><li>Perhatikan dosis yang direkomendasikan</li><li>Cek tanggal kadaluarsa</li></ul><h2>Risiko Overdosis</h2><p>Beberapa vitamin seperti A, D, E, K yang larut dalam lemak dapat menimbulkan toksisitas jika dikonsumsi berlebihan.</p>',
+                'ai_summary' => 'Artikel ini memberikan panduan aman menggunakan suplemen kesehatan, jenis-jenisnya, tips penggunaan, dan risiko overdosis.',
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2024/1/5/health-supplements.jpg',
+                'category' => 'Kesehatan',
+                'source' => 'Internal',
+                'author' => 'Nutritionist',
+                'is_published' => true,
+                'status' => 'published',
+                'views' => 980,
+            ],
+            [
+                'title' => 'Makanan untuk Ibu Menyusui: Nutrisi yang Dibutuhkan',
+                'slug' => 'makanan-ibu-menyusui-nutrisi-dibutuhkan',
+                'excerpt' => 'Panduan nutrisi penting untuk ibu menyusui agar ASI berkualitas dan bayi sehat.',
+                'content' => '<h2>Nutrisi Utama Ibu Menyusui</h2><p>Ibu menyusui membutuhkan asupan nutrisi lebih tinggi untuk memproduksi ASI yang berkualitas.</p><h3>Nutrisi Penting</h3><ul><li>Protein: 71g per hari</li><li>Kalsium: 1000mg per hari</li><li>Zat Besi: 9mg per hari</li><li>Vitamin D: 15mcg per hari</li></ul><h2>Makanan Rekomendasi</h2><p>Konsumsi sayuran hijau, kacang-kacangan, ikan, susu, dan buah-buahan untuk memenuhi kebutuhan nutrisi harian.</p>',
+                'ai_summary' => 'Artikel ini membahas nutrisi penting untuk ibu menyusui, kebutuhan harian, dan rekomendasi makanan yang sehat.',
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2024/1/6/breastfeeding-nutrition.jpg',
+                'category' => 'Kesehatan Ibu & Anak',
+                'source' => 'Internal',
+                'author' => 'Pediatric Nutritionist',
+                'is_published' => true,
+                'status' => 'published',
+                'views' => 650,
+            ],
+            [
+                'title' => 'Mengenal Vaksin Halal dan Vaksin Haram',
+                'slug' => 'mengenal-vaksin-halal-dan-vaksin-haram',
+                'excerpt' => 'Penjelasan tentang komponen vaksin dan status halalnya menurut pandangan Islam.',
+                'content' => '<h2>Komponen Vaksin</h2><p>Vaksin modern mengandung antigen, adjuvant, pengawet, dan stabilizer untuk menjaga efektivitasnya.</p><h3>Bahan yang Perlu Diperhatikan</h3><ul><li>Albumin manusia atau bovine</li><li>Gelatin dari sumber halal</li><li>Enzim tripsin dari pankreas babi</li><li>Sel-sel dari ginjal monyet</li></ul><h2>Fatwa MUI tentang Vaksin</h2><p>MUI telah mengeluarkan fatwa tentang vaksin COVID-19 yang menyatakan beberapa vaksin halal dan boleh digunakan.</p>',
+                'ai_summary' => 'Artikel ini menjelaskan komponen vaksin, bahan yang perlu diperhatikan, dan fatwa MUI terkait status halal vaksin.',
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2024/1/7/halal-vaccines.jpg',
+                'category' => 'Kesehatan',
+                'source' => 'Internal',
+                'author' => 'Islamic Medical Expert',
+                'is_published' => true,
+                'status' => 'published',
+                'views' => 1100,
+            ],
+            [
+                'title' => 'Dampak Gula Berlebih terhadap Kesehatan',
+                'slug' => 'dampak-gula-berlebih-terhadap-kesehatan',
+                'excerpt' => 'Pelajari bahaya konsumsi gula berlebihan dan cara menguranginya dalam pola makan sehari-hari.',
+                'content' => '<h2>Jumlah Gula Aman</h2><p>WHO merekomendasikan konsumsi gula maksimal 50g (12 sendok teh) per hari untuk orang dewasa.</p><h3>Risiko Kesehatan</h3><ul><li>Obesitas dan diabetes</li><li>Penyakit jantung</li><li>Kerusakan gigi</li><li>Peradangan kronis</li></ul><h2>Sumber Gula Tersembunyi</h2><p>Gula tidak hanya dari permen dan minuman manis, tetapi juga dari saus, roti, dan makanan olahan lainnya.</p>',
+                'ai_summary' => 'Artikel ini membahas dampak negatif gula berlebih terhadap kesehatan, batas aman konsumsi, dan sumber gula tersembunyi.',
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2024/1/8/sugar-dangers.jpg',
+                'category' => 'Kesehatan',
+                'source' => 'Internal',
+                'author' => 'Nutrition Expert',
+                'is_published' => true,
+                'status' => 'published',
+                'views' => 1350,
+            ],
+            [
+                'title' => 'Panduan Memilih Susu Formula untuk Bayi',
+                'slug' => 'panduan-memilih-susu-formula-untuk-bayi',
+                'excerpt' => 'Tips memilih susu formula yang aman dan sesuai dengan kebutuhan nutrisi bayi Anda.',
+                'content' => '<h2>Jenis Susu Formula</h2><p>Susu formula terdiri dari formula bayi, formula lanjutan, dan formula khusus untuk bayi dengan kondisi tertentu.</p><h3>Kriteria Pemilihan</h3><ul><li>Komposisi nutrisi lengkap</li><li>Label halal MUI</li><li>Tanggal kadaluarsa</li><li>Rekomendasi dokter</li></ul><h2>Merek Terpercaya</h2><p>Pilih merek yang telah terbukti kualitasnya dan memiliki sertifikasi halal dari lembaga yang diakui.</p>',
+                'ai_summary' => 'Artikel ini memberikan panduan memilih susu formula untuk bayi, jenis-jenisnya, kriteria pemilihan, dan merek terpercaya.',
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2024/1/9/baby-formula-guide.jpg',
+                'category' => 'Kesehatan Ibu & Anak',
+                'source' => 'Internal',
+                'author' => 'Pediatrician',
+                'is_published' => true,
+                'status' => 'published',
+                'views' => 780,
+            ],
+            [
+                'title' => 'Mengenal Gluten dan Dampaknya bagi Kesehatan',
+                'slug' => 'mengenal-gluten-dampaknya-bagi-kesehatan',
+                'excerpt' => 'Penjelasan tentang gluten, intoleransi gluten, dan alternatif makanan bebas gluten.',
+                'content' => '<h2>Apa Itu Gluten?</h2><p>Gluten adalah protein yang terdapat dalam gandum, barley, dan rye yang memberikan tekstur kenyal pada adonan.</p><h3>Intoleransi Gluten</h3><ul><li>Celiac disease - Autoimun</li><li>Sensitivitas gluten non-celiac</li><li>Alergi gandum</li></ul><h2>Alternatif Bebas Gluten</h2><p>Gunakan tepung beras, tepung jagung, tepung almond, atau tepung kentang sebagai pengganti tepung terigu.</p>',
+                'ai_summary' => 'Artikel ini menjelaskan tentang gluten, jenis intoleransi, gejala, dan alternatif makanan bebas gluten.',
+                'image' => 'https://images.tokopedia.net/img/cache/700/VqbcmM/2024/1/10/gluten-free.jpg',
+                'category' => 'Kesehatan',
+                'source' => 'Internal',
+                'author' => 'Dietitian',
+                'is_published' => true,
+                'status' => 'published',
+                'views' => 920,
+            ],
+        ];
+
+        foreach ($articles as $article) {
+            Article::updateOrCreate(
+                ['slug' => $article['slug']],
+                $article
+            );
+        }
+    }
+}

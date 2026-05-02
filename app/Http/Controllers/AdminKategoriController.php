@@ -4,21 +4,32 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\KategoriModel;
+use Illuminate\Support\Facades\Storage;
 
 class AdminKategoriController extends Controller
 {
     public function index()
     {
-        $kategori = KategoriModel::withCount('products')
+        $query = KategoriModel::withCount('products')
             ->with([
                 'products' => fn ($query) => $query
                     ->select('id_product', 'kategori_id', 'image', 'nama_product')
-                    ->whereNotNull('image')
                     ->latest('id_product')
                     ->limit(1),
-            ])
-            ->orderBy('id_kategori', 'desc')
-            ->paginate(10);
+            ]);
+
+        if (request()->filled('search')) {
+            $search = request('search');
+            $query->where(function ($builder) use ($search) {
+                $builder->where('nama_kategori', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $kategori = $query
+            ->orderBy('nama_kategori')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.kategori-redesign', compact('kategori'));
     }
@@ -28,9 +39,17 @@ class AdminKategoriController extends Controller
         $request->validate([
             'nama_kategori' => 'required|string|max:255|unique:kategori,nama_kategori',
             'description' => 'nullable|string|max:500',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
 
-        KategoriModel::create($request->only(['nama_kategori', 'description']));
+        $data = $request->only(['nama_kategori', 'description']);
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('public/categories');
+            $data['image'] = str_replace('public/', 'storage/', $path);
+        }
+
+        KategoriModel::create($data);
 
         if ($request->ajax()) {
             return response()->json([
@@ -65,9 +84,21 @@ class AdminKategoriController extends Controller
         $request->validate([
             'nama_kategori' => 'required|string|max:255|unique:kategori,nama_kategori,'.$id.',id_kategori',
             'description' => 'nullable|string|max:500',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
 
-        $kategori->update($request->only(['nama_kategori', 'description']));
+        $data = $request->only(['nama_kategori', 'description']);
+
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($kategori->image) {
+                Storage::delete(str_replace('storage/', 'public/', $kategori->image));
+            }
+            $path = $request->file('image')->store('public/categories');
+            $data['image'] = str_replace('public/', 'storage/', $path);
+        }
+
+        $kategori->update($data);
 
         if ($request->ajax()) {
             return response()->json([

@@ -194,4 +194,15 @@ class MedicationReminderController extends Controller
             ], 500);
         }
     }
+    /**
+     * Get next doses
+     */
+    public function nextDose()
+    {
+        // Stub for next dose
+        return response()->json([
+            'success' => true,
+            'next_doses' => []
+        ]);
+    }
 }

@@ -48,9 +48,18 @@ return [
     ],
 
     'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
         'places_key' => env('GOOGLE_PLACES_API_KEY'),
         'custom_search_key' => env('GOOGLE_CUSTOM_SEARCH_API_KEY'),
         'custom_search_engine_id' => env('GOOGLE_CUSTOM_SEARCH_ENGINE_ID'),
+    ],
+
+    'facebook' => [
+        'client_id' => env('FACEBOOK_APP_ID'),
+        'client_secret' => env('FACEBOOK_APP_SECRET'),
+        'redirect' => env('FACEBOOK_REDIRECT_URI'),
     ],
 
     'midtrans' => [

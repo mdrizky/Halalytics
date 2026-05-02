@@ -21,10 +21,16 @@ class DatabaseSeeder extends Seeder
             IngredientSeeder::class,
             MedicineSeeder::class,
             ProductSeeder::class,
+            ProductPricingSeeder::class,
+            ProductImageFallbackSeeder::class,
+            ProductImageSeeder::class,
             StreetFoodSeeder::class,
             HalalyticsFeatureSeeder::class,
             HalalDatabaseSeeder::class,
             BannerSeeder::class,
+            AIEnhancedProductSeeder::class,
+            AIEnhancedArticleSeeder::class,
+            AIEnhancedForbiddenIngredientSeeder::class,
         ]);
     }
 }

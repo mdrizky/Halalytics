@@ -38,10 +38,16 @@ class AIAssistantController extends Controller
 
         $text = $request->ingredients_text;
         $user = Auth::user();
-        $familyId = $request->family_id;
 
-        // Build health profile for AI context (either User or Family Member)
-        $userContext = $this->resolveHealthContext($user, $familyId);
+        $userContext = [
+            'name' => $user->full_name,
+            'age' => $user->age,
+            'gender' => $user->gender ?? null,
+            'medical_history' => $user->medical_history,
+            'allergies' => $user->allergy,
+            'goal' => $user->goal ?? null,
+            'diet_preference' => $user->diet_preference ?? null,
+        ];
 
         // FITUR 3: String matching for Watchlist
         $watchlistAlert = [];
@@ -400,38 +406,4 @@ class AIAssistantController extends Controller
         }
     }
 
-    /**
-     * Helper to resolve health context for either the main user or a family member
-     */
-    private function resolveHealthContext($user, $familyId = null)
-    {
-        if ($familyId) {
-            $family = \App\Models\FamilyProfile::where('user_id', $user->id_user)->find($familyId);
-            if ($family) {
-                return [
-                    'name' => $family->name,
-                    'is_family_member' => true,
-                    'age' => $family->age,
-                    'gender' => $family->gender,
-                    'medical_history' => $family->medical_history,
-                    'allergies' => $family->allergies,
-                    'diabetes' => str_contains(strtolower($family->medical_history ?? ''), 'diabetes'),
-                    'goal' => 'Maintain health', // Default for family
-                    'diet_preference' => null
-                ];
-            }
-        }
-
-        return [
-            'name' => $user->full_name,
-            'is_family_member' => false,
-            'age' => $user->age,
-            'gender' => $user->gender,
-            'medical_history' => $user->medical_history,
-            'allergies' => $user->allergy,
-            'diabetes' => $user->has_diabetes,
-            'goal' => $user->goal,
-            'diet_preference' => $user->diet_preference
-        ];
-    }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Services\DisplayImageService;
 
 class Banner extends Model
 {
@@ -14,4 +15,12 @@ class Banner extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    public function getImageUrlAttribute(): string
+    {
+        return app(DisplayImageService::class)->resolve($this->attributes['image'] ?? null, [
+            'name' => $this->title,
+            'category' => 'banner',
+        ], 'banner');
+    }
 }

@@ -49,9 +49,9 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 // ================== DASHBOARD ADMIN ==================
 
 // Product Requests
-Route::get('/admin/requests', [App\Http\Controllers\Admin\AdminRequestController::class, 'index'])->name('admin.requests.index');
-Route::post('/admin/requests/{id}/approve', [App\Http\Controllers\Admin\AdminRequestController::class, 'approve'])->name('admin.requests.approve');
-Route::post('/admin/requests/{id}/reject', [App\Http\Controllers\Admin\AdminRequestController::class, 'reject'])->name('admin.requests.reject');
+Route::get('/admin/requests', [App\Http\Controllers\Admin\AdminRequestController::class, 'index'])->name('admin.requests.index')->middleware(['auth', 'role:admin']);
+Route::post('/admin/requests/{id}/approve', [App\Http\Controllers\Admin\AdminRequestController::class, 'approve'])->name('admin.requests.approve')->middleware(['auth', 'role:admin']);
+Route::post('/admin/requests/{id}/reject', [App\Http\Controllers\Admin\AdminRequestController::class, 'reject'])->name('admin.requests.reject')->middleware(['auth', 'role:admin']);
 
 // Dashboard API routes
 Route::prefix('admin/dashboard')->middleware(['auth', 'role:admin'])->group(function () {
@@ -76,14 +76,14 @@ Route::prefix('admin/notifications-api')->middleware(['auth', 'role:admin'])->gr
     Route::post('/read-all', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'markAllAsRead']);
 });
 
-Route::get('/user', function () {
-    return view('user_home'); 
-})->name('user.home')->middleware('auth');
-
 // User Portal Routes
 Route::middleware('auth')->group(function () {
+    Route::get('/user', [UserPortalController::class, 'dashboard'])->name('user.home');
+    Route::get('/compose', [UserPortalController::class, 'compose'])->name('user.compose');
     Route::get('/my-scans', [UserPortalController::class, 'myScans'])->name('user.scans');
     Route::get('/products', [UserPortalController::class, 'products'])->name('user.products');
+    Route::get('/products/barcode/{barcode}', [UserPortalController::class, 'productDetailByBarcode'])->name('user.products.barcode');
+    Route::get('/products/{product}', [UserPortalController::class, 'productDetail'])->name('user.products.show');
     Route::get('/reports', [UserPortalController::class, 'reports'])->name('user.reports');
     Route::post('/reports', [UserPortalController::class, 'storeReport'])->name('user.reports.store');
     Route::get('/scan/barcode', [UserPortalController::class, 'scanner'])->name('user.scanner');
@@ -138,6 +138,7 @@ Route::middleware('auth')->group(function () {
     
     // Users
     Route::get('/admin/user', [AdminUserController::class, 'admin_user'])->name('admin.user.index')->middleware('role:admin');
+    Route::get('/admin/user/export', [AdminUserController::class, 'export'])->name('admin.user.export')->middleware('role:admin');
     Route::get('/admin/user/create', [AdminUserController::class, 'create'])->name('admin.user.create')->middleware('role:admin');
     Route::post('/admin/user/store', [AdminUserController::class, 'store'])->name('admin.user.store')->middleware('role:admin');
     Route::get('/admin/user/{id}/edit', [AdminUserController::class, 'edit'])->name('admin.user.edit')->middleware('role:admin');
@@ -236,7 +237,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/street-foods', [\App\Http\Controllers\Admin\StreetFoodController::class, 'store'])->name('admin.street-foods.store')->middleware('role:admin');
     Route::get('/admin/street-foods/{streetFood}/edit', [\App\Http\Controllers\Admin\StreetFoodController::class, 'edit'])->name('admin.street-foods.edit')->middleware('role:admin');
     Route::put('/admin/street-foods/{streetFood}', [\App\Http\Controllers\Admin\StreetFoodController::class, 'update'])->name('admin.street-foods.update')->middleware('role:admin');
-    Route::delete('/admin/street-foods/{streetFood}', [\App\Http\Controllers\Admin\StreetFoodController::class, 'destroy'])->name('admin.street-foods.destroy')->middleware('role:admin');
+    Route::post('/admin/street-foods/{streetFood}/analyze', [\App\Http\Controllers\Admin\StreetFoodController::class, 'analyze'])->name('admin.street-foods.analyze')->middleware('role:admin');
     
     // Variants
     Route::get('/admin/street-foods/{streetFood}/variants', [\App\Http\Controllers\Admin\StreetFoodController::class, 'variants'])->name('admin.street-foods.variants')->middleware('role:admin');
@@ -342,6 +343,32 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\ApiHealthMonitorController::class, 'index'])->name('admin.api-monitor.index');
         Route::get('/{apiName}/history', [\App\Http\Controllers\Admin\ApiHealthMonitorController::class, 'history'])->name('admin.api-monitor.history');
         Route::post('/check', [\App\Http\Controllers\Admin\ApiHealthMonitorController::class, 'check'])->name('admin.api-monitor.check');
+    });
+
+    // 🩸 BLOOD DONATION (ADMIN)
+    Route::prefix('admin/blood-events')->middleware('role:admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AdminBloodEventController::class, 'index'])->name('admin.blood-events.index');
+        Route::get('/create', [\App\Http\Controllers\Admin\AdminBloodEventController::class, 'create'])->name('admin.blood-events.create');
+        Route::post('/', [\App\Http\Controllers\Admin\AdminBloodEventController::class, 'store'])->name('admin.blood-events.store');
+        Route::get('/{id}/edit', [\App\Http\Controllers\Admin\AdminBloodEventController::class, 'edit'])->name('admin.blood-events.edit');
+        Route::put('/{id}', [\App\Http\Controllers\Admin\AdminBloodEventController::class, 'update'])->name('admin.blood-events.update');
+        Route::delete('/{id}', [\App\Http\Controllers\Admin\AdminBloodEventController::class, 'destroy'])->name('admin.blood-events.destroy');
+    });
+
+    Route::prefix('admin/blood-appointments')->middleware('role:admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AdminAppointmentController::class, 'index'])->name('admin.blood-appointments.index');
+        Route::get('/scanner', [\App\Http\Controllers\Admin\AdminAppointmentController::class, 'scanner'])->name('admin.blood-appointments.scanner');
+        Route::post('/scan-qr', [\App\Http\Controllers\Admin\AdminAppointmentController::class, 'scanQr'])->name('admin.blood-appointments.scan-qr');
+        Route::post('/{id}/verify', [\App\Http\Controllers\Admin\AdminAppointmentController::class, 'verify'])->name('admin.blood-appointments.verify');
+    });
+
+    Route::prefix('admin/blood-stocks')->middleware('role:admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AdminBloodStockController::class, 'index'])->name('admin.blood-stocks.index');
+    });
+
+    Route::prefix('admin/blood-emergency')->middleware('role:admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\EmergencyController::class, 'index'])->name('admin.blood-emergency.index');
+        Route::post('/', [\App\Http\Controllers\Admin\EmergencyController::class, 'store'])->name('admin.blood-emergency.store');
     });
 
 });

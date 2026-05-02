@@ -22,7 +22,7 @@ class AdminForbiddenController extends Controller
         }
 
         $ingredients = $query->orderBy('name', 'asc')->paginate(10);
-        return view('admin.forbidden.index', compact('ingredients'));
+        return view('admin.forbidden', compact('ingredients'));
     }
 
     public function store(Request $request)

@@ -26,14 +26,6 @@ class LoginController extends Controller
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
-            // ✅ Cek role: Hanya admin yang boleh masuk ke dashboard admin
-            if ($user->role !== 'admin') {
-                Auth::logout();
-                return redirect()->route('login')->withErrors([
-                    'username' => 'Username atau password salah.',
-                ])->with('error', 'Username atau password salah.');
-            }
-
             // ✅ Cek status akun
             if (!$user->active) {
                 Auth::logout();
@@ -46,8 +38,9 @@ class LoginController extends Controller
             $user->last_login = now();
             $user->save();
 
-            // ✅ Redirect ke dashboard admin
-            return redirect()->route('admin.dashboard');
+            return $user->role === 'admin'
+                ? redirect()->route('admin.dashboard')
+                : redirect()->route('user.home');
         }
 
         // ✅ Kalau gagal login

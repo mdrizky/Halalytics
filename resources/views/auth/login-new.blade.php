@@ -13,10 +13,10 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#00bbc2", 
-                        "primary-dark": "#009fa5",
-                        "background-light": "#f9fafb",
-                        "background-dark": "#111827",
+                        primary: "#004D40",
+                        "primary-dark": "#00332B",
+                        "background-light": "#F4F9F8",
+                        "background-dark": "#0F1F1D",
                     },
                     fontFamily: {
                         display: ["Manrope", "sans-serif"],
@@ -37,8 +37,8 @@
     </script>
     <style>
         .hero-pattern {
-            background-color: #00bbc2;
-            background-image: linear-gradient(135deg, rgba(0, 187, 194, 0.95) 0%, rgba(0, 159, 165, 0.9) 100%), url('https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2574&auto=format&fit=crop');
+            background-color: #004D40;
+            background-image: linear-gradient(135deg, rgba(0, 77, 64, 0.96) 0%, rgba(38, 166, 154, 0.88) 100%), url('https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2574&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
         }

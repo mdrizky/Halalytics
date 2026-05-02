@@ -18,7 +18,7 @@ use App\Models\ReportModel;
 use App\Models\Ingredient;
 use App\Models\ForbiddenIngredient;
 use App\Models\BpomData;
-use App\Models\PromoBlog;
+use App\Models\Article;
 use App\Models\ActivityEvent;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -477,31 +477,31 @@ class FullDemoSeeder extends Seeder
         }
         $this->command->info('✅ Ingredient encyclopedia + forbidden database ready');
 
-        // ========== 15. PROMO BLOG ARTICLES ==========
-        if (Schema::hasTable('promo_blogs')) {
-            $blogRows = [
-                ['title' => 'Cara Cek Status Halal Produk Secara Cepat', 'category' => 'halal-education'],
-                ['title' => 'Memahami Label BPOM dan Artinya', 'category' => 'bpom'],
-                ['title' => 'Tips Aman Memilih Kosmetik Harian', 'category' => 'beauty'],
-                ['title' => 'Panduan Membaca Komposisi Obat untuk Muslim', 'category' => 'medicine'],
-            ];
-            foreach ($blogRows as $row) {
-                $slug = Str::slug($row['title']);
-                PromoBlog::updateOrCreate(
-                    ['slug' => $slug],
-                    [
-                        'title' => $row['title'],
-                        'excerpt' => 'Artikel edukasi untuk membantu pengguna memahami status halal dan keamanan produk.',
-                        'content' => 'Konten demo artikel untuk pengujian halaman blog admin dan user.',
-                        'image' => null,
-                        'category' => $row['category'],
-                        'status' => 'published',
-                        'views' => rand(25, 200),
-                    ]
-                );
-            }
-            $this->command->info('✅ Articles: published demo content ready');
+        // ========== 15. ARTICLES SEEDER ==========
+        $blogRows = [
+            ['title' => 'Cara Cek Status Halal Produk Secara Cepat', 'category' => 'halal-education'],
+            ['title' => 'Memahami Label BPOM dan Artinya', 'category' => 'bpom'],
+            ['title' => 'Tips Aman Memilih Kosmetik Harian', 'category' => 'beauty'],
+            ['title' => 'Panduan Membaca Komposisi Obat untuk Muslim', 'category' => 'medicine'],
+        ];
+        foreach ($blogRows as $row) {
+            $slug = Str::slug($row['title']);
+            Article::updateOrCreate(
+                ['slug' => $slug],
+                [
+                    'title' => $row['title'],
+                    'excerpt' => 'Artikel edukasi untuk membantu pengguna memahami status halal dan keamanan produk.',
+                    'content' => 'Konten demo artikel untuk pengujian halaman blog admin dan user.',
+                    'image' => null,
+                    'category' => $row['category'],
+                    'status' => 'published',
+                    'is_published' => true,
+                    'author' => 'System',
+                    'views' => rand(25, 200),
+                ]
+            );
         }
+        $this->command->info('✅ Articles: published demo content ready');
 
         // ========== 16. REALTIME ACTIVITY EVENTS ==========
         if (Schema::hasTable('activity_events')) {

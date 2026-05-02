@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Services\DisplayImageService;
+use Illuminate\Support\Str;
 
 class BpomData extends Model
 {
@@ -110,11 +111,64 @@ class BpomData extends Model
 
     public function getImageUrlAttribute($value): string
     {
+        $kategori = Str::lower((string) $this->kategori);
+        $imageType = match (true) {
+            in_array($kategori, ['kosmetik', 'beauty'], true) => 'cosmetic',
+            in_array($kategori, ['obat', 'medicine'], true) => 'medicine',
+            in_array($kategori, ['pangan', 'makanan', 'minuman', 'suplemen'], true) => 'product',
+            default => 'bpom',
+        };
+
         return app(DisplayImageService::class)->resolve($value, [
             'name' => $this->nama_produk,
             'brand' => $this->merk,
             'barcode' => $this->barcode,
             'category' => $this->kategori,
-        ], in_array($this->kategori, ['kosmetik', 'beauty'], true) ? 'cosmetic' : 'bpom');
+        ], $imageType);
+    }
+
+    public function getImageAttribute($value)
+    {
+        return $this->image_url;
+    }
+
+    public function getNamaProductAttribute($value)
+    {
+        return $this->nama_produk;
+    }
+
+    public function getBrandAttribute($value)
+    {
+        return $this->merk;
+    }
+
+    public function getStatusAttribute($value)
+    {
+        return $this->status_halal ?? $this->status_keamanan ?? 'syubhat';
+    }
+
+    public function getKomposisiAttribute($value)
+    {
+        return $this->ingredients_text ?: $this->analisis_kandungan;
+    }
+
+    public function getInfoGiziAttribute($value)
+    {
+        return $this->analisis_kandungan ?: $this->analisis_halal;
+    }
+
+    public function getCategoryNameAttribute($value)
+    {
+        return $this->kategori;
+    }
+
+    public function getSourceLabelAttribute($value)
+    {
+        return 'BPOM / External';
+    }
+
+    public function getImageFallbackUrlAttribute($value): string
+    {
+        return app(DisplayImageService::class)->fallbackUrl($this->kategori, 'bpom');
     }
 }

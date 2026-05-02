@@ -31,7 +31,6 @@ class SkincareController extends Controller
             'image' => 'required_without:ingredients_text|string', // base64
             'product_name' => 'nullable|string',
             'barcode' => 'nullable|string',
-            'family_id' => 'nullable|integer',
         ]);
 
         $ingredientsText = $request->ingredients_text;
@@ -54,10 +53,14 @@ class SkincareController extends Controller
 
         try {
             $user = Auth::user();
-            $familyId = $request->family_id;
-            
-            // Build health profile for AI context (either User or Family Member)
-            $userContext = $this->resolveHealthContext($user, $familyId);
+            $userContext = [
+                'name' => $user->full_name,
+                'age' => $user->age,
+                'gender' => $user->gender ?? null,
+                'medical_history' => $user->medical_history,
+                'allergies' => $user->allergy,
+                'diet_preference' => $user->diet_preference ?? null,
+            ];
 
             $analysis = $this->gemini->analyzeSkincareIngredients($ingredientsText, $userContext);
             $ingredientsDetected = $this->buildIngredientIndicators($ingredientsText);
@@ -246,40 +249,6 @@ class SkincareController extends Controller
         ]);
     }
 
-    /**
-     * Helper to resolve health context for either the main user or a family member
-     */
-    private function resolveHealthContext($user, $familyId = null)
-    {
-        if ($familyId && $user) {
-            $family = \App\Models\FamilyProfile::where('user_id', $user->id_user)->find($familyId);
-            if ($family) {
-                return [
-                    'name' => $family->name,
-                    'is_family_member' => true,
-                    'age' => $family->age,
-                    'gender' => $family->gender,
-                    'medical_history' => $family->medical_history,
-                    'allergies' => $family->allergies,
-                    'is_pregnant' => false, // Default for family unless structured differently
-                ];
-            }
-        }
-
-        if ($user) {
-            return [
-                'name' => $user->full_name,
-                'is_family_member' => false,
-                'age' => $user->age,
-                'gender' => $user->gender,
-                'medical_history' => $user->medical_history,
-                'allergies' => $user->allergy,
-                'is_pregnant' => $user->diet_preference === 'ibu_hamil',
-            ];
-        }
-
-        return [];
-    }
 
     private function buildIngredientIndicators(string $ingredientsText): array
     {

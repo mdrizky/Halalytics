@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script id="tailwind-config">
         tailwind.config = {
@@ -17,13 +18,13 @@
                 extend: {
                     colors: {
                         "primary": "#004D40",
-                        "primary-dark": "#00372e",
+                        "primary-dark": "#00332B",
                         "primary-soft": "#E0F2F1",
                         "accent": "#26A69A",
                         "background-light": "#F4F9F8",
-                        "background-dark": "#1f2938",
-                        "emerald-halal": "#059669",
-                        "amber-syubhat": "#d97706",
+                        "background-dark": "#0F1F1D",
+                        "emerald-halal": "#2E7D32",
+                        "amber-syubhat": "#26A69A",
                         "red-haram": "#D32F2F",
                         "slate-custom": "#475569"
                     },
@@ -44,7 +45,7 @@
     <style>
         :root {
             --hal-primary: #004D40;
-            --hal-primary-dark: #00372e;
+            --hal-primary-dark: #00332B;
             --hal-secondary: #26A69A;
             --hal-container: #E0F2F1;
             --hal-background: #F4F9F8;
@@ -54,7 +55,7 @@
 
         body { font-family: 'Manrope', sans-serif; }
         .chart-gradient {
-            background: linear-gradient(180deg, rgba(38, 166, 154, 0.16) 0%, rgba(38, 166, 154, 0) 100%);
+            background: linear-gradient(180deg, rgba(38, 166, 154, 0.18) 0%, rgba(38, 166, 154, 0) 100%);
         }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -68,10 +69,10 @@
         
         /* Sidebar active indicator */
         .nav-active {
-            background: rgba(38, 166, 154, 0.14);
+            background: rgba(0, 77, 64, 0.1);
             color: var(--hal-primary);
             font-weight: 700;
-            box-shadow: inset 0 0 0 1px rgba(38, 166, 154, 0.12);
+            box-shadow: inset 0 0 0 1px rgba(0, 77, 64, 0.16);
         }
         
         /* Badge styles */
@@ -116,7 +117,7 @@
             border-radius: 50%;
         }
         input:checked + .toggle-slider {
-            background-color: var(--hal-secondary);
+            background-color: var(--hal-primary);
         }
         input:checked + .toggle-slider:before {
             transform: translateX(20px);
@@ -124,13 +125,13 @@
         .surface-card {
             background: var(--hal-surface);
             border: 1px solid rgba(15, 23, 42, 0.06);
-            box-shadow: 0 20px 45px rgba(0, 77, 64, 0.06);
+            box-shadow: 0 20px 45px rgba(0, 77, 64, 0.08);
         }
         .depth-card {
             position: relative;
             transform-style: preserve-3d;
             transition: transform .25s ease, box-shadow .25s ease;
-            box-shadow: 0 18px 40px rgba(0, 77, 64, 0.08);
+            box-shadow: 0 18px 40px rgba(0, 77, 64, 0.1);
         }
         .depth-card:hover {
             transform: translateY(-4px) rotateX(3deg);
@@ -140,19 +141,19 @@
             color: white;
             border-radius: 1rem;
             padding: 1rem;
-            box-shadow: 0 18px 38px rgba(0, 77, 64, 0.18);
+            box-shadow: 0 18px 38px rgba(0, 77, 64, 0.16);
         }
         .metric-card--primary {
-            background: linear-gradient(145deg, #004D40, #11695b);
+            background: linear-gradient(145deg, #004D40, #00332B);
         }
         .metric-card--accent {
-            background: linear-gradient(145deg, #26A69A, #4db6ac);
+            background: linear-gradient(145deg, #26A69A, #00695C);
         }
         .metric-card--soft {
-            background: linear-gradient(145deg, #0f7f73, #26A69A);
+            background: linear-gradient(145deg, #26A69A, #004D40);
         }
         .metric-card--danger {
-            background: linear-gradient(145deg, #D32F2F, #ef5350);
+            background: linear-gradient(145deg, #334155, #0F172A);
         }
         ::view-transition-group(*),
         ::view-transition-old(*),
@@ -211,7 +212,7 @@
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.cosmetics*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.cosmetics.index') }}">
                 <span class="material-icons-round text-[20px]">spa</span>
                 <span class="text-sm flex-1">Cosmetics</span>
-                <span class="text-[10px] bg-pink-100 dark:bg-pink-900/30 px-1.5 py-0.5 rounded-md font-bold text-pink-600 border border-pink-200 dark:border-pink-700">{{ number_format($global_cosmetic_count) }}</span>
+                <span class="text-[10px] bg-primary/10 dark:bg-primary/15 px-1.5 py-0.5 rounded-md font-bold text-primary border border-primary/20 dark:border-primary/30">{{ number_format($global_cosmetic_count) }}</span>
             </a>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.ingredients*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.ingredients.index') }}">
                 <span class="material-icons-round text-[20px]">science</span>
@@ -226,12 +227,12 @@
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.campaigns*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.campaigns.index') }}">
                 <span class="material-icons-round text-[20px]">campaign</span>
                 <span class="text-sm flex-1">Campaigns</span>
-                <span class="text-[10px] bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-md font-bold text-emerald-600 border border-emerald-200 dark:border-emerald-700">FCM</span>
+                <span class="text-[10px] bg-primary/10 dark:bg-primary/15 px-1.5 py-0.5 rounded-md font-bold text-primary border border-primary/20 dark:border-primary/30">FCM</span>
             </a>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.promo.blog*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.promo.blog.index') }}">
                 <span class="material-icons-round text-[20px]">article</span>
                 <span class="text-sm flex-1">Articles</span>
-                <span class="text-[10px] bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-md font-bold text-emerald-600 border border-emerald-200 dark:border-emerald-700">CMS</span>
+                <span class="text-[10px] bg-primary/10 dark:bg-primary/15 px-1.5 py-0.5 rounded-md font-bold text-primary border border-primary/20 dark:border-primary/30">CMS</span>
             </a>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.street-foods*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.street-foods.index') }}">
                 <span class="material-icons-round text-[20px]">restaurant</span>
@@ -241,7 +242,7 @@
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.forbidden*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.forbidden.index') }}">
                 <span class="material-icons-round text-[20px]">block</span>
                 <span class="text-sm flex-1">Forbidden Ingredients</span>
-                <span class="text-[10px] bg-rose-100 dark:bg-rose-900/30 px-1.5 py-0.5 rounded-md font-bold text-rose-500 border border-rose-200 dark:border-rose-800">SAFETY</span>
+                <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200 dark:border-slate-700">SAFETY</span>
             </a>
             
             <div class="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Expansion Modules</div>
@@ -258,6 +259,23 @@
                 <span class="material-icons-round text-[20px]">notifications_active</span>
                 <span class="text-sm flex-1">Notifications</span>
             </a>
+            <div class="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Blood Donation</div>
+            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.blood-stocks*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.blood-stocks.index') }}">
+                <span class="material-icons-round text-[20px]">bloodtype</span>
+                <span class="text-sm flex-1">Blood Stocks</span>
+            </a>
+            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.blood-events*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.blood-events.index') }}">
+                <span class="material-icons-round text-[20px]">event</span>
+                <span class="text-sm flex-1">Donor Events</span>
+            </a>
+            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.blood-appointments*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.blood-appointments.index') }}">
+                <span class="material-icons-round text-[20px]">groups</span>
+                <span class="text-sm flex-1">Appointments</span>
+            </a>
+            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.blood-emergency*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.blood-emergency.index') }}">
+                <span class="material-icons-round text-[20px]">emergency</span>
+                <span class="text-sm flex-1">Emergency Calls</span>
+            </a>
             <div class="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Activity & Reports</div>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.scan*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.scan.index') }}">
                 <span class="material-icons-round text-[20px]">history</span>
@@ -268,18 +286,26 @@
                 <span class="material-icons-round text-[20px]">assessment</span>
                 <span class="text-sm flex-1">Product Reports</span>
                 @if($global_report_count > 0)
-                <span class="text-[10px] bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded-md font-bold text-red-600 border border-red-200 dark:border-red-800/50 animate-pulse-slow">{{ number_format($global_report_count) }}</span>
+                <span class="text-[10px] bg-primary/10 dark:bg-primary/15 px-1.5 py-0.5 rounded-md font-bold text-primary border border-primary/20 dark:border-primary/30 animate-pulse-slow">{{ number_format($global_report_count) }}</span>
+                @endif
+            </a>
+            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.orders*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.orders.index') }}">
+                <span class="material-icons-round text-[20px]">shopping_bag</span>
+                <span class="text-sm flex-1">Orders</span>
+                @if($global_order_count > 0)
+                <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200 dark:border-slate-700">{{ number_format($global_order_count) }}</span>
                 @endif
             </a>
         </nav>
         <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            @auth
             <div class="flex items-center p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50">
                 <div class="w-10 h-10 rounded-lg overflow-hidden bg-primary flex items-center justify-center text-white font-bold">
-                    {{ strtoupper(substr(Auth::user()->username ?? 'A', 0, 1)) }}
+                    {{ strtoupper(substr(Auth::user()?->username ?? 'A', 0, 1)) }}
                 </div>
                 <div class="ml-3 flex-1 min-w-0">
-                    <p class="text-sm font-bold text-slate-800 dark:text-white truncate">{{ Auth::user()->full_name ?? Auth::user()->username }}</p>
-                    <p class="text-xs text-slate-500 truncate">{{ ucfirst(Auth::user()->role ?? 'Admin') }}</p>
+                    <p class="text-sm font-bold text-slate-800 dark:text-white truncate">{{ Auth::user()?->full_name ?? Auth::user()?->username ?? 'Admin' }}</p>
+                    <p class="text-xs text-slate-500 truncate">{{ ucfirst(Auth::user()?->role ?? 'Admin') }}</p>
                 </div>
                 <form action="{{ route('logout') }}" method="POST" class="inline">
                     @csrf
@@ -288,6 +314,14 @@
                     </button>
                 </form>
             </div>
+            @else
+            <div class="flex items-center p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                <div class="w-10 h-10 rounded-lg overflow-hidden bg-slate-300 flex items-center justify-center text-white font-bold">?</div>
+                <div class="ml-3 flex-1 min-w-0">
+                    <a href="{{ route('login') }}" class="text-sm font-bold text-primary hover:underline">Login Required</a>
+                </div>
+            </div>
+            @endauth
         </div>
     </aside>
     

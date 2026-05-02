@@ -87,6 +87,50 @@ class ProductController extends Controller
     }
 
     /**
+     * Search products by name or barcode
+     */
+    public function search(Request $request)
+    {
+        $query = trim((string) $request->query('q', ''));
+        $page = max(1, (int) $request->query('page', 1));
+        $limit = min(max((int) $request->query('limit', 20), 1), 50);
+
+        $products = ProductModel::query()
+            ->when($query !== '', function ($q) use ($query) {
+                $q->where(function ($qq) use ($query) {
+                    $qq->where('nama_product', 'like', "%{$query}%")
+                       ->orWhere('barcode', 'like', "%{$query}%")
+                       ->orWhere('komposisi', 'like', "%{$query}%");
+                });
+            })
+            ->orderByDesc('id_product')
+            ->paginate($limit, ['*'], 'page', $page);
+
+        $mapped = collect($products->items())->map(function (ProductModel $p) {
+            return $this->normalizeProductPayload([
+                'barcode' => $p->barcode,
+                'name' => $p->nama_product ?? 'Produk tanpa nama',
+                'brand' => $p->brand ?? 'Merek belum tersedia',
+                'ingredients_text' => $p->komposisi ?? 'Komposisi belum tersedia',
+                'category' => optional($p->kategori)->nama_kategori ?? 'Produk Umum',
+                'status_halal' => $p->status ?? 'unknown',
+                'image_url' => $p->getRawOriginal('image'),
+            ], $p);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Hasil pencarian produk',
+            'data' => $mapped,
+            'meta' => [
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'total' => $products->total(),
+            ],
+        ]);
+    }
+
+    /**
      * Check halal status only
      */
     public function checkHalal(Request $request)
@@ -210,10 +254,10 @@ class ProductController extends Controller
      */
     public function popular(Request $request)
     {
-        $products = \App\Models\ScanHistory::select('product_name', 'barcode', 'status')
+        $products = \App\Models\ScanHistory::select('product_name', 'barcode', 'halal_status')
             ->selectRaw('COUNT(*) as scan_count')
             ->whereNotNull('product_name')
-            ->groupBy('product_name', 'barcode', 'status')
+            ->groupBy('product_name', 'barcode', 'halal_status')
             ->orderByDesc('scan_count')
             ->limit(20)
             ->get()
@@ -221,7 +265,7 @@ class ProductController extends Controller
                 return [
                     'name' => $item->product_name,
                     'barcode' => $item->barcode,
-                    'halal_status' => $item->status ?? 'unknown',
+                    'halal_status' => $item->halal_status ?? 'unknown',
                     'scan_count' => $item->scan_count,
                 ];
             });
@@ -325,6 +369,10 @@ class ProductController extends Controller
             'image' => $resolvedImage,
             'ingredients_text' => data_get($productData, 'ingredients_text', 'Komposisi belum tersedia'),
             'category' => data_get($productData, 'category', 'Produk Umum'),
+            'source' => data_get($productData, 'source', data_get($productData, 'source_label', 'internal')),
+            'status_halal' => data_get($productData, 'status_halal', 'unknown'),
+            'halal_certificate_number' => data_get($productData, 'halal_certificate'),
+            'certification_body' => data_get($productData, 'certification_body'),
             'nutriscore' => data_get($productData, 'nutriscore'),
             'additives' => data_get($productData, 'additives', []),
             'allergens' => data_get($productData, 'allergens', []),

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @php
-        $siteName = $settings['site_name'] ?? 'HalalScan AI';
-        $defaultDescription = $settings['site_description'] ?? 'AI-Powered Halal & Health Scanner App';
+        $siteName = $settings['site_name'] ?? 'Halalytics';
+        $defaultDescription = $settings['site_description'] ?? 'AI-powered halal, health, and community intelligence platform';
         $metaDescription = trim((string) $__env->yieldContent('description', $defaultDescription));
         $metaKeywords = trim((string) $__env->yieldContent('keywords', 'halal scanner, cek halal, interaksi obat, health score, BPOM'));
         $canonicalUrl = trim((string) $__env->yieldContent('canonical', url()->current()));
@@ -164,7 +164,7 @@
                         <span class="font-bold text-xl">{{ $settings['site_name'] ?? 'HalalScan AI' }}</span>
                     </div>
                     <p class="text-gray-400 text-sm leading-relaxed max-w-sm">
-                        {{ $settings['site_description'] ?? 'AI-powered halal & health product intelligence platform.' }}
+                        {{ $settings['site_description'] ?? 'AI-powered halal, health, OCR, BPOM, and donor community platform.' }}
                     </p>
                 </div>
 
@@ -172,11 +172,11 @@
                 <div>
                     <h4 class="font-semibold mb-4 text-gray-300">Navigasi</h4>
                     <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="{{ route('home') }}" class="hover:text-[#7ce0d4] transition-colors">Beranda</a></li>
-                        <li><a href="{{ route('features') }}" class="hover:text-[#7ce0d4] transition-colors">Fitur</a></li>
-                        <li><a href="{{ route('blog.index') }}" class="hover:text-[#7ce0d4] transition-colors">Blog</a></li>
-                        <li><a href="{{ route('about') }}" class="hover:text-[#7ce0d4] transition-colors">Tentang</a></li>
-                        <li><a href="{{ route('privacy') }}" class="hover:text-[#7ce0d4] transition-colors">Privacy Policy</a></li>
+                        <li><a href="{{ route('home') }}" class="hover:text-[var(--promo-secondary)] transition-colors">Beranda</a></li>
+                        <li><a href="{{ route('features') }}" class="hover:text-[var(--promo-secondary)] transition-colors">Fitur</a></li>
+                        <li><a href="{{ route('blog.index') }}" class="hover:text-[var(--promo-secondary)] transition-colors">Blog</a></li>
+                        <li><a href="{{ route('about') }}" class="hover:text-[var(--promo-secondary)] transition-colors">Tentang</a></li>
+                        <li><a href="{{ route('privacy') }}" class="hover:text-[var(--promo-secondary)] transition-colors">Privacy Policy</a></li>
                     </ul>
                 </div>
 

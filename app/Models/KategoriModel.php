@@ -17,6 +17,7 @@ class KategoriModel extends Model
     protected $fillable = [
         'nama_kategori',
         'description',
+        'image',
     ];
 
     // Relasi ke Produk
@@ -27,12 +28,25 @@ class KategoriModel extends Model
 
     public function getThumbnailUrlAttribute(): string
     {
+        // Prioritize the category's own image if it exists
+        if ($this->image) {
+            return app(DisplayImageService::class)->resolve(
+                $this->getRawOriginal('image') ?? $this->image,
+                [
+                    'name' => $this->nama_kategori,
+                    'category' => $this->nama_kategori,
+                ],
+                'category'
+            );
+        }
+
+        // Fallback to the latest product image
         $product = $this->relationLoaded('products')
             ? $this->products->first()
-            : $this->products()->whereNotNull('image')->latest('id_product')->first();
+            : $this->products()->latest('id_product')->first();
 
         return app(DisplayImageService::class)->resolve(
-            $product?->image,
+            $product?->getRawOriginal('image') ?? $product?->image,
             [
                 'name' => $this->nama_kategori,
                 'category' => $this->nama_kategori,

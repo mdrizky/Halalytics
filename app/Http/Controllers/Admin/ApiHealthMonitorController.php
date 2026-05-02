@@ -47,7 +47,7 @@ class ApiHealthMonitorController extends Controller
             ->get()
             ->groupBy('api_name');
 
-        return view('admin.api-monitor.index', compact('current', 'history', 'apis'));
+        return view('admin.api_monitor', compact('current', 'history', 'apis'));
     }
 
     public function history(Request $request, $apiName)

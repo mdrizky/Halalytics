@@ -17,7 +17,7 @@ class AiPromptController extends Controller
     public function index()
     {
         $prompts = AiPrompt::orderBy('feature_key')->get();
-        return view('admin.ai-prompts.index', compact('prompts'));
+        return view('admin.ai_prompts', compact('prompts'));
     }
 
     public function create()

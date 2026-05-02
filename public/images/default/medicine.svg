@@ -1,0 +1,21 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="1200" height="1200" rx="96" fill="#F4F9FF"/>
+<rect x="80" y="80" width="1040" height="1040" rx="72" fill="url(#paint0_linear_1_6)"/>
+<rect x="278" y="274" width="322" height="562" rx="72" fill="#FFFFFF" fill-opacity="0.88"/>
+<rect x="338" y="338" width="202" height="434" rx="52" fill="#E2F4EE"/>
+<rect x="626" y="334" width="302" height="442" rx="80" fill="#FFFFFF" fill-opacity="0.88"/>
+<path d="M777 334C860.395 334 928 401.605 928 485V552H626V485C626 401.605 693.605 334 777 334Z" fill="#26A69A" fill-opacity="0.26"/>
+<rect x="386" y="448" width="106" height="32" rx="16" fill="#26A69A"/>
+<rect x="424" y="410" width="30" height="106" rx="15" fill="#26A69A"/>
+<rect x="714" y="602" width="126" height="34" rx="17" fill="#163832" fill-opacity="0.12"/>
+<rect x="714" y="666" width="96" height="24" rx="12" fill="#163832" fill-opacity="0.1"/>
+<circle cx="822" cy="442" r="48" fill="#26A69A"/>
+<circle cx="822" cy="442" r="20" fill="#FFFFFF"/>
+<text x="120" y="1030" fill="#163832" fill-opacity="0.72" font-family="Arial, sans-serif" font-size="82" font-weight="700">Halalytics Medicine</text>
+<defs>
+<linearGradient id="paint0_linear_1_6" x1="120" y1="120" x2="1084" y2="1088" gradientUnits="userSpaceOnUse">
+<stop stop-color="#E5F1FF"/>
+<stop offset="1" stop-color="#E2F7EB"/>
+</linearGradient>
+</defs>
+</svg>

@@ -45,7 +45,7 @@ class HalalCertificateController extends Controller
                 ->whereBetween('expires_at', [now(), now()->addDays(30)])->count(),
         ];
 
-        return view('admin.certificates.index', compact('certificates', 'stats'));
+        return view('admin.certificates', compact('certificates', 'stats'));
     }
 
     public function create()

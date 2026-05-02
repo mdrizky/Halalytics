@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Storage;
 
 class NotificationCampaignController extends Controller
 {
@@ -35,7 +36,7 @@ class NotificationCampaignController extends Controller
             'scheduled' => NotificationCampaign::where('status', 'scheduled')->count(),
         ];
 
-        return view('admin.campaigns.index', compact('campaigns', 'stats'));
+        return view('admin.campaigns', compact('campaigns', 'stats'));
     }
 
     public function create()
@@ -73,6 +74,7 @@ class NotificationCampaignController extends Controller
             'title' => 'required|string|max:255',
             'body' => 'required|string|max:1000',
             'image_url' => 'nullable|url|max:500',
+            'image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'action_url' => 'nullable|string|max:500',
             'target_mode' => 'required|in:all,specific_users',
             'user_ids' => 'nullable|string|max:2000',
@@ -80,6 +82,11 @@ class NotificationCampaignController extends Controller
             'data_type' => 'nullable|string|max:50',
             'scheduled_at' => 'nullable|date|after:now',
         ]);
+
+        if ($request->hasFile('image_file')) {
+            $path = $request->file('image_file')->store('public/campaigns');
+            $validated['image_url'] = asset(str_replace('public/', 'storage/', $path));
+        }
 
         $targetSegment = $this->buildTargetSegment($request, $validated);
 
@@ -130,6 +137,7 @@ class NotificationCampaignController extends Controller
             'title' => 'required|string|max:255',
             'body' => 'required|string|max:1000',
             'image_url' => 'nullable|url|max:500',
+            'image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'action_url' => 'nullable|string|max:500',
             'target_mode' => 'required|in:all,specific_users',
             'user_ids' => 'nullable|string|max:2000',
@@ -137,6 +145,16 @@ class NotificationCampaignController extends Controller
             'data_type' => 'nullable|string|max:50',
             'scheduled_at' => 'nullable|date|after:now',
         ]);
+
+        if ($request->hasFile('image_file')) {
+            // Optional: delete old image if it was a local storage URL
+            if ($campaign->image_url && str_contains($campaign->image_url, '/storage/campaigns/')) {
+                $oldPath = str_replace(asset('storage/'), 'public/', $campaign->image_url);
+                Storage::delete($oldPath);
+            }
+            $path = $request->file('image_file')->store('public/campaigns');
+            $validated['image_url'] = asset(str_replace('public/', 'storage/', $path));
+        }
 
         $validated['target_segment'] = $this->buildTargetSegment($request, $validated);
         $campaign->update($validated);

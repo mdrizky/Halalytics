@@ -30,6 +30,8 @@ class Medicine extends Model
         'route',
         'halal_status',
         'halal_certificate_number',
+        'bpom_status',
+        'bpom_number',
         'manufacturer',
         'country_origin',
         'dosage_form',

@@ -823,7 +823,7 @@ class ApiController extends Controller
 
         $stats = ScanModel::where('user_id', $user->id_user)
             ->where('tanggal_scan', '>=', now()->subDays(7))
-            ->selectRaw('DATE(tanggal_scan) as date, status, COUNT(*) as count')
+            ->selectRaw('DATE(tanggal_scan) as date, status_halal as status, COUNT(*) as count')
             ->groupBy('date', 'status')
             ->get();
 

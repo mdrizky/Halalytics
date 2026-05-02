@@ -11,11 +11,13 @@ class UniversalProductService
 {
     protected $safetyChecker;
     protected $externalApiService;
+    protected $geminiService;
 
-    public function __construct(SafetyCheckerService $safetyChecker, ExternalApiService $externalApiService)
+    public function __construct(SafetyCheckerService $safetyChecker, ExternalApiService $externalApiService, GeminiService $geminiService)
     {
         $this->safetyChecker = $safetyChecker;
         $this->externalApiService = $externalApiService;
+        $this->geminiService = $geminiService;
     }
 
     /**
@@ -50,7 +52,7 @@ class UniversalProductService
 
         // 3. Check Open Food Facts API v2
         $offResponse = Http::get("https://world.openfoodfacts.org/api/v2/product/{$barcode}.json", [
-            'fields' => 'product_name,code,image_url,image_front_url,ingredients_list,nutriments,_id,completeness'
+            'fields' => 'product_name,code,image_url,image_front_url,ingredients_list,nutriments,_id,completeness,brands,quantity,packaging,labels,nutriscore_grade,nova_group,stores,countries'
         ]);
         if ($offResponse->successful() && $offResponse->json('status') === 'success') {
             $productData = $offResponse->json('product');
@@ -67,7 +69,7 @@ class UniversalProductService
 
         // 4. Check Open Beauty Facts API v2
         $obfResponse = Http::get("https://world.openbeautyfacts.org/api/v2/product/{$barcode}.json", [
-            'fields' => 'product_name,code,image_url,image_front_url,ingredients_list,nutriments,_id,completeness'
+            'fields' => 'product_name,code,image_url,image_front_url,ingredients_list,nutriments,_id,completeness,brands,quantity,packaging,labels,nutriscore_grade,nova_group,stores,countries'
         ]);
         if ($obfResponse->successful() && $obfResponse->json('status') === 'success') {
             $productData = $obfResponse->json('product');
@@ -95,22 +97,63 @@ class UniversalProductService
         $existing = ProductModel::where('barcode', $data['code'] ?? '')->first();
         if ($existing) return $existing;
 
+        $productName = $data['product_name'] ?? 'Unknown Product';
+        $ingredientsList = isset($data['ingredients_list']) ? json_encode($data['ingredients_list']) : '';
+
+        // Auto-categorization and Halal Status using AI
+        $kategoriId = null;
+        $status = 'syubhat';
+        
+        try {
+            // Hardcoded active categories for AI context
+            $categoriesJson = '{"1":"Makanan Ringan","2":"Minuman","3":"Bumbu Dapur","4":"Kesehatan","5":"Kosmetik","6":"Dairy","7":"Makanan Beku","8":"Sereal & Sarapan","9":"Bayi & Anak","10":"Saus & Dressing","11":"Roti & Bakery","12":"Seafood Olahan","13":"Herbal & Jamu","14":"Frozen Snack","15":"Mie Instan","16":"Roti & Kue","17":"Suplemen","18":"Baby Food","19":"Daging Olahan","20":"Kopi & Teh","21":"Saus & Sambal","22":"Skincare","23":"Makanan Kaleng","24":"Makanan","25":"Obat"}';
+            
+            $prompt = "Analyze this product: Name: '{$productName}', Ingredients: '{$ingredientsList}'. 
+            1. Determine its halal status (halal/tidak halal/syubhat). 
+            2. Match it to the best category ID from this list: {$categoriesJson}. 
+            3. Provide a brief health & halal analysis summary (max 2 sentences).
+            Format exactly as JSON: {\"status\": \"halal/tidak halal/syubhat\", \"kategori_id\": ID_NUMBER, \"summary\": \"Analysis text\"}";
+            
+            $analysis = $this->geminiService->generateCustomContent($prompt);
+            
+            if (isset($analysis['status']) && in_array($analysis['status'], ['halal', 'tidak halal', 'syubhat'])) {
+                $status = $analysis['status'];
+            }
+            if (isset($analysis['kategori_id']) && is_numeric($analysis['kategori_id'])) {
+                $kategoriId = (int) $analysis['kategori_id'];
+            }
+            $halalAnalysis = $analysis; // Store full object
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning("AI Analysis failed for product {$productName}: " . $e->getMessage());
+        }
+
         return ProductModel::create([
-            'nama_product' => $data['product_name'] ?? 'Unknown Product',
+            'nama_product' => $productName,
             'barcode' => $data['code'] ?? '',
             'image' => $data['image_url'] ?? $data['image_front_url'] ?? $data['image_small_url'] ?? null,
-            'komposisi' => isset($data['ingredients_list']) ? json_encode($data['ingredients_list']) : null,
+            'komposisi' => $ingredientsList ?: null,
             'info_gizi' => isset($data['nutriments']) ? json_encode($data['nutriments']) : null,
             'source' => $source,
             'off_product_id' => $data['_id'] ?? null,
             'off_last_synced' => now(),
-            'is_imported_from_off' => true, // Generic flag for external import
+            'is_imported_from_off' => true, 
             'auto_imported_at' => now(),
             'verification_status' => 'needs_review',
-            'status' => 'syubhat', // Default
+            'status' => $status,
             'data_completeness_score' => $data['completeness'] ?? 0,
             'active' => true,
-            'kategori_id' => null // Todo: Map category
+            'kategori_id' => $kategoriId,
+            'halal_analysis' => $halalAnalysis ?? null,
+            
+            // New fields from API
+            'brand' => $data['brands'] ?? null,
+            'quantity' => $data['quantity'] ?? null,
+            'packaging' => $data['packaging'] ?? null,
+            'labels' => $data['labels'] ?? null,
+            'nutriscore_grade' => $data['nutriscore_grade'] ?? null,
+            'nova_group' => $data['nova_group'] ?? null,
+            'stores' => $data['stores'] ?? null,
+            'countries' => $data['countries'] ?? null,
         ]);
     }
 
@@ -123,8 +166,10 @@ class UniversalProductService
             'image_url' => $product->image_url,
             'ingredients_text' => $product->ingredients_text,
             'status_halal' => 'verified',
-            'halal_certificate' => $product->nomor_izin_edar,
+            'halal_certificate' => $product->nomor_reg,
+            'certification_body' => $product->pendaftar,
             'category' => $product->kategori,
+            'source' => 'bpom',
             'nutriscore' => null,
             'additives' => [],
             'allergens' => [],
@@ -144,13 +189,20 @@ class UniversalProductService
         return [
             'barcode' => $product->barcode,
             'name' => $product->nama_product,
-            'brand' => 'Unknown',
+            'brand' => $product->brand ?? 'Unknown',
             'image_url' => $product->image,
             'ingredients_text' => $ingredientsText,
             'status_halal' => $product->status,
             'halal_certificate' => $product->halal_certificate,
             'category' => $product->kategori ? $product->kategori->nama_kategori : 'Umum',
-            'nutriscore' => null,
+            'source' => $product->source ?? 'local_cache',
+            'nutriscore' => $product->nutriscore_grade,
+            'nova_group' => $product->nova_group,
+            'quantity' => $product->quantity,
+            'packaging' => $product->packaging,
+            'labels' => $product->labels,
+            'stores' => $product->stores,
+            'countries' => $product->countries,
             'additives' => [],
             'allergens' => [],
             'safety_alerts' => $this->safetyChecker->checkIngredients($ingredientsText)

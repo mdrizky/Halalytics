@@ -66,6 +66,17 @@ class User extends Authenticatable implements FilamentUser
         'halal_products_count',
         'profile_visibility',
         'show_health_tips',
+        'fcm_token',
+        'total_donor_count',
+        'total_donor_points',
+        'last_donor_date',
+        'next_eligible_date',
+        'current_streak',
+        'longest_streak',
+        'last_active_date',
+        'google_id',
+        'facebook_id',
+        'social_provider',
     ];
 
     protected $hidden = [
@@ -90,6 +101,13 @@ class User extends Authenticatable implements FilamentUser
         'total_scans' => 'integer',
         'halal_products_count' => 'integer',
         'show_health_tips' => 'boolean',
+        'total_donor_count' => 'integer',
+        'total_donor_points' => 'integer',
+        'last_donor_date' => 'date',
+        'next_eligible_date' => 'date',
+        'current_streak' => 'integer',
+        'longest_streak' => 'integer',
+        'last_active_date' => 'date',
     ];
 
     public function setPasswordAttribute($value)
@@ -143,6 +161,29 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasOne(CommunityUserPoint::class, 'user_id', 'id_user');
     }
+
+    // --- Donor Darah Relationships ---
+    public function donorAppointments()
+    {
+        return $this->hasMany(DonorAppointment::class, 'user_id', 'id_user');
+    }
+
+    public function donorRewards()
+    {
+        return $this->hasMany(DonorReward::class, 'user_id', 'id_user');
+    }
+
+    public function getDonorBadgeAttribute()
+    {
+        $count = $this->total_donor_count ?? 0;
+        if ($count >= 50) return 'platinum';
+        if ($count >= 25) return 'gold';
+        if ($count >= 10) return 'silver';
+        if ($count >= 5)  return 'bronze';
+        if ($count >= 1)  return 'first_donor';
+        return null;
+    }
+    // ---------------------------------
 
     public function canAccessPanel(Panel $panel): bool
     {

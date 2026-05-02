@@ -28,15 +28,20 @@ class ComparisonController extends Controller
         $request->validate([
             'barcodes' => 'required|array|min:2|max:5',
             'barcodes.*' => 'required|string',
-            'family_id' => 'nullable|integer',
         ]);
 
         $barcodes = $request->barcodes;
-        $familyId = $request->family_id;
         $user = Auth::user();
 
-        // 1. Resolve Health Context
-        $userContext = $this->resolveHealthContext($user, $familyId);
+        $userContext = [
+            'name' => $user->full_name,
+            'age' => $user->age,
+            'gender' => $user->gender ?? null,
+            'medical_history' => $user->medical_history,
+            'allergies' => $user->allergy,
+            'diet_preference' => $user->diet_preference ?? null,
+            'goal' => $user->goal ?? null,
+        ];
 
         // 2. Fetch Product Data
         $productsData = [];
@@ -72,34 +77,4 @@ class ComparisonController extends Controller
         }
     }
 
-    /**
-     * Helper to resolve health context for either the main user or a family member
-     */
-    private function resolveHealthContext($user, $familyId = null)
-    {
-        if ($familyId) {
-            $family = \App\Models\FamilyProfile::where('user_id', $user->id_user)->find($familyId);
-            if ($family) {
-                return [
-                    'name' => $family->name,
-                    'is_family_member' => true,
-                    'age' => $family->age,
-                    'gender' => $family->gender,
-                    'medical_history' => $family->medical_history,
-                    'allergies' => $family->allergies,
-                    'diabetes' => str_contains(strtolower($family->medical_history ?? ''), 'diabetes')
-                ];
-            }
-        }
-
-        return [
-            'name' => $user->full_name,
-            'is_family_member' => false,
-            'age' => $user->age,
-            'gender' => $user->gender,
-            'medical_history' => $user->medical_history,
-            'allergies' => $user->allergy,
-            'diabetes' => $user->has_diabetes
-        ];
-    }
 }

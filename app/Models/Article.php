@@ -11,13 +11,14 @@ class Article extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title', 'slug', 'excerpt', 'content', 'image',
+        'title', 'slug', 'excerpt', 'content', 'ai_summary', 'image',
         'category', 'source', 'source_url', 'author',
-        'is_published', 'views',
+        'is_published', 'status', 'views',
     ];
 
     protected $casts = [
         'is_published' => 'boolean',
+        'status' => 'string',
     ];
 
     public function getImageAttribute($value): ?string

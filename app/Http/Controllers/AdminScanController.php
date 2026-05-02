@@ -128,7 +128,7 @@ class AdminScanController extends Controller
             $scan = ScanModel::create([
                 'user_id' => $user->id_user,
                 'product_id' => $product->id_product,
-                'nama_produk' => $product->nama_produk,
+                'nama_produk' => $product->nama_product,
                 'barcode' => $validated['barcode'],
                 'kategori' => optional($product->kategori)->nama_kategori ?? null,
                 'status_halal' => strtolower((string) ($product->status ?? 'syubhat')),

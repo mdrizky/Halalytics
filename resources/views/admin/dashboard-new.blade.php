@@ -54,7 +54,7 @@
         <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Total Scans</p>
         <div class="flex items-end justify-between mt-1">
             <h3 class="text-2xl font-extrabold text-slate-800 dark:text-white">{{ number_format($analytics['overview']['total_scans'] ?? 0) }}</h3>
-            <div class="text-orange-500"><span class="material-icons-round text-lg">qr_code_scanner</span></div>
+            <div class="text-primary"><span class="material-icons-round text-lg">qr_code_scanner</span></div>
         </div>
     </div>
 
@@ -72,7 +72,7 @@
         <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Local DB</p>
         <div class="flex items-end justify-between mt-1">
             <h3 class="text-2xl font-extrabold text-slate-800 dark:text-white">{{ number_format($stats['local_products'] ?? 0) }}</h3>
-            <div class="text-blue-500"><span class="material-icons-round text-lg">storage</span></div>
+            <div class="text-slate-500"><span class="material-icons-round text-lg">storage</span></div>
         </div>
     </div>
 
@@ -200,7 +200,7 @@
                 <h3 class="text-lg font-extrabold text-slate-800 dark:text-white">Tren Health Tracking 30 Hari</h3>
                 <p class="text-xs text-slate-500 mt-1">Metrik kesehatan yang sering dicek</p>
             </div>
-            <div class="p-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 rounded-lg">
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 rounded-lg">
                 <span class="material-icons-round text-lg">monitor_heart</span>
             </div>
         </div>
@@ -435,8 +435,8 @@
                     datasets: [{
                         label: 'User Baru',
                         data: userGrowthRaw.map(d => d.count),
-                        borderColor: '#059669',
-                        backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                        borderColor: '#C01552',
+                        backgroundColor: 'rgba(192, 21, 82, 0.12)',
                         fill: true,
                         tension: 0.4
                     }]
@@ -454,7 +454,7 @@
                     labels: ['Halal', 'Haram', 'Syubhat'],
                     datasets: [{
                         data: [halalStatsDetailed.halal, halalStatsDetailed.haram, halalStatsDetailed.syubhat],
-                        backgroundColor: ['#059669', '#dc2626', '#d97706'],
+                        backgroundColor: ['#059669', '#C01552', '#6B7280'],
                         borderWidth: 0,
                         cutout: '70%'
                     }]
@@ -472,8 +472,8 @@
                     labels: scanActivityRaw.map(d => d.date),
                     datasets: [
                         { label: 'Halal', data: scanActivityRaw.map(d => d.halal), backgroundColor: '#059669' },
-                        { label: 'Syubhat', data: scanActivityRaw.map(d => d.syubhat), backgroundColor: '#d97706' },
-                        { label: 'Haram', data: scanActivityRaw.map(d => d.haram), backgroundColor: '#dc2626' }
+                        { label: 'Syubhat', data: scanActivityRaw.map(d => d.syubhat), backgroundColor: '#6B7280' },
+                        { label: 'Haram', data: scanActivityRaw.map(d => d.haram), backgroundColor: '#C01552' }
                     ]
                 },
                 options: {
@@ -493,7 +493,7 @@
                     labels: healthTrendsRaw.map(d => d.metric_type),
                     datasets: [{
                         data: healthTrendsRaw.map(d => d.count),
-                        backgroundColor: '#8b5cf6',
+                        backgroundColor: '#C01552',
                         borderRadius: 10
                     }]
                 },

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ProductModel;
 use App\Services\ActivityEventService;
+use App\Services\DisplayImageService;
 use App\Services\OpenFoodFactsService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -13,14 +14,17 @@ class ProductExternalController extends Controller
 {
     protected $openFoodFactsService;
     protected $activityEventService;
+    protected $displayImageService;
 
     public function __construct(
         OpenFoodFactsService $openFoodFactsService,
-        ActivityEventService $activityEventService
+        ActivityEventService $activityEventService,
+        DisplayImageService $displayImageService
     )
     {
         $this->openFoodFactsService = $openFoodFactsService;
         $this->activityEventService = $activityEventService;
+        $this->displayImageService = $displayImageService;
     }
 
     /**
@@ -76,8 +80,24 @@ class ProductExternalController extends Controller
                     'product_name' => $product->nama_product,
                     'product_name_en' => $product->nama_product,
                     'nama_product' => $product->nama_product,
-                    'image_url' => $product->image ? asset('storage/' . ltrim($product->image, '/')) : null,
-                    'image_front_url' => $product->image ? asset('storage/' . ltrim($product->image, '/')) : null,
+                    'image_url' => $this->displayImageService->resolve(
+                        $product->getRawOriginal('image'),
+                        [
+                            'name' => $product->nama_product,
+                            'barcode' => $product->barcode,
+                            'category' => optional($product->kategori)->nama_kategori,
+                        ],
+                        'product'
+                    ),
+                    'image_front_url' => $this->displayImageService->resolve(
+                        $product->getRawOriginal('image'),
+                        [
+                            'name' => $product->nama_product,
+                            'barcode' => $product->barcode,
+                            'category' => optional($product->kategori)->nama_kategori,
+                        ],
+                        'product'
+                    ),
                     'brands' => null,
                     'categories' => optional($product->kategori)->nama_kategori,
                     'ingredients_text' => $product->komposisi,

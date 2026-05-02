@@ -112,16 +112,21 @@ class BpomController extends Controller
             'category' => 'nullable|string',
             'barcode' => 'nullable|string',
             'image' => 'nullable|string', // base64
-            'family_id' => 'nullable|integer',
         ]);
 
         $productName = $request->product_name;
         $ingredientsText = $request->ingredients_text ?? '';
         $category = $request->category ?? 'umum';
-        $familyId = $request->family_id;
 
         $user = Auth::user();
-        $userContext = $this->resolveHealthContext($user, $familyId);
+        $userContext = [
+            'name' => $user->full_name,
+            'age' => $user->age,
+            'gender' => $user->gender,
+            'medical_history' => $user->medical_history,
+            'allergies' => $user->allergy,
+            'diabetes' => $user->has_diabetes,
+        ];
 
         try {
             $aiResult = $this->gemini->analyzeProductSafety($productName, $ingredientsText, $category, $userContext);
@@ -219,36 +224,6 @@ class BpomController extends Controller
         return 'umum';
     }
 
-    /**
-     * Helper to resolve health context for either the main user or a family member
-     */
-    private function resolveHealthContext($user, $familyId = null)
-    {
-        if ($familyId) {
-            $family = \App\Models\FamilyProfile::where('user_id', $user->id_user)->find($familyId);
-            if ($family) {
-                return [
-                    'name' => $family->name,
-                    'is_family_member' => true,
-                    'age' => $family->age,
-                    'gender' => $family->gender,
-                    'medical_history' => $family->medical_history,
-                    'allergies' => $family->allergies,
-                    'diabetes' => str_contains(strtolower($family->medical_history ?? ''), 'diabetes')
-                ];
-            }
-        }
-
-        return [
-            'name' => $user->full_name,
-            'is_family_member' => false,
-            'age' => $user->age,
-            'gender' => $user->gender,
-            'medical_history' => $user->medical_history,
-            'allergies' => $user->allergy,
-            'diabetes' => $user->has_diabetes
-        ];
-    }
 
     public function indexCosmetics(Request $request)
     {

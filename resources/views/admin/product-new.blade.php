@@ -39,7 +39,8 @@
                 <select name="halal_status" class="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-semibold text-slate-600 dark:text-slate-300 focus:ring-primary/20 focus:border-primary">
                     <option value="">Halal Status</option>
                     <option value="halal" {{ request('halal_status') == 'halal' ? 'selected' : '' }}>Halal</option>
-                    <option value="diragukan" {{ request('halal_status') == 'diragukan' ? 'selected' : '' }}>Syubhat</option>
+                    <option value="syubhat" {{ request('halal_status') == 'syubhat' ? 'selected' : '' }}>Syubhat</option>
+                    <option value="diragukan" {{ request('halal_status') == 'diragukan' ? 'selected' : '' }}>Diragukan</option>
                     <option value="tidak halal" {{ request('halal_status') == 'tidak halal' ? 'selected' : '' }}>Haram</option>
                 </select>
                 
@@ -81,6 +82,7 @@
                     <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Product Name</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Category</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Price</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Halal Status</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Active</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Scans</th>
@@ -93,7 +95,7 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-4">
                                 <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-1 shadow-inner overflow-hidden">
-                                    <img src="{{ $product->image }}" alt="{{ $product->nama_product }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
+                                    <img src="{{ $product->image }}" alt="{{ $product->nama_product }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ $product->image_fallback_url }}'">
                                 </div>
                                 <div>
                                     <p class="font-bold text-slate-900 dark:text-white">{{ Str::limit($product->nama_product, 25) }}</p>
@@ -103,6 +105,9 @@
                         </td>
                         <td class="px-6 py-4 text-xs font-medium text-slate-600 dark:text-slate-400">
                              {{ $product->kategori->nama_kategori ?? 'Uncategorized' }}
+                        </td>
+                        <td class="px-6 py-4 text-right text-xs font-bold text-slate-600 dark:text-slate-300">
+                            Rp{{ number_format((float) ($product->price ?? 0), 0, ',', '.') }}
                         </td>
                         <td class="px-6 py-4 text-center">
                             @php
@@ -141,7 +146,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">No managed local products found.</td></tr>
+                    <tr><td colspan="7" class="px-6 py-12 text-center text-slate-400">No managed local products found.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -168,6 +173,7 @@
                     <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Global Product</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Category</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Price</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Source</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Verification</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">AI Analysis</th>
@@ -180,7 +186,7 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-4">
                                 <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-1 overflow-hidden shadow-inner transform transition-transform group-hover:scale-110">
-                                    <img src="{{ $product->image }}" alt="" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
+                                    <img src="{{ $product->image }}" alt="" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ $product->image_fallback_url }}'">
                                 </div>
                                 <div>
                                     <p class="font-bold text-slate-900 dark:text-white">{{ Str::limit($product->nama_product, 25) }}</p>
@@ -190,6 +196,9 @@
                         </td>
                         <td class="px-6 py-4 text-xs italic text-slate-500">
                              {{ $product->kategori->nama_kategori ?? 'Auto-Detected' }}
+                        </td>
+                        <td class="px-6 py-4 text-right text-xs font-bold text-slate-600 dark:text-slate-300">
+                            Rp{{ number_format((float) ($product->price ?? 0), 0, ',', '.') }}
                         </td>
                         <td class="px-6 py-4 text-center">
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-primary/10 text-primary dark:bg-primary/15 dark:text-emerald-300 border border-primary/20 dark:border-primary/30">

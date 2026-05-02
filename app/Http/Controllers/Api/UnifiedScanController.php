@@ -6,16 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\ProductModel;
 use App\Services\OpenFoodFactsService;
 use App\Models\ScanModel;
+use App\Services\CrowdSourcedReportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class UnifiedScanController extends Controller
 {
     protected $universalService;
+    protected $crowdService;
 
-    public function __construct(\App\Services\UniversalProductService $universalService)
+    public function __construct(\App\Services\UniversalProductService $universalService, CrowdSourcedReportService $crowdService)
     {
         $this->universalService = $universalService;
+        $this->crowdService = $crowdService;
     }
 
     /**
@@ -40,23 +43,25 @@ class UnifiedScanController extends Controller
             $source = $result['source'];
 
             // Record Scan Logic
-            // We need a product_id. If source is BPOM, we might not have a ProductModel ID to link to scans table.
-            // But ScanModel links to `product_id`.
-            // If strictly BPOM, we might need to "fake" it or just skip recording if structure doesn't allow.
-            // ideally we should treat BpomData as a valid product to scan.
-            
-            // For now, only record if it's a ProductModel (Local Cache or Imported OFF/OBF)
             if ($source !== 'bpom' && $productData instanceof ProductModel) {
                  $this->recordScan($user, $productData);
             }
 
-            return response()->json([
+            $response = [
                 'success' => true,
                 'source' => $source,
                 'data' => $this->formatStandardizedResponse($standardized, $source, $productData),
                 'message' => 'Produk ditemukan (' . $source . ')',
                 'needs_verification' => $source !== 'bpom' && ($productData->verification_status ?? '') !== 'verified',
-            ]);
+            ];
+
+            // Add crowd-sourced status
+            if ($productData instanceof ProductModel) {
+                $crowdStatus = $this->crowdService->getCrowdStatus($productData->id_product);
+                $response['crowd_status'] = $crowdStatus;
+            }
+
+            return response()->json($response);
         }
 
         // ===== NOT FOUND =====
@@ -86,6 +91,15 @@ class UnifiedScanController extends Controller
             'komposisi' => $stdData['ingredients_text'], // String or raw
             'info_gizi' => $originalData->info_gizi ?? null,
             'kategori' => $stdData['category'],
+            'brand' => $stdData['brand'] ?? 'Unknown',
+            'quantity' => $stdData['quantity'] ?? null,
+            'packaging' => $stdData['packaging'] ?? null,
+            'labels' => $stdData['labels'] ?? null,
+            'stores' => $stdData['stores'] ?? null,
+            'countries' => $stdData['countries'] ?? null,
+            'nutriscore' => $stdData['nutriscore'] ?? null,
+            'nova_group' => $stdData['nova_group'] ?? null,
+            'ai_summary' => $originalData->halal_analysis['summary'] ?? null,
         ];
     }
 
@@ -121,4 +135,5 @@ class UnifiedScanController extends Controller
             'kategori' => $product->kategori ? $product->kategori->nama_kategori : 'Umum',
         ];
     }
+
 }

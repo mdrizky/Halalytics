@@ -18,7 +18,7 @@ class OCRController extends Controller
             return $this->listByStatuses(['pending', 'pending_admin_review']);
         }
 
-        return view('admin.ocr.index');
+        return view('admin.ocr');
     }
 
     public function uploadImage(Request $request)

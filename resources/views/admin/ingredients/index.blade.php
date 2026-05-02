@@ -107,7 +107,7 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                    <img src="{{ $ingredient->image_url }}" alt="{{ $ingredient->name }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/ingredient-placeholder.svg') }}'">
+                                    <img src="{{ $ingredient->image_url }}" alt="{{ $ingredient->name }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/ingredient-placeholder.svg'">
                                 </div>
                                 <div class="flex flex-col">
                                     <span class="text-sm font-bold text-slate-800 dark:text-white">{{ $ingredient->name }}</span>

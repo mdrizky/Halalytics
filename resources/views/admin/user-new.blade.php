@@ -12,16 +12,28 @@
         <p class="text-slate-500 dark:text-slate-400 max-w-lg">Monitor verified scan activity, manage account access, and review community contributions across the Halalytics ecosystem.</p>
     </div>
     <div class="flex gap-3">
-        <button class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-all shadow-sm">
+        <a href="{{ route('admin.user.export', request()->query()) }}" class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-all shadow-sm">
             <span class="material-icons-round text-lg">file_download</span>
             Export Data
-        </button>
-        <a href="#" class="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-extrabold hover:brightness-105 transition-all shadow-lg shadow-primary/20">
+        </a>
+        <a href="{{ route('admin.user.create') }}" class="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-extrabold hover:brightness-105 transition-all shadow-lg shadow-primary/20">
             <span class="material-icons-round text-lg">person_add</span>
             Add New User
         </a>
     </div>
 </div>
+
+@if (session('success'))
+<div class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+    {{ session('success') }}
+</div>
+@endif
+
+@if (session('error'))
+<div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+    {{ session('error') }}
+</div>
+@endif
 
 <!-- Stats Overview -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -76,7 +88,7 @@
 <!-- Search & Filters -->
 <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm mb-8">
     <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap gap-4 items-center justify-between bg-slate-50/50 dark:bg-slate-800/20">
-        <form action="{{ route('admin.user') }}" method="GET" class="w-full flex flex-wrap gap-4 items-center justify-between">
+        <form action="{{ route('admin.user.index') }}" method="GET" class="w-full flex flex-wrap gap-4 items-center justify-between">
             <div class="flex-1 min-w-[300px]">
                 <div class="relative group">
                     <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
@@ -160,12 +172,19 @@
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-2">
-                            <a href="{{ route('admin.user.edit', $user->id_user) }}" class="px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors">Details</a>
-                            <div class="relative" x-data="{ open: false }">
-                                <button @click="open = !open" class="p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-                                    <span class="material-icons-round text-lg">more_horiz</span>
+                            <a href="{{ route('admin.user.edit', $user->id_user) }}" class="px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors">Edit</a>
+                            <form action="{{ route('admin.user.toggle', $user->id_user) }}" method="POST">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                                    {{ (int)($user->active ?? 1) === 1 ? 'Block' : 'Activate' }}
                                 </button>
-                            </div>
+                            </form>
+                            <form action="{{ route('admin.user.destroy', $user->id_user) }}" method="POST" onsubmit="return confirm('Hapus user ini? Tindakan ini tidak bisa dibatalkan.')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg transition-colors">Delete</button>
+                            </form>
                         </div>
                     </td>
                 </tr>
@@ -218,8 +237,8 @@
                 </div>
             </div>
             <div class="flex items-center gap-4">
-                <button class="px-4 py-2 bg-primary rounded-lg text-sm font-extrabold hover:brightness-110 transition-all">Review Contributors</button>
-                <a href="#" class="text-sm font-bold text-slate-400 hover:text-white transition-colors">Learn about Tier System</a>
+                <a href="{{ route('admin.user.index', array_merge(request()->query(), ['sort' => 'scans_count'])) }}" class="px-4 py-2 bg-primary rounded-lg text-sm font-extrabold hover:brightness-110 transition-all">Review Contributors</a>
+                <a href="{{ route('admin.user.index', array_merge(request()->query(), ['status' => 'active'])) }}" class="text-sm font-bold text-slate-400 hover:text-white transition-colors">View Active Users</a>
             </div>
         </div>
         <!-- Decorative Background -->

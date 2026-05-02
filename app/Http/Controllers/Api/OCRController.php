@@ -10,9 +10,12 @@ use App\Models\ScanHistory;
 use App\Models\FavoriteProduct;
 use App\Services\OCRProcessingService;
 use App\Services\HalalAnalysisService;
+use App\Models\HaramIngredient;
+use App\Models\OcrScanHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class OCRController extends Controller
@@ -35,7 +38,6 @@ class OCRController extends Controller
             'front_image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
             'back_image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
             'ocr_text' => 'nullable|string',
-            'family_member_id' => 'nullable|exists:family_profiles,id',
             'language' => 'nullable|string|in:en,id,ms,ar'
         ]);
 
@@ -48,7 +50,7 @@ class OCRController extends Controller
 
             $geminiService = app(\App\Services\GeminiService::class);
             
-            // 1. Resolve User/Family Context
+            // 1. Resolve User Context
             $userContext = [
                 'name' => $user->username,
                 'age' => $user->age,
@@ -57,20 +59,6 @@ class OCRController extends Controller
                 'diabetes' => $user->has_diabetes,
                 'goal' => $user->goal
             ];
-
-            if ($request->family_member_id) {
-                $familyMember = \App\Models\FamilyProfile::find($request->family_member_id);
-                if ($familyMember) {
-                    $userContext = [
-                        'name' => $familyMember->name,
-                        'age' => $familyMember->age,
-                        'medical_history' => $familyMember->medical_history,
-                        'allergies' => $familyMember->allergies,
-                        'diabetes' => $familyMember->is_diabetic,
-                        'goal' => $familyMember->health_goal
-                    ];
-                }
-            }
             
             // 2. Perform Image Analysis (Direct Vision OCR + Analysis)
             $backImageBase64 = base64_encode(file_get_contents($request->file('back_image')->path()));
@@ -338,6 +326,84 @@ class OCRController extends Controller
         return response()->json([
             'success' => true,
             'exists' => false
+        ]);
+    }
+
+    public function syncIngredients(Request $request)
+    {
+        $updatedAfter = $request->input('updated_after');
+
+        $ingredients = $updatedAfter
+            ? HaramIngredient::query()
+                ->where('is_active', true)
+                ->where('updated_at', '>', $updatedAfter)
+                ->orderBy('updated_at')
+                ->get()
+            : Cache::remember('haram_ingredients_all', 3600, function () {
+                return HaramIngredient::query()
+                    ->where('is_active', true)
+                    ->orderBy('name')
+                    ->get();
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $ingredients->map(fn (HaramIngredient $ingredient) => [
+                'id' => $ingredient->id,
+                'name' => $ingredient->name,
+                'aliases' => $ingredient->aliases ?? [],
+                'category' => $ingredient->category,
+                'severity' => (int) $ingredient->severity,
+                'description' => $ingredient->description,
+                'is_active' => (bool) $ingredient->is_active,
+                'updated_at' => optional($ingredient->updated_at)->toISOString(),
+            ]),
+            'message' => 'Data bahan haram berhasil disinkronkan.'
+        ]);
+    }
+
+    public function scanResult(Request $request)
+    {
+        $validated = $request->validate([
+            'product_name'   => 'nullable|string|max:255',
+            'raw_text'       => 'required|string',
+            'detected_haram' => 'nullable|array',
+            'severity'       => 'nullable|integer|min:0|max:3',
+        ]);
+
+        $scan = OcrScanHistory::create([
+            'user_id'        => Auth::user()->id_user,
+            'product_name'   => $validated['product_name'] ?? null,
+            'raw_text'       => $validated['raw_text'],
+            'detected_haram' => $validated['detected_haram'] ?? [],
+            'severity'       => $validated['severity'] ?? null,
+            'scanned_at'     => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'scan' => $scan,
+                'contains_haram' => ! empty($validated['detected_haram'] ?? []),
+                'max_severity' => (int) ($validated['severity'] ?? 0),
+            ],
+            'message' => 'Hasil scan berhasil disimpan.'
+        ]);
+    }
+
+    /**
+     * Get user's OCR scan history
+     */
+    public function history()
+    {
+        $scans = OCRProduct::where('user_id', Auth::user()->id_user)
+            ->orderByDesc('created_at')
+            ->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $scans,
+            'message' => 'Riwayat OCR berhasil diambil.'
         ]);
     }
 

@@ -85,6 +85,8 @@ class AdminProductController extends Controller
     // tampil semua produk dengan filter dan pagination
     public function admin_product(Request $request)
     {
+        $externalFoodSources = ['open_food_facts', 'openfoodfacts', 'off_api', 'off'];
+
         // Base query with relations
         $baseQuery = ProductModel::with('kategori')->withCount('scans');
 
@@ -109,17 +111,35 @@ class AdminProductController extends Controller
             $baseQuery->where('active', (int) $request->active === 1);
         }
 
-        // Clone for Local Products
-        $localQuery = (clone $baseQuery)->where('source', 'local');
+        // Local products are internal/admin-managed records only.
+        $localQuery = (clone $baseQuery)->where(function ($query) {
+            $query->whereNull('source')
+                ->orWhereRaw('LOWER(source) = ?', ['local']);
+        });
         $localProducts = $localQuery->orderBy('id_product', 'desc')->paginate(10, ['*'], 'local_page')->withQueryString();
 
-        // Clone for API Products (All non-local sources)
-        $apiQuery = (clone $baseQuery)->where('source', '!=', 'local');
+        // External/imported products on this page are restricted to Open Food Facts only.
+        $apiQuery = (clone $baseQuery)->where(function ($query) use ($externalFoodSources) {
+            foreach ($externalFoodSources as $index => $source) {
+                if ($index === 0) {
+                    $query->whereRaw('LOWER(COALESCE(source, "")) = ?', [$source]);
+                    continue;
+                }
+
+                $query->orWhereRaw('LOWER(COALESCE(source, "")) = ?', [$source]);
+            }
+        });
         $apiProducts = $apiQuery->orderBy('id_product', 'desc')->paginate(10, ['*'], 'api_page')->withQueryString();
-        
-        $categories = KategoriModel::all();
-        
-        return view('admin.product-new', compact('localProducts', 'apiProducts', 'categories'));
+
+        $categories = KategoriModel::orderBy('nama_kategori')->get();
+        $productStats = [
+            'local_total' => (clone $localQuery)->count(),
+            'local_verified' => (clone $localQuery)->where('verification_status', 'verified')->count(),
+            'external_total' => (clone $apiQuery)->count(),
+            'external_review' => (clone $apiQuery)->where('verification_status', '!=', 'verified')->count(),
+        ];
+
+        return view('admin.product', compact('localProducts', 'apiProducts', 'categories', 'productStats'));
     }
 
     // OCR Scanner page
@@ -144,12 +164,13 @@ class AdminProductController extends Controller
             'komposisi' => 'nullable|string',
             'status' => 'required|in:halal,tidak halal,syubhat',
             'info_gizi' => 'nullable|string',
+            'price' => 'nullable|numeric|min:0',
             'kategori_id' => 'nullable|integer',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
 
         $data = $request->only([
-            'nama_product', 'barcode', 'komposisi', 'status', 'info_gizi', 'kategori_id'
+            'nama_product', 'barcode', 'komposisi', 'status', 'info_gizi', 'price', 'kategori_id'
         ]);
 
         // Handle image upload
@@ -190,7 +211,12 @@ class AdminProductController extends Controller
         $imageData = $this->imageService->getImages(
             productName: $product->nama_product,
             barcode: $product->barcode,
-            source: $product->source ?? 'local'
+            source: $product->source ?? 'local',
+            metadata: [
+                'category' => optional($product->kategori)->nama_kategori,
+                'existing_image' => $product->getRawOriginal('image'),
+                'exclude_id' => $product->id_product,
+            ]
         );
         
         return view('admin.product_edit', compact('product', 'categories', 'imageData'));
@@ -208,28 +234,33 @@ class AdminProductController extends Controller
             'status' => 'required|in:halal,tidak halal,syubhat',
             'verification_status' => 'nullable|in:verified,needs_review,rejected',
             'info_gizi' => 'nullable|string',
+            'price' => 'nullable|numeric|min:0',
             'kategori_id' => 'nullable|integer',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'image_url' => 'nullable|url',
         ]);
 
         $data = $request->only([
-            'nama_product', 'barcode', 'komposisi', 'status', 'verification_status', 'info_gizi', 'kategori_id'
+            'nama_product', 'barcode', 'komposisi', 'status', 'verification_status', 'info_gizi', 'price', 'kategori_id'
         ]);
 
         // Handle image upload
         if ($request->hasFile('image')) {
             $file = $request->file('image');
             $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('public/products', $filename);
+            $file->storeAs('public/products', $filename);
             $data['image'] = '/storage/products/' . $filename;
             
             // Delete old image if exists
-            if ($product->image) {
-                $oldPath = str_replace('/storage/', 'public/', $product->image);
+            $oldImage = $product->getRawOriginal('image');
+            if ($oldImage && str_starts_with($oldImage, '/storage/')) {
+                $oldPath = str_replace('/storage/', 'public/', $oldImage);
                 if (file_exists(storage_path('app/' . $oldPath))) {
                     unlink(storage_path('app/' . $oldPath));
                 }
             }
+        } elseif ($request->filled('image_url')) {
+            $data['image'] = $request->input('image_url');
         }
 
         $product->update($data);
@@ -252,11 +283,17 @@ class AdminProductController extends Controller
         $product = ProductModel::findOrFail($id);
         $product->active = !$product->active;
         $product->save();
-        
-        return response()->json([
-            'success' => true,
-            'active' => $product->active
-        ]);
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'active' => $product->active
+            ]);
+        }
+
+        return redirect()
+            ->route('admin.product.index', request()->query())
+            ->with('success', 'Status produk berhasil diperbarui.');
     }
 
     // Cari produk by barcode (lokal + internasional)
