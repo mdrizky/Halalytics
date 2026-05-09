@@ -249,8 +249,10 @@ class ApiController extends Controller
             ->get();
 
         return response()->json([
+            'success' => true,
             'response_code' => 200,
             'message' => 'Data profil user login',
+            'data' => $user,
             'content' => [
                 'user' => $user,
                 'stats' => [

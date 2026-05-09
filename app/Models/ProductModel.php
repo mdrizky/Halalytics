@@ -56,6 +56,8 @@ class ProductModel extends Model
         'nova_group',
         'stores',
         'countries',
+        'manufacture_date',
+        'expiry_date',
     ];
 
     protected $casts = [
@@ -96,10 +98,8 @@ class ProductModel extends Model
 
     public function getImageFallbackUrlAttribute(): string
     {
-        return app(DisplayImageService::class)->fallbackUrl(
-            optional($this->kategori)->nama_kategori,
-            'product'
-        );
+        $name = urlencode(substr($this->nama_product ?? 'NA', 0, 2));
+        return "https://ui-avatars.com/api/?name={$name}&background=F1F5F9&color=475569&size=128&font-size=0.4";
     }
 
     public function getSourceLabelAttribute(): string

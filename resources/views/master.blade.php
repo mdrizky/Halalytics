@@ -488,8 +488,10 @@
         <!-- Nav header -->
         <div class="nav-header d-flex align-items-center justify-content-between px-3">
             <a href="{{ route('admin.home') }}" class="brand-logo d-flex align-items-center gap-3">
-                <img class="logo-abbr" src="{{ asset('images/halalytics.png') }}" alt="Halalytics Logo">
-                <span class="brand-title">Halalytics</span>
+                <div class="bg-white rounded-lg p-1 shadow-sm border border-light">
+                    <img src="{{ asset('images/logo_halalytics.png') }}" alt="Halalytics Logo" style="height: 40px; width: auto; object-fit: contain;">
+                </div>
+                <span class="brand-title" style="font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.5rem; letter-spacing: -0.5px;">Halalytics</span>
             </a>
             <div class="d-flex align-items-center gap-3">
                 <!-- Theme Switcher Button -->

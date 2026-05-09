@@ -9,7 +9,7 @@
         $metaDescription = trim((string) $__env->yieldContent('description', $defaultDescription));
         $metaKeywords = trim((string) $__env->yieldContent('keywords', 'halal scanner, cek halal, interaksi obat, health score, BPOM'));
         $canonicalUrl = trim((string) $__env->yieldContent('canonical', url()->current()));
-        $defaultOgImage = asset('images/logo.png');
+        $defaultOgImage = asset('images/logo_halalytics.png');
         $ogImage = trim((string) $__env->yieldContent('og_image', $defaultOgImage));
         $pageTitle = trim((string) $__env->yieldContent('title', $siteName));
     @endphp
@@ -18,6 +18,7 @@
     <meta name="keywords" content="{{ $metaKeywords }}">
     <meta name="robots" content="index,follow,max-image-preview:large">
     <link rel="canonical" href="{{ $canonicalUrl }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo_halalytics.png') }}">
     <title>{{ $pageTitle }}</title>
 
     <meta property="og:type" content="website">
@@ -81,28 +82,57 @@
 
                 <!-- Logo -->
                 <a href="{{ route('home') }}" class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center">
-                        <span class="text-white font-bold text-sm">H</span>
+                    <div class="bg-white rounded-lg p-1.5 shadow-sm border border-[#e0f2f1]">
+                        <img src="{{ asset('images/logo_halalytics.png') }}" alt="Halalytics Logo" class="h-8 w-auto object-contain">
                     </div>
                     <span class="font-brand font-bold text-xl text-[#163832]">
-                        {{ $settings['site_name'] ?? 'HalalScan AI' }}
+                        {{ $settings['site_name'] ?? 'Halalytics' }}
                     </span>
                 </a>
 
                 <!-- Menu Desktop -->
-                <div class="hidden md:flex items-center space-x-8">
+                <div class="hidden md:flex items-center space-x-6">
                     <a href="{{ route('home') }}" class="promo-link font-medium {{ request()->routeIs('home') ? 'active' : '' }}">
                         Beranda
                     </a>
-                    <a href="{{ route('features') }}" class="promo-link font-medium {{ request()->routeIs('features') ? 'active' : '' }}">
-                        Fitur
-                    </a>
+                    
+                    <!-- Dropdown Perawatan Khusus -->
+                    <div class="relative group">
+                        <button class="promo-link font-medium flex items-center gap-1 focus:outline-none">
+                            Perawatan Khusus
+                            <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div class="absolute left-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div class="p-2 space-y-1">
+                                <a href="{{ route('specialized.show', 'diabetes') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg">Diabetes Care</a>
+                                <a href="{{ route('specialized.show', 'heart') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg">Heart Health</a>
+                                <a href="{{ route('specialized.show', 'mental') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg">Mental Health Center</a>
+                                <a href="{{ route('specialized.show', 'skin') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg">Haloskin (Skin Care)</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Cek Kesehatan -->
+                    <div class="relative group">
+                        <button class="promo-link font-medium flex items-center gap-1 focus:outline-none">
+                            Cek Kesehatan Mandiri
+                            <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div class="absolute left-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div class="p-2 space-y-1">
+                                <a href="{{ route('home') }}#health-tools" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg">Kalkulator Nutrisi & BMR</a>
+                                <a href="{{ route('home') }}#health-tools" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg">Target Air Minum</a>
+                                <a href="{{ route('home') }}#health-tools" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg">Skrining Risiko Lifestyle</a>
+                                <a href="{{ route('home') }}#health-tools" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg">Kalkulator Kehamilan</a>
+                                <a href="{{ route('home') }}#health-tools" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg">Tes Ketajaman Mata</a>
+                            </div>
+                        </div>
+                    </div>
+
                     <a href="{{ route('blog.index') }}" class="promo-link font-medium {{ request()->routeIs('blog*') ? 'active' : '' }}">
-                        Blog
+                        Kamus Kesehatan A-Z
                     </a>
-                    <a href="{{ route('about') }}" class="promo-link font-medium {{ request()->routeIs('about') ? 'active' : '' }}">
-                        Tentang
-                    </a>
+                    
                     <a href="{{ route('download') }}" class="promo-btn font-semibold px-5 py-2 rounded-full">
                         Download APK
                     </a>
@@ -157,11 +187,11 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <!-- Brand -->
                 <div class="col-span-1 md:col-span-2">
-                    <div class="flex items-center space-x-2 mb-4">
-                        <div class="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center">
-                            <span class="text-white font-bold text-sm">H</span>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="bg-white rounded-xl p-2">
+                            <img src="{{ asset('images/logo_halalytics.png') }}" alt="Halalytics Logo" class="h-10 w-auto object-contain">
                         </div>
-                        <span class="font-bold text-xl">{{ $settings['site_name'] ?? 'HalalScan AI' }}</span>
+                        <span class="font-bold text-xl">{{ $settings['site_name'] ?? 'Halalytics' }}</span>
                     </div>
                     <p class="text-gray-400 text-sm leading-relaxed max-w-sm">
                         {{ $settings['site_description'] ?? 'AI-powered halal, health, OCR, BPOM, and donor community platform.' }}
@@ -197,7 +227,7 @@
             </div>
 
             <div class="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
-                <p>&copy; {{ date('Y') }} {{ $settings['site_name'] ?? 'HalalScan AI' }}. All rights reserved.</p>
+                <p>&copy; {{ date('Y') }} {{ $settings['site_name'] ?? 'Halalytics' }}. All rights reserved.</p>
                 <p class="mt-2 md:mt-0">Informasi bersifat edukatif, bukan pengganti konsultasi profesional.</p>
             </div>
         </div>

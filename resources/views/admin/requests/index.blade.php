@@ -100,9 +100,18 @@
                                     </div>
                                     <div>
                                         <p class="text-sm font-bold text-slate-900 dark:text-white">{{ $item->user->full_name ?? $item->user->username ?? 'Anonymous' }}</p>
-                                        <div class="flex items-center mt-1">
-                                            <span class="material-icons-round text-[10px] text-slate-400 mr-1">history</span>
-                                            <p class="text-[10px] text-slate-400 uppercase font-bold">{{ $item->created_at->diffForHumans() }}</p>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase {{ ($item->user->role ?? '') === 'admin' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500' }}">
+                                                {{ $item->user->role ?? 'User' }}
+                                            </span>
+                                            <span class="text-[10px] text-slate-400 font-medium">•</span>
+                                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
+                                                {{ number_format(($item->user->scans_count ?? 0) + ($item->user->scan_histories_count ?? 0)) }} Contrib
+                                            </p>
+                                        </div>
+                                        <div class="flex items-center mt-1.5">
+                                            <span class="material-icons-round text-[10px] text-slate-300 mr-1">schedule</span>
+                                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wide">{{ $item->created_at->diffForHumans() }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -122,21 +131,21 @@
                                     $frontImage = $item->image_front;
                                     $backImage = $item->image_back;
                                 @endphp
-                                <div class="flex items-center gap-3">
-                                    <div class="relative group/img cursor-pointer" onclick="viewImage('{{ $frontImage }}', 'Front View')">
-                                        <div class="h-16 w-16 overflow-hidden rounded-2xl border-2 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-sm transition-transform group-hover/img:scale-110">
+                                <div class="flex items-center gap-4">
+                                    <div class="relative group/img cursor-pointer" onclick="viewImage('{{ $frontImage }}', 'Front View - {{ $item->product_name }}')">
+                                        <div class="h-24 w-20 overflow-hidden rounded-2xl border-2 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-md transition-all duration-300 group-hover/img:scale-105 group-hover/img:shadow-xl group-hover/img:border-primary/50">
                                             <img src="{{ $frontImage }}" alt="Front" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/product-placeholder.svg'">
                                         </div>
-                                        <div class="absolute -top-1 -right-1 h-4 w-4 bg-primary text-white rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">
-                                            <span class="material-icons-round text-[8px]">image</span>
+                                        <div class="absolute -top-2 -right-2 h-6 w-6 bg-primary text-white rounded-xl flex items-center justify-center border-2 border-white dark:border-slate-900 shadow-sm">
+                                            <span class="material-icons-round text-[12px]">zoom_in</span>
                                         </div>
                                     </div>
-                                    <div class="relative group/img cursor-pointer" onclick="viewImage('{{ $backImage }}', 'Back View')">
-                                        <div class="h-16 w-16 overflow-hidden rounded-2xl border-2 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-sm transition-transform group-hover/img:scale-110">
+                                    <div class="relative group/img cursor-pointer" onclick="viewImage('{{ $backImage }}', 'Back View - {{ $item->product_name }}')">
+                                        <div class="h-24 w-20 overflow-hidden rounded-2xl border-2 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-md transition-all duration-300 group-hover/img:scale-105 group-hover/img:shadow-xl group-hover/img:border-slate-400">
                                             <img src="{{ $backImage }}" alt="Back" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/product-placeholder.svg'">
                                         </div>
-                                        <div class="absolute -top-1 -right-1 h-4 w-4 bg-slate-700 text-white rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">
-                                            <span class="material-icons-round text-[8px]">image</span>
+                                        <div class="absolute -top-2 -right-2 h-6 w-6 bg-slate-700 text-white rounded-xl flex items-center justify-center border-2 border-white dark:border-slate-900 shadow-sm">
+                                            <span class="material-icons-round text-[12px]">zoom_in</span>
                                         </div>
                                     </div>
                                 </div>
@@ -144,11 +153,20 @@
                             <td class="px-6 py-6">
                                 <div class="max-w-[250px]">
                                     @if($item->ocr_text)
-                                        <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400 italic">
-                                            "{{ \Illuminate\Support\Str::limit($item->ocr_text, 100) }}"
+                                        <div class="relative group/ocr">
+                                            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400 font-mono shadow-sm">
+                                                <div class="flex items-center gap-2 mb-2">
+                                                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">AI OCR RESULT</span>
+                                                </div>
+                                                "{{ \Illuminate\Support\Str::limit($item->ocr_text, 120) }}"
+                                            </div>
                                         </div>
                                     @else
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase">No OCR Data</span>
+                                        <div class="flex items-center gap-2 text-slate-300">
+                                            <span class="material-icons-round text-sm">fmd_bad</span>
+                                            <span class="text-[10px] font-bold uppercase tracking-tight">No Data Extracted</span>
+                                        </div>
                                     @endif
                                 </div>
                             </td>
@@ -190,13 +208,15 @@
 </div>
 
 <!-- Image Viewer Modal -->
-<div id="imageViewerModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4">
-    <div class="relative w-full max-w-4xl max-h-[90vh] flex flex-col items-center">
-        <button onclick="closeImageViewer()" class="absolute -top-12 right-0 text-white hover:text-primary transition-colors flex items-center gap-2 font-bold uppercase tracking-widest text-xs">
-            Close <span class="material-icons-round">close</span>
+<div id="imageViewerModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/95 backdrop-blur-md p-4 transition-all duration-300">
+    <div class="relative w-full max-w-5xl max-h-[90vh] flex flex-col items-center">
+        <button onclick="closeImageViewer()" class="absolute -top-14 right-0 h-10 px-4 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all flex items-center gap-2 font-bold uppercase tracking-widest text-[10px]">
+            CLOSE VIEW <span class="material-icons-round text-sm">close</span>
         </button>
-        <img id="viewerImage" src="" class="w-full h-full object-contain rounded-2xl shadow-2xl">
-        <div id="viewerLabel" class="mt-4 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-white font-bold text-sm tracking-wider uppercase"></div>
+        <div class="w-full h-full overflow-hidden rounded-3xl shadow-2xl border border-white/10">
+            <img id="viewerImage" src="" class="w-full h-full object-contain bg-slate-900">
+        </div>
+        <div id="viewerLabel" class="mt-6 px-6 py-3 bg-primary text-white font-extrabold text-xs tracking-widest uppercase rounded-2xl shadow-xl shadow-primary/20"></div>
     </div>
 </div>
 

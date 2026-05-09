@@ -23,15 +23,27 @@ class StreetFoodController extends Controller
         // Auto-seed awal dari data BPOM pangan jika tabel street foods masih kosong.
         if (StreetFood::count() === 0) {
             $seedCandidates = BpomData::query()
-                ->whereIn('kategori', ['pangan', 'makanan', 'food'])
+                ->where(function($q) {
+                    $q->whereIn('kategori', ['pangan', 'makanan', 'food', 'minuman', 'beverage'])
+                      ->orWhere('nama_produk', 'like', '%makanan%')
+                      ->orWhere('nama_produk', 'like', '%minuman%');
+                })
                 ->whereNotNull('nama_produk')
-                ->limit(20)
+                ->limit(30)
                 ->get();
 
             foreach ($seedCandidates as $item) {
+                $baseSlug = Str::slug($item->nama_produk);
+                $slug = $baseSlug;
+                $counter = 1;
+                while (StreetFood::where('slug', $slug)->exists()) {
+                    $slug = $baseSlug . '-' . $counter++;
+                }
+
                 StreetFood::firstOrCreate(
                     ['name' => $item->nama_produk],
                     [
+                        'slug' => $slug,
                         'category' => 'produk-bpom',
                         'description' => $item->merk ? "Produk BPOM: {$item->merk}" : 'Produk referensi BPOM',
                         'calories_min' => 150,
@@ -51,7 +63,7 @@ class StreetFoodController extends Controller
         }
 
         $foods = StreetFood::withCount('variants')->paginate(10);
-        return view('admin.street_foods', compact('foods'));
+        return view('admin.street-foods.index', compact('foods'));
     }
 
     public function create()

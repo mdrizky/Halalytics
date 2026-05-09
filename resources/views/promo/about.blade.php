@@ -1,7 +1,7 @@
 @extends('promo.layout')
-@section('title', 'Tentang Kami - ' . ($settings['site_name'] ?? 'HalalScan AI'))
-@section('description', 'Tentang HalalScan AI: misi, pendekatan produk, dan komitmen kami dalam membantu keputusan konsumsi yang aman.')
-@section('keywords', 'tentang halalscan ai, misi aplikasi halal, keamanan konsumsi')
+@section('title', 'Tentang Kami - ' . ($settings['site_name'] ?? 'Halalytics'))
+@section('description', 'Tentang Halalytics: misi, pendekatan produk, dan komitmen kami dalam membantu keputusan konsumsi yang aman.')
+@section('keywords', 'tentang halalytics, misi aplikasi halal, keamanan konsumsi')
 @section('canonical', route('about'))
 
 @section('styles')
@@ -24,7 +24,7 @@
 <section class="about-hero pt-24 pb-16 border-b border-slate-200">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center">
-            <span class="inline-flex px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-wider">About HalalScan AI</span>
+            <span class="inline-flex px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-wider">About Halalytics</span>
             <h1 class="mt-5 text-4xl md:text-5xl font-extrabold text-slate-900">Misi Kami: Membuat Keputusan Konsumsi Lebih Aman dan Halal</h1>
             <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">
                 Kami membangun platform yang membantu user memahami apa yang mereka konsumsi dengan cara yang cepat, transparan, dan mudah dipraktikkan.
@@ -36,9 +36,9 @@
 <section class="py-16 bg-white">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
         <article class="about-card p-8">
-            <h2 class="text-2xl font-extrabold text-slate-900">Kenapa HalalScan AI Dibangun</h2>
+            <h2 class="text-2xl font-extrabold text-slate-900">Kenapa Halalytics Dibangun</h2>
             <p class="text-slate-600 mt-3 leading-relaxed">
-                Banyak konsumen kesulitan membaca komposisi produk, menilai status halal bahan teknis, atau memahami risiko interaksi obat. HalalScan AI lahir untuk menutup gap ini lewat pengalaman scan yang sederhana namun berbasis data.
+                Banyak konsumen kesulitan membaca komposisi produk, menilai status halal bahan teknis, atau memahami risiko interaksi obat. Halalytics lahir untuk menutup gap ini lewat pengalaman scan yang sederhana namun berbasis data.
             </p>
         </article>
         <article class="about-card p-8">
@@ -73,7 +73,7 @@
         <div class="about-card p-8 md:p-10">
             <h2 class="text-3xl font-extrabold text-slate-900">Komitmen Transparansi</h2>
             <p class="text-slate-600 mt-4 leading-relaxed">
-                HalalScan AI bersifat alat bantu keputusan. Untuk validitas formal/sertifikasi, pengguna tetap disarankan mengecek dokumen resmi (misalnya BPOM, sertifikat halal, atau rekomendasi tenaga medis).
+                Halalytics bersifat alat bantu keputusan. Untuk validitas formal/sertifikasi, pengguna tetap disarankan mengecek dokumen resmi (misalnya BPOM, sertifikat halal, atau rekomendasi tenaga medis).
             </p>
             <div class="mt-7 flex flex-col sm:flex-row gap-3">
                 <a href="{{ route('privacy') }}" class="inline-flex items-center justify-center px-6 py-3 bg-[#004D40] text-white rounded-xl font-bold hover:bg-[#00372e]">Lihat Privacy Policy</a>

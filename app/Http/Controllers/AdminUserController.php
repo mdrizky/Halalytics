@@ -104,6 +104,8 @@ class AdminUserController extends Controller
             'blood_type' => 'nullable|string|in:A+,A-,B+,B-,AB+,AB-,O+,O-,A,B,AB,O',
             'allergy' => 'nullable|string|max:1000',
             'medical_history' => 'nullable|string|max:2000',
+            'weight' => 'nullable|numeric|min:1|max:500',
+            'height' => 'nullable|numeric|min:1|max:300',
             'role' => 'required|in:admin,user',
             'active' => 'required|boolean',
         ]);
@@ -124,6 +126,14 @@ class AdminUserController extends Controller
                 ->route('admin.user.edit', $user->id_user)
                 ->withErrors(['role' => 'Admin terakhir tidak dapat diturunkan menjadi user biasa.'])
                 ->withInput();
+        }
+
+        // Calculate BMI
+        if ($validated['weight'] && $validated['height']) {
+            $heightInMeters = $validated['height'] / 100;
+            $validated['bmi'] = round($validated['weight'] / ($heightInMeters * $heightInMeters), 1);
+        } else {
+            $validated['bmi'] = null;
         }
 
         $user->update($validated);
@@ -212,6 +222,8 @@ class AdminUserController extends Controller
             'blood_type' => 'nullable|string|in:A+,A-,B+,B-,AB+,AB-,O+,O-,A,B,AB,O',
             'allergy' => 'nullable|string',
             'medical_history' => 'nullable|string',
+            'weight' => 'nullable|numeric|min:1|max:500',
+            'height' => 'nullable|numeric|min:1|max:300',
             'active' => 'nullable|boolean',
         ]);
 
@@ -231,6 +243,11 @@ class AdminUserController extends Controller
             'blood_type' => $validated['blood_type'] ?? null,
             'allergy' => $validated['allergy'] ?? null,
             'medical_history' => $validated['medical_history'] ?? null,
+            'weight' => $validated['weight'] ?? null,
+            'height' => $validated['height'] ?? null,
+            'bmi' => (isset($validated['weight']) && isset($validated['height']) && $validated['height'] > 0) 
+                ? round($validated['weight'] / (pow($validated['height'] / 100, 2)), 1) 
+                : null,
             'active' => array_key_exists('active', $validated) ? (bool) $validated['active'] : 1,
         ]);
 
@@ -335,6 +352,8 @@ class AdminUserController extends Controller
             'blood_type' => $this->normalizeBloodType($request->input('blood_type')),
             'allergy' => $this->normalizeTextField($request->input('allergy', $request->input('allergies'))),
             'medical_history' => $this->normalizeTextField($request->input('medical_history')),
+            'weight' => $request->filled('weight') ? floatval($request->input('weight')) : null,
+            'height' => $request->filled('height') ? floatval($request->input('height')) : null,
         ]);
     }
 

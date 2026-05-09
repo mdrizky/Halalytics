@@ -10,76 +10,75 @@
 
 @section('content')
 <!-- Page Title & Date Filter -->
-<div class="flex items-center justify-between mb-8">
+<div class="flex items-center justify-between mb-10">
     <div>
-        <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Analytics Dashboard</h2>
-        <p class="text-slate-500 text-sm mt-1">Real-time performance metrics for Halalytics platform.</p>
+        <h2 class="text-3xl font-extrabold text-white tracking-tight">Analytics Dashboard</h2>
+        <p class="text-slate-400 text-sm mt-1">Real-time performance metrics for Halalytics platform.</p>
     </div>
-    <div class="flex items-center space-x-2 bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <button class="px-4 py-1.5 text-xs font-bold rounded-lg bg-primary text-white" onclick="filterPeriod('30days')">30 Days</button>
-        <button class="px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800" onclick="filterPeriod('90days')">90 Days</button>
-        <button class="px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800" onclick="filterPeriod('year')">1 Year</button>
-        <div class="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
-        <button class="px-2 py-1.5 text-slate-500 hover:text-primary">
-            <span class="material-icons-round text-lg">calendar_today</span>
+    <div class="flex items-center space-x-2 glass-card p-1.5 border border-white/10 shadow-xl">
+        <button class="px-5 py-2 text-xs font-bold rounded-lg bg-emerald-600 text-white shadow-lg shadow-emerald-900/20" onclick="filterPeriod('30days')">30 Days</button>
+        <button class="px-5 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all" onclick="filterPeriod('90days')">90 Days</button>
+        <button class="px-5 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all" onclick="filterPeriod('year')">1 Year</button>
+        <div class="w-px h-5 bg-white/10 mx-1"></div>
+        <button class="px-3 py-2 text-slate-400 hover:text-emerald-500 transition-colors">
+            <span class="material-icons-round text-xl">calendar_today</span>
         </button>
     </div>
 </div>
 
 <!-- KPI Cards -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
     <!-- Card 1: Total Categories -->
-    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between mb-4">
-            <div class="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-halal">
-                <span class="material-icons-round">category</span>
+    <div class="glass-card p-6 border border-white/5 hover:border-emerald-500/30 group transition-all duration-300">
+        <div class="flex items-center justify-between mb-5">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+                <span class="material-icons-round text-2xl">category</span>
             </div>
-            <span class="text-[10px] font-extrabold px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-halal rounded-full">Active</span>
+            <span class="text-[10px] font-black px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full tracking-tighter uppercase">Active</span>
         </div>
-        <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Categories</p>
-        <h3 id="totalKategori-value" class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{{ number_format($totalKategori) }}</h3>
+        <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">Total Categories</p>
+        <h3 id="totalKategori-value" class="text-4xl font-black text-white mt-2 leading-none">{{ number_format($totalKategori) }}</h3>
     </div>
     
     <!-- Card 2: Total Products -->
-    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between mb-4">
-            <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                <span class="material-icons-round">inventory_2</span>
+    <div class="glass-card p-6 border border-white/5 hover:border-emerald-500/30 group transition-all duration-300">
+        <div class="flex items-center justify-between mb-5">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+                <span class="material-icons-round text-2xl">inventory_2</span>
             </div>
             <div class="flex flex-col items-end">
-                <span class="text-[10px] font-extrabold px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-halal rounded-full mb-1">Combined DB</span>
-                <span class="text-[9px] text-slate-400 font-bold uppercase">{{ number_format($offProduk) }} from OFF</span>
+                <span class="text-[10px] font-black px-3 py-1 bg-white/5 text-slate-400 rounded-full tracking-tighter uppercase mb-1">Global DB</span>
             </div>
         </div>
-        <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Products</p>
-        <div class="flex items-baseline space-x-2 mt-1">
-            <h3 id="totalProduk-value" class="text-3xl font-extrabold text-slate-800 dark:text-white">{{ number_format($totalProduk) }}</h3>
-            <span class="text-xs text-slate-400 font-medium">({{ number_format($localProduk) }} local)</span>
+        <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">Total Products</p>
+        <div class="flex items-baseline space-x-2 mt-2">
+            <h3 id="totalProduk-value" class="text-4xl font-black text-white leading-none">{{ number_format($totalProduk) }}</h3>
+            <span class="text-xs text-slate-500 font-bold tracking-tighter">OFF</span>
         </div>
     </div>
     
     <!-- Card 3: Total Users -->
-    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between mb-4">
-            <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                <span class="material-icons-round">people</span>
+    <div class="glass-card p-6 border border-white/5 hover:border-emerald-500/30 group transition-all duration-300">
+        <div class="flex items-center justify-between mb-5">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+                <span class="material-icons-round text-2xl">people</span>
             </div>
-            <span class="text-[10px] font-extrabold px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-halal rounded-full">+8.1%</span>
+            <span class="text-[10px] font-black px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full tracking-tighter uppercase">+8.1%</span>
         </div>
-        <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Users</p>
-        <h3 id="totalUsers-value" class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{{ number_format($totalUsers) }}</h3>
+        <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">Total Users</p>
+        <h3 id="totalUsers-value" class="text-4xl font-black text-white mt-2 leading-none">{{ number_format($totalUsers) }}</h3>
     </div>
     
     <!-- Card 4: Total Scans -->
-    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between mb-4">
-            <div class="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600">
-                <span class="material-icons-round">qr_code_2</span>
+    <div class="glass-card p-6 border border-white/5 hover:border-emerald-500/30 group transition-all duration-300">
+        <div class="flex items-center justify-between mb-5">
+            <div class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform">
+                <span class="material-icons-round text-2xl">qr_code_2</span>
             </div>
-            <span class="text-[10px] font-extrabold px-2 py-1 bg-primary/10 text-primary rounded-full">{{ number_format($scanToday) }} today</span>
+            <span class="text-[10px] font-black px-3 py-1 bg-white/5 text-slate-400 rounded-full tracking-tighter uppercase">{{ number_format($scanToday) }} Today</span>
         </div>
-        <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Scans</p>
-        <h3 id="totalScan-value" class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{{ number_format($totalScan) }}</h3>
+        <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">Total Scans</p>
+        <h3 id="totalScan-value" class="text-4xl font-black text-white mt-2 leading-none">{{ number_format($totalScan) }}</h3>
     </div>
 </div>
 

@@ -115,16 +115,16 @@
         }
         .input-group input:focus {
             outline: none;
-            border-color: #2D6A4F;
+            border-color: var(--primary);
             background: white;
-            box-shadow: 0 0 0 4px rgba(45, 106, 79, 0.1);
+            box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
         }
         .input-group input:focus + i {
-            color: #2D6A4F;
+            color: var(--primary);
         }
         .btn-login {
             width: 100%;
-            background: #2D6A4F;
+            background: var(--primary);
             color: white;
             padding: 16px;
             border: none;
@@ -133,7 +133,7 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(45, 106, 79, 0.2);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
         }
         .btn-login:hover {
             background: #1B4332;
@@ -165,6 +165,10 @@
             background: #F8F9FA;
             border-color: #B2BEC3;
         }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
         @media (max-width: 992px) {
             .login-left { display: none; }
             .login-right { padding: 40px; }
@@ -174,8 +178,8 @@
 <body>
     <div class="login-split">
         <div class="login-left">
-            <div class="brand-logo">
-                <i class="fas fa-hand-holding-heart"></i>
+            <div class="brand-logo" style="border: 1px solid rgba(0,0,0,0.05); padding: 5px; background: white; border-radius: 12px; overflow: hidden;">
+                <img src="/images/logo.png?v={{ time() }}" alt="Halalytics" style="width: 100%; height: 100%; object-fit: contain; padding: 5px;" onerror="this.src='{{ asset('images/logo.png') }}'; this.onerror=null;">
             </div>
             <h1 class="login-title">Halalytics Portal</h1>
             <p class="login-subtitle">Aplikasi cerdas untuk verifikasi kehalalan produk, nutrisi, dan manajemen kesehatan dalam satu genggaman.</p>
@@ -198,6 +202,11 @@
         
         <div class="login-right">
             <div class="login-form-container">
+                <div style="text-align: center; margin-bottom: 32px; animation: float 6s ease-in-out infinite;">
+                <div style="background: white; padding: 15px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                    <img src="/images/logo.png?v={{ time() }}" alt="Halalytics Logo" style="height: 100px; filter: drop-shadow(0 10px 20px rgba(5, 150, 105, 0.2));" onerror="this.src='{{ asset('images/logo.png') }}'; this.onerror=null;">
+                </div>
+                </div>
                 <h2 class="login-form-title">Selamat Datang</h2>
                 <p class="login-form-subtitle">Silakan masuk untuk mengakses panel administrasi Halalytics.</p>
                 

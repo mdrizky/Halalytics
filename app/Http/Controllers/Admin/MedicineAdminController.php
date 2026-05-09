@@ -19,20 +19,11 @@ class MedicineAdminController extends Controller
 
     public function index(Request $request)
     {
-        if (
-            !$request->filled('search') &&
-            !$request->filled('halal_status') &&
-            !$request->filled('source') &&
-            Medicine::count() === 0
-        ) {
-            $this->seedLocalFallbackMedicines();
-        }
-
-        $query = Medicine::query();
+        $baseQuery = Medicine::query();
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $baseQuery->where(function($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
                   ->orWhere('generic_name', 'LIKE', "%{$search}%")
                   ->orWhere('brand_name', 'LIKE', "%{$search}%")
@@ -41,27 +32,25 @@ class MedicineAdminController extends Controller
         }
 
         if ($request->filled('halal_status')) {
-            $query->where('halal_status', $request->halal_status);
+            $baseQuery->where('halal_status', $request->halal_status);
         }
 
-        if ($request->filled('source')) {
-            if ($request->source === 'local') {
-                $query->where('source', '!=', 'openfda');
-            } else {
-                $query->where('source', $request->source);
-            }
-        }
+        // 1. Local Medicines
+        $localQuery = (clone $baseQuery)->where('source', '!=', 'openfda');
+        $localMedicines = $localQuery->latest()->paginate(10, ['*'], 'local_page')->withQueryString();
 
-        $medicines = $query->latest()->paginate(20)->withQueryString();
+        // 2. OpenFDA
+        $fdaQuery = (clone $baseQuery)->where('source', 'openfda');
+        $fdaMedicines = $fdaQuery->latest()->paginate(10, ['*'], 'fda_page')->withQueryString();
 
         $stats = [
             'total' => Medicine::count(),
             'halal' => Medicine::where('halal_status', 'halal')->count(),
-            'syubhat' => Medicine::where('halal_status', 'syubhat')->count(),
             'from_fda' => Medicine::where('source', 'openfda')->count(),
+            'local_total' => (clone $localQuery)->count(),
         ];
 
-        return view('admin.medicine.index', compact('medicines', 'stats'));
+        return view('admin.medicine.index', compact('localMedicines', 'fdaMedicines', 'stats'));
     }
 
     private function seedLocalFallbackMedicines(): void

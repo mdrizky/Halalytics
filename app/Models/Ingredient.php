@@ -23,7 +23,12 @@ class Ingredient extends Model
         'sources',
         'notes',
         'active',
-        'image_url'
+        'image_url',
+        'category',
+        'image',
+        'origin',
+        'common_uses',
+        'nutritional_info',
     ];
 
     protected $casts = [

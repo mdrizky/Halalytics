@@ -6,13 +6,11 @@
 
 @push('styles')
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap');
-
     :root {
-        --primary: #C01552;
-        --primary-light: #E8195D;
-        --primary-dark: #8B0F3A;
-        --primary-glow: rgba(192, 21, 82, 0.18);
+        --primary: #059669;
+        --primary-light: #10B981;
+        --primary-dark: #047857;
+        --primary-glow: rgba(5, 150, 105, 0.18);
         --emerald: #059669;
         --amber: #D97706;
         --red-danger: #DC2626;
@@ -395,8 +393,8 @@
     {{-- Total Scans --}}
     <div class="kpi-card">
         <div class="flex items-start justify-between mb-3">
-            <div class="kpi-icon" style="background: rgba(192,21,82,0.1);">
-                <span class="material-icons-round" style="color: var(--primary); font-size: 20px;">qr_code_scanner</span>
+            <div class="kpi-icon">
+                <img src="{{ asset('images/logo_halalytics.png') }}" alt="Logo" style="height: 24px; width: 24px; object-fit: contain;">
             </div>
         </div>
         <p class="kpi-label mb-1">Total Scans</p>

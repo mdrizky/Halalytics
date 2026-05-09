@@ -6,14 +6,15 @@
     <title>Halalytics | Intelligent Halal Verification Ecosystem</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo_halalytics.png') }}">
     <style>
         :root {
-            --primary: #2D6A4F;
-            --primary-light: #40916C;
+            --primary: #059669;
+            --primary-light: #10B981;
             --secondary: #FFFFFF;
             --accent: #F4A261;
-            --text-main: #1A1A1A;
-            --text-muted: #666666;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
             --bg-light: #F8FAF9;
             --danger: #E74C3C;
         }
@@ -135,15 +136,19 @@
         }
 
         .hero h1 {
-            font-size: 64px;
-            line-height: 1.1;
+            font-size: 72px;
+            line-height: 1.05;
             font-weight: 800;
             margin-bottom: 24px;
-            color: #0d1b2a;
+            color: #0F172A;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: -0.04em;
         }
 
         .hero h1 span {
-            color: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .hero p {
@@ -314,7 +319,12 @@
 <body>
     <nav>
         <div class="logo">
-            <i class="fas fa-shield-halal"></i> Halalytics
+            <div style="background: white; border-radius: 8px; padding: 4px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <div style="background: white; padding: 4px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05);">
+                <img src="{{ asset('images/logo_halalytics.png') }}?v={{ time() }}" alt="Halalytics Logo" style="height: 36px; width: auto; object-fit: contain;">
+            </div>
+            </div>
+            <span style="font-weight: 800; letter-spacing: -0.5px;">Halalytics</span>
         </div>
         <ul class="nav-links">
             <li><a href="#features">Features</a></li>
@@ -324,10 +334,9 @@
         </ul>
         <div class="nav-actions">
             @auth
-                <a href="{{ url('/admin') }}" class="btn btn-primary">Dashboard</a>
+                <a href="{{ url('/admin') }}" class="btn btn-primary">Admin Dashboard</a>
             @else
-                <a href="{{ route('login') }}" class="btn btn-outline">Login</a>
-                <a href="{{ route('register') }}" class="btn btn-primary">Get Started</a>
+                <a href="{{ route('login') }}" class="btn btn-outline">Admin Login</a>
             @endauth
         </div>
     </nav>
@@ -459,7 +468,12 @@
 
     <footer style="padding: 80px; text-align: center; border-top: 1px solid #eee;">
         <div class="logo" style="justify-content: center; margin-bottom: 24px;">
-            <i class="fas fa-shield-halal"></i> Halalytics
+            <div style="background: white; border-radius: 12px; padding: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-right: 12px;">
+            <div style="background: white; padding: 6px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); display: inline-block;">
+                <img src="/images/logo.png?v={{ time() }}" alt="Halalytics Logo" style="height: 44px; width: auto; object-fit: contain;" onerror="this.src='{{ asset('images/logo.png') }}'; this.onerror=null;">
+            </div>
+            </div>
+            <span style="font-weight: 800; letter-spacing: -0.5px;">Halalytics</span>
         </div>
         <p style="color: var(--text-muted); font-size: 14px;">© 2024 Halalytics Ecosystem. All rights reserved.</p>
     </footer>

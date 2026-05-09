@@ -21,7 +21,7 @@ class FavoriteController extends Controller
      */
     public function index(Request $request)
     {
-        $favorites = Favorite::where('user_id', $request->user()->id)
+        $favorites = Favorite::where('user_id', $request->user()->id_user)
             ->with('favoritable')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -56,7 +56,7 @@ class FavoriteController extends Controller
         ]);
 
         // Check if already favorited
-        $exists = Favorite::where('user_id', $request->user()->id)
+        $exists = Favorite::where('user_id', $request->user()->id_user)
             ->where('favoritable_type', $validated['favoritable_type'])
             ->where('favoritable_id', $validated['favoritable_id'])
             ->first();
@@ -70,7 +70,7 @@ class FavoriteController extends Controller
 
         $favorite = Favorite::create([
             ...$validated,
-            'user_id' => $request->user()->id,
+            'user_id' => $request->user()->id_user,
             'last_known_status' => $validated['halal_status'],
         ]);
 
@@ -89,7 +89,7 @@ class FavoriteController extends Controller
      */
     public function destroy($id, Request $request)
     {
-        $favorite = Favorite::where('user_id', $request->user()->id)
+        $favorite = Favorite::where('user_id', $request->user()->id_user)
             ->findOrFail($id);
 
         $favorite->delete();
@@ -109,7 +109,7 @@ class FavoriteController extends Controller
             'user_notes' => 'required|string'
         ]);
 
-        $favorite = Favorite::where('user_id', $request->user()->id)
+        $favorite = Favorite::where('user_id', $request->user()->id_user)
             ->findOrFail($id);
 
         $favorite->update($validated);

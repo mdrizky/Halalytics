@@ -9,15 +9,32 @@
 @endsection
 
 @section('content')
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div class="metric-card metric-card--primary">
+        <div class="text-sm opacity-80 font-medium">Total Street Food</div>
+        <div class="text-3xl font-extrabold mt-1">{{ number_format($foods->total()) }}</div>
+    </div>
+    <div class="metric-card metric-card--accent">
+        <div class="text-sm opacity-80 font-medium">Halal Verified</div>
+        <div class="text-3xl font-extrabold mt-1">{{ number_format($foods->where('halal_status', 'halal_umum')->count()) }}</div>
+    </div>
+    <div class="metric-card metric-card--soft">
+        <div class="text-sm opacity-80 font-medium">Variants Tracked</div>
+        <div class="text-3xl font-extrabold mt-1">{{ number_format($foods->sum('variants_count')) }}</div>
+    </div>
+</div>
+
 <div class="flex items-center justify-between mb-8">
     <div>
         <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Street Food Management</h2>
         <p class="text-slate-500 text-sm mt-1">Manage non-packaged foods, nutritional data, and regional variants.</p>
     </div>
-    <a href="{{ route('admin.street-foods.create') }}" class="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all">
-        <span class="material-icons-round text-lg">add</span>
-        <span class="text-sm font-bold">Add New Food</span>
-    </a>
+    <div class="flex items-center gap-3">
+        <a href="{{ route('admin.street-foods.create') }}" class="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
+            <span class="material-icons-round text-lg">add</span>
+            <span class="text-sm font-bold">Add New Food</span>
+        </a>
+    </div>
 </div>
 
 <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-6">
@@ -90,5 +107,5 @@
     </div>
 </div>
 
-{{ $foods->links() }}
+{{ $foods->links('vendor.pagination.tailwind-admin') }}
 @endsection

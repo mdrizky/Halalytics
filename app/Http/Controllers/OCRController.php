@@ -5,13 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\OCRProduct;
 use App\Models\ScanHistory;
 use App\Models\User;
+use App\Services\OCRService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class OCRController extends Controller
 {
+    private $ocrService;
+
+    public function __construct(OCRService $ocrService)
+    {
+        $this->ocrService = $ocrService;
+    }
+
     public function index()
     {
         if (request()->wantsJson() || request()->is('api/*')) {
@@ -44,7 +53,15 @@ class OCRController extends Controller
             $filename = 'ocr_' . time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
             $path = $image->storeAs('ocr-images', $filename, 'public');
 
-            $ocrResult = $this->getMockOCRResult($request->input('ingredients_text'));
+            // Perform real OCR extraction
+            $ocrResult = $this->ocrService->extractTextFromImage($path);
+            
+            // Parse ingredients from extracted text
+            $ingredients = $this->ocrService->parseIngredients($ocrResult['text']);
+            
+            // Analyze halal status
+            $halalAnalysis = $this->ocrService->analyzeProductHalalStatus($ingredients);
+            
             $productName = $request->input('product_name') ?: $this->extractProductName($ocrResult['text']);
 
             $ocrProduct = OCRProduct::query()->updateOrCreate(
@@ -56,8 +73,10 @@ class OCRController extends Controller
                     'product_name' => $productName,
                     'brand' => $request->input('brand'),
                     'ingredients_raw' => $ocrResult['text'] ?? '',
-                    'ingredients_parsed' => $ocrResult['ingredients'] ?? [],
+                    'ingredients_parsed' => $ingredients,
                     'confidence_level' => $ocrResult['confidence'] ?? 0,
+                    'halal_status' => $halalAnalysis['overall_status'],
+                    'halal_analysis' => $halalAnalysis,
                     'status' => 'pending_admin_review',
                     'source' => 'ocr_web',
                     'front_image_path' => $step === 'front'
@@ -69,6 +88,10 @@ class OCRController extends Controller
                     'ai_analysis' => [
                         'step' => $step,
                         'uploaded_via' => 'web_admin',
+                        'ocr_method' => $ocrResult['method'] ?? 'mock',
+                        'processing_time' => $ocrResult['processing_time'] ?? microtime(true),
+                        'ingredients_count' => count($ingredients),
+                        'halal_confidence' => $halalAnalysis['confidence'] ?? 0,
                     ],
                 ]
             );
@@ -390,6 +413,34 @@ class OCRController extends Controller
         $approved = OCRProduct::query()->where('status', 'approved')->count();
 
         return $reviewed > 0 ? round(($approved / $reviewed) * 100, 2) : 0.0;
+    }
+
+    /**
+     * 📱 Get user OCR history for mobile API
+     */
+    public function getUserHistory(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        
+        $ocrProducts = OCRProduct::where('user_id', $user->id_user)
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'products' => $ocrProducts->map(function ($product) {
+                    return $this->transformProduct($product);
+                }),
+                'pagination' => [
+                    'current_page' => $ocrProducts->currentPage(),
+                    'last_page' => $ocrProducts->lastPage(),
+                    'per_page' => $ocrProducts->perPage(),
+                    'total' => $ocrProducts->total(),
+                ]
+            ]
+        ]);
     }
 
     private function getMockOCRResult(?string $ingredientsText = null): array

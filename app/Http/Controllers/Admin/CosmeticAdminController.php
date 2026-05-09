@@ -20,19 +20,13 @@ class CosmeticAdminController extends Controller
 
     public function index(Request $request)
     {
-        if (
-            !$request->filled('search') &&
-            !$request->filled('status') &&
-            BpomData::where('kategori', 'kosmetik')->count() === 0
-        ) {
-            $this->seedLocalFallbackCosmetics();
-        }
-
-        $query = BpomData::where('kategori', 'kosmetik');
+        $obfSources = ['open_beauty_facts', 'open_beauty_facts_api', 'obf'];
+        
+        $baseQuery = BpomData::where('kategori', 'kosmetik');
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $baseQuery->where(function($q) use ($search) {
                 $q->where('nama_produk', 'LIKE', "%{$search}%")
                   ->orWhere('merk', 'LIKE', "%{$search}%")
                   ->orWhere('nomor_reg', 'LIKE', "%{$search}%");
@@ -40,36 +34,25 @@ class CosmeticAdminController extends Controller
         }
 
         if ($request->filled('status')) {
-            $query->where('status_keamanan', $request->status);
+            $baseQuery->where('status_keamanan', $request->status);
         }
 
-        if ($request->filled('source')) {
-            if ($request->source === 'lokal') {
-                $query->whereNotIn('sumber_data', ['open_beauty_facts', 'open_beauty_facts_api']);
-            } else {
-                $query->where('sumber_data', $request->source);
-            }
-        }
+        // 1. Local Cosmetics
+        $localQuery = (clone $baseQuery)->whereNotIn('sumber_data', $obfSources);
+        $localCosmetics = $localQuery->latest()->paginate(10, ['*'], 'local_page')->withQueryString();
 
-        $cosmetics = $query->latest()->paginate(20)->withQueryString();
+        // 2. Open Beauty Facts
+        $obfQuery = (clone $baseQuery)->whereIn('sumber_data', $obfSources);
+        $obfCosmetics = $obfQuery->latest()->paginate(10, ['*'], 'obf_page')->withQueryString();
 
         $stats = [
             'total' => BpomData::where('kategori', 'kosmetik')->count(),
             'aman' => BpomData::where('kategori', 'kosmetik')->where('status_keamanan', 'aman')->count(),
-            'waspada' => BpomData::where('kategori', 'kosmetik')->where('status_keamanan', 'waspada')->count(),
-            'bahaya' => BpomData::where('kategori', 'kosmetik')->where('status_keamanan', 'bahaya')->count(),
-            'haram' => BpomData::where('kategori', 'kosmetik')
-                ->where(function ($q) {
-                    $q->where('status_halal', 'haram')
-                        ->orWhere('status_keamanan', 'haram');
-                })
-                ->count(),
-            'from_obf' => BpomData::where('kategori', 'kosmetik')
-                ->whereIn('sumber_data', ['open_beauty_facts', 'open_beauty_facts_api'])
-                ->count(),
+            'from_obf' => BpomData::where('kategori', 'kosmetik')->whereIn('sumber_data', $obfSources)->count(),
+            'local_total' => (clone $localQuery)->count(),
         ];
 
-        return view('admin.cosmetic.index', compact('cosmetics', 'stats'));
+        return view('admin.cosmetic.index', compact('localCosmetics', 'obfCosmetics', 'stats'));
     }
 
     private function seedLocalFallbackCosmetics(): void

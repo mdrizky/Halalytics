@@ -96,27 +96,34 @@ class AdminRequestController extends Controller
 
     private function seedFallbackRequests(): void
     {
-        $user = User::where('role', 'user')->first() ?? User::first();
-        if (!$user) {
+        $users = User::where('role', 'user')->limit(4)->get();
+        if ($users->isEmpty()) {
+            $users = User::limit(4)->get();
+        }
+        
+        if ($users->isEmpty()) {
             return;
         }
 
         $products = ProductModel::query()->latest('id_product')->limit(4)->get();
         $placeholder = 'images/placeholders/product-placeholder.svg';
 
-        foreach ($products as $product) {
+        foreach ($products as $index => $product) {
+            $user = $users[$index % $users->count()];
+            
             ProductRequest::firstOrCreate(
                 [
-                    'user_id' => $user->id_user,
                     'barcode' => $product->barcode,
                     'product_name' => $product->nama_product,
                 ],
                 [
-                    'image_front' => $placeholder,
-                    'image_back' => $placeholder,
-                    'ocr_text' => 'Komposisi: ' . ($product->komposisi ?: 'Air, gula, perisa, bahan tambahan pangan.'),
+                    'user_id' => $user->id_user,
+                    'image_front' => $product->image ?: $placeholder,
+                    'image_back' => $product->image ?: $placeholder,
+                    'ocr_text' => 'Komposisi: ' . ($product->komposisi ?: 'Bahan terpilih, rempah pilihan, tanpa pengawet buatan.'),
                     'status' => 'pending',
                     'admin_notes' => null,
+                    'created_at' => now()->subDays($index + 1),
                 ]
             );
         }

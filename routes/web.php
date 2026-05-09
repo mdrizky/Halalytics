@@ -19,8 +19,8 @@ use App\Http\Controllers\OCRController as WebOCRController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\OpenFoodFactsAdminController;
 use App\Http\Controllers\Admin\UserManagementController;
-use App\Http\Controllers\UserPortalController;
 use App\Http\Controllers\Admin\IngredientManagementController;
+use App\Http\Controllers\NotificationController;
 
 // ================== PROMO WEBSITE ==================
 
@@ -31,7 +31,11 @@ Route::get('/download', [App\Http\Controllers\Promo\PageController::class, 'down
 Route::get('/privacy', [App\Http\Controllers\Promo\PageController::class, 'privacy'])->name('privacy');
 Route::get('/blog', [App\Http\Controllers\Promo\BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [App\Http\Controllers\Promo\BlogController::class, 'show'])->name('blog.show');
-Route::post('/contact', [App\Http\Controllers\Promo\ContactController::class, 'send'])->name('contact.send');
+Route::get('/contact', [App\Http\Controllers\Promo\ContactController::class, 'send'])->name('contact.send');
+
+// New Health Services Routes
+Route::get('/specialized/{slug}', [App\Http\Controllers\Promo\PageController::class, 'specialized'])->name('specialized.show');
+Route::get('/medicine/{id}', [App\Http\Controllers\Promo\PageController::class, 'medicineDetail'])->name('medicine.show');
 
 // ================== AUTH ==================
 
@@ -42,6 +46,17 @@ Route::post('/actionLogin', [LoginController::class, 'login'])->name('actionLogi
 // Register
 Route::get('/register', [RegisterController::class, 'showRegisterForm'])->name('register.form');
 Route::post('/registeraction', [RegisterController::class, 'registeraction'])->name('registeraction');
+
+// Email Verification
+Route::get('/verify-email/{token}', [\App\Http\Controllers\Auth\VerificationController::class, 'showVerificationPage'])->name('verification.verify');
+Route::post('/email/verify/send', [\App\Http\Controllers\Auth\VerificationController::class, 'sendVerification'])->name('verification.send');
+Route::post('/email/verify/resend', [\App\Http\Controllers\Auth\VerificationController::class, 'resendVerification'])->name('verification.resend');
+
+// Password Reset
+Route::get('/reset-password/{token}/{email}', [\App\Http\Controllers\Auth\VerificationController::class, 'showPasswordResetPage'])->name('password.reset.form');
+Route::post('/password/reset', [\App\Http\Controllers\Auth\VerificationController::class, 'resetPassword'])->name('password.reset');
+Route::post('/password/forgot', [\App\Http\Controllers\Auth\VerificationController::class, 'sendPasswordReset'])->name('password.forgot');
+Route::post('/password/validate', [\App\Http\Controllers\Auth\VerificationController::class, 'validateResetToken'])->name('password.validate');
 
 // Logout
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -76,24 +91,33 @@ Route::prefix('admin/notifications-api')->middleware(['auth', 'role:admin'])->gr
     Route::post('/read-all', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'markAllAsRead']);
 });
 
-// User Portal Routes
-Route::middleware('auth')->group(function () {
-    Route::get('/user', [UserPortalController::class, 'dashboard'])->name('user.home');
-    Route::get('/compose', [UserPortalController::class, 'compose'])->name('user.compose');
-    Route::get('/my-scans', [UserPortalController::class, 'myScans'])->name('user.scans');
-    Route::get('/products', [UserPortalController::class, 'products'])->name('user.products');
-    Route::get('/products/barcode/{barcode}', [UserPortalController::class, 'productDetailByBarcode'])->name('user.products.barcode');
-    Route::get('/products/{product}', [UserPortalController::class, 'productDetail'])->name('user.products.show');
-    Route::get('/reports', [UserPortalController::class, 'reports'])->name('user.reports');
-    Route::post('/reports', [UserPortalController::class, 'storeReport'])->name('user.reports.store');
-    Route::get('/scan/barcode', [UserPortalController::class, 'scanner'])->name('user.scanner');
-});
+
 // ================== ADMIN ==================
 
-// Admin dashboard
-Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard')->middleware(['auth', 'role:admin']);
-Route::get('/admin/home', [DashboardController::class, 'index'])->name('admin.home')->middleware(['auth', 'role:admin']);
-Route::get('/admin/stats', [DashboardController::class, 'getStats'])->name('admin.dashboard.stats')->middleware(['auth', 'role:admin']);
+// Admin dashboard - REFACTORED
+Route::get('/admin', [\App\Http\Controllers\Admin\DashboardViewController::class, 'index'])->name('admin.dashboard')->middleware(['auth', 'role:admin']);
+Route::get('/admin/home', [\App\Http\Controllers\Admin\DashboardViewController::class, 'index'])->name('admin.home')->middleware(['auth', 'role:admin']);
+Route::get('/admin/stats', [\App\Http\Controllers\Admin\StatsController::class, 'getStats'])->name('admin.dashboard.stats')->middleware(['auth', 'role:admin']);
+
+// System Health
+Route::get('/admin/health', [\App\Http\Controllers\Admin\SystemHealthController::class, 'systemHealth'])->name('admin.health')->middleware(['auth', 'role:admin']);
+Route::get('/admin/performance', [\App\Http\Controllers\Admin\SystemHealthController::class, 'getPerformanceMetrics'])->name('admin.performance')->middleware(['auth', 'role:admin']);
+
+// Cache Management (admin only) - REFACTORED
+Route::post('/admin/cache/clear', [\App\Http\Controllers\Admin\StatsController::class, 'clearCache'])->name('admin.cache.clear')->middleware(['auth', 'role:admin']);
+Route::get('/admin/cache/stats', [\App\Http\Controllers\Admin\StatsController::class, 'getCacheStats'])->name('admin.cache.stats')->middleware(['auth', 'role:admin']);
+Route::post('/admin/cache/warmup', [\App\Http\Controllers\Admin\StatsController::class, 'warmUpCache'])->name('admin.cache.warmup')->middleware(['auth', 'role:admin']);
+
+// Notifications
+Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index')->middleware(['auth']);
+Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read')->middleware(['auth']);
+Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read_all')->middleware(['auth']);
+Route::delete('/notifications/{id}', [NotificationController::class, 'delete'])->name('notifications.delete')->middleware(['auth']);
+
+// Admin Notifications
+Route::get('/admin/notifications/stats', [NotificationController::class, 'stats'])->name('admin.notifications.stats')->middleware(['auth', 'role:admin']);
+Route::post('/admin/notifications/clean', [NotificationController::class, 'cleanOld'])->name('admin.notifications.clean')->middleware(['auth', 'role:admin']);
+Route::post('/admin/notifications/test', [NotificationController::class, 'sendTest'])->name('admin.notifications.test')->middleware(['auth', 'role:admin']);
 
 // ================== OCR MANAGEMENT ==================
 
@@ -238,6 +262,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/street-foods/{streetFood}/edit', [\App\Http\Controllers\Admin\StreetFoodController::class, 'edit'])->name('admin.street-foods.edit')->middleware('role:admin');
     Route::put('/admin/street-foods/{streetFood}', [\App\Http\Controllers\Admin\StreetFoodController::class, 'update'])->name('admin.street-foods.update')->middleware('role:admin');
     Route::post('/admin/street-foods/{streetFood}/analyze', [\App\Http\Controllers\Admin\StreetFoodController::class, 'analyze'])->name('admin.street-foods.analyze')->middleware('role:admin');
+    Route::delete('/admin/street-foods/{streetFood}', [\App\Http\Controllers\Admin\StreetFoodController::class, 'destroy'])->name('admin.street-foods.destroy')->middleware('role:admin');
     
     // Variants
     Route::get('/admin/street-foods/{streetFood}/variants', [\App\Http\Controllers\Admin\StreetFoodController::class, 'variants'])->name('admin.street-foods.variants')->middleware('role:admin');
@@ -276,6 +301,8 @@ Route::middleware('auth')->group(function () {
     // Medicine Management (Admin)
     Route::prefix('admin/medicines')->middleware('role:admin')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\MedicineAdminController::class, 'index'])->name('admin.medicines.index');
+        Route::get('/{id}/edit', [\App\Http\Controllers\Admin\MedicineAdminController::class, 'edit'])->name('admin.medicines.edit');
+        Route::put('/{id}', [\App\Http\Controllers\Admin\MedicineAdminController::class, 'update'])->name('admin.medicines.update');
         Route::get('/search-external', [\App\Http\Controllers\Admin\MedicineAdminController::class, 'searchExternal'])->name('admin.medicines.search-external');
         Route::post('/import', [\App\Http\Controllers\Admin\MedicineAdminController::class, 'importFromFda'])->name('admin.medicines.import');
         Route::post('/seed', [\App\Http\Controllers\Admin\MedicineAdminController::class, 'seedCommonMedicines'])->name('admin.medicines.seed');
@@ -284,6 +311,8 @@ Route::middleware('auth')->group(function () {
     // Cosmetic Management (Admin)
     Route::prefix('admin/cosmetics')->middleware('role:admin')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\CosmeticAdminController::class, 'index'])->name('admin.cosmetics.index');
+        Route::get('/{id}/edit', [\App\Http\Controllers\Admin\CosmeticAdminController::class, 'edit'])->name('admin.cosmetics.edit');
+        Route::put('/{id}', [\App\Http\Controllers\Admin\CosmeticAdminController::class, 'update'])->name('admin.cosmetics.update');
         Route::get('/search-external', [\App\Http\Controllers\Admin\CosmeticAdminController::class, 'searchExternal'])->name('admin.cosmetics.search-external');
         Route::post('/import', [\App\Http\Controllers\Admin\CosmeticAdminController::class, 'importExternal'])->name('admin.cosmetics.import');
         Route::post('/seed', [\App\Http\Controllers\Admin\CosmeticAdminController::class, 'seedCosmetics'])->name('admin.cosmetics.seed');
@@ -344,6 +373,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{apiName}/history', [\App\Http\Controllers\Admin\ApiHealthMonitorController::class, 'history'])->name('admin.api-monitor.history');
         Route::post('/check', [\App\Http\Controllers\Admin\ApiHealthMonitorController::class, 'check'])->name('admin.api-monitor.check');
     });
+
 
     // 🩸 BLOOD DONATION (ADMIN)
     Route::prefix('admin/blood-events')->middleware('role:admin')->group(function () {

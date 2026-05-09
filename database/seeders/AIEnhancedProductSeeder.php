@@ -115,6 +115,7 @@ class AIEnhancedProductSeeder extends Seeder
                 'notes' => 'Bahan pokok untuk baking',
                 'active' => true,
                 'image_url' => 'https://images.tokopedia.net/img/cache/500/VqbcmM/2024/1/1/tepung-terigu.jpg',
+                'image' => 'https://images.tokopedia.net/img/cache/500/VqbcmM/2024/1/1/tepung-terigu.jpg',
             ],
             [
                 'name' => 'Minyak Kelapa Sawit',
@@ -124,6 +125,7 @@ class AIEnhancedProductSeeder extends Seeder
                 'notes' => 'Sumber lemak nabati utama',
                 'active' => true,
                 'image_url' => 'https://images.tokopedia.net/img/cache/500/VqbcmM/2024/1/2/palm-oil.jpg',
+                'image' => 'https://images.tokopedia.net/img/cache/500/VqbcmM/2024/1/2/palm-oil.jpg',
             ]
         ];
 

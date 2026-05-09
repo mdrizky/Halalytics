@@ -7,7 +7,9 @@ use App\Models\Article;
 use App\Models\Banner;
 use App\Models\ScanModel;
 use App\Models\ProductModel;
+use App\Models\Medicine;
 use App\Models\User;
+use App\Models\NotificationCampaign;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -55,7 +57,7 @@ class AdminPolishSeeder extends Seeder
                 'category' => 'nutrition',
                 'author' => 'Nutrisionis Sarah Medina, S.Gz',
                 'image' => 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&h=400&fit=crop&q=80',
-                'content' => 'Titanium dioksida dengan kode E171 merupakan zat aditif makanan yang digunakan sebagai pewarna putih dan opacifier dalam berbagai produk makanan olahan. Bahan ini banyak ditemukan dalam permen, cokelat putih, selai, saus salad, dan produk kembang gula lainnya. Pada Mei 2021, Otoritas Keamanan Pangan Eropa (EFSA) menyatakan bahwa E171 tidak lagi dianggap aman sebagai bahan tambahan pangan, terutama karena potensi genotoksisitas dari nanopartikel yang dikandungnya. Berdasarkan penilaian EFSA tersebut, Uni Eropa resmi melarang penggunaan titanium dioksida sebagai bahan tambahan pangan mulai Agustus 2022. Namun di Indonesia, penggunaan E171 masih diperbolehkan dengan batasan tertentu sesuai Peraturan BPOM. Penelitian menunjukkan bahwa paparan jangka panjang terhadap nanopartikel titanium dioksida melalui konsumsi oral dapat menyebabkan kerusakan DNA pada sel-sel usus, perubahan respons imun, dan potensi efek karsinogenik. Meskipun risiko bagi manusia masih memerlukan penelitian lebih lanjut, prinsip kehati-hatian (precautionary principle) menjadi alasan utama banyak negara membatasi atau melarang penggunaannya. Untuk menghindari paparan E171, konsumen dapat memeriksa label komposisi produk dan menghindari produk yang mencantumkan titanium dioksida, CI 77891, atau E171 dalam daftar bahan. Halalytics menyediakan fitur scan barcode yang dapat membantu Anda mengidentifikasi produk-produk yang mengandung bahan aditif kontroversial ini.',
+                'content' => 'Titanium dioksida dengan kode E171 merupakan zat aditif makanan yang digunakan sebagai pewarna putih and opacifier dalam berbagai produk makanan olahan. Bahan ini banyak ditemukan dalam permen, cokelat putih, selai, saus salad, dan produk kembang gula lainnya. Pada Mei 2021, Otoritas Keamanan Pangan Eropa (EFSA) menyatakan bahwa E171 tidak lagi dianggap aman sebagai bahan tambahan pangan, terutama karena potensi genotoksisitas dari nanopartikel yang dikandungnya. Berdasarkan penilaian EFSA tersebut, Uni Eropa resmi melarang penggunaan titanium dioksida sebagai bahan tambahan pangan mulai Agustus 2022. Namun di Indonesia, penggunaan E171 masih diperbolehkan dengan batasan tertentu sesuai Peraturan BPOM. Penelitian menunjukkan bahwa paparan jangka panjang terhadap nanopartikel titanium dioksida melalui konsumsi oral dapat menyebabkan kerusakan DNA pada sel-sel usus, perubahan respons imun, dan potensi efek karsinogenik. Meskipun risiko bagi manusia masih memerlukan penelitian lebih lanjut, prinsip kehati-hatian (precautionary principle) menjadi alasan utama banyak negara membatasi atau melarang penggunaannya. Untuk menghindari paparan E171, konsumen dapat memeriksa label komposisi produk dan menghindari produk yang mencantumkan titanium dioksida, CI 77891, atau E171 dalam daftar bahan. Halalytics menyediakan fitur scan barcode yang dapat membantu Anda mengidentifikasi produk-produk yang mengandung bahan aditif kontroversial ini.',
                 'is_published' => true,
                 'views' => 1840,
             ],
@@ -187,6 +189,251 @@ class AdminPolishSeeder extends Seeder
                         'kategori' => $item['cat'],
                     ]);
                 }
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 5. NOTIFICATION CAMPAIGNS (New Feature)
+        |--------------------------------------------------------------------------
+        */
+        if (NotificationCampaign::count() === 0) {
+            $campaigns = [
+                [
+                    'name' => 'Ramadhan 2026',
+                    'title' => 'Ramadhan Halal Guide 2026',
+                    'body' => 'Dapatkan panduan lengkap produk halal untuk berbuka dan sahur di aplikasi Halalytics.',
+                    'target_segment' => 'all',
+                    'scheduled_at' => now()->addDays(2),
+                    'status' => 'scheduled',
+                    'action_url' => '/articles/ramadhan-guide',
+                ],
+                [
+                    'name' => 'Cosmetic Update',
+                    'title' => 'Update Database Kosmetik',
+                    'body' => '5.000+ produk kosmetik baru telah ditambahkan. Cek keamanan skin care Anda sekarang!',
+                    'target_segment' => 'all',
+                    'scheduled_at' => now()->subDays(1),
+                    'status' => 'sent',
+                    'action_url' => '/cosmetic',
+                    'sent_count' => 12500,
+                    'opened_count' => 8420,
+                ],
+                [
+                    'name' => 'BPOM Alert',
+                    'title' => 'Waspada Produk Tarik BPOM',
+                    'body' => 'Pemberitahuan penting mengenai produk yang ditarik dari peredaran oleh BPOM bulan ini.',
+                    'target_segment' => 'all',
+                    'scheduled_at' => now()->subHours(5),
+                    'status' => 'sent',
+                    'action_url' => '/bpom',
+                    'sent_count' => 15000,
+                    'opened_count' => 14200,
+                ],
+            ];
+
+            foreach ($campaigns as $campaign) {
+                NotificationCampaign::create($campaign);
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 6. OPEN FOOD FACTS (OFF) PRODUCTS (Realistic Data)
+        |--------------------------------------------------------------------------
+        */
+        if (ProductModel::where('source', 'open_food_facts')->count() === 0) {
+            $offProducts = [
+                [
+                    'nama_product' => 'Nutella Ferrero 400g',
+                    'barcode' => '3017620422003',
+                    'brand' => 'Ferrero',
+                    'source' => 'open_food_facts',
+                    'image' => 'https://images.openfoodfacts.org/images/products/301/762/042/2003/front_en.595.400.jpg',
+                    'komposisi' => 'Sugar, palm oil, hazelnuts (13%), skimmed milk powder (8.7%), fat-reduced cocoa (7.4%), emulsifier: lecithins (soya), vanillin',
+                    'status' => 'halal',
+                    'verification_status' => 'verified',
+                    'nutriscore_grade' => 'e',
+                    'calories' => 539,
+                    'protein_g' => 6.3,
+                    'fat_g' => 30.9,
+                    'sugar_g' => 56.3,
+                ],
+                [
+                    'nama_product' => 'Pringles Original 165g',
+                    'barcode' => '5053990138722',
+                    'brand' => 'Pringles',
+                    'source' => 'open_food_facts',
+                    'image' => 'https://images.openfoodfacts.org/images/products/505/399/013/8722/front_en.115.400.jpg',
+                    'komposisi' => 'Dehydrated potatoes, vegetable oils (sunflower, corn), rice flour, wheat starch, corn flour, emulsifier (E471), maltodextrin, salt, yeast extract, yeast powder, colour (annatto)',
+                    'status' => 'halal',
+                    'verification_status' => 'verified',
+                    'nutriscore_grade' => 'c',
+                    'calories' => 530,
+                    'protein_g' => 4.5,
+                    'fat_g' => 31,
+                    'sugar_g' => 0.5,
+                ],
+                [
+                    'nama_product' => 'Oreo Double Stuf 157g',
+                    'barcode' => '7622300438319',
+                    'brand' => 'Oreo',
+                    'source' => 'open_food_facts',
+                    'image' => 'https://images.openfoodfacts.org/images/products/762/230/043/8319/front_en.54.400.jpg',
+                    'komposisi' => 'Sugar, wheat flour, palm oil, rapeseed oil, wheat starch, fat-reduced cocoa powder 3.3%, glucose-fructose syrup, raising agents (ammonium carbonates, potassium carbonates, sodium carbonates), salt, emulsifier (soya lecithins), acidity regulator (sodium hydroxide), flavouring',
+                    'status' => 'halal',
+                    'verification_status' => 'verified',
+                    'nutriscore_grade' => 'e',
+                    'calories' => 485,
+                    'protein_g' => 4.8,
+                    'fat_g' => 20,
+                    'sugar_g' => 38,
+                ],
+                [
+                    'nama_product' => 'Lays Classic 170g',
+                    'barcode' => '0028400000013',
+                    'brand' => 'Lays',
+                    'source' => 'open_food_facts',
+                    'image' => 'https://images.openfoodfacts.org/images/products/002/840/000/0013/front_en.21.400.jpg',
+                    'komposisi' => 'Potatoes, vegetable oil (sunflower, corn and/or canola oil), salt',
+                    'status' => 'halal',
+                    'verification_status' => 'verified',
+                    'nutriscore_grade' => 'c',
+                    'calories' => 536,
+                    'protein_g' => 7.1,
+                    'fat_g' => 35.7,
+                    'sugar_g' => 0,
+                ],
+                [
+                    'nama_product' => 'KitKat 4 Finger 45g',
+                    'barcode' => '40052403',
+                    'brand' => 'Nestle',
+                    'source' => 'open_food_facts',
+                    'image' => 'https://images.openfoodfacts.org/images/products/400/524/03/front_en.116.400.jpg',
+                    'komposisi' => 'Sugar, wheat flour, cocoa butter, skimmed milk powder, cocoa mass, palm fat, lactose and proteins from whey (from milk), whey powder (from milk), butterfat (from milk), emulsifier (sunflower lecithin), natural flavourings, raising agent (sodium bicarbonate)',
+                    'status' => 'halal',
+                    'verification_status' => 'verified',
+                    'nutriscore_grade' => 'e',
+                    'calories' => 518,
+                    'protein_g' => 6.2,
+                    'fat_g' => 27.5,
+                    'sugar_g' => 52.3,
+                ],
+                [
+                    'nama_product' => 'Doritos Nacho Cheese 170g',
+                    'barcode' => '0028400091561',
+                    'brand' => 'Doritos',
+                    'source' => 'open_food_facts',
+                    'image' => 'https://images.openfoodfacts.org/images/products/002/840/009/1561/front_en.130.400.jpg',
+                    'komposisi' => 'Corn, vegetable oil (corn, canola, and/or sunflower oil), maltodextrin (made from corn), salt, cheddar cheese (milk, cheese cultures, salt, enzymes), whey, monosodium glutamate, buttermilk, romano cheese (part-skim cow\'s milk, cheese cultures, salt, enzymes), whey protein concentrate, onion powder, corn flour, natural and artificial flavor, dextrose, tomato powder, lactose, spices, artificial color (yellow 6, yellow 5, and red 40), lactic acid, citric acid, sugar, garlic powder, skim milk, red and green bell pepper powder, disodium inosinate, and disodium guanylate',
+                    'status' => 'syubhat',
+                    'verification_status' => 'pending',
+                    'nutriscore_grade' => 'd',
+                    'calories' => 500,
+                    'protein_g' => 6.7,
+                    'fat_g' => 26.7,
+                    'sugar_g' => 3.3,
+                ],
+            ];
+
+            foreach ($offProducts as $prod) {
+                ProductModel::create(array_merge($prod, [
+                    'active' => true,
+                    'is_imported_from_off' => true,
+                    'off_last_synced' => now(),
+                    'off_product_id' => $prod['barcode']
+                ]));
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 7. OPEN BEAUTY FACTS (OBF) PRODUCTS
+        |--------------------------------------------------------------------------
+        */
+        if (ProductModel::where('source', 'open_beauty_facts')->count() === 0) {
+            $obfProducts = [
+                [
+                    'nama_product' => 'La Roche-Posay Effaclar Duo+',
+                    'barcode' => '3337872413026',
+                    'brand' => 'La Roche-Posay',
+                    'source' => 'open_beauty_facts',
+                    'image' => 'https://images.openbeautyfacts.org/images/products/333/787/241/3026/front_en.104.400.jpg',
+                    'komposisi' => 'Aqua, Glycerin, Dimethicone, Isocetyl Stearate, Niacinamide, Isopropyl Lauroyl Sarcosinate, Silica, Ammonium Polyacryloyldimethyl Taurate.',
+                    'status' => 'halal',
+                    'verification_status' => 'verified',
+                ],
+                [
+                    'nama_product' => 'La Roche-Posay Anthelios 50ml',
+                    'barcode' => '3337875706407',
+                    'brand' => 'La Roche-Posay',
+                    'source' => 'open_beauty_facts',
+                    'image' => 'https://images.openbeautyfacts.org/images/products/333/787/570/6407/front_en.51.400.jpg',
+                    'komposisi' => 'Aqua / water, alcohol denat., diisopropyl sebacate, silica, isopropyl myristate, ethylhexyl salicylate, ethylhexyl triazone, bis-ethylhexyloxyphenol methoxyphenyl triazine, butyl methoxydibenzoylmethane, glycerin, c12-22 alkyl acrylate/hydroxyethylacrylate copolymer, propanediol, drometrizole trisiloxane, perlite, tocopherol, caprylic/capric triglyceride, acrylates/c10-30 alkyl acrylate crosspolymer, caprylyl glycol, hydroxyethylcellulose, terephthalylidene dicamphor sulfonic acid, triethanolamine, trisodium ethylenediamine disuccinate',
+                    'status' => 'halal',
+                    'verification_status' => 'verified',
+                ],
+                [
+                    'nama_product' => 'The Ordinary Niacinamide 10% + Zinc 1% 30ml',
+                    'barcode' => '769915190311',
+                    'brand' => 'The Ordinary',
+                    'source' => 'open_beauty_facts',
+                    'image' => 'https://images.openbeautyfacts.org/images/products/076/991/519/0311/front_en.21.400.jpg',
+                    'komposisi' => 'Aqua (Water), Niacinamide, Pentylene Glycol, Zinc PCA, Dimethyl Isosorbide, Tamarindus Indica Seed Gum, Xanthan gum, Isoceteth-20, Ethoxydiglycol, Phenoxyethanol, Chlorphenesin',
+                    'status' => 'halal',
+                    'verification_status' => 'verified',
+                ],
+                [
+                    'nama_product' => 'Cerave Moisturising Cream 454g',
+                    'barcode' => '3337875597388',
+                    'brand' => 'CeraVe',
+                    'source' => 'open_beauty_facts',
+                    'image' => 'https://images.openbeautyfacts.org/images/products/333/787/559/7388/front_en.114.400.jpg',
+                    'komposisi' => 'Aqua / water, glycerin, cetearyl alcohol, caprylic/capric triglyceride, cetyl alcohol, ceteareth-20, petrolatum, dimethicone, phenoxyethanol, behentrimonium methosulfate, potassium phosphate, ethylhexylglycerin, sodium lauroyl lactylate, disodium edta, dipotassium phosphate, ceramide np, ceramide ap, phytosphingosine, cholesterol, xanthan gum, carbomer, sodium hyaluronate, tocopherol, ceramide eop',
+                    'status' => 'halal',
+                    'verification_status' => 'verified',
+                ],
+            ];
+
+            foreach ($obfProducts as $prod) {
+                ProductModel::create(array_merge($prod, [
+                    'active' => true,
+                    'is_imported_from_off' => true,
+                ]));
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 8. OPEN FDA MEDICINES
+        |--------------------------------------------------------------------------
+        */
+        if (Medicine::where('source', 'openfda')->count() === 0) {
+            $fdaMedicines = [
+                [
+                    'name' => 'Advil (Ibuprofen)',
+                    'generic_name' => 'Ibuprofen',
+                    'brand' => 'Advil',
+                    'manufacturer' => 'Pfizer',
+                    'source' => 'openfda',
+                    'category' => 'Analgesic',
+                    'description' => 'Nonsteroidal anti-inflammatory drug used for pain relief and fever reduction.',
+                    'is_active' => true,
+                ],
+                [
+                    'name' => 'Tylenol (Acetaminophen)',
+                    'generic_name' => 'Acetaminophen',
+                    'brand' => 'Tylenol',
+                    'manufacturer' => 'McNeil Consumer Healthcare',
+                    'source' => 'openfda',
+                    'category' => 'Antipyretic',
+                    'description' => 'Commonly used for the treatment of pain and fever.',
+                    'is_active' => true,
+                ],
+            ];
+
+            foreach ($fdaMedicines as $med) {
+                Medicine::create($med);
             }
         }
     }

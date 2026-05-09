@@ -108,10 +108,14 @@
                         <td style="padding: 16px 24px;">
                             <div style="display: flex; align-items: center; gap: 16px;">
                                 <div style="width: 44px; height: 44px; border-radius: 10px; background: var(--bg-light); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border-color); flex-shrink: 0;">
-                                    @if($medicine->image_url)
-                                        <img src="{{ $medicine->image_url }}" alt="" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none';">
-                                    @endif
-                                    <i class="fas fa-pills" style="font-size: 18px; color: var(--text-muted);"></i>
+                                    @php
+                                        $imgSrc = $medicine->image_url;
+                                        if (!$imgSrc || str_contains($imgSrc, 'placeholder.svg')) {
+                                            $fallbackName = urlencode(substr($medicine->name, 0, 2));
+                                            $imgSrc = "https://ui-avatars.com/api/?name={$fallbackName}&background=E0F2FE&color=0369A1&size=128&font-size=0.4";
+                                        }
+                                    @endphp
+                                    <img src="{{ $imgSrc }}" alt="{{ $medicine->name }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=NA&background=E0F2FE&color=0369A1&size=128&font-size=0.4';">
                                 </div>
                                 <div>
                                     <div style="font-weight: 700; color: var(--text-main); font-size: 14px; line-height: 1.2;">{{ Str::limit($medicine->name, 40) }}</div>

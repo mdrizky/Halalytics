@@ -21,7 +21,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-semibold mb-1">Nama Situs</label>
-                <input type="text" name="site_name" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800" value="{{ $settings['site_name'] ?? 'HalalScan AI' }}">
+                <input type="text" name="site_name" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800" value="{{ $settings['site_name'] ?? 'Halalytics' }}">
             </div>
             <div>
                 <label class="block text-sm font-semibold mb-1">Versi Aplikasi</label>

@@ -277,6 +277,37 @@ class ProductController extends Controller
     }
 
     /**
+     * Get recommended products for user (AI-powered or curated)
+     */
+    public function recommendations(Request $request)
+    {
+        $category = $request->query('category', 'food');
+        
+        // Simple recommendation: Get latest verified halal products
+        $products = ProductModel::orderBy('created_at', 'desc')
+            ->where('status', 'halal')
+            ->limit(10)
+            ->get()
+            ->map(function ($p) {
+                return $this->normalizeProductPayload([
+                    'barcode' => $p->barcode,
+                    'name' => $p->nama_product,
+                    'brand' => $p->brand,
+                    'ingredients_text' => $p->komposisi,
+                    'category' => optional($p->kategori)->nama_kategori ?? 'Umum',
+                    'status_halal' => $p->status,
+                    'image_url' => $p->getRawOriginal('image'),
+                ], $p);
+            });
+
+        return response()->json([
+            'response_code' => 200,
+            'success' => true,
+            'content' => $products
+        ]);
+    }
+
+    /**
      * Get recently added products
      */
     public function recent()

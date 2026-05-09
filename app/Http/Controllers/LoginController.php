@@ -13,6 +13,23 @@ class LoginController extends Controller
         return view('auth.login-new'); 
     }
 
+    /**
+     * Redirect users after login based on their role.
+     */
+    public function index()
+    {
+        if (Auth::check()) {
+            $user = Auth::user();
+            if ($user->role === 'admin') {
+                return redirect()->route('admin.dashboard');
+            }
+            // User portal has been decommissioned — redirect to app download
+            Auth::logout();
+            return redirect()->route('download')->with('error', 'Portal user hanya tersedia di aplikasi Android.');
+        }
+        return redirect()->route('login');
+    }
+
     // ✅ Proses login
     public function login(Request $request)
     {
@@ -38,9 +55,13 @@ class LoginController extends Controller
             $user->last_login = now();
             $user->save();
 
-            return $user->role === 'admin'
-                ? redirect()->route('admin.dashboard')
-                : redirect()->route('user.home');
+            if ($user->role === 'admin') {
+                return redirect()->route('admin.dashboard');
+            }
+
+            // User portal decommissioned — block web login for non-admin
+            Auth::logout();
+            return redirect()->route('download')->with('error', 'Silakan gunakan aplikasi Android untuk mengakses fitur pengguna.');
         }
 
         // ✅ Kalau gagal login

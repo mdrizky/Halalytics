@@ -382,6 +382,7 @@ Jawab HANYA JSON:
   "summary": "string",
   "recommendation": "string",
   "winner": {"name": "string", "reason": "string"},
+  "similarities": ["daftar kesamaan bahan atau fitur antara produk-produk ini"],
   "products": [
     {
       "name": "string",
@@ -549,6 +550,7 @@ Jawab HANYA JSON:
   "description": "string",
   "recommendation": "string",
   "scientific_basis": "string",
+  "similarities": ["kesamaan zat aktif atau mekanisme kerja"],
   "sources": ["string"],
   "disclaimer": "string"
 }
@@ -2122,40 +2124,40 @@ PROMPT;
                 'tldr' => 'Nyeri otot umumnya terkait postur, kelelahan, atau aktivitas. Kompres hangat, stretching, dan obat pereda nyeri biasanya cukup. Waspadai jika ada gejala saraf (kebas/kesemutan menjalar).',
             ],
             default => [
-                'summary_prefix' => 'Saya telah menganalisis input Anda, namun keluhan yang disampaikan belum cukup spesifik untuk mendiagnosis kondisi secara akurat. Input yang tercatat: ',
-                'condition' => 'Keluhan tidak spesifik / Perlu detail tambahan',
+                'summary_prefix' => 'Saya telah menganalisis input Anda. Berikut adalah panduan kesehatan umum berdasarkan informasi yang tersedia: ',
+                'condition' => 'Perlu Evaluasi Lebih Lanjut',
                 'possible_causes' => [
-                    ['name' => 'Gejala terlalu umum', 'percentage' => 45, 'reason' => 'Banyak kondisi kesehatan memiliki gejala awal yang serupa.'],
-                    ['name' => 'Informasi tidak lengkap', 'percentage' => 35, 'reason' => 'Membutuhkan detail seperti lokasi nyeri, durasi, dan tingkat keparahan.'],
-                    ['name' => 'Salah ketik / Input acak', 'percentage' => 20, 'reason' => 'Teks yang dimasukkan mungkin tidak mengandung kata kunci medis yang jelas.'],
+                    ['name' => 'Kelelahan atau Stress', 'percentage' => 40, 'reason' => 'Banyak keluhan umum dipicu oleh kondisi fisik yang kurang istirahat.'],
+                    ['name' => 'Kurang Hidrasi / Nutrisi', 'percentage' => 30, 'reason' => 'Pastikan asupan air putih dan makanan bergizi tercukupi.'],
+                    ['name' => 'Gejala Awal Kondisi Umum', 'percentage' => 30, 'reason' => 'Beberapa gejala ringan bisa menjadi tanda awal flu atau gangguan pencernaan.'],
                 ],
                 'related_symptoms' => ['lemas', 'tidak nyaman', 'nyeri ringan', 'kurang fit'],
                 'diseases' => [
                     [
-                        'name' => 'Analisis Tertunda',
-                        'description' => 'Sebagai asisten medis AI, saya membutuhkan deskripsi gejala yang lebih detail. Misalnya: "kepala pusing sebelah kiri", "perut mual setelah makan pedas", atau "tangan terkilir jatuh dari motor".',
-                        'relation_to_case' => 'Mohon jelaskan kembali keluhan Anda dengan kalimat yang lebih deskriptif.',
+                        'name' => 'Analisis Umum',
+                        'description' => 'Meskipun gejala yang Anda masukkan mungkin bersifat umum, penting untuk tetap memantau kondisi tubuh.',
+                        'relation_to_case' => 'Mohon jelaskan kembali keluhan Anda dengan lebih detail (misal: lokasi nyeri, durasi, atau pemicu) untuk analisis yang lebih akurat.',
                     ]
                 ],
-                'triggers' => ['Kurang istirahat', 'Kelelahan ringan', 'Dehidrasi'],
-                'active_ingredients' => ['paracetamol', 'multivitamin'],
+                'triggers' => ['Kurang istirahat', 'Kelelahan fisik', 'Dehidrasi'],
+                'active_ingredients' => ['paracetamol', 'vitamin c'],
                 'medicines' => [
                     [
-                        'name' => 'Paracetamol',
-                        'function' => 'Meredakan nyeri ringan atau demam jika ada.',
-                        'dosage' => '1 tablet 500mg, bila perlu',
+                        'name' => 'Multivitamin',
+                        'function' => 'Membantu menjaga daya tahan tubuh.',
+                        'dosage' => '1 tablet sehari',
                         'how_to_take' => 'Sesudah makan',
-                        'duration' => 'Hanya jika timbul gejala',
-                        'when_to_take' => 'Sesuai kebutuhan',
-                        'halal_status' => 'Perlu cek sertifikasi halal pada kemasan (Titik kritis: Cangkang Kapsul/Gelatin)',
-                        'safety_note' => 'Hentikan penggunaan jika tidak ada perbaikan.',
-                        'side_effects' => ['mual ringan'],
+                        'duration' => '3-5 hari',
+                        'when_to_take' => 'Pagi hari',
+                        'halal_status' => 'Pilih produk bersertifikat Halal MUI',
+                        'safety_note' => 'Konsumsi air putih yang cukup.',
+                        'side_effects' => ['warna urin lebih kuning'],
                     ]
                 ],
-                'drug_mechanism' => 'Obat simptomatik seperti Paracetamol bekerja dengan menghambat prostaglandin di otak untuk mengurangi sinyal nyeri.',
-                'usage_instructions' => 'Saat ini sebaiknya perbanyak istirahat dan minum air putih. Jika keluhan memburuk, segera perjelas gejala Anda atau konsultasi ke dokter.',
-                'diet_advice' => 'Konsumsi makanan bergizi dan pastikan hidrasi tubuh tercukupi (minimal 2 liter air per hari).',
-                'first_aid' => ['Istirahat yang cukup', 'Perbanyak minum air putih', 'Evaluasi gejala dalam 24 jam ke depan'],
+                'drug_mechanism' => 'Vitamin bekerja sebagai ko-enzim untuk mempercepat pemulihan sel tubuh.',
+                'usage_instructions' => 'Berikan tubuh waktu istirahat yang cukup. Hindari aktivitas berat selama 24 jam ke depan.',
+                'diet_advice' => 'Konsumsi sayuran hijau, buah-buahan, dan minum air putih minimal 2 liter per hari.',
+                'first_aid' => ['Istirahat total', 'Kompres hangat jika ada rasa tidak nyaman', 'Pantau perubahan gejala'],
                 'prevention' => ['Tidur 7-8 jam per hari', 'Olahraga teratur', 'Manajemen stres yang baik'],
                 'follow_up_questions' => ['Bisakah Anda mendeskripsikan ulang bagian tubuh mana yang sakit?', 'Sudah berapa hari Anda merasakan keluhan ini?', 'Apakah ada faktor pemicu tertentu (seperti makanan atau aktivitas)?'],
                 'recommendation' => 'Ketik ulang keluhan Anda dengan lebih rinci agar saya bisa memberikan analisis medis dan rekomendasi obat yang sangat akurat.',

@@ -103,10 +103,7 @@ class AdminScanController extends Controller
                 'user_id' => 'required|integer',
             ]);
 
-            $user = User::query()
-                ->where('id_user', $validated['user_id'])
-                ->orWhere('id', $validated['user_id'])
-                ->first();
+            $user = User::where('id_user', $validated['user_id'])->first();
             if (!$user) {
                 return response()->json([
                     'success' => false,

@@ -89,6 +89,7 @@
                         <th style="padding: 16px;">Contact</th>
                         <th style="padding: 16px;">Role</th>
                         <th style="padding: 16px;">Status</th>
+                        <th style="padding: 16px; text-align: center;">Medical</th>
                         <th style="padding: 16px; text-align: center;">Scans</th>
                         <th style="padding: 16px;">Joined Date</th>
                         <th style="padding: 16px 24px; text-align: right;">Actions</th>
@@ -128,6 +129,21 @@
                                 <span style="display: flex; align-items: center; gap: 6px; color: var(--danger); font-size: 12px; font-weight: 700;">
                                     <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--danger);"></span> Blocked
                                 </span>
+                            @endif
+                        </td>
+                        <td style="padding: 16px; text-align: center;">
+                            @if($user->bmi)
+                                <div style="font-weight: 700; color: {{ $user->bmi > 25 ? '#F59E0B' : 'var(--primary-color)' }}; font-size: 13px;">
+                                    {{ $user->bmi }} <span style="font-size: 10px; font-weight: 500; color: var(--text-muted);">BMI</span>
+                                </div>
+                            @endif
+                            @if($user->blood_type)
+                                <span class="badge" style="background: rgba(231, 76, 60, 0.1); color: #E74C3C; border: 1px solid #E74C3C; font-size: 10px; margin-top: 4px;">
+                                    Type {{ $user->blood_type }}
+                                </span>
+                            @endif
+                            @if(!$user->bmi && !$user->blood_type)
+                                <span style="color: var(--text-muted); font-size: 11px;">-</span>
                             @endif
                         </td>
                         <td style="padding: 16px; text-align: center;">

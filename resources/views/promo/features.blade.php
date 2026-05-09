@@ -1,7 +1,7 @@
 @extends('promo.layout')
-@section('title', 'Fitur Lengkap - ' . ($settings['site_name'] ?? 'HalalScan AI'))
-@section('description', 'Jelajahi fitur HalalScan AI: halal confidence score, drug interaction checker, health score, dan integrasi data global.')
-@section('keywords', 'fitur halalscan ai, halal confidence score, drug interaction checker, health score')
+@section('title', 'Fitur Lengkap - ' . ($settings['site_name'] ?? 'Halalytics'))
+@section('description', 'Jelajahi fitur Halalytics: halal confidence score, drug interaction checker, health score, dan integrasi data global.')
+@section('keywords', 'fitur halalytics, halal confidence score, drug interaction checker, health score')
 @section('canonical', route('features'))
 
 @section('styles')
@@ -46,7 +46,7 @@
                 <span class="inline-flex px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-wider">Feature Suite</span>
                 <h1 class="mt-5 text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight">Fitur Lengkap untuk Keputusan Produk yang Lebih Aman</h1>
                 <p class="mt-4 text-lg text-slate-600 max-w-xl">
-                    HalalScan AI menggabungkan analisis halal, nutrisi, dan interaksi obat dalam satu alur yang cepat dipakai user.
+                    Halalytics menggabungkan analisis halal, nutrisi, dan interaksi obat dalam satu alur yang cepat dipakai user.
                 </p>
                 <div class="mt-8 flex flex-col sm:flex-row gap-3">
                     <a href="{{ route('download') }}" class="inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl">Coba Aplikasi</a>
@@ -57,7 +57,7 @@
                 <div class="phone-shell w-[280px] h-[560px] p-3 shadow-2xl">
                     <div class="screen w-full h-full">
                         <div class="h-8 bg-slate-950 text-[11px] text-slate-300 px-4 flex items-center justify-between">
-                            <span>9:41</span><span>HalalScan AI</span><span>5G</span>
+                            <span>9:41</span><span>Halalytics</span><span>5G</span>
                         </div>
                         <div class="p-4 space-y-3">
                             <div class="rounded-2xl border border-emerald-400/35 bg-emerald-500/10 p-3">

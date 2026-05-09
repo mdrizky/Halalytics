@@ -56,15 +56,11 @@ class AppServiceProvider extends ServiceProvider
             $view->with('global_street_food_count', $safeCount('street_foods', fn () => \App\Models\StreetFood::count()));
             $view->with('global_medicine_count', $safeCount('medicines', fn () => \App\Models\Medicine::count()));
             $view->with('global_cosmetic_count', $safeCount('bpom_data', fn () => \App\Models\BpomData::where('kategori', 'kosmetik')->count()));
-            $view->with('global_order_count', $safeCount('orders', fn () => \App\Models\Order::whereIn('status', ['pending', 'confirmed', 'processing'])->count()));
         });
 
         view()->composer('user.*', function ($view) {
             $cart = collect(session('cart', []));
             $view->with('user_cart_count', (int) $cart->sum('quantity'));
-            $view->with('user_order_count', Schema::hasTable('orders') && Auth::check()
-                ? (int) \App\Models\Order::where('user_id', Auth::user()->id_user)->count()
-                : 0);
         });
 
         // Register Observers

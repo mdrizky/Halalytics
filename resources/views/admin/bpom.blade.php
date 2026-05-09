@@ -105,13 +105,11 @@
                                     @php
                                         $imgSrc = $data->image_url;
                                         if (!$imgSrc || str_contains($imgSrc, 'placeholder.svg')) {
-                                            $imgSrc = null;
+                                            $fallbackName = urlencode(substr($data->nama_produk, 0, 2));
+                                            $imgSrc = "https://ui-avatars.com/api/?name={$fallbackName}&background=E2E8F0&color=475569&size=128&font-size=0.4";
                                         }
                                     @endphp
-                                    @if($imgSrc)
-                                        <img src="{{ $imgSrc }}" alt="" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none';">
-                                    @endif
-                                    <i class="fas fa-box" style="font-size: 18px; color: var(--text-muted);"></i>
+                                    <img src="{{ $imgSrc }}" alt="{{ $data->nama_produk }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=NA&background=E2E8F0&color=475569&size=128&font-size=0.4';">
                                 </div>
                                 <div>
                                     <div style="font-weight: 700; color: var(--text-main); font-size: 14px; line-height: 1.2;">{{ Str::limit($data->nama_produk, 45) }}</div>

@@ -1,10 +1,10 @@
 @extends('promo.layout')
 
-@section('title', $blog->title . ' - ' . ($settings['site_name'] ?? 'HalalScan AI'))
-@section('description', $blog->excerpt ?: 'Baca artikel edukasi halal dan kesehatan dari HalalScan AI.')
+@section('title', $blog->title . ' - ' . ($settings['site_name'] ?? 'Halalytics'))
+@section('description', $blog->excerpt ?: 'Baca artikel edukasi halal dan kesehatan dari Halalytics.')
 @section('keywords', ($blog->category ?? 'edukasi') . ', halal, kesehatan, interaksi obat, nutrisi')
 @section('canonical', route('blog.show', $blog->slug))
-@section('og_image', $blog->image_url ?? asset('images/logo.png'))
+@section('og_image', $blog->image_url ?? asset('images/logo_halalytics.png'))
 
 @section('schema')
 @php
@@ -13,20 +13,20 @@
         '@type' => 'Article',
         'headline' => $blog->title,
         'description' => $blog->excerpt ?: 'Artikel edukasi halal dan kesehatan',
-        'image' => $blog->image_url ? [$blog->image_url] : [asset('images/logo.png')],
+        'image' => $blog->image_url ? [$blog->image_url] : [asset('images/logo_halalytics.png')],
         'datePublished' => optional($blog->created_at)->toIso8601String(),
         'dateModified' => optional($blog->updated_at)->toIso8601String(),
         'mainEntityOfPage' => route('blog.show', $blog->slug),
         'author' => [
             '@type' => 'Organization',
-            'name' => $settings['site_name'] ?? 'HalalScan AI',
+            'name' => $settings['site_name'] ?? 'Halalytics',
         ],
         'publisher' => [
             '@type' => 'Organization',
-            'name' => $settings['site_name'] ?? 'HalalScan AI',
+            'name' => $settings['site_name'] ?? 'Halalytics',
             'logo' => [
                 '@type' => 'ImageObject',
-                'url' => asset('images/logo.png'),
+                'url' => asset('images/logo_halalytics.png'),
             ],
         ],
     ];

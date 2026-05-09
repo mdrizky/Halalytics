@@ -26,7 +26,7 @@ class BpomController extends Controller
      * Default hanya data resmi/lokal (tanpa fallback AI).
      * Kirim include_ai=true jika ingin fallback AI.
      */
-    public function searchBpom(Request $request)
+    public function search(Request $request)
     {
         $request->validate([
             'q' => 'required|string|min:1',
@@ -62,7 +62,7 @@ class BpomController extends Controller
      * Default hanya data resmi/lokal (tanpa fallback AI).
      * Kirim include_ai=true jika ingin fallback AI.
      */
-    public function checkRegistration(Request $request)
+    public function check(Request $request)
     {
         $request->validate([
             'code' => 'required|string|min:5',
@@ -104,7 +104,7 @@ class BpomController extends Controller
     /**
      * Analisis produk lengkap (keamanan + halal + BPOM)
      */
-    public function analyzeProduct(Request $request)
+    public function analyze(Request $request)
     {
         $request->validate([
             'product_name' => 'required|string',

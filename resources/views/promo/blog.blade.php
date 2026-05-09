@@ -1,6 +1,6 @@
 @extends('promo.layout')
-@section('title', 'Blog & Edukasi - ' . ($settings['site_name'] ?? 'HalalScan AI'))
-@section('description', 'Artikel edukasi halal, keamanan obat, nutrisi, dan tips kesehatan praktis dari HalalScan AI.')
+@section('title', 'Blog & Edukasi - ' . ($settings['site_name'] ?? 'Halalytics'))
+@section('description', 'Artikel edukasi halal, keamanan obat, nutrisi, dan tips kesehatan praktis dari Halalytics.')
 @section('keywords', 'blog halal, edukasi kesehatan, interaksi obat, nutrisi, BPOM')
 @section('canonical', route('blog.index', request()->only(['category', 'search'])))
 
@@ -8,12 +8,12 @@
 {
   "@context": "https://schema.org",
   "@type": "Blog",
-  "name": "Blog HalalScan AI",
+  "name": "Blog Halalytics",
   "description": "Artikel edukasi halal, obat, dan kesehatan",
   "url": "{{ route('blog.index') }}",
   "publisher": {
     "@type": "Organization",
-    "name": "{{ $settings['site_name'] ?? 'HalalScan AI' }}"
+    "name": "{{ $settings['site_name'] ?? 'Halalytics' }}"
   }
 }
 @endsection

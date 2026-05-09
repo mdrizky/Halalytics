@@ -85,8 +85,8 @@ class AdminProductController extends Controller
     // tampil semua produk dengan filter dan pagination
     public function admin_product(Request $request)
     {
-        $externalFoodSources = ['open_food_facts', 'openfoodfacts', 'off_api', 'off'];
-
+        $offSources = ['open_food_facts', 'openfoodfacts', 'off_api', 'off'];
+        
         // Base query with relations
         $baseQuery = ProductModel::with('kategori')->withCount('scans');
 
@@ -107,39 +107,45 @@ class AdminProductController extends Controller
             $baseQuery->where('status', $request->halal_status);
         }
 
-        if ($request->filled('active')) {
-            $baseQuery->where('active', (int) $request->active === 1);
-        }
+        $obfSources = ['open_beauty_facts', 'openbeautyfacts', 'obf_api', 'obf'];
 
-        // Local products are internal/admin-managed records only.
+        // 1. Local products (internal/admin-managed)
         $localQuery = (clone $baseQuery)->where(function ($query) {
             $query->whereNull('source')
                 ->orWhereRaw('LOWER(source) = ?', ['local']);
         });
         $localProducts = $localQuery->orderBy('id_product', 'desc')->paginate(10, ['*'], 'local_page')->withQueryString();
 
-        // External/imported products on this page are restricted to Open Food Facts only.
-        $apiQuery = (clone $baseQuery)->where(function ($query) use ($externalFoodSources) {
-            foreach ($externalFoodSources as $index => $source) {
-                if ($index === 0) {
-                    $query->whereRaw('LOWER(COALESCE(source, "")) = ?', [$source]);
-                    continue;
-                }
+        // 2. Open Food Facts
+        $offQuery = (clone $baseQuery)->whereIn('source', $offSources);
+        $offProducts = $offQuery->orderBy('id_product', 'desc')->paginate(10, ['*'], 'off_page')->withQueryString();
 
-                $query->orWhereRaw('LOWER(COALESCE(source, "")) = ?', [$source]);
-            }
-        });
-        $apiProducts = $apiQuery->orderBy('id_product', 'desc')->paginate(10, ['*'], 'api_page')->withQueryString();
+        // 3. Open Beauty Facts
+        $obfQuery = (clone $baseQuery)->whereIn('source', $obfSources);
+        $obfProducts = $obfQuery->orderBy('id_product', 'desc')->paginate(10, ['*'], 'obf_page')->withQueryString();
+
+        // 4. OpenFDA Medicines
+        $fdaQuery = \App\Models\Medicine::query();
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $fdaQuery->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('brand_name', 'like', "%{$search}%")
+                  ->orWhere('barcode', 'like', "%{$search}%");
+            });
+        }
+        $fdaProducts = $fdaQuery->whereIn('source', ['openfda', 'open_fda'])->orderBy('id_medicine', 'desc')->paginate(10, ['*'], 'fda_page')->withQueryString();
 
         $categories = KategoriModel::orderBy('nama_kategori')->get();
         $productStats = [
             'local_total' => (clone $localQuery)->count(),
             'local_verified' => (clone $localQuery)->where('verification_status', 'verified')->count(),
-            'external_total' => (clone $apiQuery)->count(),
-            'external_review' => (clone $apiQuery)->where('verification_status', '!=', 'verified')->count(),
+            'off_total' => (clone $offQuery)->count(),
+            'obf_total' => (clone $obfQuery)->count(),
+            'fda_total' => (clone $fdaQuery)->whereIn('source', ['openfda', 'open_fda'])->count(),
         ];
 
-        return view('admin.product', compact('localProducts', 'apiProducts', 'categories', 'productStats'));
+        return view('admin.product', compact('localProducts', 'offProducts', 'obfProducts', 'fdaProducts', 'categories', 'productStats'));
     }
 
     // OCR Scanner page

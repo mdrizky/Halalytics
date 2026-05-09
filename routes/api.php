@@ -27,13 +27,10 @@ use App\Http\Controllers\Api\MedicineController;
 use App\Http\Controllers\Api\OCRController;
 use App\Http\Controllers\Api\NutritionController;
 use App\Http\Controllers\Api\RecipeController;
-use App\Http\Controllers\Api\ExpertController;
-use App\Http\Controllers\Api\ConsultationController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\CommunityController;
 use App\Http\Controllers\Api\BpomController;
 use App\Http\Controllers\Api\SkincareController;
-use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\MentalHealthController;
 use App\Http\Controllers\Api\HelpCenterController;
 
@@ -50,6 +47,7 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/auth/google', [AuthController::class, 'googleLogin']);
 Route::post('/auth/facebook', [AuthController::class, 'facebookLogin']);
 Route::get('/banners', [BannerController::class, 'index']);
+Route::get('/categories', [App\Http\Controllers\Api\CategoryController::class, 'index']);
 
 // HEALTH CONTENT
 Route::get('/articles', [HealthArticleController::class, 'index']);
@@ -72,6 +70,7 @@ Route::prefix('products')->group(function () {
     Route::get('/barcode/{barcode}', [ProductController::class, 'show']);
     Route::get('/search', [ProductController::class, 'search']);
     Route::get('/popular', [ProductController::class, 'popular']);
+    Route::get('/recommendations', [ProductController::class, 'recommendations']);
     Route::get('/external/{barcode}', [ProductExternalController::class, 'detail']);
 });
 Route::prefix('v1/products')->group(function () {
@@ -155,27 +154,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/posts/{id}', [CommunityController::class, 'show']);
         Route::post('/posts/{id}/like', [CommunityController::class, 'likePost']);
         Route::post('/posts/{id}/comment', [CommunityController::class, 'comment']);
-        Route::get('/leaderboard', [CommunityController::class, 'leaderboard']);
     });
 
-    // HALOCODE (Expert Consultations)
-    Route::prefix('consultations')->group(function () {
-        Route::get('/experts', [ExpertController::class, 'index']);
-        Route::get('/experts/{id}', [ExpertController::class, 'show']);
-        Route::post('/start', [ConsultationController::class, 'store']);
-        Route::get('/history', [ConsultationController::class, 'history']);
-        Route::post('/{id}/end', [ConsultationController::class, 'end']);
-        Route::get('/messages/{consultationId}', [MessageController::class, 'index']);
-        Route::post('/messages/{consultationId}', [MessageController::class, 'store']);
-    });
-
-    // EXPERT DASHBOARD
-    Route::middleware('role:expert')->prefix('expert')->group(function () {
-        Route::post('/toggle-online', [ExpertController::class, 'toggleOnline']);
-        Route::get('/queue', [ConsultationController::class, 'expertQueue']);
-        Route::post('/consultations/{id}/start', [ConsultationController::class, 'start']);
-        Route::get('/wallet', [WalletController::class, 'balance']);
-    });
+    // HALOCODE (Expert Consultations) - REMOVED FOR PRODUCTION CLEANUP
 
     // ═══════════════════════════════════════════════════════════
     // 📱 MOBILE APP ROUTES (Previously missing — causing APK 404s)
@@ -282,14 +263,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/medicines/my', [\App\Http\Controllers\Api\MedicationReminderController::class, 'index']);
 
     // DAILY MISSIONS
-    Route::get('/dashboard/missions', [\App\Http\Controllers\Api\DashboardController::class, 'dailyMission']);
-    Route::post('/dashboard/missions/complete', [\App\Http\Controllers\Api\DashboardController::class, 'completeMission']);
 
     // GAMIFICATION
-    Route::get('/user/points', [\App\Http\Controllers\Api\PointsController::class, 'myPoints']);
-    Route::get('/user/points/history', [\App\Http\Controllers\Api\PointsController::class, 'history']);
-    Route::get('/leaderboard', [\App\Http\Controllers\Api\LeaderboardController::class, 'index']);
-    Route::get('/leaderboard/my-rank', [\App\Http\Controllers\Api\LeaderboardController::class, 'myRank']);
 
     // ACHIEVEMENTS & EXPORT
     Route::get('/user/achievements', [\App\Http\Controllers\Api\ProfileFeatureController::class, 'getAchievements']);

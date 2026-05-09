@@ -78,6 +78,81 @@
         </div>
     </div>
 
+    <!-- Recently Imported Section -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-b py-3 px-4 flex items-center justify-between">
+            <h5 class="mb-0 font-bold text-slate-800">Produk yang Telah Diimport</h5>
+            <span class="text-xs text-slate-400">{{ $products->total() }} Produk Terdaftar</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                            <th class="ps-4">Produk</th>
+                            <th>Barcode</th>
+                            <th>Kategori</th>
+                            <th>Status Halal</th>
+                            <th class="text-end pe-4">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($products as $product)
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar avatar-sm bg-light rounded overflow-hidden me-3" style="width: 40px; height: 40px;">
+                                        <img src="{{ $product->image_url }}" alt="" class="w-full h-full object-cover" onerror="this.src='/images/placeholders/product-placeholder.svg'">
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-slate-800 small">{{ $product->nama_product }}</div>
+                                        <div class="text-muted" style="font-size: 10px;">{{ $product->brand }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-slate-600 border px-2 py-1 small">
+                                    {{ $product->barcode }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-muted small">{{ $product->kategori->nama_kategori ?? 'N/A' }}</span>
+                            </td>
+                            <td>
+                                @php
+                                    $status = strtolower($product->status ?? 'syubhat');
+                                    $badgeClass = match($status) {
+                                        'halal' => 'bg-success',
+                                        'haram', 'tidak halal' => 'bg-danger',
+                                        default => 'bg-warning'
+                                    };
+                                @endphp
+                                <span class="badge {{ $badgeClass }} px-2 py-1" style="font-size: 10px;">{{ strtoupper($status) }}</span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <a href="{{ route('admin.product.edit', $product->id_product) }}" class="btn btn-sm btn-white text-primary rounded-pill px-3 border shadow-sm">
+                                    <i class="fas fa-edit me-1"></i> Edit
+                                </a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                Belum ada produk OpenFoodFacts yang diimport.
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @if($products->hasPages())
+        <div class="card-footer bg-white border-t py-3">
+            {{ $products->links('vendor.pagination.tailwind-admin') }}
+        </div>
+        @endif
+    </div>
+
     <!-- Footer Links -->
     <div class="d-flex justify-content-center mt-5">
         <a href="{{ route('admin.products.off.auto-imported') }}" class="btn btn-link text-muted">

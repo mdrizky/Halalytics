@@ -18,13 +18,21 @@ class AutoCategorizeProducts extends Command
         $this->info("Scanning " . $products->count() . " products...");
 
         $rules = [
-            12 => ['vitamin', 'suplemen', 'supplement', 'tablet', 'sirup obat', 'panadol', 'paracetamol', 'betadine', 'bodrex', 'obat batuk'],
-            11 => ['sabun', 'soap', 'shampoo', 'sampo', 'lotion', 'parfum', 'perfume', 'lulur', 'makeup', 'body wash', 'lipstick', 'moisturizer', 'sunscreen', 'wardah', 'kahf', 'biore', 'ponds'],
-            2 => ['drink', 'minuman', 'botol', 'can ', 'kaleng', 'teh', 'tea', 'kopi', 'coffee', 'jus', 'juice', 'soda', ' cola', 'water', 'air mineral', 'sparkling', 'syrup', 'sirup', 'pocari', 'mizone', 'adem sari', 'tehbotol', 'pucuk', 'nescafe', 'torabika', 'kapas tembak'],
-            5 => ['susu', 'milk', 'cheese', 'keju', 'yogurt', 'butter', 'mentega', 'dairy', 'creamer', 'krimer', 'indomilk', 'frisian flag', 'ultra milk', 'anlene', 'hi-lo', 'dancow'],
-            3 => ['snack', 'keripik', 'chips', 'wafer', 'makanan ringan', 'biskuit', 'chiki', 'oreo', 'biscuits', 'taro', 'chitatos', 'chitato', 'lay\'s', 'twist', 'malkist', 'roma', 'pringles', 'kitkat', 'silverqueen', 'cadbury', 'cheetos', 'beng-beng', 'chocolate', 'cokelat', 'candy', 'permen'],
-            4 => ['bumbu', 'seasoning', 'kecap', 'sauce', 'saus', 'garam', 'salt', 'gula', 'sugar', 'penyedap', 'masako', 'royco', 'ladaku', 'terasi', 'ajinomoto', 'sasa'],
-            1 => ['mie', 'noodle', 'nasi', 'rice', 'roti', 'bread', 'sereal', 'cereal', 'pasta', 'spaghetti', 'macaroni', 'indomie', 'sarimi', 'sedap', 'pop mie', 'mie instant'],
+            13 => ['vitamin', 'suplemen', 'supplement', 'suplemen', 'vitamin'], // Suplemen & Vitamin
+            3  => ['tablet', 'sirup obat', 'panadol', 'paracetamol', 'betadine', 'bodrex', 'obat batuk', 'obat'], // Obat Bebas
+            2  => ['jamu', 'herbal', 'tolak angin', 'antangin', 'jamu tradisional'], // Jamu Tradisional
+            4  => ['lotion', 'body wash', 'moisturizer', 'sunscreen', 'wardah', 'kahf', 'biore', 'ponds', 'skincare'], // Skincare
+            9  => ['makeup', 'lipstick', 'kosmetik', 'cosmetic'], // Kosmetik Wajah
+            10 => ['shampoo', 'sampo', 'perawatan rambut', 'hair'], // Perawatan Rambut
+            11 => ['bayi', 'baby', 'sabun bayi', 'shampoo bayi', 'bedak bayi', 'diaper', 'pampers', 'kebutuhan bayi'], // Kebutuhan Bayi
+            6  => ['drink', 'minuman', 'botol', 'can ', 'kaleng', 'jus', 'juice', 'soda', 'cola', 'water', 'air mineral', 'sparkling', 'syrup', 'sirup', 'pocari', 'mizone', 'adem sari', 'minuman kemasan'], // Minuman Kemasan
+            14 => ['teh', 'tea', 'kopi', 'coffee', 'tehbotol', 'pucuk', 'nescafe', 'torabika', 'kapas tembak'], // Kopi & Teh
+            7  => ['susu', 'milk', 'cheese', 'keju', 'yogurt', 'butter', 'mentega', 'dairy', 'creamer', 'krimer', 'indomilk', 'frisian flag', 'ultra milk', 'anlene', 'hi-lo', 'dancow', 'produk susu'], // Produk Susu
+            5  => ['snack', 'keripik', 'chips', 'wafer', 'makanan ringan', 'biskuit', 'chiki', 'oreo', 'biscuits', 'taro', 'chitatos', 'chitato', 'lay\'s', 'twist', 'malkist', 'roma', 'pringles', 'kitkat', 'silverqueen', 'cadbury', 'cheetos', 'beng-beng', 'chocolate', 'cokelat', 'candy', 'permen', 'mie', 'noodle', 'indomie', 'sarimi', 'sedap', 'pop mie', 'mie instant'], // Makanan Ringan
+            1  => ['bumbu', 'seasoning', 'kecap', 'sauce', 'saus', 'garam', 'salt', 'gula', 'sugar', 'penyedap', 'masako', 'royco', 'ladaku', 'terasi', 'ajinomoto', 'sasa', 'bumbu dapur'], // Bumbu Dapur
+            12 => ['nasi', 'rice', 'roti', 'bread', 'sereal', 'cereal', 'pasta', 'spaghetti', 'macaroni', 'bahan roti', 'kue', 'terigu', 'tepung'], // Bahan Roti & Kue
+            8  => ['daging', 'meat', 'sosis', 'sausage', 'nugget', 'ayam', 'chicken', 'beef', 'kornet', 'daging olahan'], // Daging Olahan
+            15 => ['vegan', 'nabati', 'soya', 'produk vegan'] // Produk Vegan
         ];
 
         $categories = KategoriModel::all()->pluck('nama_kategori', 'id_kategori')->toArray();

@@ -143,6 +143,42 @@
                         </div>
                     </div>
 
+                    <div class="pt-6 border-t border-slate-100 dark:border-slate-800">
+                        <h3 class="text-md font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                            <span class="material-icons-round text-primary text-xl">medical_services</span>
+                            Informasi Medis
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <!-- Weight -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Berat Badan (kg)</label>
+                                <input type="number" step="0.1" name="weight" value="{{ old('weight', $user->weight) }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="0.0">
+                            </div>
+
+                            <!-- Height -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Tinggi Badan (cm)</label>
+                                <input type="number" step="0.1" name="height" value="{{ old('height', $user->height) }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="0.0">
+                            </div>
+
+                            <!-- BMI Display -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">BMI (Body Mass Index)</label>
+                                <div class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold {{ $user->bmi > 25 ? 'text-amber-600' : 'text-primary' }}">
+                                    @if($user->bmi)
+                                        {{ $user->bmi }} 
+                                        <span class="text-[10px] font-medium ml-1">
+                                            ({{ $user->bmi < 18.5 ? 'Underweight' : ($user->bmi < 25 ? 'Normal' : ($user->bmi < 30 ? 'Overweight' : 'Obese')) }})
+                                        </span>
+                                    @else
+                                        N/A
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Blood Type</label>

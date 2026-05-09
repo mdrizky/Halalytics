@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Halalytics Admin')</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
@@ -29,7 +29,7 @@
                         "slate-custom": "#475569"
                     },
                     fontFamily: {
-                        "display": ["Manrope", "sans-serif"]
+                        "display": ["Plus Jakarta Sans", "Inter", "sans-serif"]
                     },
                     borderRadius: {
                         "DEFAULT": "0.25rem",
@@ -53,7 +53,20 @@
             --hal-error: #D32F2F;
         }
 
-        body { font-family: 'Manrope', sans-serif; }
+        * {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+            letter-spacing: -0.01em;
+        }
+
+        .font-display {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            letter-spacing: -0.02em;
+        }
         .chart-gradient {
             background: linear-gradient(180deg, rgba(38, 166, 154, 0.18) 0%, rgba(38, 166, 154, 0) 100%);
         }
@@ -169,8 +182,8 @@
     <!-- Sidebar Navigation -->
     <aside class="w-64 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
         <div class="p-6 flex items-center space-x-3">
-            <div class="w-8 h-8 bg-primary rounded-xl shadow-lg shadow-emerald-900/20 flex items-center justify-center">
-                <span class="material-icons-round text-white text-xl">qr_code_scanner</span>
+            <div class="w-10 h-10 flex items-center justify-center bg-white rounded-lg border border-slate-100 shadow-sm overflow-hidden">
+                <img src="{{ asset('images/logo_halalytics.png') }}?v={{ time() }}" alt="Logo" class="w-full h-full object-contain p-1">
             </div>
             <h1 class="text-xl font-bold tracking-tight text-slate-800 dark:text-white">Halalytics</h1>
         </div>
@@ -185,8 +198,8 @@
                 <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200 dark:border-slate-700">{{ number_format($global_user_count) }}</span>
             </a>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.product*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.product.index') }}">
-                <span class="material-icons-round text-[20px]">inventory_2</span>
-                <span class="text-sm flex-1">Products</span>
+                <span class="material-icons-round text-[20px]">restaurant</span>
+                <span class="text-sm flex-1">Foods & Beverages</span>
                 <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200 dark:border-slate-700">{{ number_format($global_product_count) }}</span>
             </a>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.requests*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.requests.index') }}">
@@ -287,13 +300,6 @@
                 <span class="text-sm flex-1">Product Reports</span>
                 @if($global_report_count > 0)
                 <span class="text-[10px] bg-primary/10 dark:bg-primary/15 px-1.5 py-0.5 rounded-md font-bold text-primary border border-primary/20 dark:border-primary/30 animate-pulse-slow">{{ number_format($global_report_count) }}</span>
-                @endif
-            </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.orders*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.orders.index') }}">
-                <span class="material-icons-round text-[20px]">shopping_bag</span>
-                <span class="text-sm flex-1">Orders</span>
-                @if($global_order_count > 0)
-                <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200 dark:border-slate-700">{{ number_format($global_order_count) }}</span>
                 @endif
             </a>
         </nav>

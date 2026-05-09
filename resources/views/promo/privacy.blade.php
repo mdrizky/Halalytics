@@ -1,7 +1,7 @@
 @extends('promo.layout')
-@section('title', 'Kebijakan Privasi - ' . ($settings['site_name'] ?? 'HalalScan AI'))
-@section('description', 'Kebijakan privasi HalalScan AI: bagaimana data pengguna dikumpulkan, digunakan, dan dilindungi.')
-@section('keywords', 'kebijakan privasi, keamanan data, perlindungan data, halalscan ai')
+@section('title', 'Kebijakan Privasi - ' . ($settings['site_name'] ?? 'Halalytics'))
+@section('description', 'Kebijakan privasi Halalytics: bagaimana data pengguna dikumpulkan, digunakan, dan dilindungi.')
+@section('keywords', 'kebijakan privasi, keamanan data, perlindungan data, halalytics')
 @section('canonical', route('privacy'))
 
 @section('schema')
@@ -10,7 +10,7 @@
   "@type": "WebPage",
   "name": "Kebijakan Privasi",
   "url": "{{ route('privacy') }}",
-  "description": "Penjelasan penggunaan dan perlindungan data pengguna HalalScan AI"
+  "description": "Penjelasan penggunaan dan perlindungan data pengguna Halalytics"
 }
 @endsection
 
@@ -45,7 +45,7 @@
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <article class="privacy-card p-7 md:p-10 text-slate-700 leading-relaxed space-y-7">
             <p>
-                Di HalalScan AI, keamanan data Anda adalah prioritas. Dokumen ini menjelaskan bagaimana data dikumpulkan, digunakan, dan dilindungi selama Anda menggunakan layanan kami.
+                Di Halalytics, keamanan data Anda adalah prioritas. Dokumen ini menjelaskan bagaimana data dikumpulkan, digunakan, dan dilindungi selama Anda menggunakan layanan kami.
             </p>
 
             <div>
@@ -72,7 +72,7 @@
             <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
                 <h3 class="text-lg font-extrabold text-amber-800">Disclaimer Penting</h3>
                 <p class="text-amber-800/90 text-sm mt-2">
-                    HalalScan AI adalah alat bantu informasi. Aplikasi ini tidak menggantikan diagnosis dokter, apoteker, ahli gizi, ataupun sertifikasi halal resmi lembaga berwenang.
+                    Halalytics adalah alat bantu informasi. Aplikasi ini tidak menggantikan diagnosis dokter, apoteker, ahli gizi, ataupun sertifikasi halal resmi lembaga berwenang.
                 </p>
             </div>
 
