@@ -34,6 +34,7 @@ Route::get('/privacy', [App\Http\Controllers\Promo\PageController::class, 'priva
 Route::get('/blog', [App\Http\Controllers\Promo\BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [App\Http\Controllers\Promo\BlogController::class, 'show'])->name('blog.show');
 Route::get('/contact', [App\Http\Controllers\Promo\ContactController::class, 'send'])->name('contact.send');
+Route::post('/ai/chat', [App\Http\Controllers\Promo\PageController::class, 'aiChat'])->name('promo.ai_chat');
 
 // New Health Services Routes
 Route::get('/specialized/{slug}', [App\Http\Controllers\Promo\PageController::class, 'specialized'])->name('specialized.show');

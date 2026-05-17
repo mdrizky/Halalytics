@@ -519,7 +519,7 @@
 </style>
 
 <div class="ai-fab" id="ai-fab">
-    <div class="ai-fab-label">Tanya HILDA AI</div>
+    <div class="ai-fab-label">Tanya AI Halalytics</div>
     <div class="ai-fab-btn" onclick="toggleAI()">🤖</div>
 </div>
 
@@ -528,22 +528,22 @@
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-lg">🤖</div>
             <div>
-                <p class="font-black text-sm">Halalytics AI (HILDA)</p>
+                <p class="font-black text-sm">AI Halalytics</p>
                 <p class="text-[10px] text-emerald-300">Online</p>
             </div>
         </div>
         <button onclick="toggleAI()" class="text-white opacity-50 hover:opacity-100 text-xl">&times;</button>
     </div>
     <div class="ai-chat-box" id="chat-messages">
-        <div class="ai-bubble-msg">Halo! Saya <b>HILDA</b> 🤖 Tanyakan tentang penyakit, obat, nutrisi, atau kehalalan produk!</div>
+        <div class="ai-bubble-msg">Halo! Saya <b>AI Halalytics</b> 🤖 Asisten cerdas kesehatan, gizi, diet, obat, dan produk halal Anda. Silakan tanyakan apa saja!</div>
         <div style="padding:8px 0">
-            <span class="ai-chip" onclick="askChip('Gejala diabetes')">Gejala Diabetes</span>
-            <span class="ai-chip" onclick="askChip('Vitamin untuk imun')">Vitamin Imun</span>
-            <span class="ai-chip" onclick="askChip('Cek halal')">Cek Halal</span>
+            <span class="ai-chip" onclick="askChip('Beri saya tips diet sehat bergizi')">Tips Diet Sehat</span>
+            <span class="ai-chip" onclick="askChip('Apa saja gejala diabetes dan cara mencegahnya?')">Gejala Diabetes</span>
+            <span class="ai-chip" onclick="askChip('Bagaimana cara mengetahui produk kosmetik aman dan halal?')">Skincare Halal</span>
         </div>
     </div>
     <div class="p-3 bg-white border-t border-gray-100 flex gap-2">
-        <input type="text" id="ai-input" placeholder="Tulis pertanyaan..." class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none" onkeypress="if(event.key==='Enter')sendAIMessage()">
+        <input type="text" id="ai-input" placeholder="Tulis pertanyaan Anda di sini..." class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none" onkeypress="if(event.key==='Enter')sendAIMessage()">
         <button onclick="sendAIMessage()" class="bg-emerald-600 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-lg hover:bg-emerald-700 flex-shrink-0">&rarr;</button>
     </div>
 </div>
@@ -557,26 +557,11 @@ function calculateWater(){const w=document.getElementById('water_weight').value;
 function calculateRisk(){let s=0;if(document.getElementById('risk_smoke').checked)s+=40;if(document.getElementById('risk_family').checked)s+=30;if(document.getElementById('risk_sleep').checked)s+=20;const b=document.getElementById('risk_res'),v=document.getElementById('risk_val');b.classList.remove('hidden');if(s>=60){v.innerText='TINGGI';b.className='mt-6 p-6 rounded-2xl text-center bg-rose-50 text-rose-600'}else if(s>=30){v.innerText='SEDANG';b.className='mt-6 p-6 rounded-2xl text-center bg-amber-50 text-amber-600'}else{v.innerText='RENDAH';b.className='mt-6 p-6 rounded-2xl text-center bg-emerald-50 text-emerald-600'}}
 function calculateDueDate(){const h=document.getElementById('hpht_date').value;if(!h){alert('Masukkan tanggal HPHT!');return}const d=new Date(h);d.setDate(d.getDate()+7);d.setMonth(d.getMonth()-3);d.setFullYear(d.getFullYear()+1);document.getElementById('due_val').innerText=d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});document.getElementById('due_res').classList.remove('hidden')}
 
-// HILDA AI
+// AI Halalytics Panel Controls
 function toggleAI(){const p=document.getElementById('ai-panel'),f=document.getElementById('ai-fab');const o=p.style.display==='flex';p.style.display=o?'none':'flex';f.style.display=o?'flex':'none'}
 function askChip(t){document.getElementById('ai-input').value=t;sendAIMessage()}
 
-const hildaKB=[
-{keys:['diabetes','gula darah','insulin','kencing manis'],answer:'🩺 <b>Diabetes Mellitus</b><br><br><b>Gejala umum:</b><br>• Sering buang air kecil<br>• Haus berlebihan<br>• Penurunan BB tanpa sebab<br>• Luka sulit sembuh<br><br><b>Gula darah normal:</b> Puasa 70-100 mg/dL<br><br>💡 Download Halalytics untuk program Diabetes Care!'},
-{keys:['kolesterol','ldl','hdl'],answer:'🫀 <b>Kolesterol</b><br><br><b>Nilai normal:</b><br>• Total: < 200 mg/dL<br>• LDL: < 100 mg/dL<br>• HDL: > 40 mg/dL<br><br><b>Tips:</b> Konsumsi oat, ikan salmon, olahraga 30 mnt/hari'},
-{keys:['jantung','serangan jantung','tekanan darah','hipertensi','darah tinggi'],answer:'❤️ <b>Kesehatan Jantung</b><br><br><b>TD normal:</b> < 120/80 mmHg<br><br><b>Tanda bahaya:</b><br>• Nyeri dada tertekan<br>• Nyeri ke lengan kiri<br>• Sesak napas & keringat dingin<br><br>⚠️ Jika mengalami ini, SEGERA hubungi 119!'},
-{keys:['depresi','cemas','anxiety','stres','mental','psikolog'],answer:'🧠 <b>Kesehatan Mental</b><br><br><b>Perlu bantuan jika:</b><br>• Sedih > 2 minggu<br>• Kehilangan minat<br>• Gangguan tidur<br>• Sulit konsentrasi<br><br>Hotline: 119 ext 8<br>💚 Minta bantuan itu tanda kekuatan.'},
-{keys:['vitamin','suplemen','daya tahan','imun'],answer:'💊 <b>Vitamin untuk Imunitas</b><br><br>• <b>Vitamin C</b> 500-1000mg/hari<br>• <b>Vitamin D3</b> 1000 IU/hari<br>• <b>Zinc</b> 15mg/hari<br>• <b>Probiotik</b> untuk usus sehat<br><br>✅ Semua vitamin di Halalytics terverifikasi halal!'},
-{keys:['halal','haram','babi','gelatin','cek halal'],answer:'✅ <b>Cek Kehalalan Produk</b><br><br>Halalytics membantu via:<br>• Scan barcode instan<br>• Analisis bahan AI<br>• Database BPOM & MUI<br><br><b>Waspadai:</b> Gelatin, E120, Alkohol, Shortening<br><br>📱 Download Halalytics untuk scan!'},
-{keys:['maag','asam lambung','gerd','lambung'],answer:'🏥 <b>GERD/Maag</b><br><br>• Makan teratur, porsi kecil<br>• Hindari pedas, asam, kafein<br>• Jangan tiduran setelah makan<br>• Obat: Antasida, Omeprazole'},
-{keys:['flu','batuk','pilek','demam'],answer:'🤒 <b>Flu & Demam</b><br><br>• Istirahat cukup<br>• Minum 2-3 liter/hari<br>• Paracetamol untuk demam > 38°C<br>• Madu + lemon untuk batuk<br><br>Ke dokter jika demam > 3 hari'},
-{keys:['diet','kalori','berat badan','obesitas'],answer:'🥗 <b>Manajemen BB</b><br><br>BMI ideal: 18.5-24.9<br>• Defisit 300-500 kcal/hari<br>• Protein 1.2-1.6 g/kg<br>• Sayur & buah 5 porsi/hari<br><br>🧮 Gunakan Kalkulator BMR di atas!'},
-{keys:['hamil','kehamilan','ibu hamil','janin'],answer:'🤰 <b>Kehamilan</b><br><br><b>Nutrisi penting:</b><br>• Asam Folat 400-800 mcg<br>• Zat Besi 27 mg/hari<br>• Kalsium 1000 mg/hari<br>• DHA/Omega-3<br><br>👶 Gunakan Kalkulator Kehamilan di atas!'},
-{keys:['kulit','jerawat','skincare','acne'],answer:'✨ <b>Perawatan Kulit</b><br><br>Pagi: Cleanser → Moisturizer → SPF<br>Malam: Cleanser → Serum → Moisturizer<br><br>Jerawat: Salicylic Acid, Niacinamide<br>💡 Coba Haloskin untuk analisis AI!'},
-];
-
-function getHildaResponse(t){const l=t.toLowerCase();for(const e of hildaKB){if(e.keys.some(k=>l.includes(k)))return e.answer}if(l.includes('halo')||l.includes('hai')||l.includes('hi'))return'Halo! 👋 Saya HILDA, asisten kesehatan Anda. Tanyakan tentang penyakit, obat, nutrisi, atau kehalalan produk!';if(l.includes('terima kasih')||l.includes('makasih'))return'Sama-sama! 😊 Senang bisa membantu!';if(l.includes('obat'))return'💊 Cek bagian Beli Obat & Suplemen di atas, atau scan barcode di aplikasi Halalytics!';return'🤔 Saya belum punya info spesifik tentang itu. Coba tanyakan tentang: diabetes, kolesterol, kesehatan mental, vitamin, kehalalan, diet, atau kehamilan!'}
-
-function sendAIMessage(){const i=document.getElementById('ai-input'),c=document.getElementById('chat-messages'),t=i.value.trim();if(!t)return;const u=document.createElement('div');u.className='ai-bubble-msg user';u.innerText=t;c.appendChild(u);i.value='';c.scrollTop=c.scrollHeight;const tp=document.createElement('div');tp.innerHTML='<span></span><span></span><span></span>';tp.className='ai-typing';c.appendChild(tp);c.scrollTop=c.scrollHeight;setTimeout(()=>{tp.remove();const b=document.createElement('div');b.className='ai-bubble-msg';b.innerHTML=getHildaResponse(t);c.appendChild(b);c.scrollTop=c.scrollHeight},1200)}
+function sendAIMessage(){const i=document.getElementById('ai-input'),c=document.getElementById('chat-messages'),t=i.value.trim();if(!t)return;const u=document.createElement('div');u.className='ai-bubble-msg user';u.innerText=t;c.appendChild(u);i.value='';c.scrollTop=c.scrollHeight;const tp=document.createElement('div');tp.innerHTML='<span></span><span></span><span></span>';tp.className='ai-typing';c.appendChild(tp);c.scrollTop=c.scrollHeight;
+fetch('/ai/chat',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({message:t})}).then(response=>response.json()).then(data=>{tp.remove();const b=document.createElement('div');b.className='ai-bubble-msg';b.innerHTML=data.reply||'Maaf, ada kendala koneksi dengan AI Halalytics.';c.appendChild(b);c.scrollTop=c.scrollHeight}).catch(error=>{tp.remove();const b=document.createElement('div');b.className='ai-bubble-msg';b.innerHTML='Maaf, gagal menghubungi server AI Halalytics. Coba lagi nanti.';c.appendChild(b);c.scrollTop=c.scrollHeight})}
 </script>
 @endsection

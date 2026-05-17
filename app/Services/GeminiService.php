@@ -773,6 +773,7 @@ PROMPT;
             $this->model,
             'gemini-2.0-flash-lite',
             'gemini-2.0-flash',
+            'gemini-1.5-flash',
         ]));
 
         $payload = [
