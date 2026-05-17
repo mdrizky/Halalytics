@@ -120,6 +120,9 @@
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-2">
+                            <a href="{{ route('admin.kategori.show', $kat->id_kategori) }}" class="p-2 text-slate-400 hover:text-primary transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="View Full Inventory">
+                                <span class="material-icons-round text-lg">visibility</span>
+                            </a>
                             <button onclick="editCategory({{ $kat->id_kategori }}, '{{ addslashes($kat->nama_kategori) }}', '{{ addslashes($kat->description) }}')" class="p-2 text-slate-400 hover:text-primary transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
                                 <span class="material-icons-round text-lg">edit</span>
                             </button>

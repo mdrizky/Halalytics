@@ -125,9 +125,9 @@ class BpomService
         });
     }
 
-    public function syncLatest(int $limit = 100): array
+    public function syncLatest(int $limit = 100, ?array $keywords = null): array
     {
-        $keywords = ['obat', 'makanan', 'kosmetik', 'suplemen', 'vitamin', 'sirup', 'cream'];
+        $keywords = $keywords ?? ['obat', 'makanan', 'kosmetik', 'suplemen', 'vitamin', 'sirup', 'cream'];
         $synced = 0;
         $sources = [];
         $errors = [];

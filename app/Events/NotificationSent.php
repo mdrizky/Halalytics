@@ -55,8 +55,8 @@ class NotificationSent implements ShouldBroadcast
             'type' => $this->notification->type,
             'title' => $this->notification->title,
             'message' => $this->notification->message,
-            'data' => $this->notification->data,
-            'read' => $this->notification->read,
+            'data' => $this->notification->extra_data ?? [],
+            'read' => (bool) $this->notification->is_read,
             'created_at' => $this->notification->created_at->toISOString(),
             'time_ago' => $this->notification->created_at->diffForHumans(),
         ];

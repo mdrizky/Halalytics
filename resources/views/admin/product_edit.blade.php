@@ -22,7 +22,7 @@
                 <span class="material-icons-round text-lg">arrow_back</span>
                 BACK
             </a>
-            <form action="{{ route('admin.product.destroy', $product->id_product) }}" method="POST" onsubmit="return confirm('Archive this asset permanently?')">
+            <form action="{{ route('admin.product.destroy', $type === 'medicine' ? $product->id_medicine : $product->id_product) }}" method="POST" onsubmit="return confirm('Archive this asset permanently?')">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="h-12 px-6 flex items-center gap-2 rounded-2xl bg-rose-50 dark:bg-rose-900/20 text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-all font-bold text-sm">
@@ -33,7 +33,7 @@
         </div>
     </div>
 
-    <form action="{{ route('admin.product.update', $product->id_product) }}" method="POST" enctype="multipart/form-data" class="space-y-8 pb-12">
+    <form action="{{ route('admin.product.update', $type === 'medicine' ? $product->id_medicine : $product->id_product) }}" method="POST" enctype="multipart/form-data" class="space-y-8 pb-12">
         @csrf
         
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -93,7 +93,7 @@
                         </label>
                     </div>
                     <p class="mt-4 text-[9px] font-medium text-slate-400 text-center leading-relaxed">
-                        ID: {{ $product->id_product }} • Last modified: {{ $product->updated_at->format('d M Y') }}
+                        ID: {{ $type === 'medicine' ? $product->id_medicine : $product->id_product }} • Last modified: {{ $product->updated_at->format('d M Y') }}
                     </p>
                 </div>
 
@@ -146,23 +146,30 @@
                 <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
                     <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6">Assessed Status</label>
                     <div class="space-y-3">
+                        @php
+                            $currentStatus = $type === 'medicine' ? $product->halal_status : $product->status;
+                            $statusName = $type === 'medicine' ? 'halal_status' : 'status';
+                        @endphp
                         @foreach(['halal' => ['icon' => 'verified', 'color' => 'text-emerald-500', 'bg' => 'peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20', 'border' => 'peer-checked:border-emerald-500'], 
                                  'syubhat' => ['icon' => 'help', 'color' => 'text-amber-500', 'bg' => 'peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/20', 'border' => 'peer-checked:border-amber-500'], 
-                                 'tidak halal' => ['icon' => 'cancel', 'color' => 'text-rose-500', 'bg' => 'peer-checked:bg-rose-50 dark:peer-checked:bg-rose-900/20', 'border' => 'peer-checked:border-rose-500']] as $val => $cfg)
+                                 'tidak halal' => ['icon' => 'cancel', 'color' => 'text-rose-500', 'bg' => 'peer-checked:bg-rose-50 dark:peer-checked:bg-rose-900/20', 'border' => 'peer-checked:border-rose-500'],
+                                 'haram' => ['icon' => 'cancel', 'color' => 'text-rose-500', 'bg' => 'peer-checked:bg-rose-50 dark:peer-checked:bg-rose-900/20', 'border' => 'peer-checked:border-rose-500']] as $val => $cfg)
+                        @if(($type === 'medicine' && in_array($val, ['halal', 'haram', 'syubhat'])) || ($type === 'general' && in_array($val, ['halal', 'tidak halal', 'syubhat'])))
                         <label class="relative block cursor-pointer group">
-                            <input type="radio" name="status" value="{{ $val }}" {{ old('status', $product->status) == $val ? 'checked' : '' }} class="peer sr-only" required>
+                            <input type="radio" name="{{ $statusName }}" value="{{ $val }}" {{ old($statusName, $currentStatus) == $val ? 'checked' : '' }} class="peer sr-only" required>
                             <div class="flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-50 dark:border-slate-800 transition-all {{ $cfg['bg'] }} {{ $cfg['border'] }} group-hover:bg-slate-50 dark:group-hover:bg-slate-800/50">
                                 <div class="h-10 w-10 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center shadow-sm">
                                     <span class="material-icons-round {{ $cfg['color'] }}">{{ $cfg['icon'] }}</span>
                                 </div>
                                 <div class="flex-1">
-                                    <p class="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-tight">{{ $val == 'tidak halal' ? 'HARAM' : strtoupper($val) }}</p>
+                                    <p class="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-tight">{{ ($val == 'tidak halal' || $val == 'haram') ? 'HARAM' : strtoupper($val) }}</p>
                                 </div>
                                 <div class="h-5 w-5 rounded-full border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center peer-checked:border-primary transition-all">
                                     <div class="h-2.5 w-2.5 rounded-full bg-primary scale-0 peer-checked:scale-100 transition-transform"></div>
                                 </div>
                             </div>
                         </label>
+                        @endif
                         @endforeach
                     </div>
                 </div>
@@ -179,8 +186,13 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="md:col-span-2 space-y-2">
                             <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Official Name</label>
-                            <input type="text" name="nama_product" value="{{ old('nama_product', $product->nama_product) }}" required class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary transition-all">
-                            @error('nama_product') <p class="text-[10px] text-rose-500 font-bold mt-1 ml-1">{{ $message }}</p> @enderror
+                            @if($type === 'medicine')
+                                <input type="text" name="name" value="{{ old('name', $product->name) }}" required class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary transition-all">
+                                @error('name') <p class="text-[10px] text-rose-500 font-bold mt-1 ml-1">{{ $message }}</p> @enderror
+                            @else
+                                <input type="text" name="nama_product" value="{{ old('nama_product', $product->nama_product) }}" required class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary transition-all">
+                                @error('nama_product') <p class="text-[10px] text-rose-500 font-bold mt-1 ml-1">{{ $message }}</p> @enderror
+                            @endif
                         </div>
 
                         <div class="space-y-2">

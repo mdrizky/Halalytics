@@ -70,6 +70,12 @@ class IngredientManagementController extends Controller
         }
     }
 
+    public function show($id)
+    {
+        $ingredient = Ingredient::findOrFail($id);
+        return view('admin.ingredients.show', compact('ingredient'));
+    }
+
     public function create()
     {
         return view('admin.ingredients.create');

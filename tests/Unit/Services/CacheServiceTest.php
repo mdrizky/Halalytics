@@ -9,12 +9,9 @@ use App\Models\ProductModel;
 use App\Models\ScanModel;
 use App\Models\KategoriModel;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class CacheServiceTest extends TestCase
 {
-    use RefreshDatabase;
-
     private CacheService $cacheService;
 
     protected function setUp(): void

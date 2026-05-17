@@ -470,7 +470,7 @@
         <div class="logo" style="justify-content: center; margin-bottom: 24px;">
             <div style="background: white; border-radius: 12px; padding: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-right: 12px;">
             <div style="background: white; padding: 6px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); display: inline-block;">
-                <img src="/images/logo.png?v={{ time() }}" alt="Halalytics Logo" style="height: 44px; width: auto; object-fit: contain;" onerror="this.src='{{ asset('images/logo.png') }}'; this.onerror=null;">
+                <img src="{{ asset('images/logo_halalytics.png') }}?v={{ time() }}" alt="Halalytics Logo" style="height: 44px; width: auto; object-fit: contain;">
             </div>
             </div>
             <span style="font-weight: 800; letter-spacing: -0.5px;">Halalytics</span>

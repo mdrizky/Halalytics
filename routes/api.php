@@ -33,6 +33,9 @@ use App\Http\Controllers\Api\BpomController;
 use App\Http\Controllers\Api\SkincareController;
 use App\Http\Controllers\Api\MentalHealthController;
 use App\Http\Controllers\Api\HelpCenterController;
+use App\Http\Controllers\Api\SyncController;
+use App\Http\Controllers\Api\NutritionistDashboardController;
+use App\Http\Controllers\Api\NutritionConsultationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -72,6 +75,7 @@ Route::prefix('products')->group(function () {
     Route::get('/popular', [ProductController::class, 'popular']);
     Route::get('/recommendations', [ProductController::class, 'recommendations']);
     Route::get('/external/{barcode}', [ProductExternalController::class, 'detail']);
+    Route::get('/product-detail', [ProductController::class, 'detailProduct']);
 });
 Route::prefix('v1/products')->group(function () {
     Route::get('/popular', [ProductController::class, 'popular']);
@@ -186,6 +190,22 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}/notes', [\App\Http\Controllers\Api\FavoriteController::class, 'updateNotes']);
     });
 
+    // Offline & health batch sync (mobile WorkManager)
+    Route::post('/sync/scan-logs', [SyncController::class, 'syncScanLogs']);
+    Route::post('/sync/health-logs', [SyncController::class, 'syncHealthLogs']);
+
+    // User ↔ ahli gizi (konsultasi dasar, siap dikembangkan ke realtime)
+    Route::prefix('nutrition')->group(function () {
+        Route::get('/consultations/mine', [NutritionConsultationController::class, 'mine']);
+        Route::post('/consultations', [NutritionConsultationController::class, 'store']);
+        Route::post('/consultations/{id}/messages', [NutritionConsultationController::class, 'storeMessage'])->whereNumber('id');
+    });
+
+    Route::middleware('role:nutritionist')->prefix('nutritionist')->group(function () {
+        Route::get('/dashboard', [NutritionistDashboardController::class, 'index']);
+        Route::get('/consultations', [NutritionConsultationController::class, 'indexNutritionist']);
+    });
+
     Route::get('/user/stats/weekly', [\App\Http\Controllers\Api\AIAssistantController::class, 'generateWeeklyReport']);
 
     // FOOD & RECOGNITION
@@ -239,6 +259,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/reminders/log', [\App\Http\Controllers\Api\MedicationReminderController::class, 'log']);
         Route::get('/halal-alternatives', [\App\Http\Controllers\Api\HalalAlternativeController::class, 'getAlternatives']);
         Route::post('/compare', [\App\Http\Controllers\Api\ComparisonController::class, 'compare']);
+        Route::post('/bmi-advice', [\App\Http\Controllers\Api\MedicalProfileController::class, 'getAiBmiAdvice']);
     });
 
     // MEAL AI
@@ -253,6 +274,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // MEDICAL RECORDS
     Route::get('/medical-records', [\App\Http\Controllers\Api\MedicalRecordController::class, 'index']);
     Route::post('/medical-records', [\App\Http\Controllers\Api\MedicalRecordController::class, 'store']);
+    Route::get('/medical-profile', [\App\Http\Controllers\Api\MedicalProfileController::class, 'show']);
+    Route::post('/medical-profile', [\App\Http\Controllers\Api\MedicalProfileController::class, 'store']);
+    Route::post('/ai/bmi-advice', [\App\Http\Controllers\Api\MedicalProfileController::class, 'getAiBmiAdvice']);
+    Route::get('/medical-reports', [\App\Http\Controllers\Api\MedicalProfileController::class, 'getReports']);
 
     // EMERGENCY
     Route::post('/emergency/trigger', [\App\Http\Controllers\Api\EmergencyController::class, 'triggerEmergency']);
@@ -308,6 +333,9 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::post('appointments/scan-qr', [\App\Http\Controllers\Admin\AdminAppointmentController::class, 'scanQr']);
     Route::post('appointments/{id}/verify', [\App\Http\Controllers\Admin\AdminAppointmentController::class, 'verify']);
     Route::apiResource('blood-stocks', \App\Http\Controllers\Admin\AdminBloodStockController::class);
+    Route::get('medical-profiles', [\App\Http\Controllers\Admin\AdminMedicalProfileController::class, 'index']);
+    Route::get('medical-profiles/{id}', [\App\Http\Controllers\Admin\AdminMedicalProfileController::class, 'show']);
+    Route::put('medical-profiles/{id}', [\App\Http\Controllers\Admin\AdminMedicalProfileController::class, 'update']);
     Route::post('emergency-requests', [\App\Http\Controllers\Admin\EmergencyController::class, 'store']);
     Route::post('emergency-requests/{id}/notify', [\App\Http\Controllers\Admin\EmergencyController::class, 'sendNotification']);
 });

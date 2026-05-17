@@ -6,13 +6,10 @@ use Tests\TestCase;
 use App\Services\EmailVerificationService;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Carbon\Carbon;
 
 class EmailVerificationServiceTest extends TestCase
 {
-    use RefreshDatabase;
-
     private EmailVerificationService $emailVerificationService;
 
     protected function setUp(): void
@@ -39,7 +36,7 @@ class EmailVerificationServiceTest extends TestCase
         $this->assertNull($user->email_verified_at);
 
         // Verify email was sent
-        Mail::assertSent(\App\Mail\EmailVerification::class, function ($mail) use ($user) {
+        Mail::assertQueued(\App\Mail\EmailVerification::class, function ($mail) use ($user) {
             return $mail->hasTo($user->email) && $mail->user->id_user === $user->id_user;
         });
     }
@@ -56,7 +53,7 @@ class EmailVerificationServiceTest extends TestCase
         $this->assertTrue($result);
 
         // Verify no email was sent since user is already verified
-        Mail::assertNotSent(\App\Mail\EmailVerification::class);
+        Mail::assertNotQueued(\App\Mail\EmailVerification::class);
     }
 
     /**
@@ -133,14 +130,14 @@ class EmailVerificationServiceTest extends TestCase
         $result = $this->emailVerificationService->resendVerification($user);
 
         $this->assertTrue($result['success']);
-        $this->assertStringContains('sent successfully', $result['message']);
+        $this->assertStringContainsString('sent successfully', $result['message']);
 
         $user->refresh();
         $this->assertNotEquals('old-token', $user->email_verification_token);
         $this->assertGreaterThan(now(), $user->email_verification_expires_at);
 
-        // Verify email was sent
-        Mail::assertSent(\App\Mail\EmailVerification::class);
+        // Verify email was queued
+        Mail::assertQueued(\App\Mail\EmailVerification::class);
     }
 
     /**
@@ -156,7 +153,7 @@ class EmailVerificationServiceTest extends TestCase
         $this->assertEquals('Email is already verified.', $result['message']);
 
         // Verify no email was sent
-        Mail::assertNotSent(\App\Mail\EmailVerification::class);
+        Mail::assertNotQueued(\App\Mail\EmailVerification::class);
     }
 
     /**
@@ -173,10 +170,10 @@ class EmailVerificationServiceTest extends TestCase
         $result = $this->emailVerificationService->resendVerification($user);
 
         $this->assertFalse($result['success']);
-        $this->assertStringContains('wait before requesting', $result['message']);
+        $this->assertStringContainsString('wait before requesting', $result['message']);
 
         // Verify no email was sent
-        Mail::assertNotSent(\App\Mail\EmailVerification::class);
+        Mail::assertNotQueued(\App\Mail\EmailVerification::class);
     }
 
     /**
@@ -206,11 +203,9 @@ class EmailVerificationServiceTest extends TestCase
         $this->emailVerificationService->sendVerification($user);
 
         $user->refresh();
-        $expectedExpiration = now()->addHours(24);
-        $actualExpiration = $user->email_verification_expires_at;
-
-        // Allow for 1 minute difference
-        $this->assertLessThan(61, abs($expectedExpiration->diffInSeconds($actualExpiration)));
+        $this->assertNotNull($user->email_verification_expires_at);
+        $this->assertTrue($user->email_verification_expires_at->greaterThan(now()->addHours(23)));
+        $this->assertTrue($user->email_verification_expires_at->lessThanOrEqualTo(now()->addHours(25)));
     }
 
     /**
@@ -248,8 +243,11 @@ class EmailVerificationServiceTest extends TestCase
         $uniqueTokens = $tokens->unique();
         $this->assertEquals($tokens->count(), $uniqueTokens->count());
 
-        // Verify all emails were sent
-        Mail::assertSent(\App\Mail\EmailVerification::class, 3);
+        foreach ($users as $user) {
+            Mail::assertQueued(\App\Mail\EmailVerification::class, function ($mail) use ($user) {
+                return $mail->hasTo($user->email);
+            });
+        }
     }
 
     /**

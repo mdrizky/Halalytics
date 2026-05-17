@@ -23,10 +23,8 @@ class NotificationService
             'type' => $type,
             'title' => $title,
             'message' => $message,
-            'data' => $data,
-            'read' => false,
-            'created_at' => now(),
-            'updated_at' => now(),
+            'extra_data' => $data ?: null,
+            'is_read' => false,
         ]);
 
         // Broadcast to user's private channel
@@ -178,8 +176,8 @@ class NotificationService
                         'type' => $notification->type,
                         'title' => $notification->title,
                         'message' => $notification->message,
-                        'data' => $notification->data,
-                        'read' => $notification->read,
+                        'data' => $notification->extra_data ?? [],
+                        'read' => (bool) $notification->is_read,
                         'created_at' => $notification->created_at->toISOString(),
                         'time_ago' => $notification->created_at->diffForHumans(),
                     ];
@@ -197,7 +195,7 @@ class NotificationService
         
         return Cache::remember($cacheKey, 300, function () use ($user) {
             return Notification::where('user_id', $user->id_user)
-                ->where('read', false)
+                ->where('is_read', false)
                 ->count();
         });
     }
@@ -215,7 +213,7 @@ class NotificationService
             return false;
         }
 
-        $notification->update(['read' => true]);
+        $notification->update(['is_read' => true]);
         
         // Update cached count
         $this->updateNotificationCount($user->id_user);
@@ -229,8 +227,8 @@ class NotificationService
     public function markAllAsRead(User $user): int
     {
         $count = Notification::where('user_id', $user->id_user)
-            ->where('read', false)
-            ->update(['read' => true]);
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
 
         // Update cached count
         $this->updateNotificationCount($user->id_user);
@@ -317,7 +315,7 @@ class NotificationService
     {
         return [
             'total_notifications' => Notification::count(),
-            'unread_notifications' => Notification::where('read', false)->count(),
+            'unread_notifications' => Notification::where('is_read', false)->count(),
             'notifications_today' => Notification::whereDate('created_at', now()->toDate())->count(),
             'notifications_this_week' => Notification::whereBetween('created_at', [
                 now()->startOfWeek(),

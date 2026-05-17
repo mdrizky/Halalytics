@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 class AdminUserController extends Controller
 {
     // Menampilkan semua user dengan statistik
-    public function admin_user(Request $request)
+    public function index(Request $request)
     {
         // Stats for new view
         $totalUsers = User::count();
@@ -90,6 +90,28 @@ class AdminUserController extends Controller
         return view('admin.user_edit', compact('user', 'userScans'));
     }
 
+    // Detail user profile
+    public function show($id_user)
+    {
+        $user = User::withCount('scans')->withCount('scanHistories')->findOrFail($id_user);
+        
+        // Latest scans from both legacy and new systems
+        $scans = ScanModel::where('user_id', $id_user)->orderByDesc('tanggal_scan')->limit(10)->get();
+        $scanHistories = collect();
+        if (Schema::hasTable('scan_histories')) {
+            $scanHistories = ScanHistory::where('user_id', $id_user)->orderByDesc('created_at')->limit(20)->get();
+        }
+
+        // Stats summary
+        $stats = [
+            'total_scans' => (int) ($user->scans_count ?? 0) + (int) ($user->scan_histories_count ?? 0),
+            'halal_scans' => ScanModel::where('user_id', $id_user)->where('status_halal', 'halal')->count(),
+            'haram_scans' => ScanModel::where('user_id', $id_user)->where('status_halal', 'tidak halal')->count(),
+        ];
+
+        return view('admin.user_show', compact('user', 'scans', 'scanHistories', 'stats'));
+    }
+
     // Update user
     public function update(Request $request, $id_user)
     {
@@ -106,7 +128,7 @@ class AdminUserController extends Controller
             'medical_history' => 'nullable|string|max:2000',
             'weight' => 'nullable|numeric|min:1|max:500',
             'height' => 'nullable|numeric|min:1|max:300',
-            'role' => 'required|in:admin,user',
+            'role' => 'required|in:admin,user,nutritionist',
             'active' => 'required|boolean',
         ]);
 
@@ -217,7 +239,7 @@ class AdminUserController extends Controller
             'username' => 'nullable|string|max:255|unique:users,username',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'required|in:admin,user',
+            'role' => 'required|in:admin,user,nutritionist',
             'phone' => 'nullable|string|max:20',
             'blood_type' => 'nullable|string|in:A+,A-,B+,B-,AB+,AB-,O+,O-,A,B,AB,O',
             'allergy' => 'nullable|string',

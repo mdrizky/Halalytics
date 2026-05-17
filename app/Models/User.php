@@ -77,6 +77,12 @@ class User extends Authenticatable implements FilamentUser
         'google_id',
         'facebook_id',
         'social_provider',
+        'email_verified_at',
+        'email_verification_token',
+        'email_verification_expires_at',
+        'onboarding_progress',
+        'onboarding_level',
+        'onboarding_completed_at',
     ];
 
     protected $hidden = [
@@ -108,6 +114,9 @@ class User extends Authenticatable implements FilamentUser
         'current_streak' => 'integer',
         'longest_streak' => 'integer',
         'last_active_date' => 'date',
+        'email_verified_at' => 'datetime',
+        'email_verification_expires_at' => 'datetime',
+        'onboarding_progress' => 'array',
     ];
 
     public function setPasswordAttribute($value)
@@ -184,6 +193,84 @@ class User extends Authenticatable implements FilamentUser
         return null;
     }
     // ---------------------------------
+    // SINKRONISASI FIELD (TINGKAT DEWA)
+    // ---------------------------------
+    
+    // Pastikan weight_kg dan weight sinkron tanpa rekursi accessor
+    public function getWeightAttribute($value)
+    {
+        if ($value !== null && $value !== '' && (float) $value > 0) {
+            return $value;
+        }
+        $rawKg = $this->attributes['weight_kg'] ?? null;
+        if ($rawKg !== null && $rawKg !== '' && (float) $rawKg > 0) {
+            return $rawKg;
+        }
+
+        return $value;
+    }
+
+    public function getWeightKgAttribute($value)
+    {
+        if ($value !== null && $value !== '' && (float) $value > 0) {
+            return $value;
+        }
+        $rawW = $this->attributes['weight'] ?? null;
+        if ($rawW !== null && $rawW !== '' && (float) $rawW > 0) {
+            return $rawW;
+        }
+
+        return $value;
+    }
+
+    // Pastikan height selalu terisi
+    public function getHeightAttribute($value)
+    {
+        return $value ?: ($this->medicalProfile->height_cm ?? 0);
+    }
+
+    // Sinkronisasi allergy (string) dan allergies (array) — tanpa saling memanggil accessor (hindari rekursi / undefined)
+    public function getAllergyAttribute($value)
+    {
+        if ($value !== null && $value !== '') {
+            return $value;
+        }
+        $rawJson = $this->attributes['allergies'] ?? null;
+        if (is_string($rawJson) && $rawJson !== '' && $rawJson !== 'null') {
+            $decoded = json_decode($rawJson, true);
+            if (is_array($decoded) && $decoded !== []) {
+                return implode(', ', $decoded);
+            }
+        }
+
+        return $value ?? '';
+    }
+
+    public function getAllergiesAttribute($value)
+    {
+        $rawJson = $this->attributes['allergies'] ?? null;
+        if (is_string($rawJson) && $rawJson !== '' && $rawJson !== 'null') {
+            $decoded = json_decode($rawJson, true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+        if (is_array($value)) {
+            return $value;
+        }
+        $allergyStr = $this->attributes['allergy'] ?? null;
+        if (is_string($allergyStr) && $allergyStr !== '') {
+            return array_values(array_filter(array_map('trim', explode(',', $allergyStr))));
+        }
+
+        return [];
+    }
+
+    // Relationship ke MedicalProfile untuk fallback data
+    public function medicalProfile()
+    {
+        return $this->hasOne(MedicalProfile::class, 'id_user', 'id_user');
+    }
 
     public function canAccessPanel(Panel $panel): bool
     {

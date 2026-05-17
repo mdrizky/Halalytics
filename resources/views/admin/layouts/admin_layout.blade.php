@@ -199,7 +199,7 @@
             </a>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.product*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.product.index') }}">
                 <span class="material-icons-round text-[20px]">restaurant</span>
-                <span class="text-sm flex-1">Foods & Beverages</span>
+                <span class="text-sm flex-1">Product Management</span>
                 <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200 dark:border-slate-700">{{ number_format($global_product_count) }}</span>
             </a>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.requests*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.requests.index') }}">
@@ -216,16 +216,6 @@
                 <span class="material-symbols-outlined text-[20px]">verified_user</span>
                 <span class="text-sm flex-1">BPOM Data</span>
                 <span class="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-bold border border-primary/20">VERIFY</span>
-            </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.medicines*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.medicines.index') }}">
-                <span class="material-icons-round text-[20px]">medication</span>
-                <span class="text-sm flex-1">Medicines</span>
-                <span class="text-[10px] bg-primary/10 dark:bg-primary/15 px-1.5 py-0.5 rounded-md font-bold text-primary border border-primary/20 dark:border-primary/30">{{ number_format($global_medicine_count) }}</span>
-            </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.cosmetics*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.cosmetics.index') }}">
-                <span class="material-icons-round text-[20px]">spa</span>
-                <span class="text-sm flex-1">Cosmetics</span>
-                <span class="text-[10px] bg-primary/10 dark:bg-primary/15 px-1.5 py-0.5 rounded-md font-bold text-primary border border-primary/20 dark:border-primary/30">{{ number_format($global_cosmetic_count) }}</span>
             </a>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.ingredients*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.ingredients.index') }}">
                 <span class="material-icons-round text-[20px]">science</span>
@@ -288,6 +278,12 @@
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.blood-emergency*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.blood-emergency.index') }}">
                 <span class="material-icons-round text-[20px]">emergency</span>
                 <span class="text-sm flex-1">Emergency Calls</span>
+            </a>
+            <div class="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">AI Health Suite</div>
+            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.health-features*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.health-features.index') }}">
+                <span class="material-icons-round text-[20px]">monitor_heart</span>
+                <span class="text-sm flex-1">Health Features</span>
+                <span class="text-[10px] bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-md font-bold text-emerald-600 border border-emerald-200 dark:border-emerald-700">AI</span>
             </a>
             <div class="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Activity & Reports</div>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.scan*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.scan.index') }}">
@@ -396,6 +392,8 @@
                 <span class="text-red-700 dark:text-red-300 text-sm font-medium">{{ session('error') }}</span>
             </div>
             @endif
+            
+            @include('components.medical-ai-disclaimer-banner')
             
             @yield('content')
         </div>

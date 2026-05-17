@@ -72,16 +72,32 @@ class AIAssistantController extends Controller
         try {
             $analysis = $this->geminiService->analyzeIngredients($text, $userContext);
 
-            // Log intake if nutrition estimate is available
+            // Log intake to daily_intakes table (Dashboard Sync)
             if (isset($analysis['nutrition_estimate'])) {
+                $today = now()->format('Y-m-d');
+                $nutrition = $analysis['nutrition_estimate'];
+                
+                \App\Models\DailyIntake::updateOrCreate(
+                    ['user_id' => $user->id_user, 'intake_date' => $today],
+                    [
+                        'total_sugar_g' => \DB::raw('total_sugar_g + ' . ($nutrition['sugar_g'] ?? 0)),
+                        'total_sodium_mg' => \DB::raw('total_sodium_mg + ' . ($nutrition['sodium_mg'] ?? 0)),
+                        'total_calories' => \DB::raw('total_calories + ' . ($nutrition['calories'] ?? 0)),
+                        'total_carbs_g' => \DB::raw('total_carbs_g + ' . ($nutrition['carbs_g'] ?? 0)),
+                        'total_protein_g' => \DB::raw('total_protein_g + ' . ($nutrition['protein_g'] ?? 0)),
+                        'total_fat_g' => \DB::raw('total_fat_g + ' . ($nutrition['fat_g'] ?? 0)),
+                    ]
+                );
+
+                // Also keep legacy intake_logs for history
                 IntakeLog::create([
                     'user_id' => $user->id_user,
                     'product_id' => $request->product_id,
                     'product_name' => $request->product_name ?? 'Unknown Product',
-                    'sugar_g' => $analysis['nutrition_estimate']['sugar_g'] ?? 0,
-                    'sodium_mg' => $analysis['nutrition_estimate']['sodium_mg'] ?? 0,
-                    'calories' => $analysis['nutrition_estimate']['calories'] ?? 0,
-                    'logged_at' => Carbon::now()->toDateString()
+                    'sugar_g' => $nutrition['sugar_g'] ?? 0,
+                    'sodium_mg' => $nutrition['sodium_mg'] ?? 0,
+                    'calories' => $nutrition['calories'] ?? 0,
+                    'logged_at' => $today
                 ]);
             }
             

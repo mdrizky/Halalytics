@@ -154,6 +154,7 @@
                         </td>
                         <td style="padding: 16px 24px; text-align: right;">
                             <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                                <a href="{{ route('admin.user.show', $user->id_user) }}" class="btn btn-outline" style="padding: 8px; color: var(--accent-color); border-color: var(--accent-color);" title="View Detail"><i class="fas fa-eye"></i></a>
                                 <a href="{{ route('admin.user.edit', $user->id_user) }}" class="btn btn-outline" style="padding: 8px; color: var(--primary-color); border-color: var(--primary-color);"><i class="fas fa-user-edit"></i></a>
                                 
                                 <form action="{{ route('admin.user.toggle', $user->id_user) }}" method="POST" style="display: inline;">

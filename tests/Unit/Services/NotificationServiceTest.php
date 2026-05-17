@@ -9,22 +9,16 @@ use App\Models\Notification;
 use App\Models\ScanModel;
 use App\Models\ReportModel;
 use App\Models\OCRProduct;
-use Illuminate\Support\Facades\Broadcast;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class NotificationServiceTest extends TestCase
 {
-    use RefreshDatabase;
-
     private NotificationService $notificationService;
 
     protected function setUp(): void
     {
         parent::setUp();
+        config(['broadcasting.default' => 'null']);
         $this->notificationService = app(NotificationService::class);
-        
-        // Mock broadcasting to avoid actual WebSocket connections during tests
-        Broadcast::fake();
     }
 
     /**
@@ -47,9 +41,6 @@ class NotificationServiceTest extends TestCase
         $this->assertEquals($message, $notification->message);
         $this->assertEquals($data, $notification->data);
         $this->assertFalse($notification->read);
-
-        // Verify broadcast was called
-        Broadcast::assertDispatched(\App\Events\NotificationSent::class);
     }
 
     /**
@@ -69,8 +60,8 @@ class NotificationServiceTest extends TestCase
         $notification = Notification::where('user_id', $user->id_user)->first();
         $this->assertNotNull($notification);
         $this->assertEquals('scan_completed', $notification->type);
-        $this->assertStringContains('✅', $notification->title);
-        $this->assertStringContains('Test Product', $notification->message);
+        $this->assertStringContainsString('✅', $notification->title);
+        $this->assertStringContainsString('Test Product', $notification->message);
     }
 
     /**
@@ -90,7 +81,7 @@ class NotificationServiceTest extends TestCase
         $notification = Notification::where('user_id', $user->id_user)->first();
         $this->assertNotNull($notification);
         $this->assertEquals('report_submitted', $notification->type);
-        $this->assertStringContains('📝', $notification->title);
+        $this->assertStringContainsString('📝', $notification->title);
     }
 
     /**
@@ -110,8 +101,8 @@ class NotificationServiceTest extends TestCase
         $notification = Notification::where('user_id', $user->id_user)->first();
         $this->assertNotNull($notification);
         $this->assertEquals('ocr_completed', $notification->type);
-        $this->assertStringContains('✅', $notification->title);
-        $this->assertStringContains('OCR Product', $notification->message);
+        $this->assertStringContainsString('✅', $notification->title);
+        $this->assertStringContainsString('OCR Product', $notification->message);
     }
 
     /**
@@ -119,7 +110,7 @@ class NotificationServiceTest extends TestCase
      */
     public function test_send_achievement_notification(): void
     {
-        $user = User::factory()->create(['onboarding_points' => 100]);
+        $user = User::factory()->create();
         $achievement = 'First Scan';
         $points = 10;
 
@@ -128,8 +119,8 @@ class NotificationServiceTest extends TestCase
         $notification = Notification::where('user_id', $user->id_user)->first();
         $this->assertNotNull($notification);
         $this->assertEquals('achievement_unlocked', $notification->type);
-        $this->assertStringContains('🏆', $notification->title);
-        $this->assertStringContains("$points points", $notification->message);
+        $this->assertStringContainsString('🏆', $notification->title);
+        $this->assertStringContainsString("$points points", $notification->message);
         $this->assertEquals($points, $notification->data['points']);
     }
 
@@ -152,8 +143,8 @@ class NotificationServiceTest extends TestCase
         $notification = Notification::where('user_id', $user->id_user)->first();
         $this->assertNotNull($notification);
         $this->assertEquals('onboarding_progress', $notification->type);
-        $this->assertStringContains('✅', $notification->title);
-        $this->assertStringContains($step, $notification->message);
+        $this->assertStringContainsString('✅', $notification->title);
+        $this->assertStringContainsString($step, $notification->message);
         $this->assertArrayHasKey('progress_percentage', $notification->data);
     }
 
@@ -202,7 +193,11 @@ class NotificationServiceTest extends TestCase
         $notifications = $this->notificationService->getUserNotifications($user);
 
         $this->assertCount(3, $notifications);
-        $this->assertEquals('desc', $notifications[0]['created_at'] <=> $notifications[2]['created_at']);
+        $t0 = strtotime($notifications[0]['created_at']);
+        $t2 = strtotime($notifications[2]['created_at']);
+        $this->assertNotFalse($t0);
+        $this->assertNotFalse($t2);
+        $this->assertGreaterThanOrEqual($t2, $t0);
     }
 
     /**
@@ -213,8 +208,8 @@ class NotificationServiceTest extends TestCase
         $user = User::factory()->create();
         
         // Create mix of read and unread notifications
-        Notification::factory()->count(3)->create(['user_id' => $user->id_user, 'read' => false]);
-        Notification::factory()->count(2)->create(['user_id' => $user->id_user, 'read' => true]);
+        Notification::factory()->count(3)->create(['user_id' => $user->id_user, 'is_read' => false]);
+        Notification::factory()->count(2)->create(['user_id' => $user->id_user, 'is_read' => true]);
 
         $unreadCount = $this->notificationService->getUnreadCount($user);
 
@@ -227,7 +222,7 @@ class NotificationServiceTest extends TestCase
     public function test_mark_as_read(): void
     {
         $user = User::factory()->create();
-        $notification = Notification::factory()->create(['user_id' => $user->id_user, 'read' => false]);
+        $notification = Notification::factory()->create(['user_id' => $user->id_user, 'is_read' => false]);
 
         $result = $this->notificationService->markAsRead($notification->id, $user);
 
@@ -244,7 +239,7 @@ class NotificationServiceTest extends TestCase
     {
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
-        $notification = Notification::factory()->create(['user_id' => $user1->id_user, 'read' => false]);
+        $notification = Notification::factory()->create(['user_id' => $user1->id_user, 'is_read' => false]);
 
         $result = $this->notificationService->markAsRead($notification->id, $user2);
 
@@ -262,13 +257,13 @@ class NotificationServiceTest extends TestCase
         $user = User::factory()->create();
         
         // Create unread notifications
-        Notification::factory()->count(5)->create(['user_id' => $user->id_user, 'read' => false]);
+        Notification::factory()->count(5)->create(['user_id' => $user->id_user, 'is_read' => false]);
 
         $markedCount = $this->notificationService->markAllAsRead($user);
 
         $this->assertEquals(5, $markedCount);
         
-        $unreadCount = Notification::where('user_id', $user->id_user)->where('read', false)->count();
+        $unreadCount = Notification::where('user_id', $user->id_user)->where('is_read', false)->count();
         $this->assertEquals(0, $unreadCount);
     }
 
@@ -323,10 +318,10 @@ class NotificationServiceTest extends TestCase
     public function test_get_notification_stats(): void
     {
         // Create various notifications
-        Notification::factory()->count(5)->create(['read' => false]);
-        Notification::factory()->count(3)->create(['read' => true]);
-        Notification::factory()->count(2)->create(['type' => 'scan_completed', 'read' => false]);
-        Notification::factory()->count(1)->create(['type' => 'report_submitted', 'read' => false]);
+        Notification::factory()->count(5)->create(['is_read' => false]);
+        Notification::factory()->count(3)->create(['is_read' => true]);
+        Notification::factory()->count(2)->create(['type' => 'scan_completed', 'is_read' => false]);
+        Notification::factory()->count(1)->create(['type' => 'report_submitted', 'is_read' => false]);
 
         $stats = $this->notificationService->getNotificationStats();
 

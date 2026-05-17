@@ -7,14 +7,11 @@ use App\Services\OCRService;
 use App\Models\User;
 use App\Models\OCRProduct;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 class OCRServiceTest extends TestCase
 {
-    use RefreshDatabase;
-
     private OCRService $ocrService;
 
     protected function setUp(): void
@@ -43,7 +40,7 @@ class OCRServiceTest extends TestCase
         ]);
 
         $user = User::factory()->create();
-        $image = UploadedFile::fake()->image('product.jpg');
+        $image = UploadedFile::fake()->create('product.jpg', 120, 'image/jpeg');
 
         $result = $this->ocrService->extractTextFromImage($image, $user);
 
@@ -53,7 +50,7 @@ class OCRServiceTest extends TestCase
         $this->assertArrayHasKey('confidence', $result);
         $this->assertArrayHasKey('method', $result);
         $this->assertEquals('google_vision', $result['method']);
-        $this->assertStringContains('Water, Sugar, Salt', $result['text']);
+        $this->assertStringContainsString('Water, Sugar, Salt', $result['text']);
     }
 
     /**
@@ -63,9 +60,9 @@ class OCRServiceTest extends TestCase
     {
         // Mock Google Vision API failure
         Http::fake([
-            'vision.googleapis.com/*' => Http::response(['error' => 'API Error'], 500),
+            'https://vision.googleapis.com/*' => Http::response(['error' => 'API Error'], 500),
             // Mock Gemini API success
-            'generativelanguage.googleapis.com/*' => Http::response([
+            'https://generativelanguage.googleapis.com/*' => Http::response([
                 'candidates' => [
                     [
                         'content' => [
@@ -81,13 +78,13 @@ class OCRServiceTest extends TestCase
         ]);
 
         $user = User::factory()->create();
-        $image = UploadedFile::fake()->image('product.jpg');
+        $image = UploadedFile::fake()->create('product.jpg', 120, 'image/jpeg');
 
         $result = $this->ocrService->extractTextFromImage($image, $user);
 
         $this->assertIsArray($result);
         $this->assertEquals('gemini', $result['method']);
-        $this->assertStringContains('Water, Sugar, Salt', $result['text']);
+        $this->assertStringContainsString('Water, Sugar, Salt', $result['text']);
     }
 
     /**
@@ -176,7 +173,7 @@ class OCRServiceTest extends TestCase
     {
         // Mock both APIs
         Http::fake([
-            'vision.googleapis.com/*' => Http::response([
+            'https://vision.googleapis.com/*' => Http::response([
                 'responses' => [
                     [
                         'fullTextAnnotation' => [
@@ -185,7 +182,7 @@ class OCRServiceTest extends TestCase
                     ]
                 ]
             ], 200),
-            'generativelanguage.googleapis.com/*' => Http::response([
+            'https://generativelanguage.googleapis.com/*' => Http::response([
                 'candidates' => [
                     [
                         'content' => [
@@ -201,7 +198,7 @@ class OCRServiceTest extends TestCase
         ]);
 
         $user = User::factory()->create();
-        $image = UploadedFile::fake()->image('product.jpg');
+        $image = UploadedFile::fake()->create('product.jpg', 120, 'image/jpeg');
         $productName = 'Test Product';
         $brand = 'Test Brand';
 

@@ -177,6 +177,10 @@ class ExternalHealthArticleService
             return null;
         }
 
+        if (! $this->isUrlSafeForServerFetch($url)) {
+            return null;
+        }
+
         return Cache::remember('external_article_image_' . md5($url), 21600, function () use ($url) {
             try {
                 $html = Http::timeout(10)
@@ -216,5 +220,34 @@ class ExternalHealthArticleService
         $article['image_url'] = $this->extractPreviewImage((string) ($article['source_url'] ?? ''));
 
         return $article;
+    }
+
+    /**
+     * Mitigasi dasar SSRF: hanya http(s), tolak IP privat / loopback / metadata AWS.
+     */
+    private function isUrlSafeForServerFetch(string $url): bool
+    {
+        if (! filter_var($url, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+
+        $parts = parse_url($url);
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+        if (! in_array($scheme, ['http', 'https'], true)) {
+            return false;
+        }
+
+        $host = strtolower((string) ($parts['host'] ?? ''));
+        if ($host === '' || str_contains($host, 'localhost')) {
+            return false;
+        }
+
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            if (! filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

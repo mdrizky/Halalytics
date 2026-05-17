@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Notification;
 
 class Favorite extends Model
 {
@@ -34,6 +35,10 @@ class Favorite extends Model
     // Check if status changed
     public function checkStatusChange()
     {
+        if (! $this->favoritable) {
+            return;
+        }
+
         $currentStatus = $this->favoritable->status ?? $this->favoritable->halal_status ?? 'unknown';
         
         if ($currentStatus !== $this->last_known_status) {

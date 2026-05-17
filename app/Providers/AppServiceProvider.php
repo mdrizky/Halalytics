@@ -48,6 +48,7 @@ class AppServiceProvider extends ServiceProvider
             };
 
             $view->with('global_user_count', $safeCount('users', fn () => \App\Models\User::count()));
+            $view->with('global_nutritionist_count', $safeCount('users', fn () => \App\Models\User::where('role', 'nutritionist')->count()));
             $view->with('global_product_count', $safeCount('products', fn () => \App\Models\ProductModel::count()));
             $view->with('global_category_count', $safeCount('kategori', fn () => \App\Models\KategoriModel::count()));
             $view->with('global_banner_count', $safeCount('banners', fn () => \App\Models\Banner::count()));

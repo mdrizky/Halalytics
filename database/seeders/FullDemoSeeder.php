@@ -63,7 +63,7 @@ class FullDemoSeeder extends Seeder
             [
                 'username' => 'admin',
                 'full_name' => 'Super Admin',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('admin123'),
                 'role' => 'admin',
                 'phone' => '08123456789',
             ]
@@ -539,7 +539,7 @@ class FullDemoSeeder extends Seeder
 
         $this->command->info('');
         $this->command->info('🎉 FullDemoSeeder selesai! Semua data testing sudah tersedia.');
-        $this->command->info('   Login: admin@halalytics.com / password');
+        $this->command->info('   Login: admin@halalytics.com / admin123');
         $this->command->info('   Login: daffa@example.com / password');
     }
 }

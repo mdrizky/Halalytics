@@ -25,6 +25,25 @@ class AdminProductController extends Controller
     }
 
     /**
+     * Display product detail
+     */
+    public function show($id)
+    {
+        $product = ProductModel::with('kategori')->withCount('scans')->find($id);
+        
+        // If not found in ProductModel, check Medicine model
+        if (!$product) {
+            $medicine = \App\Models\Medicine::where('id_medicine', $id)->first();
+            if ($medicine) {
+                return view('admin.product_show', ['product' => $medicine, 'type' => 'medicine']);
+            }
+            return redirect()->route('admin.product.index')->with('error', 'Product not found');
+        }
+
+        return view('admin.product_show', ['product' => $product, 'type' => 'general']);
+    }
+
+    /**
      * AI-Assisted Batch Verification
      */
     public function batchAiVerify(Request $request)
@@ -211,76 +230,80 @@ class AdminProductController extends Controller
     // form edit produk
     public function edit($id)
     {
-        $product = ProductModel::findOrFail($id);
+        $product = ProductModel::find($id);
+        $type = 'general';
+
+        if (!$product) {
+            $product = \App\Models\Medicine::where('id_medicine', $id)->firstOrFail();
+            $type = 'medicine';
+        }
+
         $categories = KategoriModel::all();
         
         $imageData = $this->imageService->getImages(
-            productName: $product->nama_product,
+            productName: $product->nama_product ?? $product->name,
             barcode: $product->barcode,
             source: $product->source ?? 'local',
             metadata: [
-                'category' => optional($product->kategori)->nama_kategori,
-                'existing_image' => $product->getRawOriginal('image'),
-                'exclude_id' => $product->id_product,
+                'category' => $type === 'general' ? optional($product->kategori)->nama_kategori : ($product->category ?? 'Medicine'),
+                'existing_image' => $type === 'general' ? $product->getRawOriginal('image') : $product->image_url,
+                'exclude_id' => $id,
             ]
         );
         
-        return view('admin.product_edit', compact('product', 'categories', 'imageData'));
+        return view('admin.product_edit', compact('product', 'categories', 'imageData', 'type'));
     }
 
     // update produk
     public function update(Request $request, $id)
     {
-        $product = ProductModel::findOrFail($id);
+        $product = ProductModel::find($id);
+        $medicine = null;
 
-        $request->validate([
-            'nama_product' => 'required|string|max:255',
-            'barcode' => 'required|string|unique:products,barcode,'.$id.',id_product',
-            'komposisi' => 'nullable|string',
-            'status' => 'required|in:halal,tidak halal,syubhat',
-            'verification_status' => 'nullable|in:verified,needs_review,rejected',
-            'info_gizi' => 'nullable|string',
-            'price' => 'nullable|numeric|min:0',
-            'kategori_id' => 'nullable|integer',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'image_url' => 'nullable|url',
-        ]);
-
-        $data = $request->only([
-            'nama_product', 'barcode', 'komposisi', 'status', 'verification_status', 'info_gizi', 'price', 'kategori_id'
-        ]);
-
-        // Handle image upload
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $file->storeAs('public/products', $filename);
-            $data['image'] = '/storage/products/' . $filename;
-            
-            // Delete old image if exists
-            $oldImage = $product->getRawOriginal('image');
-            if ($oldImage && str_starts_with($oldImage, '/storage/')) {
-                $oldPath = str_replace('/storage/', 'public/', $oldImage);
-                if (file_exists(storage_path('app/' . $oldPath))) {
-                    unlink(storage_path('app/' . $oldPath));
-                }
-            }
-        } elseif ($request->filled('image_url')) {
-            $data['image'] = $request->input('image_url');
+        if (!$product) {
+            $medicine = \App\Models\Medicine::where('id_medicine', $id)->firstOrFail();
         }
 
-        $product->update($data);
+        $request->validate([
+            'nama_product' => 'required_without:name|string|max:255',
+            'name' => 'required_without:nama_product|string|max:255',
+            'barcode' => 'required|string',
+            'status' => 'nullable|in:halal,tidak halal,syubhat',
+            'halal_status' => 'nullable|in:halal,haram,syubhat,unknown',
+        ]);
 
-        return redirect()->route('admin.product.index')->with('success', 'Produk berhasil diupdate!');
+        if ($product) {
+            $data = $request->only(['nama_product', 'barcode', 'komposisi', 'status', 'verification_status', 'info_gizi', 'price', 'kategori_id']);
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('public/products');
+                $data['image'] = str_replace('public/', 'storage/', $path);
+            }
+            $product->update($data);
+        } else {
+            $data = $request->only(['name', 'generic_name', 'brand_name', 'barcode', 'halal_status', 'manufacturer', 'dosage_form']);
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('public/medicines');
+                $medicine->image_url = str_replace('public/', 'storage/', $path);
+            }
+            $medicine->update($data);
+        }
+
+        return redirect()->route('admin.product.index')->with('success', 'Data produk berhasil diperbarui!');
     }
 
     // hapus produk
     public function destroy($id)
     {
-        $product = ProductModel::findOrFail($id);
-        $product->delete();
+        $product = ProductModel::find($id);
+        
+        if ($product) {
+            $product->delete();
+        } else {
+            $medicine = \App\Models\Medicine::where('id_medicine', $id)->firstOrFail();
+            $medicine->delete();
+        }
 
-        return redirect()->route('admin.product.index')->with('success', 'Produk berhasil dihapus!');
+        return redirect()->route('admin.product.index')->with('success', 'Data berhasil dihapus!');
     }
 
     // Toggle product active status

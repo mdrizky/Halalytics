@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Favorite;
+use App\Models\ProductModel;
 use App\Services\FirebaseRealtimeService;
 use Illuminate\Http\Request;
 
@@ -26,28 +27,37 @@ class FavoriteController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Check for status changes & append barcode
         $favorites->transform(function ($favorite) {
-            $favorite->checkStatusChange();
-            // Append barcode from related model (Product/BpomData) if available
-            $favorite->barcode = $favorite->favoritable->barcode ?? $favorite->favoritable->code ?? null;
+            try {
+                $favorite->checkStatusChange();
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Favorite status check skipped', [
+                    'favorite_id' => $favorite->id,
+                    'message' => $e->getMessage(),
+                ]);
+            }
+            $rel = $favorite->favoritable;
+            $favorite->barcode = $rel?->barcode ?? $rel?->code ?? null;
+
             return $favorite;
         });
 
         return response()->json([
             'success' => true,
-            'data' => $favorites
+            'data' => $favorites,
         ]);
     }
 
     /**
-     * Add to favorites
+     * Add to favorites.
+     * When "barcode" is sent, server resolves/creates ProductModel — client must not send favoritable_id=0.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'favoritable_type' => 'required|string',
-            'favoritable_id' => 'required|integer',
+            'barcode' => 'nullable|string|max:128',
+            'favoritable_type' => 'nullable|string',
+            'favoritable_id' => 'nullable|integer|min:1',
             'product_name' => 'required|string',
             'product_image' => 'nullable|string',
             'halal_status' => 'required|string',
@@ -55,7 +65,37 @@ class FavoriteController extends Controller
             'user_notes' => 'nullable|string',
         ]);
 
-        // Check if already favorited
+        if (empty($validated['barcode']) && empty($validated['favoritable_id'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Wajib kirim barcode atau favoritable_id yang valid.',
+            ], 422);
+        }
+
+        if (! empty($validated['barcode'])) {
+            $product = ProductModel::query()->firstOrCreate(
+                ['barcode' => trim($validated['barcode'])],
+                [
+                    'nama_product' => $validated['product_name'],
+                    'status' => $validated['halal_status'],
+                    'active' => true,
+                    'source' => 'favorite_sync',
+                    'image' => $validated['product_image'] ?? null,
+                ]
+            );
+
+            $validated['favoritable_type'] = ProductModel::class;
+            $validated['favoritable_id'] = (int) $product->getKey();
+        } else {
+            if (empty($validated['favoritable_type'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'favoritable_type wajib jika tidak menggunakan barcode.',
+                ], 422);
+            }
+            $validated['favoritable_type'] = $this->normalizeFavoritableType((string) $validated['favoritable_type']);
+        }
+
         $exists = Favorite::where('user_id', $request->user()->id_user)
             ->where('favoritable_type', $validated['favoritable_type'])
             ->where('favoritable_id', $validated['favoritable_id'])
@@ -64,23 +104,28 @@ class FavoriteController extends Controller
         if ($exists) {
             return response()->json([
                 'success' => false,
-                'message' => 'Product already in favorites'
+                'message' => 'Product already in favorites',
             ], 409);
         }
 
         $favorite = Favorite::create([
-            ...$validated,
+            'favoritable_type' => $validated['favoritable_type'],
+            'favoritable_id' => $validated['favoritable_id'],
+            'product_name' => $validated['product_name'],
+            'product_image' => $validated['product_image'] ?? null,
+            'halal_status' => $validated['halal_status'],
+            'category' => $validated['category'] ?? null,
+            'user_notes' => $validated['user_notes'] ?? null,
             'user_id' => $request->user()->id_user,
             'last_known_status' => $validated['halal_status'],
         ]);
 
-        // Sync to Firebase
         $this->firebaseService->syncFavorite($favorite);
 
         return response()->json([
             'success' => true,
             'message' => 'Added to favorites',
-            'data' => $favorite
+            'data' => $favorite,
         ], 201);
     }
 
@@ -96,7 +141,7 @@ class FavoriteController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Removed from favorites'
+            'message' => 'Removed from favorites',
         ]);
     }
 
@@ -106,7 +151,7 @@ class FavoriteController extends Controller
     public function updateNotes($id, Request $request)
     {
         $validated = $request->validate([
-            'user_notes' => 'required|string'
+            'user_notes' => 'required|string',
         ]);
 
         $favorite = Favorite::where('user_id', $request->user()->id_user)
@@ -117,7 +162,17 @@ class FavoriteController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Notes updated',
-            'data' => $favorite
+            'data' => $favorite,
         ]);
+    }
+
+    private function normalizeFavoritableType(string $value): string
+    {
+        $normalized = strtolower(trim($value));
+
+        return match ($normalized) {
+            'product', 'app\\models\\productmodel', 'app/models/productmodel' => ProductModel::class,
+            default => ProductModel::class,
+        };
     }
 }

@@ -72,8 +72,10 @@ class CacheService
         
         return Cache::remember($cacheKey, self::DEFAULT_TTL, function () use ($query, $page) {
             $products = \App\Models\ProductModel::with('kategori')
-                ->where('nama_produk', 'LIKE', "%{$query}%")
-                ->orWhere('barcode', 'LIKE', "%{$query}%")
+                ->where(function ($q) use ($query) {
+                    $q->where('nama_product', 'LIKE', "%{$query}%")
+                        ->orWhere('barcode', 'LIKE', "%{$query}%");
+                })
                 ->paginate(20, ['*'], 'page', $page);
 
             return [

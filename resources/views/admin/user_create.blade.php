@@ -84,6 +84,7 @@
                         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Role</label>
                         <select name="role" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary">
                             <option value="user" {{ old('role', 'user') === 'user' ? 'selected' : '' }}>User</option>
+                            <option value="nutritionist" {{ old('role') === 'nutritionist' ? 'selected' : '' }}>Ahli Gizi</option>
                             <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Administrator</option>
                         </select>
                     </div>

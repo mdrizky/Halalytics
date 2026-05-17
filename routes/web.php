@@ -20,6 +20,8 @@ use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\OpenFoodFactsAdminController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\IngredientManagementController;
+use App\Http\Controllers\AdminNutritionistController;
+use App\Http\Controllers\ExpertDashboardController;
 use App\Http\Controllers\NotificationController;
 
 // ================== PROMO WEBSITE ==================
@@ -65,6 +67,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Product Requests
 Route::get('/admin/requests', [App\Http\Controllers\Admin\AdminRequestController::class, 'index'])->name('admin.requests.index')->middleware(['auth', 'role:admin']);
+Route::get('/admin/requests/{id}', [App\Http\Controllers\Admin\AdminRequestController::class, 'show'])->name('admin.requests.show')->middleware(['auth', 'role:admin']);
 Route::post('/admin/requests/{id}/approve', [App\Http\Controllers\Admin\AdminRequestController::class, 'approve'])->name('admin.requests.approve')->middleware(['auth', 'role:admin']);
 Route::post('/admin/requests/{id}/reject', [App\Http\Controllers\Admin\AdminRequestController::class, 'reject'])->name('admin.requests.reject')->middleware(['auth', 'role:admin']);
 
@@ -160,35 +163,35 @@ Route::middleware('auth')->group(function () {
         Route::delete('/messages/{id}', [App\Http\Controllers\Admin\Promo\PromoMessageController::class, 'destroy'])->name('messages.destroy');
     });
     
-    // Users
-    Route::get('/admin/user', [AdminUserController::class, 'admin_user'])->name('admin.user.index')->middleware('role:admin');
+    // User Management
+    Route::get('/admin/user', [AdminUserController::class, 'index'])->name('admin.user.index')->middleware('role:admin');
     Route::get('/admin/user/export', [AdminUserController::class, 'export'])->name('admin.user.export')->middleware('role:admin');
     Route::get('/admin/user/create', [AdminUserController::class, 'create'])->name('admin.user.create')->middleware('role:admin');
     Route::post('/admin/user/store', [AdminUserController::class, 'store'])->name('admin.user.store')->middleware('role:admin');
+    Route::get('/admin/user/{id}', [AdminUserController::class, 'show'])->name('admin.user.show')->middleware('role:admin');
     Route::get('/admin/user/{id}/edit', [AdminUserController::class, 'edit'])->name('admin.user.edit')->middleware('role:admin');
     Route::put('/admin/user/{id}', [AdminUserController::class, 'update'])->name('admin.user.update')->middleware('role:admin');
-    Route::delete('/admin/user/{id}', [AdminUserController::class, 'hapus'])->name('admin.user.destroy')->middleware('role:admin');
-    Route::patch('/admin/users/{id}/toggle', [AdminUserController::class, 'toggleStatus'])->name('admin.user.toggle')->middleware('role:admin');
+    Route::delete('/admin/user/{id}', [AdminUserController::class, 'destroy'])->name('admin.user.destroy')->middleware('role:admin');
+    Route::post('/admin/user/{id}/toggle', [AdminUserController::class, 'toggleActive'])->name('admin.user.toggle')->middleware('role:admin');
     Route::patch('/admin/users/{id}/role', [AdminUserController::class, 'changeRole'])->name('admin.user.role')->middleware('role:admin');
-    
-    // Alias for old user route if any
-    Route::get('/admin/user/list', [AdminUserController::class, 'admin_user'])->name('admin.user')->middleware('role:admin');
 
-    // Products
+    // Nutritionist Management (Separate from Users)
+    Route::prefix('admin/nutritionists')->middleware('role:admin')->name('admin.nutritionists.')->group(function () {
+        Route::get('/', [AdminNutritionistController::class, 'index'])->name('index');
+        Route::get('/{id}', [AdminNutritionistController::class, 'show'])->name('show');
+        Route::post('/{id}/toggle', [AdminNutritionistController::class, 'toggleStatus'])->name('toggle');
+        Route::delete('/{id}', [AdminNutritionistController::class, 'destroy'])->name('destroy');
+    });
+
+    // Product Management (Consolidated)
     Route::get('/admin/product', [AdminProductController::class, 'admin_product'])->name('admin.product.index')->middleware('role:admin');
     Route::get('/admin/product/create', [AdminProductController::class, 'create'])->name('admin.product.create')->middleware('role:admin');
     Route::get('/admin/product/ocr', [AdminProductController::class, 'ocrScanner'])->name('admin.product.ocr')->middleware('role:admin');
     Route::post('/admin/product/store', [AdminProductController::class, 'store'])->name('admin.product.store')->middleware('role:admin');
+    Route::get('/admin/product/{id}', [AdminProductController::class, 'show'])->name('admin.product.show')->middleware('role:admin');
     Route::get('/admin/product/{id}/edit', [AdminProductController::class, 'edit'])->name('admin.product.edit')->middleware('role:admin');
-    Route::post('/admin/product/{id}/update', [AdminProductController::class, 'update'])->name('admin.product.update')->middleware('role:admin');
+    Route::put('/admin/product/{id}', [AdminProductController::class, 'update'])->name('admin.product.update')->middleware('role:admin');
     Route::delete('/admin/product/{id}', [AdminProductController::class, 'destroy'])->name('admin.product.destroy')->middleware('role:admin');
-    
-    // Alias for old product routes
-    Route::get('/admin/product/all', [AdminProductController::class, 'admin_product'])->name('admin_product_new')->middleware('role:admin');
-    Route::get('/admin/product/tambah', [AdminProductController::class, 'create'])->name('admin.product.tambah')->middleware('role:admin');
-
-    // Search Produk by Barcode
-    Route::get('/admin/product/search/{barcode}', [AdminProductController::class, 'searchByBarcode'])->name('admin.product.search')->middleware('role:admin');
     Route::patch('/admin/product/{id}/toggle-active', [AdminProductController::class, 'toggleActive'])->name('admin.product.toggle_active')->middleware('role:admin');
     Route::post('/admin/product/batch-ai-verify', [AdminProductController::class, 'batchAiVerify'])->name('admin.product.batch_ai_verify')->middleware('role:admin');
     Route::post('/admin/product/apply-batch-ai-verify', [AdminProductController::class, 'applyBatchAiVerify'])->name('admin.product.apply_batch_ai_verify')->middleware('role:admin');
@@ -208,6 +211,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/kategori/all', [AdminKategoriController::class, 'index'])->name('admin.kategori')->middleware('role:admin');
     Route::get('/admin/kategori/create', [AdminKategoriController::class, 'create'])->name('admin.kategori.create')->middleware('role:admin');
     Route::post('/admin/kategori', [AdminKategoriController::class, 'store'])->name('admin.kategori.store')->middleware('role:admin');
+    Route::get('/admin/kategori/{id}', [AdminKategoriController::class, 'show'])->name('admin.kategori.show')->middleware('role:admin');
     Route::get('/admin/kategori/{id}/edit', [AdminKategoriController::class, 'edit'])->name('admin.kategori.edit')->middleware('role:admin');
     Route::put('/admin/kategori/{id}', [AdminKategoriController::class, 'update'])->name('admin.kategori.update')->middleware('role:admin');
     Route::delete('/admin/kategori/{id}', [AdminKategoriController::class, 'destroy'])->name('admin.kategori.destroy')->middleware('role:admin');
@@ -251,6 +255,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/ingredients', [IngredientManagementController::class, 'index'])->name('admin.ingredients.index')->middleware('role:admin');
     Route::get('/admin/ingredients/create', [IngredientManagementController::class, 'create'])->name('admin.ingredients.create')->middleware('role:admin');
     Route::post('/admin/ingredients', [IngredientManagementController::class, 'store'])->name('admin.ingredients.store')->middleware('role:admin');
+    Route::get('/admin/ingredients/{id}', [IngredientManagementController::class, 'show'])->name('admin.ingredients.show')->middleware('role:admin');
     Route::get('/admin/ingredients/{id}/edit', [IngredientManagementController::class, 'edit'])->name('admin.ingredients.edit')->middleware('role:admin');
     Route::put('/admin/ingredients/{id}', [IngredientManagementController::class, 'update'])->name('admin.ingredients.update')->middleware('role:admin');
     Route::delete('/admin/ingredients/{id}', [IngredientManagementController::class, 'destroy'])->name('admin.ingredients.destroy')->middleware('role:admin');
@@ -298,25 +303,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [\App\Http\Controllers\Admin\BpomAdminController::class, 'destroy'])->name('admin.bpom.destroy');
     });
 
-    // Medicine Management (Admin)
-    Route::prefix('admin/medicines')->middleware('role:admin')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\MedicineAdminController::class, 'index'])->name('admin.medicines.index');
-        Route::get('/{id}/edit', [\App\Http\Controllers\Admin\MedicineAdminController::class, 'edit'])->name('admin.medicines.edit');
-        Route::put('/{id}', [\App\Http\Controllers\Admin\MedicineAdminController::class, 'update'])->name('admin.medicines.update');
-        Route::get('/search-external', [\App\Http\Controllers\Admin\MedicineAdminController::class, 'searchExternal'])->name('admin.medicines.search-external');
-        Route::post('/import', [\App\Http\Controllers\Admin\MedicineAdminController::class, 'importFromFda'])->name('admin.medicines.import');
-        Route::post('/seed', [\App\Http\Controllers\Admin\MedicineAdminController::class, 'seedCommonMedicines'])->name('admin.medicines.seed');
-    });
-
-    // Cosmetic Management (Admin)
-    Route::prefix('admin/cosmetics')->middleware('role:admin')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\CosmeticAdminController::class, 'index'])->name('admin.cosmetics.index');
-        Route::get('/{id}/edit', [\App\Http\Controllers\Admin\CosmeticAdminController::class, 'edit'])->name('admin.cosmetics.edit');
-        Route::put('/{id}', [\App\Http\Controllers\Admin\CosmeticAdminController::class, 'update'])->name('admin.cosmetics.update');
-        Route::get('/search-external', [\App\Http\Controllers\Admin\CosmeticAdminController::class, 'searchExternal'])->name('admin.cosmetics.search-external');
-        Route::post('/import', [\App\Http\Controllers\Admin\CosmeticAdminController::class, 'importExternal'])->name('admin.cosmetics.import');
-        Route::post('/seed', [\App\Http\Controllers\Admin\CosmeticAdminController::class, 'seedCosmetics'])->name('admin.cosmetics.seed');
-    });
+    // Consolidated Product Hub replaces legacy medicine/cosmetic routes
 
     // Articles Management (Admin)
     Route::prefix('admin/articles')->middleware('role:admin')->group(function () {
@@ -399,6 +386,17 @@ Route::middleware('auth')->group(function () {
     Route::prefix('admin/blood-emergency')->middleware('role:admin')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\EmergencyController::class, 'index'])->name('admin.blood-emergency.index');
         Route::post('/', [\App\Http\Controllers\Admin\EmergencyController::class, 'store'])->name('admin.blood-emergency.store');
+    });
+
+    // 🏥 AI HEALTH SUITE (ADMIN)
+    Route::prefix('admin/health-features')->middleware('role:admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\HealthFeatureController::class, 'index'])->name('admin.health-features.index');
+        Route::post('/toggle', [\App\Http\Controllers\Admin\HealthFeatureController::class, 'toggle'])->name('admin.health-features.toggle');
+    });
+
+    // 🍏 EXPERT / NUTRITIONIST DASHBOARD
+    Route::prefix('expert')->middleware('role:nutritionist')->name('expert.')->group(function () {
+        Route::get('/dashboard', [ExpertDashboardController::class, 'index'])->name('dashboard');
     });
 
 });

@@ -112,27 +112,53 @@ class UserController extends Controller
             'total_caffeine_mg' => $dailyIntake->total_caffeine_mg,
             'total_sugar_g' => $dailyIntake->total_sugar_g,
             'total_calories' => $dailyIntake->total_calories,
+            'total_carbs_g' => $dailyIntake->total_carbs_g ?? 0,
+            'total_protein_g' => $dailyIntake->total_protein_g ?? 0,
+            'total_fat_g' => $dailyIntake->total_fat_g ?? 0,
+            'total_sodium_mg' => $dailyIntake->total_sodium_mg ?? 0,
         ] : [
             'total_water_ml' => 0,
             'total_caffeine_mg' => 0,
             'total_sugar_g' => 0,
             'total_calories' => 0,
+            'total_carbs_g' => 0,
+            'total_protein_g' => 0,
+            'total_fat_g' => 0,
+            'total_sodium_mg' => 0,
         ];
 
-        // CALCULATE TARGETS
-        // Water: Weight based (30ml per kg) or default 2000ml
-        $waterTarget = $user->weight_kg ? ($user->weight_kg * 30) : 2000;
-        $caffeineLimit = 400; // FDA Standard
+        // CALCULATE TARGETS (DYNAMIC)
+        $weight = $user->weight ?: $user->weight_kg ?: 60;
+        
+        // Water: 30ml per kg
+        $waterTarget = $weight * 30;
+        
+        // Calories: Base 2000 + adjustment
+        $calorieTarget = 2000;
+        if ($weight > 80) $calorieTarget = 2500;
+        if ($weight < 50) $calorieTarget = 1800;
+
+        // Nutrients based on Calorie Target (Standard balanced diet: 50% Carbs, 20% Protein, 30% Fat)
+        $carbsTarget = round(($calorieTarget * 0.50) / 4);
+        $proteinTarget = round(($calorieTarget * 0.20) / 4);
+        $fatTarget = round(($calorieTarget * 0.30) / 9);
 
         return response()->json([
+            'success' => true,
             'daily_intake' => $intakeData,
             'targets' => [
                 'water_target_ml' => $waterTarget,
-                'caffeine_limit_mg' => $caffeineLimit,
+                'caffeine_limit_mg' => 400,
+                'calorie_limit' => $calorieTarget,
+                'sugar_limit_g' => 50,
+                'carbs_target_g' => $carbsTarget,
+                'protein_target_g' => $proteinTarget,
+                'fat_target_g' => $fatTarget,
+                'sodium_limit_mg' => 2300,
             ],
             'progress' => [
                 'water_percentage' => min(100, ($intakeData['total_water_ml'] / $waterTarget) * 100),
-                'caffeine_percentage' => min(100, ($intakeData['total_caffeine_mg'] / $caffeineLimit) * 100),
+                'caffeine_percentage' => min(100, ($intakeData['total_caffeine_mg'] / 400) * 100),
             ],
         ]);
     }

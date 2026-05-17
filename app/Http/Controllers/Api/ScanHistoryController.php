@@ -285,11 +285,15 @@ class ScanHistoryController extends Controller
 
     private function normalizeSource(string $source): string
     {
-        return match (strtolower(trim($source))) {
-            'open_beauty_facts' => 'open_food_facts',
-            'openfda' => 'local',
-            'manual', 'bpom' => 'local',
-            default => $source,
+        $s = strtolower(trim($source));
+
+        return match ($s) {
+            'open_beauty_facts', 'openbeautyfacts', 'obf' => 'open_beauty_facts',
+            'open_food_facts', 'openfoodfacts', 'off' => 'open_food_facts',
+            'openfda', 'fda' => 'openfda',
+            'bpom' => 'bpom',
+            'manual', 'text_search', 'umkm', 'street_food' => 'local',
+            default => $s !== '' ? $s : 'local',
         };
     }
 

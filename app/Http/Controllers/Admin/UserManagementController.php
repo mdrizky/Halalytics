@@ -92,7 +92,7 @@ class UserManagementController extends Controller
             'full_name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $id . ',id_user',
             'phone' => 'sometimes|string|max:20',
-            'role' => 'sometimes|in:admin,user',
+            'role' => 'sometimes|in:admin,user,nutritionist',
             'active' => 'sometimes|boolean',
             'avatar_url' => 'sometimes|url|nullable',
             'birth_date' => 'sometimes|date|nullable',

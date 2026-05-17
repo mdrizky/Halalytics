@@ -12,17 +12,17 @@ use Illuminate\Support\Str;
 
 class ProductExternalController extends Controller
 {
-    protected $openFoodFactsService;
+    protected $externalService;
     protected $activityEventService;
     protected $displayImageService;
 
     public function __construct(
-        OpenFoodFactsService $openFoodFactsService,
+        \App\Services\ExternalProductService $externalService,
         ActivityEventService $activityEventService,
         DisplayImageService $displayImageService
     )
     {
-        $this->openFoodFactsService = $openFoodFactsService;
+        $this->externalService = $externalService;
         $this->activityEventService = $activityEventService;
         $this->displayImageService = $displayImageService;
     }
@@ -43,13 +43,24 @@ class ProductExternalController extends Controller
         $pageSize = $request->input('page_size', 20);
         $page = $request->input('page', 1);
 
-        $result = $this->openFoodFactsService->searchProducts($query, $pageSize, $page);
+        // Search Food
+        $foodResult = $this->externalService->searchFood($query, $pageSize, $page);
+        // Search Beauty
+        $beautyResult = $this->externalService->searchBeauty($query, $pageSize, $page);
 
-        if ($result['success']) {
+        $allProducts = array_merge($foodResult['products'] ?? [], $beautyResult['products'] ?? []);
+
+        if (count($allProducts) > 0) {
             return response()->json([
                 'response_code' => 200,
-                'message' => "Found {$result['count']} products",
-                'content' => $result
+                'message' => "Found " . count($allProducts) . " products",
+                'content' => [
+                    'success' => true,
+                    'products' => $allProducts,
+                    'count' => count($allProducts),
+                    'page' => $page,
+                    'source' => 'external_combined'
+                ]
             ], 200);
         }
 
@@ -155,43 +166,32 @@ class ProductExternalController extends Controller
             ], 400);
         }
 
-        $result = $this->openFoodFactsService->getProductByBarcode($barcode);
+        // Try Food first, then Beauty
+        $product = $this->externalService->getFood($barcode);
+        if (!$product) {
+            $product = $this->externalService->getBeauty($barcode);
+        }
+        if (!$product) {
+            $product = $this->externalService->getDrug($barcode);
+        }
 
-        if ($result['success'] && $result['product']) {
-            $product = $result['product'];
-
-            // Add halal analysis
-            if (!empty($product['ingredients_text']) || !empty($product['ingredients_text_en'])) {
-                $ingredients = $product['ingredients_text'] ?? $product['ingredients_text_en'];
-                $product['halal_analysis'] = $this->openFoodFactsService->analyzeIngredients($ingredients);
-            }
-
+        if ($product) {
             $normalized = [
-                'source' => 'open_food_facts',
+                'source' => $product['source'] ?? 'external',
                 'barcode' => $product['barcode'] ?? $barcode,
-                'name' => $product['product_name'] ?? $product['product_name_en'] ?? 'Unknown Product',
-                'brands' => $product['brands'] ?? null,
-                'categories' => $product['categories'] ?? null,
-                'ingredients_text' => $product['ingredients_text'] ?? $product['ingredients_text_en'] ?? null,
-                'nutriments' => [
-                    'energy' => data_get($product, 'nutriments.energy-kcal_100g')
-                        ?? data_get($product, 'nutriments.energy-kcal')
-                        ?? data_get($product, 'nutriments.energy_100g'),
-                    'sugar' => data_get($product, 'nutriments.sugars_100g')
-                        ?? data_get($product, 'nutriments.sugars'),
-                    'fat' => data_get($product, 'nutriments.fat_100g')
-                        ?? data_get($product, 'nutriments.fat'),
-                    'salt' => data_get($product, 'nutriments.salt_100g')
-                        ?? data_get($product, 'nutriments.salt'),
-                ],
+                'name' => $product['name'] ?? 'Unknown Product',
+                'brands' => $product['brand'] ?? null,
+                'categories' => $product['category'] ?? null,
+                'ingredients_text' => $product['ingredients'] ?? null,
+                'nutriments' => $product['nutrition'] ?? [],
                 'nutriscore_grade' => $product['nutriscore_grade'] ?? null,
-                'labels' => $product['labels_tags'] ?? [],
-                'halal_analysis' => $product['halal_analysis'] ?? [
-                    'status' => 'unknown',
+                'labels' => [],
+                'halal_analysis' => [
+                    'status' => $product['halal_status'] ?? 'unknown',
                     'suspicious_ingredients' => [],
-                    'recommendation' => 'Tidak ada data ingredients untuk analisis.',
+                    'recommendation' => 'Analisis berdasarkan data ingredients eksternal.',
                 ],
-                'image_url' => $product['image_front_url'] ?? $product['image_url'] ?? null,
+                'image_url' => $product['image'] ?? null,
                 'synced_at' => now()->toIso8601String(),
             ];
 

@@ -16,6 +16,10 @@ class EmailVerificationService
     public function sendVerification(User $user): bool
     {
         try {
+            if ($user->email_verified_at) {
+                return true;
+            }
+
             // Generate verification token
             $token = Str::random(60);
             $expiresAt = Carbon::now()->addHours(24);
@@ -48,7 +52,8 @@ class EmailVerificationService
     public function verifyEmail(string $token): array
     {
         try {
-            $user = User::where('email_verification_token', $token)
+            $user = User::query()
+                ->whereRaw('LOWER(email_verification_token) = ?', [strtolower($token)])
                 ->where('email_verification_expires_at', '>', Carbon::now())
                 ->first();
 
@@ -95,10 +100,10 @@ class EmailVerificationService
             ];
         }
 
-        // Rate limiting: only allow resend every 5 minutes
-        if ($user->email_verification_expires_at && 
-            $user->email_verification_expires_at->diffInMinutes(Carbon::now()) < 55) {
-            
+        // Blokir permintaan baru selama token masih berlaku (belum kedaluwarsa).
+        if ($user->email_verification_token
+            && $user->email_verification_expires_at
+            && $user->email_verification_expires_at->isFuture()) {
             return [
                 'success' => false,
                 'message' => 'Please wait before requesting another verification email.',

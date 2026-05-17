@@ -120,12 +120,22 @@ class BpomAdminController extends Controller
     /**
      * Sync data from external APIs (OpenFoodFacts halal products + OpenBeautyFacts cosmetics)
      */
-    public function syncExternal()
+    public function syncExternal(Request $request)
     {
-        $result = $this->bpomService->syncLatest(100);
+        $focus = $request->query('focus');
+        $limit = 100;
+
+        if ($focus === 'cosmetics') {
+            // Specific keywords for cosmetics to focus the sync
+            $keywords = ['kosmetik', 'skincare', 'makeup', 'serum', 'cream', 'face wash'];
+            $result = $this->bpomService->syncLatest($limit, $keywords);
+        } else {
+            $result = $this->bpomService->syncLatest($limit);
+        }
 
         $message = sprintf(
-            'Sync BPOM selesai. %d data diproses.',
+            'Sync BPOM (%s) selesai. %d data diproses.',
+            $focus ?: 'Global',
             (int) ($result['synced_count'] ?? 0)
         );
 

@@ -178,6 +178,10 @@
             </div>
         @endif
 
+        <div class="max-w-7xl mx-auto px-4 pt-3">
+            @include('components.medical-ai-disclaimer-banner')
+        </div>
+
         @yield('content')
     </main>
 

@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\HealthTracking;
 use App\Models\ProductModel;
 use App\Models\ScanHistory;
+use App\Models\ScanModel;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class SyncController extends Controller
 {
@@ -26,6 +28,31 @@ class SyncController extends Controller
         $userId = $request->user()->id_user;
         $createdCount = 0;
 
+        if (! Schema::hasTable('scan_histories')) {
+            DB::transaction(function () use ($request, $userId, &$createdCount) {
+                foreach ($request->input('logs', []) as $log) {
+                    $recordedAt = Carbon::createFromTimestampMs((int) $log['scanned_at']);
+                    ScanModel::create([
+                        'user_id' => $userId,
+                        'product_id' => null,
+                        'nama_produk' => $log['product_name'] ?? 'Unknown Product',
+                        'barcode' => $log['barcode'],
+                        'kategori' => $log['halal_status'],
+                        'status_halal' => $log['halal_status'],
+                        'status_kesehatan' => 'sehat',
+                        'tanggal_scan' => $recordedAt,
+                    ]);
+                    $createdCount++;
+                }
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sync berhasil (legacy scans)',
+                'count' => $createdCount,
+            ]);
+        }
+
         DB::transaction(function () use ($request, $userId, &$createdCount) {
             foreach ($request->input('logs', []) as $log) {
                 $product = ProductModel::firstOrCreate(
@@ -38,7 +65,7 @@ class SyncController extends Controller
                     ]
                 );
 
-                $recordedAt = Carbon::createFromTimestampMs($log['scanned_at']);
+                $recordedAt = Carbon::createFromTimestampMs((int) $log['scanned_at']);
 
                 $scanHistory = new ScanHistory([
                     'user_id' => $userId,

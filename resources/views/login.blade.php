@@ -179,7 +179,7 @@
     <div class="login-split">
         <div class="login-left">
             <div class="brand-logo" style="border: 1px solid rgba(0,0,0,0.05); padding: 5px; background: white; border-radius: 12px; overflow: hidden;">
-                <img src="/images/logo.png?v={{ time() }}" alt="Halalytics" style="width: 100%; height: 100%; object-fit: contain; padding: 5px;" onerror="this.src='{{ asset('images/logo.png') }}'; this.onerror=null;">
+                <img src="/images/logo_halalytics.png?v={{ time() }}" alt="Halalytics" style="width: 100%; height: 100%; object-fit: contain; padding: 5px;" onerror="this.src='{{ asset('images/logo_halalytics.png') }}'; this.onerror=null;">
             </div>
             <h1 class="login-title">Halalytics Portal</h1>
             <p class="login-subtitle">Aplikasi cerdas untuk verifikasi kehalalan produk, nutrisi, dan manajemen kesehatan dalam satu genggaman.</p>
@@ -204,7 +204,7 @@
             <div class="login-form-container">
                 <div style="text-align: center; margin-bottom: 32px; animation: float 6s ease-in-out infinite;">
                 <div style="background: white; padding: 15px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
-                    <img src="/images/logo.png?v={{ time() }}" alt="Halalytics Logo" style="height: 100px; filter: drop-shadow(0 10px 20px rgba(5, 150, 105, 0.2));" onerror="this.src='{{ asset('images/logo.png') }}'; this.onerror=null;">
+                    <img src="/images/logo_halalytics.png?v={{ time() }}" alt="Halalytics Logo" style="height: 100px; filter: drop-shadow(0 10px 20px rgba(5, 150, 105, 0.2));" onerror="this.src='{{ asset('images/logo_halalytics.png') }}'; this.onerror=null;">
                 </div>
                 </div>
                 <h2 class="login-form-title">Selamat Datang</h2>

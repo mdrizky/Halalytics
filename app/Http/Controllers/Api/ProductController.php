@@ -4,409 +4,246 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProductModel;
-use App\Models\HalalProduct;
-use App\Models\ActivityModel;
-use App\Services\DisplayImageService;
-use App\Services\HalalCertificationService;
-use App\Services\GeminiService;
+use App\Services\ExternalProductService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Hybrid product API: local DB + Open Food/Beauty Facts (+ OpenFDA for barcode).
+ */
 class ProductController extends Controller
 {
-    protected $halalService;
-    protected $universalProductService;
-    protected $displayImageService;
-
     public function __construct(
-        HalalCertificationService $halalService,
-        \App\Services\UniversalProductService $universalProductService,
-        DisplayImageService $displayImageService
+        protected ExternalProductService $productService
     ) {
-        $this->halalService = $halalService;
-        $this->universalProductService = $universalProductService;
-        $this->displayImageService = $displayImageService;
     }
 
-    /**
-     * Get product details from universal sources (Local -> OFF -> OBF)
-     */
-    public function show($barcode)
+    public function detailProduct(Request $request): JsonResponse
     {
-        try {
-            $result = $this->universalProductService->findProduct($barcode);
+        $type = $request->query('type');
+        $id = $request->query('id');
 
-            if ($result['found']) {
-                $productData = $result['standardized'] ?? [];
-                $normalizedProduct = $this->normalizeProductPayload($productData, $result['data'] ?? null);
-                $halalInfo = [
-                    'halal_status' => data_get($productData, 'status_halal', 'unknown'),
-                    'halal_certificate_number' => data_get($productData, 'halal_certificate'),
-                    'certification_body' => data_get($productData, 'certification_body'),
-                    'source' => $result['source'] ?? 'unknown',
-                ];
+        if (!$type || !$id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Parameter type and id are required',
+            ], 400);
+        }
 
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Detail produk berhasil dimuat',
-                    'data' => [
-                        'product' => $normalizedProduct,
-                        'halal_info' => $halalInfo,
-                        'halal_source' => $result['source'] ?? 'unknown',
-                    ],
-                ]);
-            }
-        } catch (\Throwable $throwable) {
-            Log::warning('ProductController show failed', [
-                'barcode' => $barcode,
-                'error' => $throwable->getMessage(),
-            ]);
+        $data = match ($type) {
+            'food' => $this->productService->getFood($id),
+            'beauty' => $this->productService->getBeauty($id),
+            'drug' => $this->productService->getDrug($id),
+            default => null,
+        };
+
+        if (!$data) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Product not found in external registry',
+            ], 404);
         }
 
         return response()->json([
-            'success' => false,
-            'message' => 'Produk belum ditemukan. Coba scan ulang atau cek barcode produk.',
-            'data' => [
-                'product' => $this->normalizeProductPayload([
-                    'barcode' => $barcode,
-                    'name' => 'Produk belum ditemukan',
-                    'brand' => 'Merek tidak tersedia',
-                    'ingredients_text' => 'Komposisi belum tersedia',
-                    'category' => 'Produk Umum',
-                    'status_halal' => 'unknown',
-                ]),
-                'halal_info' => [
-                    'halal_status' => 'unknown',
-                    'halal_certificate_number' => null,
-                    'certification_body' => null,
-                    'source' => 'fallback',
-                ],
-                'halal_source' => 'fallback',
-            ],
-        ], 404);
-    }
-
-    /**
-     * Search products by name or barcode
-     */
-    public function search(Request $request)
-    {
-        $query = trim((string) $request->query('q', ''));
-        $page = max(1, (int) $request->query('page', 1));
-        $limit = min(max((int) $request->query('limit', 20), 1), 50);
-
-        $products = ProductModel::query()
-            ->when($query !== '', function ($q) use ($query) {
-                $q->where(function ($qq) use ($query) {
-                    $qq->where('nama_product', 'like', "%{$query}%")
-                       ->orWhere('barcode', 'like', "%{$query}%")
-                       ->orWhere('komposisi', 'like', "%{$query}%");
-                });
-            })
-            ->orderByDesc('id_product')
-            ->paginate($limit, ['*'], 'page', $page);
-
-        $mapped = collect($products->items())->map(function (ProductModel $p) {
-            return $this->normalizeProductPayload([
-                'barcode' => $p->barcode,
-                'name' => $p->nama_product ?? 'Produk tanpa nama',
-                'brand' => $p->brand ?? 'Merek belum tersedia',
-                'ingredients_text' => $p->komposisi ?? 'Komposisi belum tersedia',
-                'category' => optional($p->kategori)->nama_kategori ?? 'Produk Umum',
-                'status_halal' => $p->status ?? 'unknown',
-                'image_url' => $p->getRawOriginal('image'),
-            ], $p);
-        });
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Hasil pencarian produk',
-            'data' => $mapped,
-            'meta' => [
-                'current_page' => $products->currentPage(),
-                'last_page' => $products->lastPage(),
-                'total' => $products->total(),
-            ],
+            'status' => 'success',
+            'category' => $type,
+            'result' => $data,
         ]);
     }
 
     /**
-     * Check halal status only
+     * GET /api/products/barcode/{barcode}
+     * Ensures a local ProductModel row exists for favorites / scan history FK.
      */
-    public function checkHalal(Request $request)
+    public function show(string $barcode): JsonResponse
     {
-        $request->validate([
-            'barcode' => 'required|string',
-            'product_name' => 'required|string',
-            'brand' => 'nullable|string'
-        ]);
+        $barcode = trim($barcode);
+        if ($barcode === '' || strlen($barcode) < 8) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid barcode',
+            ], 422);
+        }
 
-        $result = $this->halalService->verifyAndStore(
-            $request->barcode,
-            $request->product_name,
-            $request->brand
+        $local = ProductModel::query()
+            ->where('barcode', $barcode)
+            ->first();
+
+        if ($local) {
+            return response()->json([
+                'success' => true,
+                'data' => $this->mapProductModel($local),
+            ]);
+        }
+
+        $ext = $this->productService->getFood($barcode)
+            ?? $this->productService->getBeauty($barcode)
+            ?? $this->productService->getDrug($barcode);
+
+        if (!$ext) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found',
+            ], 404);
+        }
+
+        $product = ProductModel::query()->firstOrCreate(
+            ['barcode' => $ext['barcode'] ?? $barcode],
+            [
+                'nama_product' => $ext['name'] ?? 'Unknown Product',
+                'brand' => $ext['brand'] ?? null,
+                'status' => $ext['halal_status'] ?? 'unknown',
+                'active' => true,
+                'source' => $ext['source'] ?? 'external',
+                'komposisi' => is_string($ext['ingredients'] ?? null) ? $ext['ingredients'] : null,
+                'image' => $ext['image'] ?? null,
+            ]
         );
 
-        // Record Activity
-        if (auth('sanctum')->check()) {
-            ActivityModel::create([
-                'id_user' => auth('sanctum')->id(),
-                'aktivitas' => "Mengecek status halal: " . $request->product_name,
-                'status' => $result['data']->halal_status
+        return response()->json([
+            'success' => true,
+            'data' => $this->mapProductModel($product->fresh()),
+        ]);
+    }
+
+    /**
+     * GET /api/products/search?q=&page=&limit=
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $request->validate([
+            'q' => 'nullable|string|max:255',
+            'page' => 'sometimes|integer|min:1',
+            'limit' => 'sometimes|integer|min:1|max:100',
+        ]);
+
+        $q = trim((string) $request->get('q', ''));
+        $page = max(1, (int) $request->get('page', 1));
+        $limit = min(50, max(1, (int) $request->get('limit', 20)));
+
+        if ($q === '') {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'products' => [],
+                    'total' => 0,
+                    'page' => $page,
+                    'total_pages' => 0,
+                ],
             ]);
         }
 
-        return response()->json([
-            'success' => true,
-            'halal_status' => $result['data']->halal_status,
-            'certificate_number' => $result['data']->halal_certificate_number,
-            'certification_body' => $result['data']->certification_body,
-            'valid_until' => $result['data']->certificate_valid_until,
-            'last_checked' => $result['data']->last_checked_at,
-            'source' => $result['source']
-        ]);
-    }
-
-    /**
-     * Batch check multiple products
-     */
-    public function batchCheckHalal(Request $request)
-    {
-        $request->validate([
-            'products' => 'required|array',
-            'products.*.barcode' => 'required|string',
-            'products.*.name' => 'required|string',
-            'products.*.brand' => 'nullable|string'
-        ]);
-
-        $results = [];
-
-        foreach ($request->products as $product) {
-            $result = $this->halalService->verifyAndStore(
-                $product['barcode'],
-                $product['name'],
-                $product['brand'] ?? ''
-            );
-
-            $results[] = [
-                'barcode' => $product['barcode'],
-                'halal_status' => $result['data']->halal_status,
-                'certificate_number' => $result['data']->halal_certificate_number
-            ];
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => $results
-        ]);
-    }
-
-    /**
-     * Get halal alternatives for a consumer product using AI
-     */
-    public function alternatives(Request $request, $barcode)
-    {
         try {
-            // First, find the product so we know its name and ingredients
-            $result = $this->universalProductService->findProduct($barcode);
-            
-            if (!$result['found']) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Produk tidak ditemukan, tidak bisa mencari alternatif.'
-                ], 404);
-            }
-
-            $productData = $result['standardized'];
-            $productName = $productData['name'];
-            $ingredients = $productData['ingredients_text'];
-            $category = $productData['category'] ?? 'makanan/minuman umum';
-
-            // Invoke Gemini AI to find alternatives
-            $geminiService = app(GeminiService::class);
-            $aiResponse = $geminiService->findProductHalalAlternative($productName, $ingredients, $category);
-
-            // Record Activity
-            if (auth('sanctum')->check()) {
-                ActivityModel::create([
-                    'id_user' => auth('sanctum')->id(),
-                    'aktivitas' => "Mencari alternatif halal untuk: " . $productName,
-                    'status' => 'success'
-                ]);
+            $food = $this->productService->searchFood($q, $limit, $page);
+            $beauty = $this->productService->searchBeauty($q, $limit, $page);
+            $merged = array_merge($food['products'] ?? [], $beauty['products'] ?? []);
+            $products = [];
+            foreach ($merged as $row) {
+                $products[] = $this->mapExternalArrayToProductPayload($row);
             }
 
             return response()->json([
                 'success' => true,
-                'data' => $aiResponse
+                'data' => [
+                    'products' => $products,
+                    'total' => count($products),
+                    'page' => $page,
+                    'total_pages' => max(1, (int) ceil(count($products) / max(1, $limit))),
+                ],
             ]);
+        } catch (\Throwable $e) {
+            Log::warning('ProductController::search failed', ['q' => $q, 'error' => $e->getMessage()]);
 
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Halal Product Alternative Error: ' . $e->getMessage());
+            $locals = ProductModel::query()
+                ->where(function ($query) use ($q) {
+                    $query->where('nama_product', 'like', "%{$q}%")
+                        ->orWhere('barcode', 'like', "%{$q}%")
+                        ->orWhere('brand', 'like', "%{$q}%");
+                })
+                ->where(function ($query) {
+                    $query->whereNull('active')->orWhere('active', true);
+                })
+                ->limit($limit)
+                ->get()
+                ->map(fn (ProductModel $p) => $this->mapProductModel($p))
+                ->values()
+                ->all();
+
             return response()->json([
-                'success' => false,
-                'message' => 'Gagal mencari alternatif produk: ' . $e->getMessage()
-            ], 500);
+                'success' => true,
+                'data' => [
+                    'products' => $locals,
+                    'total' => count($locals),
+                    'page' => 1,
+                    'total_pages' => 1,
+                ],
+            ]);
         }
     }
 
-    /**
-     * Get popular products (most scanned)
-     */
-    public function popular(Request $request)
+    public function popular(Request $request): JsonResponse
     {
-        $products = \App\Models\ScanHistory::select('product_name', 'barcode', 'halal_status')
-            ->selectRaw('COUNT(*) as scan_count')
-            ->whereNotNull('product_name')
-            ->groupBy('product_name', 'barcode', 'halal_status')
-            ->orderByDesc('scan_count')
-            ->limit(20)
+        $limit = min(50, max(1, (int) $request->get('limit', 10)));
+
+        $items = ProductModel::query()
+            ->where(function ($q) {
+                $q->whereNull('active')->orWhere('active', true);
+            })
+            ->orderByDesc('id_product')
+            ->limit($limit)
             ->get()
-            ->map(function ($item) {
-                return [
-                    'name' => $item->product_name,
-                    'barcode' => $item->barcode,
-                    'halal_status' => $item->halal_status ?? 'unknown',
-                    'scan_count' => $item->scan_count,
-                ];
-            });
+            ->map(fn (ProductModel $p) => $this->mapProductModel($p))
+            ->values();
 
         return response()->json([
             'success' => true,
-            'data' => $products,
+            'data' => $items,
         ]);
     }
 
-    /**
-     * Get recommended products for user (AI-powered or curated)
-     */
-    public function recommendations(Request $request)
+    public function recommendations(Request $request): JsonResponse
     {
-        $category = $request->query('category', 'food');
-        
-        // Simple recommendation: Get latest verified halal products
-        $products = ProductModel::orderBy('created_at', 'desc')
-            ->where('status', 'halal')
-            ->limit(10)
-            ->get()
-            ->map(function ($p) {
-                return $this->normalizeProductPayload([
-                    'barcode' => $p->barcode,
-                    'name' => $p->nama_product,
-                    'brand' => $p->brand,
-                    'ingredients_text' => $p->komposisi,
-                    'category' => optional($p->kategori)->nama_kategori ?? 'Umum',
-                    'status_halal' => $p->status,
-                    'image_url' => $p->getRawOriginal('image'),
-                ], $p);
-            });
-
-        return response()->json([
-            'response_code' => 200,
-            'success' => true,
-            'content' => $products
-        ]);
+        return $this->popular($request);
     }
 
-    /**
-     * Get recently added products
-     */
-    public function recent()
+    private function mapProductModel(ProductModel $p): array
     {
-        $products = ProductModel::orderBy('created_at', 'desc')
-            ->limit(20)
-            ->get()
-            ->map(function ($p) {
-                return [
-                    'id' => $p->id_product,
-                    'name' => $p->nama_product ?? $p->name ?? 'Produk tanpa nama',
-                    'brand' => $p->brand ?: 'Merek belum tersedia',
-                    'barcode' => $p->barcode,
-                    'halal_status' => $p->halal_status ?? 'unknown',
-                    'image_url' => $this->displayImageService->resolve($p->image, [
-                        'name' => $p->nama_product ?? $p->name,
-                        'brand' => $p->brand,
-                        'barcode' => $p->barcode,
-                        'category' => $p->kategori ?? $p->category ?? 'product',
-                    ], 'product'),
-                    'created_at' => $p->created_at,
-                ];
-            });
-
-        return response()->json([
-            'success' => true,
-            'data' => $products,
-        ]);
+        return [
+            'id' => (int) $p->id_product,
+            'barcode' => (string) ($p->barcode ?? ''),
+            'name' => (string) ($p->nama_product ?? ''),
+            'brand' => $p->brand,
+            'category' => null,
+            'status' => (string) ($p->status ?? 'unknown'),
+            'halal_info' => null,
+            'ingredients' => $p->komposisi,
+            'nutrition_facts' => null,
+            'image_url' => $p->image,
+            'source' => (string) ($p->source ?? 'local'),
+            'created_at' => optional($p->created_at)?->toIso8601String() ?? now()->toIso8601String(),
+            'updated_at' => optional($p->updated_at)?->toIso8601String() ?? now()->toIso8601String(),
+        ];
     }
 
-    /**
-     * Get user's scan history
-     */
-    public function scanHistory(Request $request)
+    private function mapExternalArrayToProductPayload(array $row): array
     {
-        $user = $request->user();
-        $scans = \App\Models\ScanHistory::where('user_id', $user->id_user)
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-
-        return response()->json([
-            'success' => true,
-            'data' => $scans,
-        ]);
-    }
-
-    /**
-     * Get user's favorite products
-     */
-    public function favorites(Request $request)
-    {
-        $user = $request->user();
-        $favorites = \App\Models\FavoriteProduct::where('user_id', $user->id_user)
-            ->with(['ocrProduct', 'product'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-
-        return response()->json([
-            'success' => true,
-            'data' => $favorites,
-        ]);
-    }
-
-    private function normalizeProductPayload(array $productData, $model = null): array
-    {
-        $productId = 0;
-        if ($model instanceof \App\Models\BpomData) {
-            $productId = $model->id;
-        } elseif ($model instanceof \App\Models\ProductModel) {
-            $productId = $model->id_product;
-        }
-
-        $resolvedImage = $this->displayImageService->resolve(
-            data_get($productData, 'image_url'),
-            [
-                'name' => data_get($productData, 'name'),
-                'brand' => data_get($productData, 'brand'),
-                'barcode' => data_get($productData, 'barcode'),
-                'category' => data_get($productData, 'category', 'product'),
-            ],
-            'product'
-        );
+        $barcode = (string) ($row['barcode'] ?? '');
 
         return [
-            'id' => $productId,
-            'barcode' => data_get($productData, 'barcode'),
-            'name' => data_get($productData, 'name', 'Produk tanpa nama'),
-            'brand' => data_get($productData, 'brand', 'Merek belum tersedia'),
-            'image_front_url' => $resolvedImage,
-            'image' => $resolvedImage,
-            'ingredients_text' => data_get($productData, 'ingredients_text', 'Komposisi belum tersedia'),
-            'category' => data_get($productData, 'category', 'Produk Umum'),
-            'source' => data_get($productData, 'source', data_get($productData, 'source_label', 'internal')),
-            'status_halal' => data_get($productData, 'status_halal', 'unknown'),
-            'halal_certificate_number' => data_get($productData, 'halal_certificate'),
-            'certification_body' => data_get($productData, 'certification_body'),
-            'nutriscore' => data_get($productData, 'nutriscore'),
-            'additives' => data_get($productData, 'additives', []),
-            'allergens' => data_get($productData, 'allergens', []),
+            'id' => 0,
+            'barcode' => $barcode,
+            'name' => (string) ($row['name'] ?? ''),
+            'brand' => $row['brand'] ?? null,
+            'category' => $row['category'] ?? null,
+            'status' => (string) ($row['halal_status'] ?? 'unknown'),
+            'halal_info' => null,
+            'ingredients' => $row['ingredients'] ?? null,
+            'nutrition_facts' => null,
+            'image_url' => $row['image'] ?? null,
+            'source' => (string) ($row['source'] ?? 'external'),
+            'created_at' => now()->toIso8601String(),
+            'updated_at' => now()->toIso8601String(),
         ];
     }
 }

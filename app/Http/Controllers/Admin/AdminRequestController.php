@@ -27,6 +27,12 @@ class AdminRequestController extends Controller
         return view('admin.requests.index', compact('requests'));
     }
 
+    public function show($id)
+    {
+        $request = ProductRequest::with('user')->findOrFail($id);
+        return view('admin.requests.show', compact('request'));
+    }
+
     public function approve($id)
     {
         $request = ProductRequest::findOrFail($id);

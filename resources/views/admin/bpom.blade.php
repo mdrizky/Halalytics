@@ -11,13 +11,19 @@
 <div class="dashboard-header" style="margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-end;">
     <div>
         <h1 style="margin: 0; font-size: 28px; color: var(--primary-color);">BPOM Raw Data Repository</h1>
-        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 14px;">Master data produk obat, makanan, dan kosmetik hasil sinkronisasi API eksternal dan kontribusi pengguna.</p>
+        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 14px;">Master data produk obat, makanan, dan kosmetik hasil sinkronisasi dari situs web resmi BPOM Indonesia dan kontribusi pengguna.</p>
     </div>
-    <div>
+    <div style="display: flex; gap: 12px;">
         <form action="{{ route('admin.bpom.sync') }}" method="POST" onsubmit="this.querySelector('button').disabled=true; this.querySelector('.btn-text').textContent='Syncing...';">
             @csrf
             <button type="submit" class="btn btn-primary" style="background: var(--accent-color); border-color: var(--accent-color);">
-                <i class="fas fa-sync-alt"></i> <span class="btn-text">Sync Global Data</span>
+                <i class="fas fa-sync-alt"></i> <span class="btn-text">Sync BPOM (Semua Kategori)</span>
+            </button>
+        </form>
+        <form action="{{ route('admin.bpom.sync') }}?focus=cosmetics" method="POST" onsubmit="this.querySelector('button').disabled=true; this.querySelector('.btn-text').textContent='Syncing...';">
+            @csrf
+            <button type="submit" class="btn btn-outline" style="border-color: var(--accent-color); color: var(--accent-color);">
+                <i class="fas fa-magic"></i> <span class="btn-text">Sync BPOM (Kosmetik)</span>
             </button>
         </form>
     </div>
@@ -145,7 +151,7 @@
                                 </span>
                             @elseif(Str::contains($data->sumber_data, 'open_'))
                                 <span style="font-size: 10px; font-weight: 800; color: #e91e63; display: flex; align-items: center; gap: 4px;">
-                                    <i class="fas fa-globe"></i> GLOBAL SYNC
+                                    <i class="fas fa-globe"></i> BPOM SYNC
                                 </span>
                             @else
                                 <span style="font-size: 10px; font-weight: 800; color: var(--text-muted); display: flex; align-items: center; gap: 4px;">

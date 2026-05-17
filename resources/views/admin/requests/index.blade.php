@@ -172,6 +172,9 @@
                             </td>
                             <td class="px-6 py-6 text-right">
                                 <div class="flex justify-end gap-2">
+                                    <a href="{{ route('admin.requests.show', $item->id) }}" class="h-10 w-10 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all flex items-center justify-center" title="View Detailed Audit">
+                                        <span class="material-icons-round text-lg">visibility</span>
+                                    </a>
                                     <form action="{{ route('admin.requests.approve', $item->id) }}" method="POST" onsubmit="return confirm('Approve and publish this product?')">
                                         @csrf
                                         <button type="submit" class="h-10 px-5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-dark transition-all flex items-center gap-2 shadow-lg shadow-primary/20">

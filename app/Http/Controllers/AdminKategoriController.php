@@ -34,6 +34,16 @@ class AdminKategoriController extends Controller
         return view('admin.kategori-redesign', compact('kategori'));
     }
 
+    public function show($id)
+    {
+        $kategori = KategoriModel::withCount('products')->findOrFail($id);
+        $products = \App\Models\ProductModel::where('kategori_id', $id)
+            ->latest('id_product')
+            ->paginate(12);
+            
+        return view('admin.kategori_show', compact('kategori', 'products'));
+    }
+
     public function store(Request $request)
     {
         $request->validate([
