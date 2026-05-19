@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\AI\AiResponseFormatter;
+use App\Services\AI\FoodAnalysisOrchestrator;
+use App\Services\AI\PromptBuilderService;
 use App\Services\GeminiService;
 use App\Services\ActivityEventService;
 use Illuminate\Http\Request;
@@ -16,11 +19,17 @@ class AIAssistantController extends Controller
 {
     protected $geminiService;
     protected $activityEventService;
+    protected $aiResponseFormatter;
 
-    public function __construct(GeminiService $geminiService, ActivityEventService $activityEventService)
-    {
+    public function __construct(
+        GeminiService $geminiService,
+        ActivityEventService $activityEventService,
+        AiResponseFormatter $aiResponseFormatter,
+        protected FoodAnalysisOrchestrator $foodAnalysisOrchestrator
+    ) {
         $this->geminiService = $geminiService;
         $this->activityEventService = $activityEventService;
+        $this->aiResponseFormatter = $aiResponseFormatter;
     }
 
     /**
@@ -47,6 +56,8 @@ class AIAssistantController extends Controller
             'allergies' => $user->allergy,
             'goal' => $user->goal ?? null,
             'diet_preference' => $user->diet_preference ?? null,
+            'bmi' => $user->bmi ?? null,
+            'activity_level' => $user->activity_level ?? null,
         ];
 
         // FITUR 3: String matching for Watchlist
@@ -70,7 +81,12 @@ class AIAssistantController extends Controller
         }
 
         try {
-            $analysis = $this->geminiService->analyzeIngredients($text, $userContext);
+            $analysis = $this->foodAnalysisOrchestrator->analyzeIngredients($text, array_merge($userContext, [
+                'user_id' => $user->id_user,
+            ]), [
+                'product_name' => $request->product_name,
+                'barcode' => $request->barcode ?? null,
+            ]);
 
             // Log intake to daily_intakes table (Dashboard Sync)
             if (isset($analysis['nutrition_estimate'])) {
@@ -101,11 +117,13 @@ class AIAssistantController extends Controller
                 ]);
             }
             
+            $formatted = $this->aiResponseFormatter->forMobile($analysis);
+
             return response()->json([
                 'success' => true,
-                'content' => $analysis,
+                'content' => $formatted,
                 'watchlist_alert' => $watchlistAlert,
-                'message' => 'Analysis completed and logged successfully'
+                'message' => 'Analysis completed and logged successfully',
             ]);
 
         } catch (\Exception $e) {
@@ -419,6 +437,48 @@ class AIAssistantController extends Controller
                 'message' => 'Failed to generate report',
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Mobile AI chat — personalized, no placeholder responses.
+     */
+    public function chat(Request $request)
+    {
+        $request->validate([
+            'message' => 'required|string|max:4000',
+        ]);
+
+        $user = Auth::user();
+        $message = trim($request->input('message'));
+
+        $userContext = [
+            'user_name' => $user->full_name ?? $user->username ?? 'Pengguna',
+            'user_age' => $user->age ?? '-',
+            'user_diseases' => $user->medical_history ?? '-',
+            'user_allergies' => $user->allergy ?? '-',
+            'user_message' => $message,
+        ];
+
+        try {
+            $userContext['user_id'] = $user->id_user;
+            $reply = $this->foodAnalysisOrchestrator->chat($message, $userContext);
+
+            if ($reply === '') {
+                $reply = 'Maaf, respons AI kosong. Silakan coba ulang dengan pertanyaan yang lebih spesifik.';
+            }
+
+            return response()->json([
+                'success' => true,
+                'reply' => $reply,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('AI chat error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => true,
+                'reply' => 'Maaf, AI Halalytics sedang sibuk. Silakan coba lagi sebentar. Untuk pertanyaan mendesak terkait kesehatan, hubungi tenaga medis terdekat.',
+            ]);
         }
     }
 

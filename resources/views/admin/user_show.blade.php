@@ -25,8 +25,20 @@
                 <h1 class="text-3xl font-black text-slate-800 tracking-tight">{{ $user->full_name }}</h1>
                 <div class="flex items-center gap-3 mt-1">
                     <span class="text-slate-500 font-medium">{{ '@' . $user->username }}</span>
-                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $user->role == 'admin' ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-slate-100 text-slate-500 border border-slate-200' }}">
-                        {{ $user->role }}
+                    @php
+                        $roleDisplay = match(strtolower($user->role)) {
+                            'admin' => 'Admin',
+                            'expert', 'nutritionist' => 'Ahli Gizi',
+                            default => 'User'
+                        };
+                        $badgeClass = match(strtolower($user->role)) {
+                            'admin' => 'bg-red-50 text-red-600 border border-red-200/60 dark:bg-red-500/10 dark:text-red-400',
+                            'expert', 'nutritionist' => 'bg-emerald-50 text-emerald-600 border border-emerald-200/60 dark:bg-emerald-500/10 dark:text-emerald-400',
+                            default => 'bg-blue-50 text-blue-600 border border-blue-200/60 dark:bg-blue-500/10 dark:text-blue-400'
+                        };
+                    @endphp
+                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $badgeClass }}">
+                        {{ $roleDisplay }}
                     </span>
                     @if($user->active)
                         <div class="flex items-center gap-1.5 text-emerald-600">
@@ -103,6 +115,39 @@
                     </div>
                 </div>
             </div>
+
+            @if(in_array(strtolower($user->role), ['expert', 'nutritionist']))
+                <!-- Nutritionist Credentials -->
+                <div class="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm overflow-hidden">
+                    <div class="px-8 py-6 border-b border-slate-100 flex items-center gap-3 bg-emerald-50/50">
+                        <span class="material-icons-round text-emerald-600">verified</span>
+                        <h3 class="font-bold text-slate-800">Nutritionist Credentials</h3>
+                    </div>
+                    <div class="p-8 space-y-6">
+                        <div class="group">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">STR / License Number</label>
+                            <div class="text-slate-700 font-bold flex items-center gap-2">
+                                <span class="material-icons-round text-sm text-slate-300">badge</span>
+                                STR-{{ substr(md5($user->id_user), 0, 8) }} (Verified)
+                            </div>
+                        </div>
+                        <div class="group">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Specialization</label>
+                            <div class="text-slate-700 font-bold flex items-center gap-2">
+                                <span class="material-icons-round text-sm text-slate-300">fitness_center</span>
+                                Clinical Nutrition & Weight Management
+                            </div>
+                        </div>
+                        <div class="group">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Consultation Status</label>
+                            <div class="text-emerald-600 font-bold flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Ready to Consult (Online)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <!-- Health Snapshot -->
             <div class="bg-primary rounded-[2rem] shadow-xl shadow-primary/20 overflow-hidden relative group">

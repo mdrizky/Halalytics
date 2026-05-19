@@ -21,7 +21,11 @@ class OpenFoodFactsAdminController extends Controller
      */
     public function index()
     {
-        return view('admin.products.openfoodfacts.index');
+        $products = ProductModel::where('source', 'open_food_facts')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('admin.products.openfoodfacts.index', compact('products'));
     }
 
     /**

@@ -73,6 +73,67 @@ class MidtransService
         ];
     }
 
+    /**
+     * @param  array{order_id: string, gross_amount: int, customer_details?: array<string, string>, item_name?: string}  $details
+     */
+    public function createTransaction(array $details): array
+    {
+        $serverKey = (string) config('services.midtrans.server_key');
+        $orderId = (string) ($details['order_id'] ?? ('HAL-' . now()->timestamp));
+        $amount = (int) ($details['gross_amount'] ?? 0);
+
+        if ($serverKey === '') {
+            return [
+                'token' => 'sandbox-token-' . $orderId,
+                'redirect_url' => null,
+                'order_id' => $orderId,
+                'is_mock' => true,
+            ];
+        }
+
+        $endpoint = config('services.midtrans.is_production')
+            ? 'https://app.midtrans.com/snap/v1/transactions'
+            : 'https://app.sandbox.midtrans.com/snap/v1/transactions';
+
+        $customer = $details['customer_details'] ?? [];
+        $payload = [
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => $amount,
+            ],
+            'customer_details' => [
+                'first_name' => $customer['first_name'] ?? 'Donatur',
+                'email' => $customer['email'] ?? 'donor@halalytics.local',
+                'phone' => $customer['phone'] ?? '',
+            ],
+            'item_details' => [[
+                'id' => $orderId,
+                'price' => $amount,
+                'quantity' => 1,
+                'name' => $details['item_name'] ?? 'Donasi Halalytics',
+            ]],
+        ];
+
+        $response = Http::withBasicAuth($serverKey, '')
+            ->acceptJson()
+            ->post($endpoint, $payload);
+
+        if (! $response->successful()) {
+            return [
+                'token' => null,
+                'redirect_url' => null,
+                'order_id' => $orderId,
+                'error' => $response->json('error_messages.0') ?? 'Gagal membuat transaksi Midtrans.',
+            ];
+        }
+
+        return [
+            'token' => $response->json('token'),
+            'redirect_url' => $response->json('redirect_url'),
+            'order_id' => $orderId,
+        ];
+    }
+
     public function isValidSignature(array $payload): bool
     {
         $serverKey = (string) config('services.midtrans.server_key');

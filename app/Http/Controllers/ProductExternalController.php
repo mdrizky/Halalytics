@@ -15,16 +15,21 @@ class ProductExternalController extends Controller
     protected $externalService;
     protected $activityEventService;
     protected $displayImageService;
+    protected OpenFoodFactsService $openFoodFactsService;
+    protected \App\Services\UniversalProductService $universalProductService;
 
     public function __construct(
         \App\Services\ExternalProductService $externalService,
         ActivityEventService $activityEventService,
-        DisplayImageService $displayImageService
-    )
-    {
+        DisplayImageService $displayImageService,
+        OpenFoodFactsService $openFoodFactsService,
+        \App\Services\UniversalProductService $universalProductService
+    ) {
         $this->externalService = $externalService;
         $this->activityEventService = $activityEventService;
         $this->displayImageService = $displayImageService;
+        $this->openFoodFactsService = $openFoodFactsService;
+        $this->universalProductService = $universalProductService;
     }
 
     /**
@@ -64,7 +69,11 @@ class ProductExternalController extends Controller
             ], 200);
         }
 
-        $rawMessage = (string)($result['message'] ?? 'No products found');
+        $rawMessage = (string) (
+            $foodResult['message']
+            ?? $beautyResult['message']
+            ?? 'No products found'
+        );
         $safeMessage = (str_contains(strtolower($rawMessage), 'curl error') || str_contains(strtolower($rawMessage), 'operation timed out'))
             ? 'Layanan OpenFoodFacts sedang lambat. Coba ulang sebentar lagi.'
             : $rawMessage;
@@ -166,34 +175,12 @@ class ProductExternalController extends Controller
             ], 400);
         }
 
-        // Try Food first, then Beauty
-        $product = $this->externalService->getFood($barcode);
-        if (!$product) {
-            $product = $this->externalService->getBeauty($barcode);
-        }
-        if (!$product) {
-            $product = $this->externalService->getDrug($barcode);
-        }
+        // Try unified cascaded lookup
+        $res = $this->universalProductService->findProduct($barcode);
 
-        if ($product) {
-            $normalized = [
-                'source' => $product['source'] ?? 'external',
-                'barcode' => $product['barcode'] ?? $barcode,
-                'name' => $product['name'] ?? 'Unknown Product',
-                'brands' => $product['brand'] ?? null,
-                'categories' => $product['category'] ?? null,
-                'ingredients_text' => $product['ingredients'] ?? null,
-                'nutriments' => $product['nutrition'] ?? [],
-                'nutriscore_grade' => $product['nutriscore_grade'] ?? null,
-                'labels' => [],
-                'halal_analysis' => [
-                    'status' => $product['halal_status'] ?? 'unknown',
-                    'suspicious_ingredients' => [],
-                    'recommendation' => 'Analisis berdasarkan data ingredients eksternal.',
-                ],
-                'image_url' => $product['image'] ?? null,
-                'synced_at' => now()->toIso8601String(),
-            ];
+        if ($res['found'] ?? false) {
+            $normalized = $res['standardized'];
+            $normalized['synced_at'] = now()->toIso8601String();
 
             $user = auth('sanctum')->user();
             $this->activityEventService->logEvent(
@@ -206,7 +193,7 @@ class ProductExternalController extends Controller
                 payload: [
                     'source' => $normalized['source'],
                     'name' => $normalized['name'],
-                    'nutriscore_grade' => $normalized['nutriscore_grade'],
+                    'nutriscore_grade' => $normalized['nutriscore'] ?? null,
                 ]
             );
 
@@ -214,7 +201,7 @@ class ProductExternalController extends Controller
                 'success' => true,
                 'source' => $normalized['source'],
                 'trace_id' => $traceId,
-                'content' => $product,
+                'content' => $res['data'],
                 'data' => $normalized,
                 'response_code' => 200,
                 'message' => 'Product found',
@@ -226,7 +213,7 @@ class ProductExternalController extends Controller
             'source_error' => 'PRODUCT_NOT_FOUND',
             'trace_id' => $traceId,
             'response_code' => 404,
-            'message' => $result['message'] ?? 'Product not found',
+            'message' => 'Product not found in OpenFoodFacts, OpenBeautyFacts, OpenFDA, or local database.',
             'content' => null
         ], 404);
     }

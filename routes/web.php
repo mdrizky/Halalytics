@@ -8,7 +8,6 @@ use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\AdminScanController;
 use App\Http\Controllers\AdminKategoriController;
 use App\Http\Controllers\AdminReportController;
-use App\Http\Controllers\AdminPengaturanController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\HalalProductController;
 use App\Http\Controllers\AdminApiController;

@@ -35,7 +35,11 @@ class RoleMiddleware
         $hasRole = method_exists($user, 'hasRole') && $user->hasRole($role);
         $legacyRoleMatch = ($user->role ?? null) === $role;
 
-        if (! $hasRole && ! $legacyRoleMatch) {
+        $nutritionistAliases = ['nutritionist', 'ahli_gizi', 'expert'];
+        $aliasMatch = $role === 'nutritionist'
+            && in_array($user->role ?? '', $nutritionistAliases, true);
+
+        if (! $hasRole && ! $legacyRoleMatch && ! $aliasMatch) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
                     'success' => false,

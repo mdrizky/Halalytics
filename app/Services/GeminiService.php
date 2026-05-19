@@ -985,7 +985,168 @@ PROMPT;
             ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
 
-        return 'Analisis sementara tersedia. Silakan gunakan hasil ini sebagai referensi awal dan verifikasi dengan sumber resmi bila diperlukan.';
+        // --- CONVERSATIONAL CHAT FALLBACKS (TINGKAT DEWA) ---
+        if (Str::contains($lower, ['cara memakai', 'memakai aplikasi', 'panduan', 'cara menggunakan', 'tutorial', 'fitur'])) {
+            return "Halo! Berikut adalah panduan singkat cara menggunakan aplikasi **AI Halalytics**:\n\n" .
+                   "1. **Pindai Barcode (Scan)**: Tekan tombol scan di navigasi bawah untuk memindai barcode produk makanan, minuman, obat, atau skincare. Aplikasi akan secara instan menganalisis kandungan bahan kritis halal & risiko kesehatannya secara real-time!\n" .
+                   "2. **Tanya AI Halalytics (Chat)**: Tanyakan apa saja tentang kandungan produk, gejala penyakit, resep alternatif halal, atau tips gizi sehat langsung di ruang obrolan ini.\n" .
+                   "3. **Cari Produk**: Gunakan kolom pencarian di halaman utama untuk melihat katalog detail produk lokal maupun database global OpenFoodFacts secara cepat.\n" .
+                   "4. **Profil Kesehatan (Health Profile)**: Masukkan riwayat alergi atau kondisi medis Anda di halaman profil untuk mendapatkan peringatan otomatis yang disesuaikan saat memindai produk.\n\n" .
+                   "Selamat menjelajah! Semoga hidup Anda senantiasa sehat, halal, dan berkah! 🌿";
+        }
+
+        if (Str::contains($lower, ['diabetes', 'kencing manis', 'gula darah', 'glukosa'])) {
+            return "**Diabetes Melitus** adalah kondisi kesehatan kronis yang ditandai dengan tingginya kadar gula (glukosa) di dalam darah.\n\n" .
+                   "### 🚨 Gejala Umum Diabetes:\n" .
+                   "- **Poliuria**: Sering buang air kecil, terutama pada malam hari.\n" .
+                   "- **Polidipsia**: Rasa haus yang berlebihan dan tidak kunjung hilang.\n" .
+                   "- **Polifagia**: Rasa lapar berlebih meskipun baru saja selesai makan.\n" .
+                   "- **Penurunan Berat Badan**: Kehilangan berat badan secara drastis tanpa penyebab yang jelas.\n" .
+                   "- **Kelelahan Ekstrim** & luka yang sangat lambat sembuh.\n\n" .
+                   "### 🛡️ Cara Pencegahan & Pengendalian:\n" .
+                   "1. **Batasi Gula & Karbohidrat Olahan**: Ganti nasi putih dengan karbohidrat kompleks seperti beras merah, oat, atau quinoa.\n" .
+                   "2. **Rutin Berolahraga**: Lakukan aktivitas fisik intensitas sedang minimal 150 menit per minggu (misal: jalan cepat, berenang, bersepeda).\n" .
+                   "3. **Jaga Berat Badan Ideal**: Obesitas dan timbunan lemak perut adalah faktor risiko utama resistensi insulin.\n" .
+                   "4. **Konsumsi Banyak Serat**: Perbanyak porsi sayuran hijau dan buah rendah gula untuk membantu menstabilkan pelepasan glukosa darah.\n\n" .
+                   "Silakan konsultasikan dengan dokter atau Ahli Gizi Halalytics untuk mendapatkan rekomendasi menu diet diabetes yang lebih personal! 🩺";
+        }
+
+        if (Str::contains($lower, ['skincare', 'kosmetik', 'makeup', 'lipstik', 'bedak', 'kecantikan'])) {
+            return "Halo! Dalam memilih kosmetik atau skincare, pastikan Anda selalu memperhatikan **Titik Kritis Halal** dan keamanannya:\n\n" .
+                   "- **Gelatin & Kolagen**: Sangat sering bersumber dari babi atau hewan yang disembelih tidak sesuai syariat. Selalu pilih produk dengan logo sertifikasi halal resmi.\n" .
+                   "- **Plasenta & Sel Punca**: Berasal dari organ mamalia yang haram digunakan dalam produk kecantikan luar.\n" .
+                   "- **Bahan Kimia Berbahaya**: Hindari produk abal-abal yang terindikasi mengandung Mercury, Hydroquinone berlebih (tanpa resep dokter), atau Paraben keras yang berisiko memicu iritasi dan masalah kesehatan jangka panjang.\n\n" .
+                   "Anda dapat memindai list bahan komposisi kosmetik Anda menggunakan kamera OCR Halalytics untuk analisis keamanan dan halal instan! 💖";
+        }
+
+        if (Str::contains($lower, ['diet', 'berat badan', 'kalori', 'kurus', 'fat loss', 'kegemukan'])) {
+            return "Pola diet sehat bukan berarti tidak makan, melainkan mengatur asupan kalori dan nutrisi seimbang untuk jangka panjang:\n\n" .
+                   "### 🥗 Tips Diet Sehat Halalytics:\n" .
+                   "1. **Defisit Kalori Sehat**: Kurangi asupan kalori harian sekitar 300-500 kalori dari kebutuhan harian total Anda secara bertahap.\n" .
+                   "2. **Tingkatkan Asupan Protein & Serat**: Protein membantu menjaga massa otot tetap kencang, sedangkan serat larut air membuat Anda merasa kenyang lebih lama.\n" .
+                   "3. **Cukupi Kebutuhan Air Putih**: Minum minimal 2-3 liter air per hari untuk mendukung metabolisme tubuh yang maksimal.\n" .
+                   "4. **Hindari Makan Larut Malam**: Batasi konsumsi makanan berat minimal 2-3 jam sebelum tidur agar sistem pencernaan dapat beristirahat.\n\n" .
+                   "Gunakan asisten gizi Halalytics untuk memantau kalori harian, asupan air, serta nutrisi makanan harian Anda secara otomatis! 🏃‍♂️";
+        }
+
+        if (Str::contains($lower, ['hipertensi', 'darah tinggi', 'tensi', 'garam', 'natrium'])) {
+            return "**Hipertensi (Tekanan Darah Tinggi)** sering disebut sebagai 'silent killer' karena kerap kali tidak menunjukkan gejala awal yang jelas.\n\n" .
+                   "### ⚠️ Langkah Mengontrol Tekanan Darah:\n" .
+                   "- **Diet DASH (Dietary Approaches to Stop Hypertension)**: Perbanyak konsumsi sayuran hijau, buah-buahan, gandum utuh, dan protein rendah lemak seperti ikan.\n" .
+                   "- **Batasi Natrium (Garam)**: Batasi konsumsi garam maksimal 1 sendok teh (sekitar 2.000 mg natrium) per hari. Hindari makanan kaleng dan makanan instan olahan.\n" .
+                   "- **Kelola Stres dengan Baik**: Lakukan teknik relaksasi, meditasi, dan pastikan tidur cukup 7-8 jam setiap malam.\n" .
+                   "- **Rutin Berolahraga**: Berjalan kaki santai 30 menit setiap hari terbukti ampuh memperkuat jantung dan menurunkan tekanan darah secara stabil.\n\n" .
+                   "Pantau tensi Anda secara berkala dan manfaatkan fitur konsultasi gizi kami untuk asupan rendah garam yang lezat! 🩺";
+        }
+
+        if (Str::contains($lower, ['halo', 'hai', 'pagi', 'siang', 'sore', 'malam', 'tanya', 'siapa'])) {
+            return "Halo! Saya **AI Halalytics** 🤖 asisten cerdas kesehatan, gizi, diet, obat, dan produk halal Anda. Silakan tanyakan apa saja!\n\n" .
+                   "Untuk mendapatkan jawaban terbaik, silakan tanyakan mengenai:\n" .
+                   "- 🍎 **Tips Gizi & Diet Sehat** (misal: 'Bagaimana diet untuk diabetes?')\n" .
+                   "- 💊 **Keamanan & Kehalalan Bahan** (misal: 'Apakah gelatin halal?')\n" .
+                   "- 🩺 **Edukasi Gejala Penyakit** (misal: 'Apa gejala asam urat?')\n" .
+                   "- 🧼 **Bahan Kosmetik/Skincare** (misal: 'Kandungan skincare yang berbahaya')\n\n" .
+                   "*Catatan: Jawaban AI ini adalah untuk edukasi awal. Selalu verifikasi dengan dokter ahli untuk tindakan medis resmi.*";
+        }
+
+        return $this->buildContextualFallbackFromPrompt($prompt);
+    }
+
+    private function buildContextualFallbackFromPrompt(string $prompt): string
+    {
+        $userQuestion = $this->extractUserQuestionFromPrompt($prompt);
+        $lowerQuestion = Str::lower($userQuestion);
+
+        if (Str::contains($lowerQuestion, ['bahan', 'komposisi', 'ingredient', 'halal', 'haram', 'syubhat'])) {
+            $ingredients = $this->extractIngredientsFromPrompt($prompt);
+            if ($ingredients !== '') {
+                $analysis = $this->fallbackIngredientAnalysis($ingredients, $this->extractUserContextFromPrompt($prompt));
+                $status = Str::upper((string) ($analysis['status_halal'] ?? 'unknown'));
+                $ringkasan = (string) ($analysis['ringkasan'] ?? '');
+                $recommendation = (string) ($analysis['recommendation'] ?? '');
+                $watchouts = collect($analysis['watchouts'] ?? [])->filter()->implode("\n• ");
+
+                $response = "🕌 **Status Halal (Analisis Cepat): {$status}**\n\n{$ringkasan}";
+                if ($recommendation !== '') {
+                    $response .= "\n\n💡 **Rekomendasi:** {$recommendation}";
+                }
+                if ($watchouts !== '') {
+                    $response .= "\n\n⚠️ **Perhatian:**\n• {$watchouts}";
+                }
+                $response .= "\n\n_Sumber: analisis rule-based Halalytics. Verifikasi sertifikasi resmi MUI/BPJPH bila diperlukan._";
+
+                return $response;
+            }
+        }
+
+        if (Str::contains($lowerQuestion, ['gula', 'sodium', 'garam', 'kalori', 'nutrisi', 'sehat'])) {
+            return "**Analisis Kesehatan (mode offline)**\n\n"
+                . "Berdasarkan pertanyaan Anda tentang nutrisi, perhatikan tiga hal utama:\n"
+                . "1. **Gula** — batasi produk dengan gula >20g per 100g jika dikonsumsi rutin.\n"
+                . "2. **Sodium** — waspadai produk dengan sodium >600mg per 100g, terutama bila Anda punya riwayat hipertensi.\n"
+                . "3. **Komposisi** — bahan pertama pada label biasanya dominan; pilih produk dengan komposisi lebih sederhana.\n\n"
+                . "Untuk analisis produk spesifik, gunakan fitur **Scan Barcode** agar Halalytics membaca komposisi lengkap.\n\n"
+                . "_Konsultasikan dokter atau ahli gizi untuk kondisi medis spesifik._";
+        }
+
+        if ($userQuestion !== '') {
+            return "**AI Halalytics (mode offline)**\n\n"
+                . "Terima kasih atas pertanyaan Anda. Saat ini koneksi ke model AI utama sedang terbatas, "
+                . "namun berikut panduan singkat:\n\n"
+                . "• Untuk **cek produk**: gunakan Scan Barcode di aplikasi.\n"
+                . "• Untuk **halal & bahan**: sebutkan daftar bahan/komposisi agar kami analisis.\n"
+                . "• Untuk **kesehatan & diet**: jelaskan kondisi Anda (diabetes, hipertensi, alergi) agar saran lebih personal.\n\n"
+                . "**Pertanyaan Anda:** \"{$userQuestion}\"\n\n"
+                . "Silakan coba lagi sebentar lagi atau hubungi ahli gizi melalui menu konsultasi.";
+        }
+
+        return "Halo! Saya **AI Halalytics**. Saat ini layanan AI cloud sedang terbatas, tetapi Anda tetap bisa:\n"
+            . "• Memindai barcode produk untuk analisis halal & kesehatan\n"
+            . "• Menanyakan komposisi bahan (contoh: \"Apakah gelatin halal?\")\n"
+            . "• Membaca artikel kesehatan di aplikasi\n\n"
+            . "Coba kirim pertanyaan lebih spesifik atau gunakan fitur scan.";
+    }
+
+    private function extractUserQuestionFromPrompt(string $prompt): string
+    {
+        if (preg_match('/pertanyaan(?:\s+pengguna)?:\s*(.+)$/is', $prompt, $matches)) {
+            return trim($matches[1]);
+        }
+
+        if (preg_match('/daftar bahan:\s*(.+?)(?:\n|profil pengguna:)/is', $prompt, $matches)) {
+            return 'Analisis bahan: ' . trim($matches[1]);
+        }
+
+        return trim(Str::limit(preg_replace('/\s+/', ' ', $prompt) ?? $prompt, 280));
+    }
+
+    private function extractIngredientsFromPrompt(string $prompt): string
+    {
+        if (preg_match('/daftar bahan:\s*(.+?)(?:\n|profil pengguna:)/is', $prompt, $matches)) {
+            return trim($matches[1]);
+        }
+
+        if (preg_match('/komposisi:\s*(.+?)(?:\n|$)/is', $prompt, $matches)) {
+            return trim($matches[1]);
+        }
+
+        return '';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function extractUserContextFromPrompt(string $prompt): array
+    {
+        $context = [];
+        if (preg_match('/profil pengguna:\s*(\{.+?\})/is', $prompt, $matches)) {
+            $decoded = json_decode($matches[1], true);
+            if (is_array($decoded)) {
+                $context = $decoded;
+            }
+        }
+
+        return $context;
     }
 
     private function fallbackImagePromptResponse(string $prompt): string

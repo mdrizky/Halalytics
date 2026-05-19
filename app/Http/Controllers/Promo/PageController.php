@@ -112,22 +112,26 @@ class PageController extends Controller
     /**
      * AI Halalytics Assistant chat endpoint.
      */
-    public function aiChat(\Illuminate\Http\Request $request, \App\Services\GeminiService $gemini)
-    {
+    public function aiChat(
+        \Illuminate\Http\Request $request,
+        \App\Services\GeminiService $gemini,
+        \App\Services\AI\PromptBuilderService $promptBuilder
+    ) {
         $message = $request->input('message');
         if (empty($message)) {
             return response()->json(['error' => 'Pesan tidak boleh kosong.'], 400);
         }
 
         try {
-            $systemPrompt = <<<PROMPT
-Anda adalah AI Halalytics, asisten kecerdasan kesehatan, gizi, diet, obat, dan produk halal yang sangat ramah, sopan, dan cerdas.
-Jawablah pertanyaan berikut dengan penjelasan yang akurat, informatif, dan praktis menggunakan bahasa Indonesia yang santun.
-Fokuslah pada topik-topik kesehatan, gizi, panduan diet sehat, fungsi atau kehalalan obat-obatan, serta gaya hidup sehat halal.
-Jika ditanya tentang topik di luar kesehatan atau gizi, tetaplah jawab secara bijaksana dan hubungkan dengan dampaknya terhadap kesehatan jasmani maupun rohani jika memungkinkan.
+            $systemPrompt = $promptBuilder->build('user_chat', [
+                'user_message' => $message,
+            ], <<<PROMPT
+Anda adalah AI Halalytics, asisten kesehatan, gizi, diet, obat, dan produk halal berbasis bukti.
+Jawab pertanyaan dengan jelas, informatif, dan personal. JANGAN gunakan kalimat placeholder.
+Jangan klaim "Halal Resmi" kecuali ada sertifikasi MUI/BPJPH.
 
-Pertanyaan pengguna: {$message}
-PROMPT;
+Pertanyaan pengguna: {user_message}
+PROMPT);
 
             $reply = $gemini->generateText($systemPrompt);
 

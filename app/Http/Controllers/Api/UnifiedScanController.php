@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProductModel;
+use App\Services\AI\CategoryDetectorService;
 use App\Services\OpenFoodFactsService;
 use App\Models\ScanModel;
 use App\Services\CrowdSourcedReportService;
@@ -14,11 +15,16 @@ class UnifiedScanController extends Controller
 {
     protected $universalService;
     protected $crowdService;
+    protected CategoryDetectorService $categoryDetector;
 
-    public function __construct(\App\Services\UniversalProductService $universalService, CrowdSourcedReportService $crowdService)
-    {
+    public function __construct(
+        \App\Services\UniversalProductService $universalService,
+        CrowdSourcedReportService $crowdService,
+        CategoryDetectorService $categoryDetector
+    ) {
         $this->universalService = $universalService;
         $this->crowdService = $crowdService;
+        $this->categoryDetector = $categoryDetector;
     }
 
     /**
@@ -47,10 +53,17 @@ class UnifiedScanController extends Controller
                  $this->recordScan($user, $productData);
             }
 
+            $detectedCategory = $this->categoryDetector->detect([
+                'name' => $standardized['name'] ?? '',
+                'ingredients' => $standardized['ingredients_text'] ?? '',
+                'category' => $standardized['category'] ?? '',
+            ]);
+
             $response = [
                 'success' => true,
                 'source' => $source,
                 'data' => $this->formatStandardizedResponse($standardized, $source, $productData),
+                'detected_category' => $detectedCategory,
                 'message' => 'Produk ditemukan (' . $source . ')',
                 'needs_verification' => $source !== 'bpom' && ($productData->verification_status ?? '') !== 'verified',
             ];

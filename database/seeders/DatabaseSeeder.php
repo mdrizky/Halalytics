@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             AIEnhancedProductSeeder::class,
             AIEnhancedArticleSeeder::class,
             AIEnhancedForbiddenIngredientSeeder::class,
+            HalalyticsCoreSeeder::class,
         ]);
     }
 }

@@ -44,6 +44,7 @@ use App\Http\Controllers\Api\NutritionConsultationController;
 */
 
 // 🔓 PUBLIC ROUTES
+Route::post('/payment/webhook/midtrans', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'midtrans']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
@@ -244,8 +245,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reports', [\App\Http\Controllers\ApiController::class, 'storeReport']);
     Route::post('/export-report', [\App\Http\Controllers\Api\ReportExportController::class, 'export']);
 
+    // DONATIONS (campaign Midtrans)
+    Route::prefix('donations')->group(function () {
+        Route::get('/campaigns', [\App\Http\Controllers\Api\DonationController::class, 'campaigns']);
+        Route::post('/create', [\App\Http\Controllers\Api\DonationController::class, 'create']);
+        Route::get('/history', [\App\Http\Controllers\Api\DonationController::class, 'history']);
+    });
+
     // AI ASSISTANT SUITE
     Route::prefix('ai')->group(function () {
+        Route::post('/chat', [\App\Http\Controllers\Api\AIAssistantController::class, 'chat']);
+        Route::post('/feedback', [\App\Http\Controllers\Api\AdminAiLogController::class, 'feedback']);
         Route::post('/analyze', [\App\Http\Controllers\Api\AIAssistantController::class, 'analyzeIngredients']);
         Route::get('/weekly-report', [\App\Http\Controllers\Api\AIAssistantController::class, 'generateWeeklyReport']);
         Route::get('/personal-risk-score', [\App\Http\Controllers\Api\AIAssistantController::class, 'getPersonalRiskScore']);
@@ -302,6 +312,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/monitor/stats', [\App\Http\Controllers\Api\AdminMonitorController::class, 'getDashboardStats']);
         Route::get('/monitor/feed', [\App\Http\Controllers\Api\AdminMonitorController::class, 'getActivityFeed']);
         Route::get('/products/pending', [\App\Http\Controllers\Api\ContributionController::class, 'pending']);
+        Route::get('/ai/logs', [\App\Http\Controllers\Api\AdminAiLogController::class, 'index']);
+        Route::get('/ai/stats', [\App\Http\Controllers\Api\AdminAiLogController::class, 'stats']);
     });
 });
 
