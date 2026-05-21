@@ -351,3 +351,11 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::post('emergency-requests', [\App\Http\Controllers\Admin\EmergencyController::class, 'store']);
     Route::post('emergency-requests/{id}/notify', [\App\Http\Controllers\Admin\EmergencyController::class, 'sendNotification']);
 });
+
+// Halalytics Event System (v4.0)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/events', [\App\Http\Controllers\Api\EventController::class, 'index']);
+    Route::post('/events/{id}/register', [\App\Http\Controllers\Api\EventController::class, 'register']);
+    Route::get('/events/my-tickets', [\App\Http\Controllers\Api\EventController::class, 'myTickets']);
+});
+

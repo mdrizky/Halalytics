@@ -61,35 +61,86 @@ class FoodAnalysisOrchestrator
 
         $geminiResult = [];
         try {
+            // Build full prompt from DB template (admin-editable) with all context injected
             $prompt = $this->promptBuilder->build('food_analysis', $promptVars);
-            $geminiResult = $this->gemini->analyzeIngredients($ingredientsText, $userContext);
+
+            // Send the full contextual prompt to Gemini — NOT just ingredients text
+            $rawResponse = $this->gemini->generateCustomContent($prompt, 0.3, 3000);
+
+            if (is_array($rawResponse)) {
+                $geminiResult = $rawResponse;
+            } elseif (is_string($rawResponse) && trim($rawResponse) !== '') {
+                // Try to parse if string returned
+                $decoded = json_decode($rawResponse, true);
+                $geminiResult = is_array($decoded) ? $decoded : [];
+            }
+
+            // Fallback: if Gemini returned empty, use the ingredient-only analysis
+            if (empty($geminiResult)) {
+                $geminiResult = $this->gemini->analyzeIngredients($ingredientsText, $userContext);
+            }
         } catch (\Throwable $e) {
             Log::warning('Gemini analyze failed, using rule engine: ' . $e->getMessage());
+            // Rule engine fallback — still returns meaningful data
+            try {
+                $geminiResult = $this->gemini->analyzeIngredients($ingredientsText, $userContext);
+            } catch (\Throwable $e2) {
+                Log::error('Rule engine also failed: ' . $e2->getMessage());
+            }
         }
 
         $merged = array_merge($geminiResult, [
-            'status' => $halal['halal_status'] ?? ($geminiResult['status_halal'] ?? 'unknown'),
-            'status_halal' => $halal['halal_status'] ?? ($geminiResult['status_halal'] ?? 'unknown'),
-            'halal_score' => $halal['halal_score'] ?? ($geminiResult['halal_score'] ?? 70),
-            'health_score' => $nutrition['health_score'] ?? ($geminiResult['health_score'] ?? 70),
-            'health_status' => $nutrition['health_status'] ?? null,
-            'sugar_risk' => $nutrition['sugar_risk'] ?? null,
-            'sodium_risk' => $nutrition['sodium_risk'] ?? null,
-            'dominant_ingredient' => $nutrition['dominant_ingredient'] ?? null,
-            'ringkasan' => $geminiResult['ringkasan'] ?? $halal['summary'],
-            'recommendation' => $geminiResult['recommendation'] ?? null,
+            // Halal — rule engine selalu override Gemini untuk akurasi
+            'status'          => $halal['halal_status'] ?? ($geminiResult['status_halal'] ?? 'unknown'),
+            'status_halal'    => $halal['halal_status'] ?? ($geminiResult['status_halal'] ?? 'unknown'),
+            'halal_score'     => $halal['halal_score']  ?? ($geminiResult['halal_score']  ?? 70),
+            'halal_flags'     => $halal['flags']        ?? [],
+            'health_warnings' => $halal['health_warnings'] ?? [],
+
+            // Nutrisi — rule engine selalu override
+            'health_score'       => $nutrition['health_score']       ?? ($geminiResult['health_score'] ?? 70),
+            'health_status'      => $nutrition['health_status']      ?? null,
+            'sugar_risk'         => $nutrition['sugar_risk']         ?? 'rendah',
+            'sodium_risk'        => $nutrition['sodium_risk']        ?? 'rendah',
+            'fat_risk'           => $nutrition['fat_risk']           ?? 'rendah',
+            'dominant_ingredient'=> $nutrition['dominant_ingredient'] ?? null,
+            'is_ultra_processed' => $nutrition['is_ultra_processed'] ?? false,
+            'nutrition_flags'    => $nutrition['nutrition_flags']    ?? [],
+            'nutrition_values'   => $nutrition['nutrition_values']   ?? [],
+            'nutrition_estimate' => $nutrition['nutrition_estimate'] ?? [],
+
+            // Ringkasan — Gemini lebih baik, fallback ke rule engine
+            'ringkasan'   => (! empty($geminiResult['ringkasan']) && ! $this->isPlaceholder($geminiResult['ringkasan'] ?? ''))
+                ? $geminiResult['ringkasan']
+                : $halal['summary'],
+
+            'recommendation' => (! empty($geminiResult['recommendation']) && ! $this->isPlaceholder($geminiResult['recommendation'] ?? ''))
+                ? $geminiResult['recommendation']
+                : null,
+
+            // Peringatan gabungan dari semua sumber
             'watchouts' => array_values(array_unique(array_merge(
-                $geminiResult['watchouts'] ?? [],
-                $personal['personal_warnings'] ?? [],
-                $nutrition['nutrition_flags'] ?? []
+                $geminiResult['watchouts']          ?? [],
+                $personal['personal_warnings']      ?? [],
+                $nutrition['nutrition_flags']        ?? [],
+                $halal['health_warnings']            ?? [],
             ))),
-            'personalized_message' => implode(' ', $personal['personal_warnings'] ?? []),
-            'recommendations' => $this->recommendationService->suggest($nutrition, $halal, $personal),
-            'long_term_consideration' => $this->evidenceService->longTermNote($nutrition),
-            'ai_confidence' => empty($geminiResult) ? 'medium' : 'high',
-            'data_source' => $productData['source'] ?? 'AI Halalytics + Gemini',
-            'consult_nutritionist' => $personal['consult_nutritionist'] ?? false,
-            'consumption_pattern_message' => $behavior['consumption_pattern_message'] ?? '',
+
+            // Pesan personal
+            'personalized_message' => ! empty($personal['personal_warnings'])
+                ? implode("\n", $personal['personal_warnings'])
+                : ($geminiResult['personalized_message'] ?? ''),
+
+            // Rekomendasi dari service
+            'recommendations'          => $this->recommendationService->suggest($nutrition, $halal, $personal),
+            'long_term_consideration'  => $this->evidenceService->longTermNote($nutrition),
+            'short_term_effect'        => $geminiResult['short_term_effect'] ?? '',
+
+            // Metadata
+            'ai_confidence'              => empty($geminiResult) ? 'medium' : 'high',
+            'data_source'                => $productData['source'] ?? 'AI Halalytics + Gemini',
+            'consult_nutritionist'       => $personal['consult_nutritionist'] ?? false,
+            'consumption_pattern_message'=> $behavior['consumption_pattern_message'] ?? '',
         ]);
 
         if ($userId > 0) {

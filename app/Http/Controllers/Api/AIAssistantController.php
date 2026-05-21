@@ -460,6 +460,26 @@ class AIAssistantController extends Controller
             'user_message' => $message,
         ];
 
+        // Fetch Recent Scans & Intake History for AI Context
+        try {
+            $recentScans = \App\Models\ScanHistory::where('user_id', $user->id_user)
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->pluck('product_name')
+                ->toArray();
+                
+            $recentIntakes = IntakeLog::where('user_id', $user->id_user)
+                ->orderBy('logged_at', 'desc')
+                ->limit(5)
+                ->get(['product_name', 'sugar_g', 'sodium_mg', 'calories'])
+                ->toArray();
+                
+            $userContext['recent_scans'] = !empty($recentScans) ? implode(", ", $recentScans) : 'Belum ada data scan.';
+            $userContext['recent_intakes'] = !empty($recentIntakes) ? json_encode($recentIntakes) : 'Belum ada log nutrisi.';
+        } catch (\Exception $e) {
+            Log::warning("Failed to fetch AI memory context: " . $e->getMessage());
+        }
+
         try {
             $userContext['user_id'] = $user->id_user;
             $reply = $this->foodAnalysisOrchestrator->chat($message, $userContext);

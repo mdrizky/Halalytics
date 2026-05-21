@@ -123,15 +123,50 @@ class PageController extends Controller
         }
 
         try {
+            $msgLower = strtolower($message);
+            $isHalalQuery = false;
+            $isMedicalQuery = false;
+
+            // Keywords for halal analysis
+            $halalKeywords = ['halal', 'haram', 'syubhat', 'kandungan', 'ingredien', 'komposisi', 'babi', 'alkohol', 'gelatin', 'e-number', 'e300', 'e120', 'emulsifier', 'lesitin', 'enzim', 'unsur'];
+            foreach ($halalKeywords as $kw) {
+                if (str_contains($msgLower, $kw)) {
+                    $isHalalQuery = true;
+                    break;
+                }
+            }
+
+            // Keywords for medical/health
+            $medicalKeywords = ['sakit', 'obat', 'penyakit', 'gejala', 'pusing', 'demam', 'dosis', 'resep', 'interaksi', 'diabetes', 'jantung', 'hipertensi', 'kolesterol', 'dokter', 'medis', 'efek samping', 'klinik'];
+            foreach ($medicalKeywords as $kw) {
+                if (str_contains($msgLower, $kw)) {
+                    $isMedicalQuery = true;
+                    break;
+                }
+            }
+
+            if ($isHalalQuery) {
+                $roleInstructions = "Anda adalah AI Halalytics, pakar verifikasi kehalalan produk, bahan tambahan pangan (E-numbers), dan hukum makanan dalam Islam.
+Analisis kehalalan bahan yang ditanyakan dengan rinci:
+1. Jelaskan titik kritis kehalalan bahan tersebut (misal: sumber hewani vs nabati).
+2. Sebutkan status hukumnya (Halal, Haram, atau Syubhat).
+3. Berikan saran alternatif halal jika bahan tersebut syubhat/haram.
+JANGAN mengklaim sertifikasi resmi jika tidak ada data BPJPH/MUI. Jawab dengan nada sopan dan mendidik.";
+            } elseif ($isMedicalQuery) {
+                $roleInstructions = "Anda adalah AI Halalytics, asisten kesehatan dan informasi medis terpercaya.
+Berikan informasi medis dengan ketentuan ketat:
+1. Sertakan DISCLAIMER medis yang jelas bahwa informasi ini hanya bersifat edukatif dan bukan pengganti diagnosis dokter profesional.
+2. Jelaskan gejala, fungsi obat, atau penyakit yang ditanyakan berdasarkan literatur kesehatan ilmiah terkini.
+3. Berikan saran gaya hidup sehat, asupan gizi, atau pertolongan pertama yang aman.
+4. Ingatkan untuk berkonsultasi ke fasilitas kesehatan terdekat.";
+            } else {
+                $roleInstructions = "Anda adalah AI Halalytics, asisten virtual ramah untuk kesehatan, gizi, dan produk halal.
+Jawab sapaan atau pertanyaan umum pengguna dengan ramah, hangat, dan berikan gambaran singkat mengenai fitur utama Halalytics (Scan Produk BPOM/Halal, Cek Interaksi Obat, Komunitas Donor Darah, Konsultasi Ahli Gizi).";
+            }
+
             $systemPrompt = $promptBuilder->build('user_chat', [
                 'user_message' => $message,
-            ], <<<PROMPT
-Anda adalah AI Halalytics, asisten kesehatan, gizi, diet, obat, dan produk halal berbasis bukti.
-Jawab pertanyaan dengan jelas, informatif, dan personal. JANGAN gunakan kalimat placeholder.
-Jangan klaim "Halal Resmi" kecuali ada sertifikasi MUI/BPJPH.
-
-Pertanyaan pengguna: {user_message}
-PROMPT);
+            ], $roleInstructions . "\n\nPertanyaan pengguna: {user_message}");
 
             $reply = $gemini->generateText($systemPrompt);
 

@@ -182,45 +182,204 @@
     /* Hero Section Fix */
     .hero-container {
         padding-top: 140px;
-        padding-bottom: 100px;
-        background: radial-gradient(circle at 80% 20%, rgba(0, 200, 83, 0.1), transparent 40%);
+        padding-bottom: 80px;
+        background: radial-gradient(circle at 85% 30%, rgba(38, 166, 154, 0.15), transparent 50%),
+                    radial-gradient(circle at 15% 80%, rgba(77, 182, 172, 0.08), transparent 45%);
+    }
+
+    /* Floating Animations */
+    @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(3deg); }
+        50% { transform: translateY(-20px) rotate(1.5deg); }
+    }
+    @keyframes float-delayed {
+        0%, 100% { transform: translateY(0px) rotate(-3deg); }
+        50% { transform: translateY(-16px) rotate(-1.5deg); }
+    }
+    .animate-float {
+        animation: float 6s ease-in-out infinite;
+    }
+    .animate-float-delayed {
+        animation: float-delayed 5s ease-in-out infinite;
+    }
+
+    /* Partner Slider Marquee Custom Styles */
+    .partner-swiper .swiper-wrapper {
+        transition-timing-function: linear !important;
+    }
+    .partner-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        border-radius: 16px;
+        padding: 14px 28px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 4px 20px rgba(0, 77, 64, 0.02);
     }
 </style>
 @endsection
 
 @section('content')
 <!-- ===== HERO SECTION ===== -->
-<div class="hero-container px-6">
-    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-        <div>
-            <div class="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-bold border border-emerald-100 mb-8">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                Halalytics AI v2.0 - Kini Lebih Cerdas
+<div class="hero-container px-6 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+        <!-- Text content -->
+        <div class="lg:col-span-7 space-y-8 relative z-10">
+            <div class="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-bold border border-emerald-100/60 shadow-sm animate-pulse">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                Halalytics AI v2.0 - Kini Lebih Cerdas & Responsif
             </div>
-            <h1 class="text-6xl font-black text-gray-900 leading-tight mb-8">
-                Pantau Kesehatan <br> Dengan <span class="text-emerald-600">Kepastian Halal.</span>
+            <h1 class="text-5xl md:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight">
+                Skrining Kesehatan <br> Dengan <span class="text-emerald-600">Kepastian Halal.</span>
             </h1>
-            <p class="text-xl text-gray-500 mb-10 leading-relaxed">
-                Platform kesehatan terintegrasi yang menggabungkan kecerdasan AI dengan basis data halal terverifikasi. Konsultasi, cek nutrisi, dan skrining risiko dalam satu genggaman.
+            <p class="text-lg md:text-xl text-slate-500 leading-relaxed max-w-xl">
+                Asisten pintar kesehatan terintegrasi pertama yang menghubungkan kecerdasan buatan AI dengan basis data obat-obatan BPOM serta sertifikasi halal resmi. Cepat, akurat, dan aman.
             </p>
-            <div class="flex gap-4">
-                <a href="{{ route('download') }}" class="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black text-lg hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-600/30">
+            <div class="flex flex-wrap gap-4 pt-2">
+                <a href="{{ route('download') }}" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-4 rounded-2xl font-black text-lg hover:from-emerald-500 hover:to-teal-500 transition-all duration-300 shadow-xl shadow-emerald-700/25 flex items-center gap-3">
                     Download Aplikasi
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                 </a>
-                <a href="#specialized" class="bg-white text-gray-700 border border-gray-200 px-8 py-4 rounded-2xl font-black text-lg hover:bg-gray-50 transition-all">
-                    Layanan Khusus
+                <a href="#health-tools" class="bg-white text-slate-700 border border-slate-200 px-8 py-4 rounded-2xl font-black text-lg hover:bg-slate-50 transition-all duration-300 shadow-sm flex items-center gap-2">
+                    Kalkulator Medis
                 </a>
             </div>
         </div>
-        <div class="hidden lg:flex justify-end relative">
-            <div class="device-shell w-[300px] h-[600px] rotate-3 shadow-2xl">
-                <img src="{{ asset('images/promo/ss-home-1.png') }}" alt="App Home" class="w-full h-full object-cover">
+
+        <!-- Floating Devices and AI Chat Preview -->
+        <div class="lg:col-span-5 hidden lg:flex justify-center items-center relative h-[650px] w-full">
+            <!-- Background Decorative Circle -->
+            <div class="absolute w-[450px] h-[450px] bg-gradient-to-tr from-emerald-500/10 to-teal-500/5 rounded-full blur-2xl"></div>
+
+            <!-- Device Back (Delayed Float) -->
+            <div class="device-shell w-[250px] h-[500px] absolute right-8 top-12 z-0 opacity-80 scale-95 animate-float-delayed">
+                <div class="w-full h-full rounded-[40px] border-4 border-slate-800 overflow-hidden bg-slate-900 shadow-xl">
+                    <img src="{{ asset('images/promo/ss-home-2.png') }}" alt="App Feature" class="w-full h-full object-cover">
+                </div>
             </div>
-            <div class="absolute -bottom-6 -left-6 bg-white p-6 rounded-3xl shadow-2xl border border-emerald-50 w-64 z-10">
-                <p class="text-xs font-black text-gray-400 uppercase mb-2 tracking-widest">Live Status</p>
+
+            <!-- Device Front (Float) -->
+            <div class="device-shell w-[270px] h-[540px] absolute left-12 bottom-8 z-10 animate-float">
+                <div class="w-full h-full rounded-[44px] border-[6px] border-slate-900 overflow-hidden bg-slate-950 shadow-2xl">
+                    <img src="{{ asset('images/promo/ss-home-1.png') }}" alt="App Home" class="w-full h-full object-cover">
+                </div>
+            </div>
+
+            <!-- Floating AI Chat Bubble Card -->
+            <div class="absolute left-0 top-24 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-emerald-50 w-72 z-20 animate-bounce" style="animation-duration: 4s;">
+                <div class="flex items-center gap-2.5 mb-2 pb-2 border-b border-gray-100">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <span class="text-xs font-bold text-emerald-700">AI Halalytics (HILDA)</span>
+                </div>
+                <div class="space-y-2">
+                    <div class="bg-gray-100 rounded-xl p-2.5 text-[11px] text-gray-700 max-w-[90%]">
+                        "Apakah kandungan gelatin babi ada pada obat A?"
+                    </div>
+                    <div class="bg-emerald-50 rounded-xl p-2.5 text-[11px] text-emerald-800 ml-auto max-w-[90%] text-right font-medium">
+                        "Hasil penelusuran: Obat A terdaftar BPOM dan menggunakan gelatin sapi bersertifikat halal."
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Status Badge -->
+            <div class="absolute -bottom-4 right-0 bg-white p-5 rounded-3xl shadow-xl border border-emerald-50 w-60 z-20">
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">Ketersediaan Pakar</p>
                 <div class="flex items-center gap-3">
-                    <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
-                    <p class="font-bold text-gray-800">512 Dokter Online</p>
+                    <div class="w-3.5 h-3.5 rounded-full bg-emerald-500 animate-ping absolute"></div>
+                    <div class="w-3.5 h-3.5 rounded-full bg-emerald-500 relative"></div>
+                    <p class="font-extrabold text-sm text-slate-800">512 Tenaga Medis Siaga</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== PARTNERS INFINITE MARQUEE SLIDER ===== -->
+<div class="bg-white/60 border-y border-slate-200/50 py-8 relative z-20">
+    <div class="max-w-7xl mx-auto px-6">
+        <p class="text-center text-[10px] font-black uppercase tracking-widest text-slate-400 mb-5">Keakuratan Data Terintegrasi Secara Resmi</p>
+        <div class="swiper partner-swiper overflow-hidden">
+            <div class="swiper-wrapper flex items-center">
+                <!-- Slide 1 -->
+                <div class="swiper-slide !w-auto">
+                    <div class="partner-card">
+                        <span class="text-lg">🛡️</span>
+                        <span class="font-brand font-extrabold text-xs text-slate-700">BPOM RI</span>
+                    </div>
+                </div>
+                <!-- Slide 2 -->
+                <div class="swiper-slide !w-auto">
+                    <div class="partner-card">
+                        <span class="text-lg">🕌</span>
+                        <span class="font-brand font-extrabold text-xs text-slate-700">LPPOM MUI</span>
+                    </div>
+                </div>
+                <!-- Slide 3 -->
+                <div class="swiper-slide !w-auto">
+                    <div class="partner-card">
+                        <span class="text-lg">🩺</span>
+                        <span class="font-brand font-extrabold text-xs text-slate-700">Kemenkes RI</span>
+                    </div>
+                </div>
+                <!-- Slide 4 -->
+                <div class="swiper-slide !w-auto">
+                    <div class="partner-card">
+                        <span class="text-lg">📦</span>
+                        <span class="font-brand font-extrabold text-xs text-slate-700">Open Food Facts</span>
+                    </div>
+                </div>
+                <!-- Slide 5 -->
+                <div class="swiper-slide !w-auto">
+                    <div class="partner-card">
+                        <span class="text-lg">🤖</span>
+                        <span class="font-brand font-extrabold text-xs text-slate-700">Gemini Cloud AI</span>
+                    </div>
+                </div>
+                <!-- Slide 6 -->
+                <div class="swiper-slide !w-auto">
+                    <div class="partner-card">
+                        <span class="text-lg">🎓</span>
+                        <span class="font-brand font-extrabold text-xs text-slate-700">UI & ITB Labs</span>
+                    </div>
+                </div>
+                <!-- Duplicate slides for seamless loop marquee -->
+                <div class="swiper-slide !w-auto">
+                    <div class="partner-card">
+                        <span class="text-lg">🛡️</span>
+                        <span class="font-brand font-extrabold text-xs text-slate-700">BPOM RI</span>
+                    </div>
+                </div>
+                <div class="swiper-slide !w-auto">
+                    <div class="partner-card">
+                        <span class="text-lg">🕌</span>
+                        <span class="font-brand font-extrabold text-xs text-slate-700">LPPOM MUI</span>
+                    </div>
+                </div>
+                <div class="swiper-slide !w-auto">
+                    <div class="partner-card">
+                        <span class="text-lg">🩺</span>
+                        <span class="font-brand font-extrabold text-xs text-slate-700">Kemenkes RI</span>
+                    </div>
+                </div>
+                <div class="swiper-slide !w-auto">
+                    <div class="partner-card">
+                        <span class="text-lg">📦</span>
+                        <span class="font-brand font-extrabold text-xs text-slate-700">Open Food Facts</span>
+                    </div>
+                </div>
+                <div class="swiper-slide !w-auto">
+                    <div class="partner-card">
+                        <span class="text-lg">🤖</span>
+                        <span class="font-brand font-extrabold text-xs text-slate-700">Gemini Cloud AI</span>
+                    </div>
+                </div>
+                <div class="swiper-slide !w-auto">
+                    <div class="partner-card">
+                        <span class="text-lg">🎓</span>
+                        <span class="font-brand font-extrabold text-xs text-slate-700">UI & ITB Labs</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -478,30 +637,139 @@
 
         <div class="alphabet-grid mb-16">
             @foreach(range('A', 'Z') as $c)
-            <div class="char-btn @if($c == 'A') active @endif">{{ $c }}</div>
+            <div class="char-btn @if($c == 'A') active @endif" onclick="filterAlphabet('{{ $c }}')">{{ $c }}</div>
             @endforeach
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="dictionary-grid">
             @php
             $diseases = [
-                ['name' => 'Abdominal Migrain', 'desc' => 'Nyeri perut parah yang sering terjadi pada anak-anak.'],
-                ['name' => 'Abses Gigi', 'desc' => 'Kumpulan nanah di gigi atau gusi akibat infeksi bakteri.'],
-                ['name' => 'Acne Vulgaris', 'desc' => 'Masalah kulit berupa jerawat akibat penyumbatan pori.'],
-                ['name' => 'Anemia', 'desc' => 'Kondisi kekurangan sel darah merah yang sehat dalam tubuh.'],
-                ['name' => 'Asma', 'desc' => 'Penyempitan saluran pernapasan akibat peradangan kronis.'],
-                ['name' => 'Alergi Makanan', 'desc' => 'Reaksi sistem imun terhadap protein tertentu dalam makanan.']
+                [
+                    'name' => 'Abdominal Migrain',
+                    'desc' => 'Nyeri perut parah yang sering terjadi pada anak-anak.',
+                    'causes' => 'Faktor genetika, ketidakseimbangan zat kimia otak (serotonin), stres psikologis, kelelahan fisik, serta pemicu makanan tertentu (cokelat, MSG, keju olahan).',
+                    'symptoms' => 'Nyeri perut tumpul/melilit di sekitar pusar, mual, muntah berulang, kulit pucat, serta sensitivitas terhadap cahaya.',
+                    'treatments' => 'Istirahat di ruangan sunyi dan gelap, hidrasi cairan yang cukup, obat pereda nyeri sesuai anjuran dokter, serta pengelolaan stres anak.',
+                    'halal' => 'Pastikan makanan olahan yang dikonsumsi anak bebas dari emulsifier syubhat atau rennet hewani non-halal pada keju.'
+                ],
+                [
+                    'name' => 'Abses Gigi',
+                    'desc' => 'Kumpulan nanah di gigi atau gusi akibat infeksi bakteri.',
+                    'causes' => 'Bakteri mulut yang menembus pulpa gigi melalui gigi berlubang, luka gusi, serta kebersihan gigi dan mulut yang buruk.',
+                    'symptoms' => 'Nyeri berdenyut konstan yang menjalar ke rahang/telinga, gusi bengkak kemerahan, sensitif suhu ekstrem, demam, dan rasa pahit di mulut.',
+                    'treatments' => 'Drainase nanah oleh dokter gigi, perawatan saluran akar (root canal), pencabutan gigi yang rusak parah, serta konsumsi antibiotik.',
+                    'halal' => 'Pilih obat kumur antiseptik tanpa kandungan alkohol (etanol industri) bebas syubhat dan pasta gigi bersertifikasi halal.'
+                ],
+                [
+                    'name' => 'Acne Vulgaris',
+                    'desc' => 'Masalah kulit berupa jerawat akibat penyumbatan pori-pori.',
+                    'causes' => 'Produksi minyak (sebum) berlebih oleh kelenjar sebasea, penyumbatan folikel rambut oleh sel kulit mati, infeksi bakteri Cutibacterium acnes, serta ketidakseimbangan hormon.',
+                    'symptoms' => 'Komedo hitam/putih, papula merah meradang, pustul (benjolan bernanah), hingga kusta/nodul keras yang nyeri di wajah, leher, atau dada.',
+                    'treatments' => 'Gunakan pembersih wajah berbahan asam salisilat/benzoil peroksida, batasi makanan tinggi gula/susu, konsultasi obat topikal retinoid.',
+                    'halal' => 'Pastikan produk kosmetik, pembersih wajah, dan serum bebas dari plasenta, kolagen hewani non-halal, atau gelatin babi.'
+                ],
+                [
+                    'name' => 'Anemia',
+                    'desc' => 'Kondisi kekurangan sel darah merah yang sehat dalam tubuh.',
+                    'causes' => 'Kekurangan zat besi kronis, defisiensi Vitamin B12 atau Asam Folat, pendarahan dalam, atau gangguan produksi sel darah merah di sumsum tulang.',
+                    'symptoms' => 'Letih lesu berkepanjangan, wajah dan telapak tangan pucat, sesak napas saat aktivitas ringan, pusing, tangan dan kaki terasa dingin.',
+                    'treatments' => 'Konsumsi suplemen zat besi, vitamin C untuk penyerapan, serta peningkatan asupan makanan bergizi (daging merah halal, sayuran hijau).',
+                    'halal' => 'Saat membeli suplemen zat besi atau multivitamin B-kompleks, pastikan cangkang kapsul terbuat dari gelatin sapi halal atau kapsul nabati (selulosa).'
+                ],
+                [
+                    'name' => 'Asma',
+                    'desc' => 'Penyempitan saluran pernapasan akibat peradangan kronis.',
+                    'causes' => 'Sensitivitas saluran pernapasan terhadap alergen lingkungan (debu, bulu hewan, polusi, asap rokok), perubahan cuaca dingin, atau stres.',
+                    'symptoms' => 'Batuk berulang (terutama malam/pagi hari), sesak napas parah, suara mengi (bengek) saat membuang napas, dada terasa terikat.',
+                    'treatments' => 'Gunakan inhaler pereda (bronkodilator) untuk serangan akut, inhaler pencegah (steroid hirup), serta hindari pemicu alergen.',
+                    'halal' => 'Periksa kandungan propelan dan pembawa (solven) pada obat semprot inhaler agar bersih dari kontaminasi alkohol industri tidak halal.'
+                ],
+                [
+                    'name' => 'Alergi Makanan',
+                    'desc' => 'Reaksi sistem imun terhadap protein tertentu dalam makanan.',
+                    'causes' => 'Sistem kekebalan tubuh mendeteksi protein tertentu (seperti pada udang, kacang, telur, susu) sebagai ancaman berbahaya dan melepaskan histamin.',
+                    'symptoms' => 'Gatal-gatal kemerahan di kulit, bibir atau mata bengkak, kram perut, diare, muntah, hingga sesak napas berat (syok anafilaksis).',
+                    'treatments' => 'Hindari makanan pemicu secara ketat, bawa antihistamin darurat, serta suntikan epinefrin untuk reaksi anafilaksis berat.',
+                    'halal' => 'Waspadai kandungan bahan tambahan pangan tersembunyi (E-numbers) pada makanan olahan yang berpotensi memicu reaksi alergi dan berstatus syubhat.'
+                ]
             ];
             @endphp
             @foreach($diseases as $d)
-            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-emerald-200 transition-all cursor-pointer">
-                <h4 class="font-black text-gray-900 mb-2">{{ $d['name'] }}</h4>
-                <p class="text-sm text-gray-500 leading-relaxed">{{ $d['desc'] }}</p>
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer group" onclick="openDictionaryDetail({{ json_encode($d) }})">
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-black text-gray-900 group-hover:text-emerald-700 transition-colors">{{ $d['name'] }}</h4>
+                    <span class="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">A</span>
+                </div>
+                <p class="text-sm text-gray-500 leading-relaxed line-clamp-2">{{ $d['desc'] }}</p>
+                <div class="mt-4 flex items-center text-xs font-extrabold text-emerald-600 gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Lihat Selengkapnya <span>&rarr;</span>
+                </div>
             </div>
             @endforeach
         </div>
     </div>
 </section>
+
+<!-- ===== DICTIONARY DETAIL MODAL ===== -->
+<div id="dict-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] hidden items-center justify-center p-4">
+    <div class="bg-white w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl border border-gray-100 flex flex-col max-h-[85vh] scale-95 transition-transform duration-300" id="dict-modal-card">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-emerald-700 to-teal-700 p-6 text-white flex justify-between items-start">
+            <div>
+                <span class="text-xs font-black uppercase tracking-widest text-teal-100 bg-white/10 px-3 py-1 rounded-full">Kamus Medis & Halal</span>
+                <h3 id="dict-title" class="text-2xl font-black mt-2">Nama Penyakit</h3>
+            </div>
+            <button onclick="closeDictionaryDetail()" class="text-white hover:text-teal-200 text-3xl font-bold leading-none">&times;</button>
+        </div>
+        
+        <!-- Content (Scrollable) -->
+        <div class="p-8 overflow-y-auto space-y-6 text-sm leading-relaxed">
+            <div>
+                <h5 class="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Definisi Singkat</h5>
+                <p id="dict-desc" class="text-slate-700 font-medium text-base"></p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                    <h5 class="text-xs font-black text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                        <span>❓</span> Penyebab
+                    </h5>
+                    <p id="dict-causes" class="text-slate-600"></p>
+                </div>
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                    <h5 class="text-xs font-black text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                        <span>⚠️</span> Gejala Umum
+                    </h5>
+                    <p id="dict-symptoms" class="text-slate-600"></p>
+                </div>
+            </div>
+
+            <div class="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100/60">
+                <h5 class="text-xs font-black text-emerald-800 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <span>🩺</span> Pengobatan Medis
+                </h5>
+                <p id="dict-treatments" class="text-emerald-700 font-medium"></p>
+            </div>
+
+            <div class="bg-amber-50/60 p-5 rounded-2xl border border-amber-100/70">
+                <h5 class="text-xs font-black text-amber-800 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <span>🕌</span> Perspektif Halal & Pantangan
+                </h5>
+                <p id="dict-halal" class="text-amber-700 font-medium"></p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+            <button onclick="closeDictionaryDetail()" class="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-all">
+                Tutup
+            </button>
+            <button class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl transition-all shadow-md shadow-emerald-700/10" onclick="closeDictionaryDetail(); toggleAI();">
+                Tanyakan AI Halalytics
+            </button>
+        </div>
+    </div>
+</div>
 
 
 <!-- ===== HALALYTICS AI (HILDA) ===== -->
@@ -552,10 +820,115 @@
 
 @section('scripts')
 <script>
+// Initialize Swiper.js Partner Marquee
+document.addEventListener('DOMContentLoaded', function() {
+    new Swiper('.partner-swiper', {
+        loop: true,
+        autoplay: {
+            delay: 0,
+            disableOnInteraction: false,
+        },
+        speed: 5000,
+        slidesPerView: 'auto',
+        spaceBetween: 24,
+        allowTouchMove: false, // Prevents manual swipe interference
+    });
+});
+
 function calculateBMR(){const a=document.getElementById('nut_age').value,w=document.getElementById('nut_weight').value,h=document.getElementById('nut_height').value,g=document.getElementById('nut_gender').value,ac=document.getElementById('nut_activity').value;if(!a||!w||!h){alert('Harap lengkapi semua data!');return}let b=g==='male'?88.362+(13.397*w)+(4.799*h)-(5.677*a):447.593+(9.247*w)+(3.098*h)-(4.330*a);document.getElementById('bmr_val').innerText=Math.round(b*ac).toLocaleString()+' kcal';document.getElementById('bmr_res').classList.remove('hidden')}
 function calculateWater(){const w=document.getElementById('water_weight').value;if(!w){alert('Masukkan berat badan!');return}let l=(w*0.033).toFixed(1);if(document.getElementById('water_weather').value==='hot')l=(parseFloat(l)+0.8).toFixed(1);document.getElementById('water_val').innerText=l+' Liter';document.getElementById('water_res').classList.remove('hidden')}
 function calculateRisk(){let s=0;if(document.getElementById('risk_smoke').checked)s+=40;if(document.getElementById('risk_family').checked)s+=30;if(document.getElementById('risk_sleep').checked)s+=20;const b=document.getElementById('risk_res'),v=document.getElementById('risk_val');b.classList.remove('hidden');if(s>=60){v.innerText='TINGGI';b.className='mt-6 p-6 rounded-2xl text-center bg-rose-50 text-rose-600'}else if(s>=30){v.innerText='SEDANG';b.className='mt-6 p-6 rounded-2xl text-center bg-amber-50 text-amber-600'}else{v.innerText='RENDAH';b.className='mt-6 p-6 rounded-2xl text-center bg-emerald-50 text-emerald-600'}}
 function calculateDueDate(){const h=document.getElementById('hpht_date').value;if(!h){alert('Masukkan tanggal HPHT!');return}const d=new Date(h);d.setDate(d.getDate()+7);d.setMonth(d.getMonth()-3);d.setFullYear(d.getFullYear()+1);document.getElementById('due_val').innerText=d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});document.getElementById('due_res').classList.remove('hidden')}
+
+// Health Dictionary Interactive Controls
+const diseaseDataset = {
+    'A': [
+        { name: 'Abdominal Migrain', desc: 'Nyeri perut parah yang sering terjadi pada anak-anak.', causes: 'Faktor genetika, ketidakseimbangan zat kimia otak (serotonin), stres psikologis, kelelahan fisik, serta pemicu makanan tertentu (cokelat, MSG, keju olahan).', symptoms: 'Nyeri perut tumpul/melilit di sekitar pusar, mual, muntah berulang, kulit pucat, serta sensitivitas terhadap cahaya.', treatments: 'Istirahat di ruangan sunyi dan gelap, hidrasi cairan yang cukup, obat pereda nyeri sesuai anjuran dokter, serta pengelolaan stres anak.', halal: 'Pastikan makanan olahan yang dikonsumsi anak bebas dari emulsifier syubhat atau rennet hewani non-halal pada keju.' },
+        { name: 'Abses Gigi', desc: 'Kumpulan nanah di gigi atau gusi akibat infeksi bakteri.', causes: 'Bakteri mulut yang menembus pulpa gigi melalui gigi berlubang, luka gusi, serta kebersihan gigi dan mulut yang buruk.', symptoms: 'Nyeri berdenyut konstan yang menjalar ke rahang/telinga, gusi bengkak kemerahan, sensitif suhu ekstrem, demam, dan rasa pahit di mulut.', treatments: 'Drainase nanah oleh dokter gigi, perawatan saluran akar (root canal), pencabutan gigi yang rusak parah, serta konsumsi antibiotik.', halal: 'Pilih obat kumur antiseptik tanpa kandungan alkohol (etanol industri) bebas syubhat dan pasta gigi bersertifikasi halal.' },
+        { name: 'Acne Vulgaris', desc: 'Masalah kulit berupa jerawat akibat penyumbatan pori-pori.', causes: 'Produksi minyak (sebum) berlebih oleh kelenjar sebasea, penyumbatan folikel rambut oleh sel kulit mati, infeksi bakteri Cutibacterium acnes, serta ketidakseimbangan hormon.', symptoms: 'Komedo hitam/putih, papula merah meradang, pustul (benjolan bernanah), hingga kusta/nodul keras yang nyeri di wajah, leher, atau dada.', treatments: 'Gunakan pembersih wajah berbahan asam salisilat/benzoil peroksida, batasi makanan tinggi gula/susu, konsultasi obat topikal retinoid.', halal: 'Pastikan produk kosmetik, pembersih wajah, dan serum bebas dari plasenta, kolagen hewani non-halal, atau gelatin babi.' },
+        { name: 'Anemia', desc: 'Kondisi kekurangan sel darah merah yang sehat dalam tubuh.', causes: 'Kekurangan zat besi kronis, defisiensi Vitamin B12 atau Asam Folat, pendarahan dalam, atau gangguan produksi sel darah merah di sumsum tulang.', symptoms: 'Letih lesu berkepanjangan, wajah dan telapak tangan pucat, sesak napas saat aktivitas ringan, pusing, tangan dan kaki terasa dingin.', treatments: 'Konsumsi suplemen zat besi, vitamin C untuk penyerapan, serta peningkatan asupan makanan bergizi (daging merah halal, sayuran hijau).', halal: 'Saat membeli suplemen zat besi atau multivitamin B-kompleks, pastikan cangkang kapsul terbuat dari gelatin sapi halal atau kapsul nabati (selulosa).' },
+        { name: 'Asma', desc: 'Penyempitan saluran pernapasan akibat peradangan kronis.', causes: 'Sensitivitas saluran pernapasan terhadap alergen lingkungan (debu, bulu hewan, polusi, asap rokok), perubahan cuaca dingin, atau stres.', symptoms: 'Batuk berulang (terutama malam/pagi hari), sesak napas parah, suara mengi (bengek) saat membuang napas, dada terasa terikat.', treatments: 'Gunakan inhaler pereda (bronkodilator) untuk serangan akut, inhaler pencegah (steroid hirup), serta hindari pemicu alergen.', halal: 'Periksa kandungan propelan dan pembawa (solven) pada obat semprot inhaler agar bersih dari kontaminasi alkohol industri tidak halal.' },
+        { name: 'Alergi Makanan', desc: 'Reaksi sistem imun terhadap protein tertentu dalam makanan.', causes: 'Sistem kekebalan tubuh mendeteksi protein tertentu (seperti pada udang, kacang, telur, susu) sebagai ancaman berbahaya dan melepaskan histamin.', symptoms: 'Gatal-gatal kemerahan di kulit, bibir atau mata bengkak, kram perut, diare, muntah, hingga sesak napas berat (syok anafilaksis).', treatments: 'Hindari makanan pemicu secara ketat, bawa antihistamin darurat, serta suntikan epinefrin untuk reaksi anafilaksis berat.', halal: 'Waspadai kandungan bahan tambahan pangan tersembunyi (E-numbers) pada makanan olahan yang berpotensi memicu reaksi alergi dan berstatus syubhat.' }
+    ]
+};
+
+function filterAlphabet(letter) {
+    // Update active letter button
+    document.querySelectorAll('.char-btn').forEach(btn => {
+        if (btn.innerText === letter) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    const grid = document.getElementById('dictionary-grid');
+    grid.innerHTML = '';
+
+    const items = diseaseDataset[letter] || [];
+    if (items.length > 0) {
+        items.forEach(d => {
+            const card = document.createElement('div');
+            card.className = 'bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer group';
+            card.onclick = () => openDictionaryDetail(d);
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-black text-gray-900 group-hover:text-emerald-700 transition-colors">${d.name}</h4>
+                    <span class="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">${letter}</span>
+                </div>
+                <p class="text-sm text-gray-500 leading-relaxed line-clamp-2">${d.desc}</p>
+                <div class="mt-4 flex items-center text-xs font-extrabold text-emerald-600 gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Lihat Selengkapnya <span>&rarr;</span>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    } else {
+        // Render dynamic empty state
+        const emptyState = document.createElement('div');
+        emptyState.className = 'col-span-full bg-white border border-dashed border-slate-200 rounded-3xl p-12 text-center flex flex-col items-center justify-center';
+        emptyState.innerHTML = `
+            <div class="w-16 h-16 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center text-3xl mb-4">🔍</div>
+            <h4 class="font-black text-slate-800 mb-2">Belum Ada Istilah untuk Huruf "${letter}"</h4>
+            <p class="text-slate-500 text-sm max-w-sm mb-6 leading-relaxed">
+                Kami terus memperbarui database kamus kesehatan halal kami. Anda dapat bertanya langsung kepada Hilda AI untuk istilah ini.
+            </p>
+            <button onclick="toggleAI(); askChip('Jelaskan istilah medis berawalan ${letter} dan kaitannya dengan panduan halal')" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-sm transition-all shadow-lg shadow-emerald-700/10 flex items-center gap-2">
+                Tanyakan Hilda AI 🤖
+            </button>
+        `;
+        grid.appendChild(emptyState);
+    }
+}
+
+function openDictionaryDetail(data) {
+    document.getElementById('dict-title').innerText = data.name;
+    document.getElementById('dict-desc').innerText = data.desc;
+    document.getElementById('dict-causes').innerText = data.causes || 'Data tidak tersedia';
+    document.getElementById('dict-symptoms').innerText = data.symptoms || 'Data tidak tersedia';
+    document.getElementById('dict-treatments').innerText = data.treatments || 'Data tidak tersedia';
+    document.getElementById('dict-halal').innerText = data.halal || 'Data tidak tersedia';
+
+    const modal = document.getElementById('dict-modal');
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        document.getElementById('dict-modal-card').style.transform = 'scale(1)';
+    }, 50);
+}
+
+function closeDictionaryDetail() {
+    document.getElementById('dict-modal-card').style.transform = 'scale(0.95)';
+    setTimeout(() => {
+        document.getElementById('dict-modal').style.display = 'none';
+    }, 150);
+}
+
+// Close modal if clicking outside the card
+document.getElementById('dict-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDictionaryDetail();
+    }
+});
 
 // AI Halalytics Panel Controls
 function toggleAI(){const p=document.getElementById('ai-panel'),f=document.getElementById('ai-fab');const o=p.style.display==='flex';p.style.display=o?'none':'flex';f.style.display=o?'flex':'none'}

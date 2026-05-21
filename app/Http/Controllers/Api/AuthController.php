@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Google_Client;
 use GuzzleHttp\Client as GuzzleClient;
@@ -29,7 +30,7 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'username' => 'required|string|max:255|unique:users,username',
-            'phone' => 'required|string|max:20',
+            'phone' => 'nullable|string|max:20',
             'blood_type' => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-,A,B,AB,O',
             'allergy' => 'nullable|string|max:1000',
             'medical_history' => 'nullable|string|max:2000',
@@ -43,7 +44,6 @@ class AuthController extends Controller
             'password.min' => 'Password minimal 8 karakter.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
             'username.unique' => 'Username sudah digunakan.',
-            'phone.required' => 'Nomor telepon wajib diisi.',
             'blood_type.in' => 'Golongan darah tidak valid.',
         ]);
 
@@ -144,6 +144,16 @@ class AuthController extends Controller
             ], 422);
         }
 
+        $throttleKey = 'login_attempts|' . $request->ip() . '|' . strtolower($payload['login']);
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik.",
+            ], 429);
+        }
+
         try {
             $user = User::query()
                 ->where('email', $payload['login'])
@@ -151,6 +161,7 @@ class AuthController extends Controller
                 ->first();
 
             if (!$user || !Hash::check($payload['password'], $user->password)) {
+                RateLimiter::hit($throttleKey, 300); // Lock for 5 minutes
                 return response()->json([
                     'success' => false,
                     'status' => 'error',
@@ -160,6 +171,8 @@ class AuthController extends Controller
                     ],
                 ], 401);
             }
+            
+            RateLimiter::clear($throttleKey);
 
             if (!(bool) ($user->active ?? $user->is_active ?? true)) {
                 return response()->json([
@@ -363,6 +376,16 @@ class AuthController extends Controller
     // FORGOT PASSWORD
     public function forgotPassword(Request $request)
     {
+        $throttleKey = 'forgot_password_attempts|' . $request->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => "Terlalu banyak permintaan. Silakan coba lagi dalam {$seconds} detik.",
+            ], 429);
+        }
+
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|exists:users,email',
         ]);
@@ -380,12 +403,14 @@ class AuthController extends Controller
         ]);
 
         if ($status === Password::RESET_LINK_SENT) {
+            RateLimiter::hit($throttleKey, 900); // Lock for 15 minutes to prevent spamming reset link
             return response()->json([
                 'success' => true,
                 'message' => 'Instruksi reset password telah dikirim ke email Anda.'
             ]);
         }
         
+        RateLimiter::hit($throttleKey, 60); // 1 minute penalty for failed sends
         return response()->json([
             'success' => false,
             'message' => __($status),

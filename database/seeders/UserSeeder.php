@@ -21,7 +21,7 @@ class UserSeeder extends Seeder
             [
                 'full_name' => 'Daffa Rizky',
                 'email' => 'daffa@example.com',
-                'password' => Hash::make('12345678'),
+                'password' => Hash::make('password'),
                 'phone' => '08123456789',
                 'blood_type' => 'A+',
                 'allergy' => 'Seafood',

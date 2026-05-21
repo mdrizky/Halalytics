@@ -13,14 +13,16 @@
             linear-gradient(180deg, #f5f9f7 0%, #eef8f5 100%);
     }
     .feature-card {
-        background: #fff;
-        border: 1px solid #dbe3ea;
-        border-radius: 20px;
-        transition: transform .22s ease, box-shadow .22s ease;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 24px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.05), 0 2px 4px -1px rgba(16, 185, 129, 0.03);
     }
     .feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 16px 34px rgba(15, 23, 42, .10);
+        transform: translateY(-8px);
+        border-color: #10b981;
+        box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.15), 0 10px 20px -5px rgba(15, 23, 42, 0.1);
     }
     .phone-shell {
         background: linear-gradient(145deg, #101522, #0d1018);

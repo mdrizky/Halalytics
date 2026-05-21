@@ -16,12 +16,22 @@ class SetLocale
      */
     public function handle(Request $request, Closure $next)
     {
-        $rawLanguage = strtolower((string) $request->header('Accept-Language', 'id'));
-        $primaryToken = trim(explode(',', $rawLanguage)[0]);
-        $baseLanguage = trim(explode('-', $primaryToken)[0]);
+        $locale = null;
 
-        $supported = ['id', 'en', 'ms', 'ar'];
-        $resolved = in_array($baseLanguage, $supported, true) ? $baseLanguage : 'id';
+        // Check session (for web requests)
+        if ($request->hasSession() && $request->session()->has('locale')) {
+            $locale = $request->session()->get('locale');
+        }
+
+        // Fallback to Accept-Language header
+        if (!$locale) {
+            $rawLanguage = strtolower((string) $request->header('Accept-Language', 'id'));
+            $primaryToken = trim(explode(',', $rawLanguage)[0]);
+            $locale = trim(explode('-', $primaryToken)[0]);
+        }
+
+        $supported = ['id', 'en'];
+        $resolved = in_array($locale, $supported, true) ? $locale : 'id';
 
         app()->setLocale($resolved);
 

@@ -37,7 +37,7 @@ class OpenFoodFactsAdminController extends Controller
             'query' => 'required|string|min:3'
         ]);
 
-        $results = $this->offService->searchProducts($request->query, $request->page ?? 1);
+        $results = $this->offService->searchProducts($request->input('query'), $request->page ?? 1);
 
         if ($request->ajax()) {
             return response()->json($results);
@@ -45,7 +45,7 @@ class OpenFoodFactsAdminController extends Controller
 
         return view('admin.products.openfoodfacts.search', [
             'results' => $results,
-            'query' => $request->query
+            'query' => $request->input('query')
         ]);
     }
 
