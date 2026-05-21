@@ -44,6 +44,10 @@ fun AppNavDemo() {
     var detailState by remember { mutableStateOf(ProductDetailUiState()) }
     var scanLoading by remember { mutableStateOf(false) }
     var scanError by remember { mutableStateOf<String?>(null) }
+    var activeUsername by remember { mutableStateOf("User") }
+    var activeCondition by remember { mutableStateOf("Tidak ada riwayat penyakit") }
+    var activeAge by remember { mutableStateOf("24") }
+    var activeAllergies by remember { mutableStateOf("Tidak ada alergi") }
 
     NavHost(navController = navController, startDestination = DemoRoutes.SPLASH) {
         composable(DemoRoutes.SPLASH) {
@@ -51,12 +55,15 @@ fun AppNavDemo() {
         }
         composable(DemoRoutes.LOGIN) {
             LoginScreen(isLoading = false, error = null, onLogin = { username, password ->
-                if (username.isNotBlank() && password.length >= 8) navController.navigate(DemoRoutes.HOME)
+                if (username.isNotBlank() && password.length >= 8) {
+                    activeUsername = username
+                    navController.navigate(DemoRoutes.HOME)
+                }
             })
         }
         composable(DemoRoutes.HOME) {
             HomeScreen(
-                username = "daffa",
+                username = activeUsername,
                 onOpenScan = { navController.navigate(DemoRoutes.SCAN) },
                 onOpenAiChat = { navController.navigate(DemoRoutes.AI) },
                 onOpenProfile = { navController.navigate(DemoRoutes.PROFILE) },
@@ -100,7 +107,13 @@ fun AppNavDemo() {
             AIChatScreen(uiState = aiState, onSendMessage = { message -> aiState = AiChatUiState(reply = "AI: $message") })
         }
         composable(DemoRoutes.PROFILE) {
-            EditProfileScreen("daffa", "24", "-", "-", onSave = { _, _, _, _ -> navController.popBackStack() })
+            EditProfileScreen(activeUsername, activeAge, activeCondition, activeAllergies, onBack = { navController.popBackStack() }, onSave = { name, age, diseases, allergies ->
+                activeUsername = name
+                activeAge = age
+                activeCondition = diseases
+                activeAllergies = allergies
+                navController.popBackStack()
+            })
         }
         composable(DemoRoutes.SETTINGS) { SettingsScreen(onBack = { navController.popBackStack() }) }
         composable(DemoRoutes.HISTORY) { HistoryScreen(onBack = { navController.popBackStack() }) }
