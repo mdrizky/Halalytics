@@ -12,27 +12,19 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $payload = $request->validate([
-            'login' => ['nullable', 'string'],
-            'email' => ['nullable', 'email'],
-            'username' => ['nullable', 'string'],
+            'username' => ['required', 'string', 'min:3', 'max:50'],
             'password' => ['required', 'string', 'min:8'],
         ]);
 
-        $loginValue = $payload['login'] ?? $payload['email'] ?? $payload['username'] ?? null;
-        if (!$loginValue) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gunakan field login/email/username.',
-            ], 422);
-        }
-
-        $field = filter_var($loginValue, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-        $credentials = [$field => $loginValue, 'password' => $payload['password']];
+        $credentials = [
+            'username' => trim($payload['username']),
+            'password' => $payload['password'],
+        ];
 
         if (!Auth::attempt($credentials)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Username/email atau password salah.',
+                'message' => 'Username atau password salah.',
             ], 401);
         }
 
@@ -41,12 +33,12 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
+            'message' => 'Login berhasil.',
             'token' => $token,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'username' => $user->username,
-                'email' => $user->email,
                 'role' => $user->role,
                 'avatar' => $user->avatar,
             ],
