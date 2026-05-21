@@ -11,6 +11,7 @@ class IntentClassifierService
         if (preg_match('/^\d{8,13}$/', $msg)) return 'PRODUCT_SCAN';
 
         return match (true) {
+            str_contains($msg, 'bmi'), str_contains($msg, 'indeks massa tubuh'), str_contains($msg, 'berat badan'), str_contains($msg, 'tinggi badan') => 'BMI_CALCULATION',
             str_contains($msg, 'halal'), str_contains($msg, 'haram'), str_contains($msg, 'syubhat') => 'HALAL_QUESTION',
             str_contains($msg, 'obat'), str_contains($msg, 'efek samping') => 'MEDICINE_QUESTION',
             str_contains($msg, 'diet'), str_contains($msg, 'kalori'), str_contains($msg, 'gizi') => 'DIET_ADVICE',

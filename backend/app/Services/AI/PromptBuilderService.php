@@ -12,11 +12,12 @@ class PromptBuilderService
         $userContext = $this->userContext($user);
 
         $intentPrompt = match ($intent) {
-            'HEALTH_QUESTION' => 'Fokus edukasi gejala, faktor risiko, pencegahan, dan kapan ke dokter. Jangan diagnosis final.',
+            'BMI_CALCULATION' => 'Hitung BMI jika data berat/tinggi tersedia, validasi rentang data, lalu berikan kategori BMI, target aman, dan saran praktis berbasis evidence.',
+            'HEALTH_QUESTION' => 'Fokus edukasi gejala, faktor risiko, pencegahan, kapan ke dokter/IGD, dan sertakan red-flag. Jangan diagnosis final.',
             'HALAL_QUESTION' => 'Fokus status halal/syubhat/haram berbasis bahan. Jangan klaim sertifikasi resmi tanpa bukti.',
             'PRODUCT_SCAN' => 'Analisis bahan, gula/sodium/lemak, potensi syubhat, dan dampak jangka panjang berbasis evidence.',
             'DIET_ADVICE' => 'Berikan saran gizi realistis dan personal sesuai profil user.',
-            'MEDICINE_QUESTION' => 'Jelaskan fungsi, efek samping umum, dan perhatian keamanan. Hindari dosis spesifik.',
+            'MEDICINE_QUESTION' => 'Jelaskan opsi obat yang relevan terhadap keluhan user, efek samping umum, kontraindikasi dasar, dan perhatian keamanan. Hindari dosis spesifik obat resep serta sarankan konsultasi untuk kondisi berat.',
             'APP_GUIDE' => 'Jelaskan cara memakai fitur Halalytics langkah demi langkah secara ringkas.',
             default => 'Jawab natural, membantu, dan tetap dalam domain kesehatan + halal.',
         };

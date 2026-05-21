@@ -6,8 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.example.halalyticscompose.R
 import com.example.halalyticscompose.ui.components.HalalyticsTopBar
+import com.example.halalyticscompose.ui.components.PremiumHeroSection
 import com.example.halalyticscompose.ui.theme.HalalyticsColors
 import com.example.halalyticscompose.ui.theme.HalalyticsUiTokens
 
@@ -29,9 +33,15 @@ fun ArticleScreen(onBack: (() -> Unit)? = null) {
                 .fillMaxSize()
                 .background(HalalyticsColors.Background)
                 .padding(padding)
+                .navigationBarsPadding()
+                .verticalScroll(rememberScrollState())
                 .padding(HalalyticsUiTokens.ScreenPadding),
             verticalArrangement = Arrangement.spacedBy(HalalyticsUiTokens.SectionSpacing),
         ) {
+            PremiumHeroSection(
+                title = "Health & Halal Insights",
+                subtitle = "Artikel pilihan dengan gaya premium untuk rekomendasi harian.",
+            )
             Text(stringResource(R.string.article), style = MaterialTheme.typography.headlineSmall, color = HalalyticsColors.Primary)
             val articles = listOf(
                 "Panduan pilih produk halal dengan label BPJPH",
@@ -46,7 +56,7 @@ fun ArticleScreen(onBack: (() -> Unit)? = null) {
                 ) {
                     Column(Modifier.padding(14.dp)) {
                         Text(title, style = MaterialTheme.typography.titleMedium, color = HalalyticsColors.Text)
-                        Text("Sumber: Public Health Feed", style = MaterialTheme.typography.bodySmall, color = HalalyticsColors.Primary)
+                        Text(stringResource(R.string.article_source_public_health), style = MaterialTheme.typography.bodySmall, color = HalalyticsColors.Primary)
                     }
                 }
             }

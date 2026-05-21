@@ -4,14 +4,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,12 +27,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.halalyticscompose.R
 import com.example.halalyticscompose.presentation.viewmodel.AiChatUiState
 import com.example.halalyticscompose.ui.components.ErrorState
 import com.example.halalyticscompose.ui.components.HalalyticsTopBar
+import com.example.halalyticscompose.ui.components.PremiumHeroSection
 import com.example.halalyticscompose.ui.components.LoadingState
 import com.example.halalyticscompose.ui.theme.HalalyticsColors
 
@@ -37,12 +45,21 @@ data class ChatBubble(val role: String, val text: String)
 fun AIChatScreen(
     uiState: AiChatUiState,
     onSendMessage: (String) -> Unit,
+    bmiValue: Double? = null,
+    onVoiceInputRequest: () -> Unit = {},
+    voiceInputState: String? = null,
+    voiceTranscript: String? = null,
 ) {
     var currentMessage by remember { mutableStateOf("") }
+    var lastSubmittedMessage by remember { mutableStateOf("") }
     val history = remember { mutableStateListOf<ChatBubble>() }
 
     if (uiState.reply.isNotBlank() && history.lastOrNull()?.text != uiState.reply) {
         history.add(ChatBubble("ai", uiState.reply))
+    }
+
+    if (!voiceTranscript.isNullOrBlank() && currentMessage != voiceTranscript) {
+        currentMessage = voiceTranscript
     }
 
     Scaffold(topBar = { HalalyticsTopBar() }) { padding ->
@@ -51,15 +68,24 @@ fun AIChatScreen(
                 .fillMaxSize()
                 .background(HalalyticsColors.Background)
                 .padding(padding)
+                .navigationBarsPadding()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            PremiumHeroSection(
+                title = "AI Smart Assistant",
+                subtitle = "Tanya halal, kesehatan, obat, skincare, dan gunakan voice note pintar.",
+            )
             Text(stringResource(R.string.ai_chat), style = MaterialTheme.typography.headlineSmall, color = HalalyticsColors.Primary)
+            if (!voiceInputState.isNullOrBlank()) {
+                Text(text = voiceInputState, style = MaterialTheme.typography.bodySmall, color = HalalyticsColors.Primary)
+            }
+            BmiCoachCard(bmiValue)
 
             when {
                 uiState.isLoading -> LoadingState()
                 uiState.error != null -> ErrorState(message = uiState.error, onRetry = {
-                    if (currentMessage.isNotBlank()) onSendMessage(currentMessage)
+                    if (lastSubmittedMessage.isNotBlank()) onSendMessage(lastSubmittedMessage)
                 })
             }
 
@@ -92,17 +118,51 @@ fun AIChatScreen(
                     modifier = Modifier.weight(1f),
                     label = { Text(stringResource(R.string.type_message)) },
                 )
+                IconButton(onClick = onVoiceInputRequest, enabled = !uiState.isLoading) {
+                    Icon(
+                        imageVector = Icons.Default.Mic,
+                        contentDescription = stringResource(R.string.voice_note),
+                        tint = HalalyticsColors.Primary,
+                    )
+                }
                 Button(onClick = {
                     val msg = currentMessage.trim()
                     if (msg.isNotBlank()) {
                         history.add(ChatBubble("user", msg))
+                        lastSubmittedMessage = msg
                         onSendMessage(msg)
                         currentMessage = ""
                     }
-                }) {
+                }, enabled = currentMessage.trim().isNotBlank() && !uiState.isLoading) {
                     Text(stringResource(R.string.send), color = HalalyticsColors.Background)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun BmiCoachCard(bmiValue: Double?) {
+    if (bmiValue == null) return
+    val category = when {
+        bmiValue < 18.5 -> "Kurus"
+        bmiValue < 25.0 -> "Normal"
+        bmiValue < 30.0 -> "Overweight"
+        else -> "Obesitas"
+    }
+    val redFlag = if (bmiValue < 16.0 || bmiValue >= 35.0) "⚠️ Red-flag BMI ekstrem, konsultasi dokter." else "✅ Tidak ada red-flag BMI ekstrem."
+    val target = when (category) {
+        "Kurus" -> "Target 2 Bulan: Naik 2-4 kg bertahap"
+        "Normal" -> "Target 2 Bulan: Pertahankan berat badan"
+        "Overweight" -> "Target 2 Bulan: Turun 2-4 kg aman"
+        else -> "Target 2 Bulan: Turun 3-6 kg + evaluasi dokter"
+    }
+    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.White)) {
+        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Analisis AI Coach", style = MaterialTheme.typography.titleMedium, color = HalalyticsColors.Text)
+            Text("BMI: ${"%.2f".format(bmiValue)} ($category)", color = HalalyticsColors.Primary)
+            Text(target, color = HalalyticsColors.Text)
+            Text(redFlag, color = HalalyticsColors.Text)
         }
     }
 }

@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.example.halalyticscompose.R
 import com.example.halalyticscompose.ui.components.HalalyticsTopBar
+import com.example.halalyticscompose.ui.components.PremiumHeroSection
 import com.example.halalyticscompose.ui.theme.HalalyticsColors
 import com.example.halalyticscompose.ui.theme.HalalyticsUiTokens
 
@@ -27,6 +28,10 @@ fun DonationScreen(onBack: (() -> Unit)? = null) {
                 .padding(HalalyticsUiTokens.ScreenPadding),
             verticalArrangement = Arrangement.spacedBy(HalalyticsUiTokens.SectionSpacing),
         ) {
+            PremiumHeroSection(
+                title = "Donation Impact Hero",
+                subtitle = "Dukung kampanye kesehatan dan halal dengan progress real-time.",
+            )
             Text("Campaign aktif, target, dan progress akan sinkron dari backend.", color = HalalyticsColors.Text)
             Text(stringResource(R.string.donation), style = MaterialTheme.typography.headlineSmall, color = HalalyticsColors.Primary)
             Text(stringResource(R.string.donate_now), color = HalalyticsColors.Text)

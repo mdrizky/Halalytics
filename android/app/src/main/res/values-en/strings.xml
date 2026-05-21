@@ -114,4 +114,15 @@
     <string name="scan_permission_denied">Camera permission denied. Enable it in app settings.</string>
     <string name="scan_waiting_permission">Waiting for camera permission...</string>
     <string name="camera_back_desc">Back</string>
+    <string name="home_subtitle">Welcome, %1$s</string>
+    <string name="product_categories">Product Categories</string>
+    <string name="category_food">Food</string>
+    <string name="category_drink">Drink</string>
+    <string name="category_cosmetic">Cosmetic</string>
+    <string name="category_medicine">Medicine</string>
+    <string name="profile_subtitle">Update health data</string>
+    <string name="profile_personal_recommendation_hint">This profile is used for personalized recommendations</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="article_source_public_health">Source: Public Health Feed</string>
+    <string name="voice_note">Voice note</string>
 </resources>
