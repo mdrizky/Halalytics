@@ -13,6 +13,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -27,6 +28,7 @@ import com.example.halalyticscompose.R
 import com.example.halalyticscompose.presentation.viewmodel.AiChatUiState
 import com.example.halalyticscompose.ui.components.ErrorState
 import com.example.halalyticscompose.ui.components.LoadingState
+import com.example.halalyticscompose.ui.components.HalalyticsTopBar
 import com.example.halalyticscompose.ui.theme.HalalyticsColors
 
 data class ChatBubble(val role: String, val text: String)
@@ -43,10 +45,12 @@ fun AIChatScreen(
         history.add(ChatBubble("ai", uiState.reply))
     }
 
+    Scaffold(topBar = { HalalyticsTopBar() }) { padding ->
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(HalalyticsColors.Background)
+            .padding(padding)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -102,5 +106,7 @@ fun AIChatScreen(
                 Text(stringResource(R.string.send), color = HalalyticsColors.Background)
             }
         }
+    }
+}
     }
 }

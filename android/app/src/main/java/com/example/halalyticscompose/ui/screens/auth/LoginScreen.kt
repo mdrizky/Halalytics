@@ -15,6 +15,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.halalyticscompose.R
+import com.example.halalyticscompose.ui.components.HalalyticsTopBar
 import com.example.halalyticscompose.ui.theme.HalalyticsColors
 import com.example.halalyticscompose.ui.theme.HalalyticsUiTokens
 
@@ -38,10 +40,12 @@ fun LoginScreen(
     var username by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
 
+    Scaffold(topBar = { HalalyticsTopBar() }) { padding ->
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(HalalyticsColors.Background)
+            .padding(padding)
             .padding(HalalyticsUiTokens.ScreenPadding),
         verticalArrangement = Arrangement.Center,
     ) {
@@ -97,5 +101,7 @@ fun LoginScreen(
                 }
             }
         }
+    }
+}
     }
 }
