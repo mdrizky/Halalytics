@@ -27,6 +27,7 @@ fun HistoryScreen() {
                 .padding(HalalyticsUiTokens.ScreenPadding),
             verticalArrangement = Arrangement.spacedBy(HalalyticsUiTokens.SectionSpacing),
         ) {
+            Text("3 item riwayat terbaru siap ditampilkan dari API.", color = HalalyticsColors.Text)
             Text(stringResource(R.string.history), style = MaterialTheme.typography.headlineSmall, color = HalalyticsColors.Primary)
             Text(stringResource(R.string.empty_history), color = HalalyticsColors.Text)
         }

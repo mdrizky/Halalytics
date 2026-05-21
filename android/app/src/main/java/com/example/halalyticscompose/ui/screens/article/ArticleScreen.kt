@@ -27,6 +27,7 @@ fun ArticleScreen() {
                 .padding(HalalyticsUiTokens.ScreenPadding),
             verticalArrangement = Arrangement.spacedBy(HalalyticsUiTokens.SectionSpacing),
         ) {
+            Text("Daftar artikel akan ditarik dari endpoint artikel publik.", color = HalalyticsColors.Text)
             Text(stringResource(R.string.article), style = MaterialTheme.typography.headlineSmall, color = HalalyticsColors.Primary)
             Text(stringResource(R.string.featured_article), color = HalalyticsColors.Text)
         }

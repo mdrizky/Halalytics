@@ -27,6 +27,7 @@ fun DonationScreen() {
                 .padding(HalalyticsUiTokens.ScreenPadding),
             verticalArrangement = Arrangement.spacedBy(HalalyticsUiTokens.SectionSpacing),
         ) {
+            Text("Campaign aktif, target, dan progress akan sinkron dari backend.", color = HalalyticsColors.Text)
             Text(stringResource(R.string.donation), style = MaterialTheme.typography.headlineSmall, color = HalalyticsColors.Primary)
             Text(stringResource(R.string.donate_now), color = HalalyticsColors.Text)
         }

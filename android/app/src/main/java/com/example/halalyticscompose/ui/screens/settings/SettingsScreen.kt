@@ -27,6 +27,7 @@ fun SettingsScreen() {
                 .padding(HalalyticsUiTokens.ScreenPadding),
             verticalArrangement = Arrangement.spacedBy(HalalyticsUiTokens.SectionSpacing),
         ) {
+            Text("Bahasa, notifikasi, dan privasi terpusat di halaman ini.", color = HalalyticsColors.Text)
             Text(stringResource(R.string.settings), style = MaterialTheme.typography.headlineSmall, color = HalalyticsColors.Primary)
             Text(stringResource(R.string.language_setting), color = HalalyticsColors.Text)
             Text(stringResource(R.string.notification), color = HalalyticsColors.Text)

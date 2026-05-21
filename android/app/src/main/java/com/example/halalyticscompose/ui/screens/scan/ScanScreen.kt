@@ -27,6 +27,7 @@ fun ScanScreen() {
                 .padding(HalalyticsUiTokens.ScreenPadding),
             verticalArrangement = Arrangement.spacedBy(HalalyticsUiTokens.SectionSpacing),
         ) {
+            Text("Mode scan barcode siap dihubungkan ke CameraX + API produk.", color = HalalyticsColors.Text)
             Text(stringResource(R.string.scan_barcode), style = MaterialTheme.typography.headlineSmall, color = HalalyticsColors.Primary)
             Text(stringResource(R.string.scan_instruction), color = HalalyticsColors.Text)
         }
