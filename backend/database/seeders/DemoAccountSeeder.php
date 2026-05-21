@@ -28,7 +28,7 @@ class DemoAccountSeeder extends Seeder
 
         User::updateOrCreate(['email' => 'nutritionist@halalytics.com'], [
             'name' => 'ahli gizi',
-            'username' => 'ahligizi',
+            'username' => 'ahli gizi',
             'password' => Hash::make('12345678'),
             'role' => 'ahli_gizi',
             'email_verified_at' => now(),
