@@ -28,6 +28,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.halalyticscompose.R
 import com.example.halalyticscompose.ui.components.HalalyticsTopBar
+import com.example.halalyticscompose.ui.components.PremiumHeroSection
 import com.example.halalyticscompose.ui.theme.HalalyticsColors
 import com.example.halalyticscompose.ui.theme.HalalyticsUiTokens
 
@@ -49,6 +50,10 @@ fun LoginScreen(
                 .padding(HalalyticsUiTokens.ScreenPadding),
             verticalArrangement = Arrangement.Center,
         ) {
+            PremiumHeroSection(
+                title = "Welcome to Halalytics",
+                subtitle = "AI-first marketplace untuk pharmacy, food, beverage, dan cosmetic.",
+            )
             Text(
                 text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineMedium,

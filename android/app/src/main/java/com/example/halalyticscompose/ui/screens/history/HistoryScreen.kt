@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.example.halalyticscompose.R
 import com.example.halalyticscompose.ui.components.HalalyticsTopBar
+import com.example.halalyticscompose.ui.components.PremiumHeroSection
 import com.example.halalyticscompose.ui.theme.HalalyticsColors
 import com.example.halalyticscompose.ui.theme.HalalyticsUiTokens
 
@@ -27,6 +28,10 @@ fun HistoryScreen(onBack: (() -> Unit)? = null) {
                 .padding(HalalyticsUiTokens.ScreenPadding),
             verticalArrangement = Arrangement.spacedBy(HalalyticsUiTokens.SectionSpacing),
         ) {
+            PremiumHeroSection(
+                title = "History Hero Banner",
+                subtitle = "Lacak scan produk dan rekomendasi kesehatan kamu secara rapi.",
+            )
             Text("3 item riwayat terbaru siap ditampilkan dari API.", color = HalalyticsColors.Text)
             Text(stringResource(R.string.history), style = MaterialTheme.typography.headlineSmall, color = HalalyticsColors.Primary)
             Text(stringResource(R.string.empty_history), color = HalalyticsColors.Text)

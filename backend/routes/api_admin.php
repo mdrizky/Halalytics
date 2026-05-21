@@ -7,6 +7,7 @@ use App\Http\Controllers\API\Admin\HalalRulesManagerController;
 use App\Http\Controllers\API\Admin\NutritionRulesManagerController;
 use App\Http\Controllers\API\Admin\PartnerShowcaseController;
 use App\Http\Controllers\API\Admin\AITrainingController;
+use App\Http\Controllers\API\Admin\MedicalRulesManagerController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
@@ -30,4 +31,10 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(functi
     Route::get('/ai-analytics', [AILogsController::class, 'analytics']);
     Route::get('/ai-training-dataset', [AITrainingController::class, 'dataset']);
     Route::get('/partners/preview', [PartnerShowcaseController::class, 'preview']);
+
+    Route::get('/medical-rules', [MedicalRulesManagerController::class, 'index']);
+    Route::post('/medical-rules/symptoms', [MedicalRulesManagerController::class, 'storeSymptomRule']);
+    Route::put('/medical-rules/symptoms/{id}', [MedicalRulesManagerController::class, 'updateSymptomRule']);
+    Route::delete('/medical-rules/symptoms/{id}', [MedicalRulesManagerController::class, 'destroySymptomRule']);
+    Route::post('/medical-rules/releases', [MedicalRulesManagerController::class, 'publishRelease']);
 });

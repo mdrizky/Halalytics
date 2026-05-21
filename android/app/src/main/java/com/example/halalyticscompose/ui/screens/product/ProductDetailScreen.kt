@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.example.halalyticscompose.presentation.viewmodel.ProductDetailUiState
 import com.example.halalyticscompose.ui.components.ErrorState
 import com.example.halalyticscompose.ui.components.HalalyticsTopBar
+import com.example.halalyticscompose.ui.components.PremiumHeroSection
 import com.example.halalyticscompose.ui.components.LoadingState
 import com.example.halalyticscompose.ui.theme.HalalyticsColors
 import com.example.halalyticscompose.ui.theme.HalalyticsUiTokens
@@ -38,6 +39,11 @@ fun ProductDetailScreen(
                 .background(HalalyticsColors.Background)
                 .padding(padding),
         ) {
+            PremiumHeroSection(
+                title = "Product Intelligence Hero",
+                subtitle = "Analisis premium untuk halal status, nutrisi, dan warning produk.",
+                modifier = Modifier.padding(HalalyticsUiTokens.ScreenPadding),
+            )
             when {
                 uiState.isLoading -> LoadingState()
                 uiState.error != null -> ErrorState(message = uiState.error, onRetry = onRetry)

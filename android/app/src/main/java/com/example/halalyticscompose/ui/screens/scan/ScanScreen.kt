@@ -31,6 +31,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.example.halalyticscompose.R
 import com.example.halalyticscompose.ui.components.ErrorState
 import com.example.halalyticscompose.ui.components.HalalyticsTopBar
+import com.example.halalyticscompose.ui.components.PremiumHeroSection
 import com.example.halalyticscompose.ui.components.LoadingState
 import com.example.halalyticscompose.ui.theme.HalalyticsColors
 import com.example.halalyticscompose.ui.theme.HalalyticsUiTokens
@@ -69,6 +70,10 @@ fun ScanScreen(
                 .padding(HalalyticsUiTokens.ScreenPadding),
             verticalArrangement = Arrangement.spacedBy(HalalyticsUiTokens.SectionSpacing),
         ) {
+            PremiumHeroSection(
+                title = "Smart Scan Hero",
+                subtitle = "Pindai produk cepat untuk skor halal, health score, dan insight AI.",
+            )
             Text(stringResource(R.string.scan_barcode), style = MaterialTheme.typography.headlineSmall, color = HalalyticsColors.Primary)
 
             when {

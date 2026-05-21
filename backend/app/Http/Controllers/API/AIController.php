@@ -7,6 +7,7 @@ use App\Services\AI\GeminiService;
 use App\Services\AI\IntentClassifierService;
 use App\Services\AI\PromptBuilderService;
 use App\Services\AI\AiResponseFormatter;
+use App\Services\AI\MedicalRecommendationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -18,6 +19,7 @@ class AIController extends Controller
         private readonly IntentClassifierService $intentClassifier,
         private readonly PromptBuilderService $promptBuilder,
         private readonly AiResponseFormatter $formatter,
+        private readonly MedicalRecommendationService $medicalRecommendationService,
     ) {}
 
     public function chat(Request $request): JsonResponse
@@ -38,10 +40,13 @@ class AIController extends Controller
         $intent = $this->intentClassifier->classify($payload['message']);
         $prompt = $this->promptBuilder->buildPrompt($intent, $payload['message'], $request->user());
         $reply = $this->geminiService->chat($prompt, $payload['message']);
+        $recommendation = in_array($intent, ['HEALTH_QUESTION', 'MEDICINE_QUESTION'], true)
+            ? $this->medicalRecommendationService->recommend($payload['message'], $request->user())
+            : [];
 
         return response()->json([
             'success' => true,
-            'data' => $this->formatter->format($intent, $reply),
+            'data' => $this->formatter->format($intent, $reply, $recommendation),
             'meta' => [
                 'timestamp' => now()->toIso8601String(),
             ],

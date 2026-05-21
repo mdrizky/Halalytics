@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.example.halalyticscompose.R
 import com.example.halalyticscompose.ui.components.HalalyticsTopBar
+import com.example.halalyticscompose.ui.components.PremiumHeroSection
 import com.example.halalyticscompose.ui.theme.HalalyticsColors
 import com.example.halalyticscompose.ui.theme.HalalyticsUiTokens
 
@@ -27,6 +28,10 @@ fun SettingsScreen(onBack: (() -> Unit)? = null) {
                 .padding(HalalyticsUiTokens.ScreenPadding),
             verticalArrangement = Arrangement.spacedBy(HalalyticsUiTokens.SectionSpacing),
         ) {
+            PremiumHeroSection(
+                title = "Smart Settings Hero",
+                subtitle = "Atur bahasa, privasi, notifikasi, dan preferensi AI secara modern.",
+            )
             Text("Bahasa, notifikasi, dan privasi terpusat di halaman ini.", color = HalalyticsColors.Text)
             Text(stringResource(R.string.settings), style = MaterialTheme.typography.headlineSmall, color = HalalyticsColors.Primary)
             Text(stringResource(R.string.language_setting), color = HalalyticsColors.Text)

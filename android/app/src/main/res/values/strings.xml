@@ -143,4 +143,15 @@
     <string name="scan_permission_denied">Izin kamera ditolak. Aktifkan di pengaturan aplikasi.</string>
     <string name="scan_waiting_permission">Menunggu izin kamera...</string>
     <string name="camera_back_desc">Kembali</string>
+    <string name="home_subtitle">Selamat datang, %1$s</string>
+    <string name="product_categories">Kategori Produk</string>
+    <string name="category_food">Makanan</string>
+    <string name="category_drink">Minuman</string>
+    <string name="category_cosmetic">Kosmetik</string>
+    <string name="category_medicine">Obat</string>
+    <string name="profile_subtitle">Perbarui data kesehatan</string>
+    <string name="profile_personal_recommendation_hint">Profil ini dipakai untuk rekomendasi personal</string>
+    <string name="save_changes">Simpan Perubahan</string>
+    <string name="article_source_public_health">Sumber: Public Health Feed</string>
+    <string name="voice_note">Catatan suara</string>
 </resources>
