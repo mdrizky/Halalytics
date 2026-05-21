@@ -13,7 +13,7 @@ class DemoAccountSeeder extends Seeder
         User::updateOrCreate(['email' => 'admin@halalytics.com'], [
             'name' => 'admin',
             'username' => 'admin',
-            'password' => Hash::make('Admin123!'),
+            'password' => Hash::make('admin123'),
             'role' => 'admin',
             'email_verified_at' => now(),
         ]);
@@ -21,15 +21,15 @@ class DemoAccountSeeder extends Seeder
         User::updateOrCreate(['email' => 'user@halalytics.com'], [
             'name' => 'daffa',
             'username' => 'daffa',
-            'password' => Hash::make('User123!'),
+            'password' => Hash::make('12345678'),
             'role' => 'user',
             'email_verified_at' => now(),
         ]);
 
         User::updateOrCreate(['email' => 'nutritionist@halalytics.com'], [
-            'name' => 'nutritionist',
-            'username' => 'nutritionist',
-            'password' => Hash::make('Nutrition123!'),
+            'name' => 'ahli gizi',
+            'username' => 'ahli gizi',
+            'password' => Hash::make('12345678'),
             'role' => 'ahli_gizi',
             'email_verified_at' => now(),
         ]);

@@ -11,15 +11,20 @@ class AuthController extends Controller
 {
     public function login(Request $request): JsonResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
+        $payload = $request->validate([
+            'username' => ['required', 'string', 'min:3', 'max:50'],
             'password' => ['required', 'string', 'min:8'],
         ]);
+
+        $credentials = [
+            'username' => trim($payload['username']),
+            'password' => $payload['password'],
+        ];
 
         if (!Auth::attempt($credentials)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Email atau password salah.',
+                'message' => 'Username atau password salah.',
             ], 401);
         }
 
@@ -28,11 +33,12 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
+            'message' => 'Login berhasil.',
             'token' => $token,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
-                'email' => $user->email,
+                'username' => $user->username,
                 'role' => $user->role,
                 'avatar' => $user->avatar,
             ],

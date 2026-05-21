@@ -140,4 +140,7 @@
     <string name="onboarding_title_3">Dipercaya &amp; Berbasis Fakta</string>
     <string name="onboarding_desc_3">Semua analisis berdasarkan data ilmiah dari WHO, FDA, dan database halal terpercaya.</string>
     <string name="get_started">Mulai Sekarang</string>
+    <string name="scan_permission_denied">Izin kamera ditolak. Aktifkan di pengaturan aplikasi.</string>
+    <string name="scan_waiting_permission">Menunggu izin kamera...</string>
+    <string name="camera_back_desc">Kembali</string>
 </resources>

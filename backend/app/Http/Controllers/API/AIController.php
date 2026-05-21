@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\AI\GeminiService;
 use App\Services\AI\IntentClassifierService;
 use App\Services\AI\PromptBuilderService;
+use App\Services\AI\AiResponseFormatter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -16,6 +17,7 @@ class AIController extends Controller
         private readonly GeminiService $geminiService,
         private readonly IntentClassifierService $intentClassifier,
         private readonly PromptBuilderService $promptBuilder,
+        private readonly AiResponseFormatter $formatter,
     ) {}
 
     public function chat(Request $request): JsonResponse
@@ -39,9 +41,9 @@ class AIController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => [
-                'intent' => $intent,
-                'message' => $reply,
+            'data' => $this->formatter->format($intent, $reply),
+            'meta' => [
+                'timestamp' => now()->toIso8601String(),
             ],
         ]);
     }

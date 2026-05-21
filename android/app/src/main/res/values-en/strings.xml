@@ -111,4 +111,7 @@
     <string name="onboarding_title_3">Trusted &amp; Evidence-Based</string>
     <string name="onboarding_desc_3">All analysis is based on scientific data from WHO, FDA, and trusted halal databases.</string>
     <string name="get_started">Get Started</string>
+    <string name="scan_permission_denied">Camera permission denied. Enable it in app settings.</string>
+    <string name="scan_waiting_permission">Waiting for camera permission...</string>
+    <string name="camera_back_desc">Back</string>
 </resources>
