@@ -18,6 +18,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.halalyticscompose.ui.theme.HalalyticsColors
 
 @Composable
 fun EditProfileScreen(
@@ -34,7 +35,7 @@ fun EditProfileScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Edit Profil") })
+            TopAppBar(title = { Text("Edit Profil", color = HalalyticsColors.Text) })
         },
     ) { padding ->
         Column(
@@ -44,7 +45,7 @@ fun EditProfileScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(text = "Perbarui data profil Anda", style = MaterialTheme.typography.titleMedium)
+            Text(text = "Perbarui data profil Anda", style = MaterialTheme.typography.titleMedium, color = HalalyticsColors.Text)
 
             OutlinedTextField(
                 value = name,
@@ -75,7 +76,7 @@ fun EditProfileScreen(
                 onClick = { onSave(name, age, diseases, allergies) },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Simpan")
+                Text("Simpan", color = androidx.compose.ui.graphics.Color.White)
             }
         }
     }
