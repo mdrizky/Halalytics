@@ -56,7 +56,7 @@ fun SplashScreen(
         AnimatedVisibility(visible = visible, enter = fadeIn() + scaleIn(initialScale = 0.88f)) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_halalytics_logo),
+                    painter = painterResource(id = R.mipmap.ic_launcher),
                     contentDescription = stringResource(R.string.app_name),
                     modifier = Modifier.size(120.dp),
                 )
