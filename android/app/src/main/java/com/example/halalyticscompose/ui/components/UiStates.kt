@@ -9,9 +9,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.halalyticscompose.R
+import com.example.halalyticscompose.ui.theme.HalalyticsColors
 
 @Composable
 fun LoadingState() {
@@ -23,7 +26,7 @@ fun LoadingState() {
         verticalArrangement = Arrangement.Center,
     ) {
         CircularProgressIndicator()
-        Text(text = "Memuat...", style = MaterialTheme.typography.bodyMedium)
+        Text(text = stringResource(R.string.loading), style = MaterialTheme.typography.bodyMedium, color = HalalyticsColors.Text)
     }
 }
 
@@ -36,9 +39,9 @@ fun ErrorState(message: String, onRetry: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(text = message, style = MaterialTheme.typography.bodyMedium)
+        Text(text = message, style = MaterialTheme.typography.bodyMedium, color = HalalyticsColors.Text)
         Button(onClick = onRetry) {
-            Text("Coba Lagi")
+            Text(stringResource(R.string.retry), color = HalalyticsColors.Text)
         }
     }
 }

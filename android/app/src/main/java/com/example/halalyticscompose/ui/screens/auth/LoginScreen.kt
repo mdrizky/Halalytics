@@ -21,10 +21,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.halalyticscompose.R
 import com.example.halalyticscompose.ui.theme.HalalyticsColors
 import com.example.halalyticscompose.ui.theme.HalalyticsUiTokens
 
@@ -45,14 +46,14 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "Halalytics",
+            text = stringResource(R.string.app_name),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = HalalyticsColors.Primary,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Masuk dengan username",
+            text = stringResource(R.string.login),
             style = MaterialTheme.typography.bodyMedium,
             color = HalalyticsColors.Text,
         )
@@ -60,14 +61,14 @@ fun LoginScreen(
 
         Card(
             shape = HalalyticsUiTokens.CardRadius,
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = HalalyticsColors.Background),
             modifier = Modifier.fillMaxWidth(),
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
-                    label = { Text("Username") },
+                    label = { Text(stringResource(R.string.full_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -75,7 +76,7 @@ fun LoginScreen(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password") },
+                    label = { Text(stringResource(R.string.password)) },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
@@ -92,7 +93,7 @@ fun LoginScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = HalalyticsColors.Primary),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(if (isLoading) "Memuat..." else "Masuk")
+                    Text(if (isLoading) stringResource(R.string.loading) else stringResource(R.string.login), color = HalalyticsColors.Background)
                 }
             }
         }

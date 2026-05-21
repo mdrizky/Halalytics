@@ -21,8 +21,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.example.halalyticscompose.R
 import com.example.halalyticscompose.presentation.viewmodel.AiChatUiState
 import com.example.halalyticscompose.ui.components.ErrorState
 import com.example.halalyticscompose.ui.components.LoadingState
@@ -49,7 +50,7 @@ fun AIChatScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text("AI Chat", style = MaterialTheme.typography.headlineSmall, color = HalalyticsColors.Primary)
+        Text(stringResource(R.string.ai_chat), style = MaterialTheme.typography.headlineSmall, color = HalalyticsColors.Primary)
 
         if (uiState.isLoading) {
             LoadingState()
@@ -75,9 +76,9 @@ fun AIChatScreen(
                     Text(
                         text = msg.text,
                         modifier = Modifier
-                            .background(if (msg.role == "user") HalalyticsColors.Primary else Color.White)
+                             .background(if (msg.role == "user") HalalyticsColors.Primary else HalalyticsColors.Background)
                             .padding(12.dp),
-                        color = if (msg.role == "user") Color.White else HalalyticsColors.Text,
+                        color = if (msg.role == "user") HalalyticsColors.Background else HalalyticsColors.Text,
                     )
                 }
             }
@@ -88,7 +89,7 @@ fun AIChatScreen(
                 value = currentMessage,
                 onValueChange = { currentMessage = it },
                 modifier = Modifier.weight(1f),
-                label = { Text("Ketik pesan") },
+                label = { Text(stringResource(R.string.type_message)) },
             )
             Button(onClick = {
                 val msg = currentMessage.trim()
@@ -98,7 +99,7 @@ fun AIChatScreen(
                     currentMessage = ""
                 }
             }) {
-                Text("Kirim")
+                Text(stringResource(R.string.send), color = HalalyticsColors.Background)
             }
         }
     }
