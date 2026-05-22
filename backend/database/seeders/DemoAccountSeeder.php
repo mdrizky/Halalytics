@@ -10,7 +10,9 @@ class DemoAccountSeeder extends Seeder
 {
     public function run(): void
     {
-        // Ensure core role accounts always exist in users table.
+        $now = now();
+
+        // Keep existing user profile/password intact; only create if missing.
         $accounts = [
             [
                 'email' => 'admin@halalytics.com',
@@ -36,34 +38,51 @@ class DemoAccountSeeder extends Seeder
         ];
 
         foreach ($accounts as $account) {
-            User::updateOrCreate(
+            $user = User::firstOrCreate(
                 ['email' => $account['email']],
                 [
                     'name' => $account['name'],
                     'username' => $account['username'],
                     'password' => Hash::make($account['password']),
                     'role' => $account['role'],
-                    'email_verified_at' => now(),
+                    'email_verified_at' => $now,
                 ]
             );
+
+            if ($user->role !== $account['role']) {
+                $user->role = $account['role'];
+            }
+
+            if (!$user->email_verified_at) {
+                $user->email_verified_at = $now;
+            }
+
+            if ($user->isDirty()) {
+                $user->save();
+            }
         }
 
-        // Backfill existing known accounts if they were created as regular user before role support.
+        // Legacy username backfill support from older seed data.
         User::query()
-            ->whereIn('email', ['admin@halalytics.com', 'nutritionist@halalytics.com'])
-            ->orWhereIn('username', ['admin', 'ahli_gizi'])
+            ->whereIn('username', ['admin', 'ahli gizi'])
             ->get()
-            ->each(function (User $user): void {
-                if ($user->email === 'admin@halalytics.com' || $user->username === 'admin') {
+            ->each(function (User $user) use ($now): void {
+                if ($user->username === 'admin') {
                     $user->role = 'admin';
                 }
 
-                if ($user->email === 'nutritionist@halalytics.com' || $user->username === 'ahli_gizi') {
+                if ($user->username === 'ahli gizi') {
                     $user->role = 'ahli_gizi';
+                    $user->username = 'ahli_gizi';
                 }
 
-                $user->email_verified_at = $user->email_verified_at ?? now();
-                $user->save();
+                if (!$user->email_verified_at) {
+                    $user->email_verified_at = $now;
+                }
+
+                if ($user->isDirty()) {
+                    $user->save();
+                }
             });
     }
 }
