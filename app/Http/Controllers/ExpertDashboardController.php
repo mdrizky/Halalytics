@@ -11,7 +11,7 @@ class ExpertDashboardController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'role:nutritionist']);
+        $this->middleware(['auth', 'role:ahli_gizi']);
     }
 
     public function index()

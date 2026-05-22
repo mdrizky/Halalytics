@@ -4,43 +4,53 @@ namespace App\Services\AI;
 
 class IntentClassifierService
 {
+    private const INTENT_PATTERNS = [
+        'APP_GUIDE' => [
+            '/(?:\b|)(cara pakai|cara memakai|tutorial|fitur|bagaimana scan|bantuan|panduan|cara menggunakan)(?:\b|)/i',
+        ],
+        'HALAL_QUESTION' => [
+            '/(?:\b|)(halal|haram|syubhat|kehalalan|mui|bpjph|sertifikat|babi|alkohol|gelatin|karmin|najis)(?:\b|)/i',
+        ],
+        'MEDICINE_QUESTION' => [
+            '/(?:\b|)(obat|tablet|kapsul|dosis|efek samping|apotek|resep dokter|sirup|paracetamol|antibiotik|farmasi)(?:\b|)/i',
+        ],
+        'COSMETIC_QUESTION' => [
+            '/(?:\b|)(skincare|kosmetik|makeup|lipstik|serum|toner|sunscreen|moisturizer|jerawat|kulit|wajah)(?:\b|)/i',
+        ],
+        'DIET_ADVICE' => [
+            '/(?:\b|)(diet|menu|kalori|bmi|turun berat|meal plan|nutrisi|gizi|protein|karbohidrat|lemak|puasa)(?:\b|)/i',
+        ],
+        'PRODUCT_SCAN' => [
+            '/(?:\b|)(barcode|produk ini|scan|komposisi|ingredients|bahan-bahan|kandungan|produk apa ini)(?:\b|)/i',
+        ],
+        'HEALTH_QUESTION' => [
+            '/(?:\b|)(gejala|sakit|demam|batuk|nyeri|pusing|mual|dokter|rumah sakit|hipertensi|diabetes|alergi)(?:\b|)/i',
+        ]
+    ];
+
     public function classify(string $message): string
     {
         $text = strtolower(trim($message));
+        $scores = [];
 
-        if ($this->containsAny($text, ['cara pakai', 'cara memakai', 'tutorial', 'fitur aplikasi', 'bagaimana scan'])) {
-            return 'APP_GUIDE';
-        }
-        if ($this->containsAny($text, ['halal', 'haram', 'syubhat', 'kehalalan', 'sertifikat mui'])) {
-            return 'HALAL_QUESTION';
-        }
-        if ($this->containsAny($text, ['obat', 'tablet', 'kapsul', 'dosis', 'efek samping obat'])) {
-            return 'MEDICINE_QUESTION';
-        }
-        if ($this->containsAny($text, ['skincare', 'kosmetik', 'makeup', 'lipstik'])) {
-            return 'COSMETIC_QUESTION';
-        }
-        if ($this->containsAny($text, ['diet', 'menu', 'kalori', 'bmi', 'turun berat', 'meal plan'])) {
-            return 'DIET_ADVICE';
-        }
-        if ($this->containsAny($text, ['barcode', 'produk ini', 'scan', 'komposisi'])) {
-            return 'PRODUCT_SCAN';
-        }
-        if ($this->containsAny($text, ['gejala', 'sakit', 'demam', 'batuk', 'nyeri'])) {
-            return 'HEALTH_QUESTION';
-        }
-
-        return 'GENERAL_HEALTH';
-    }
-
-    private function containsAny(string $haystack, array $needles): bool
-    {
-        foreach ($needles as $needle) {
-            if (str_contains($haystack, $needle)) {
-                return true;
+        foreach (self::INTENT_PATTERNS as $intent => $patterns) {
+            $scores[$intent] = 0;
+            foreach ($patterns as $pattern) {
+                if (preg_match_all($pattern, $text, $matches)) {
+                    $scores[$intent] += count($matches[0]);
+                }
             }
         }
 
-        return false;
+        arsort($scores);
+        
+        $topIntent = array_key_first($scores);
+        $topScore = $scores[$topIntent] ?? 0;
+
+        if ($topScore > 0) {
+            return $topIntent;
+        }
+
+        return 'GENERAL_HEALTH';
     }
 }

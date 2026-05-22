@@ -202,7 +202,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/consultations/{id}/messages', [NutritionConsultationController::class, 'storeMessage'])->whereNumber('id');
     });
 
-    Route::middleware('role:nutritionist')->prefix('nutritionist')->group(function () {
+    Route::middleware('role:ahli_gizi')->prefix('nutritionist')->group(function () {
         Route::get('/dashboard', [NutritionistDashboardController::class, 'index']);
         Route::get('/consultations', [NutritionConsultationController::class, 'indexNutritionist']);
     });

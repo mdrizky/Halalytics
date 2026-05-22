@@ -401,7 +401,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // 🍏 EXPERT / NUTRITIONIST DASHBOARD
-    Route::prefix('expert')->middleware('role:nutritionist')->name('expert.')->group(function () {
+    Route::prefix('expert')->middleware('role:ahli_gizi')->name('expert.')->group(function () {
         Route::get('/dashboard', [ExpertDashboardController::class, 'index'])->name('dashboard');
     });
 

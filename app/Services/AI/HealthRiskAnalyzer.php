@@ -139,6 +139,21 @@ class HealthRiskAnalyzer
             }
         }
 
+        // ─── Cross-Domain Analysis (Halal vs Health) ─────────────────────────
+        
+        $halalStatus = $halal['halal_status'] ?? 'unknown';
+        if (in_array($halalStatus, ['halal', 'Kemungkinan Halal'])) {
+            if ($sugarRisk === 'tinggi' || $sodiumRisk === 'tinggi' || $fatRisk === 'tinggi') {
+                $unhealthyFactors = [];
+                if ($sugarRisk === 'tinggi') $unhealthyFactors[] = 'gula';
+                if ($sodiumRisk === 'tinggi') $unhealthyFactors[] = 'sodium/garam';
+                if ($fatRisk === 'tinggi') $unhealthyFactors[] = 'lemak';
+                
+                $factorsString = implode(', ', $unhealthyFactors);
+                $warnings[] = "⚠️ PARADOX: Produk ini terindikasi HALAL, namun tinggi {$factorsString}. Tidak disarankan untuk konsumsi rutin demi menjaga kesehatan Anda.";
+            }
+        }
+
         // ─── Hitung Level Risiko ─────────────────────────────────────────────
 
         $criticalWarnings = collect($warnings)->filter(fn ($w) => str_contains($w, 'KERAS') || str_contains($w, '🚨'))->count();

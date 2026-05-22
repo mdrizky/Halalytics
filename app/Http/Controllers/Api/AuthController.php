@@ -111,7 +111,7 @@ class AuthController extends Controller
             'status' => 'success',
             'message' => 'Akun berhasil dibuat! Silakan login.',
             'user' => $user,
-            'role' => $user->role,
+            'role' => $user->getRoleNames()->first() ?? $user->role,
             'token' => $token,
         ], 201);
     }
@@ -198,7 +198,7 @@ class AuthController extends Controller
                 'status' => 'success',
                 'message' => 'Login berhasil.',
                 'user' => $user->fresh(),
-                'role' => $user->role,
+                'role' => $user->getRoleNames()->first() ?? $user->role,
                 'token' => $token,
                 'streak' => [
                     'current' => (int) ($user->current_streak ?? 0),

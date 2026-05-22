@@ -14,7 +14,7 @@ class RoleSeeder extends Seeder
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         // create roles
-        foreach (['user', 'expert', 'admin'] as $role) {
+        foreach (['user', 'ahli_gizi', 'admin'] as $role) {
             Role::firstOrCreate([
                 'name' => $role,
                 'guard_name' => 'web',
@@ -26,7 +26,7 @@ class RoleSeeder extends Seeder
             ->whereNotNull('role')
             ->chunkById(100, function ($users) {
                 foreach ($users as $user) {
-                    if (in_array($user->role, ['user', 'expert', 'admin'], true)) {
+                    if (in_array($user->role, ['user', 'ahli_gizi', 'admin'], true)) {
                         $user->syncRoles([$user->role]);
                     }
                 }

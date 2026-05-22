@@ -197,4 +197,30 @@ class FoodAnalysisOrchestrator
             Log::debug('AI log skip: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Cek apakah respons dari AI hanyalah kalimat placeholder.
+     */
+    private function isPlaceholder(mixed $text): bool
+    {
+        if (!is_string($text)) {
+            if (is_array($text) && empty($text)) return true;
+            return false;
+        }
+        $text = strtolower(trim($text));
+        if ($text === '') return true;
+        
+        $placeholders = [
+            'maaf', 'saya adalah ai', 'sebagai ai', 'tidak memiliki informasi', 
+            'belum bisa memberikan', 'tidak ada data', 'string', 'placeholder'
+        ];
+        
+        foreach ($placeholders as $ph) {
+            if (str_contains($text, $ph)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
 }

@@ -40,7 +40,7 @@ class DemoAccountSeeder extends Seeder
                 'username' => 'nutritionist_demo',
                 'email' => 'nutritionist@halalytics.com',
                 'password' => Hash::make('Nutrition123!'),
-                'role' => 'nutritionist',
+                'role' => 'ahli_gizi',
                 'active' => 1,
                 'weight_kg' => 60,
                 'blood_type' => 'B',
