@@ -239,7 +239,7 @@ class AdminUserController extends Controller
             'username' => 'nullable|string|max:255|unique:users,username',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'required|in:admin,user,nutritionist',
+            'role' => 'required|in:admin,user,nutritionist,ahli_gizi',
             'phone' => 'nullable|string|max:20',
             'blood_type' => 'nullable|string|in:A+,A-,B+,B-,AB+,AB-,O+,O-,A,B,AB,O',
             'allergy' => 'nullable|string',

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('token', 255)->unique()->index();
             $table->integer('rotated_count')->default(0);
             $table->timestamp('last_rotated_at')->nullable();
-            $table->timestamp('expires_at');
+            $table->timestamp('expires_at')->nullable();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->timestamps();
@@ -43,7 +43,7 @@ return new class extends Migration
             $table->integer('attempts')->default(0);
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
-            $table->timestamp('expires_at');
+            $table->timestamp('expires_at')->nullable();
             $table->timestamps();
 
             $table->index(['email', 'expires_at']);

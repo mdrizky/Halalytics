@@ -116,7 +116,7 @@
                 </div>
             </div>
 
-            @if(in_array(strtolower($user->role), ['expert', 'nutritionist']))
+            @if(in_array(strtolower($user->role), ['expert', 'nutritionist', 'ahli_gizi']))
                 <!-- Nutritionist Credentials -->
                 <div class="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm overflow-hidden">
                     <div class="px-8 py-6 border-b border-slate-100 flex items-center gap-3 bg-emerald-50/50">
@@ -149,62 +149,117 @@
                 </div>
             @endif
 
-            <!-- Health Snapshot -->
-            <div class="bg-primary rounded-[2rem] shadow-xl shadow-primary/20 overflow-hidden relative group">
-                <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500"></div>
-                <div class="px-8 py-6 flex items-center gap-3 relative">
-                    <span class="material-icons-round text-white/80">favorite</span>
-                    <h3 class="font-bold text-white">Health Snapshot</h3>
-                </div>
-                <div class="p-8 space-y-6 relative">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-white/10 rounded-2xl p-4 backdrop-blur-md border border-white/10">
-                            <label class="text-[9px] font-black text-white/50 uppercase tracking-widest block mb-1 text-center">BMI Score</label>
-                            <div class="text-2xl font-black text-white text-center">{{ $user->bmi ?: '-' }}</div>
-                            @if($user->bmi)
-                                <div class="text-[10px] font-bold text-center mt-1 {{ $user->bmi > 25 ? 'text-amber-300' : ($user->bmi < 18.5 ? 'text-blue-300' : 'text-emerald-300') }}">
-                                    {{ $user->bmi > 25 ? 'Overweight' : ($user->bmi < 18.5 ? 'Underweight' : 'Normal Weight') }}
+            @if(in_array(strtolower($user->role), ['user', 'ahli_gizi']))
+                <!-- Health Snapshot (User & Ahli Gizi) -->
+                <div class="bg-primary rounded-[2rem] shadow-xl shadow-primary/20 overflow-hidden relative group">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500"></div>
+                    <div class="px-8 py-6 flex items-center gap-3 relative">
+                        <span class="material-icons-round text-white/80">favorite</span>
+                        <h3 class="font-bold text-white">Health Snapshot</h3>
+                    </div>
+                    <div class="p-8 space-y-6 relative">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-white/10 rounded-2xl p-4 backdrop-blur-md border border-white/10">
+                                <label class="text-[9px] font-black text-white/50 uppercase tracking-widest block mb-1 text-center">BMI Score</label>
+                                <div class="text-2xl font-black text-white text-center">{{ $user->bmi ?: '-' }}</div>
+                                @if($user->bmi)
+                                    <div class="text-[10px] font-bold text-center mt-1 {{ $user->bmi > 25 ? 'text-amber-300' : ($user->bmi < 18.5 ? 'text-blue-300' : 'text-emerald-300') }}">
+                                        {{ $user->bmi > 25 ? 'Overweight' : ($user->bmi < 18.5 ? 'Underweight' : 'Normal Weight') }}
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="bg-white/10 rounded-2xl p-4 backdrop-blur-md border border-white/10">
+                                <label class="text-[9px] font-black text-white/50 uppercase tracking-widest block mb-1 text-center">Blood Type</label>
+                                <div class="text-2xl font-black text-white text-center">{{ $user->blood_type ?: '-' }}</div>
+                                <div class="text-[10px] font-bold text-center mt-1 text-white/60 uppercase">Emergency</div>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-white/10 rounded-2xl p-4 border border-white/5 hover:bg-white/[0.15] transition-all">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="material-icons-round text-sm text-amber-400">warning</span>
+                                    <label class="text-[10px] font-black text-white/70 uppercase tracking-widest">Allergies</label>
                                 </div>
-                            @endif
-                        </div>
-                        <div class="bg-white/10 rounded-2xl p-4 backdrop-blur-md border border-white/10">
-                            <label class="text-[9px] font-black text-white/50 uppercase tracking-widest block mb-1 text-center">Blood Type</label>
-                            <div class="text-2xl font-black text-white text-center">{{ $user->blood_type ?: '-' }}</div>
-                            <div class="text-[10px] font-bold text-center mt-1 text-white/60 uppercase">Emergency</div>
-                        </div>
-                    </div>
-                    <div class="space-y-4">
-                        <div class="bg-white/10 rounded-2xl p-4 border border-white/5 hover:bg-white/[0.15] transition-all">
-                            <div class="flex items-center gap-2 mb-2">
-                                <span class="material-icons-round text-sm text-amber-400">warning</span>
-                                <label class="text-[10px] font-black text-white/70 uppercase tracking-widest">Allergies</label>
+                                <p class="text-xs text-white leading-relaxed font-medium">
+                                    {{ $user->allergy ?: 'No specific allergies reported by the user.' }}
+                                </p>
                             </div>
-                            <p class="text-xs text-white leading-relaxed font-medium">
-                                {{ $user->allergy ?: 'No specific allergies reported by the user.' }}
-                            </p>
-                        </div>
-                        <div class="bg-white/10 rounded-2xl p-4 border border-white/5 hover:bg-white/[0.15] transition-all">
-                            <div class="flex items-center gap-2 mb-2">
-                                <span class="material-icons-round text-sm text-blue-400">history_edu</span>
-                                <label class="text-[10px] font-black text-white/70 uppercase tracking-widest">Medical History</label>
+                            <div class="bg-white/10 rounded-2xl p-4 border border-white/5 hover:bg-white/[0.15] transition-all">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="material-icons-round text-sm text-blue-400">history_edu</span>
+                                    <label class="text-[10px] font-black text-white/70 uppercase tracking-widest">Medical History</label>
+                                </div>
+                                <p class="text-xs text-white leading-relaxed font-medium">
+                                    {{ $user->medical_history ?: 'User has not shared their medical background yet.' }}
+                                </p>
                             </div>
-                            <p class="text-xs text-white leading-relaxed font-medium">
-                                {{ $user->medical_history ?: 'User has not shared their medical background yet.' }}
-                            </p>
                         </div>
-                    </div>
-                    <div class="pt-4 grid grid-cols-2 gap-4 text-center">
-                        <div class="group/stat">
-                            <div class="text-[10px] font-black text-white/40 uppercase tracking-widest">Weight</div>
-                            <div class="text-white font-black">{{ $user->weight ? $user->weight . ' kg' : '-' }}</div>
-                        </div>
-                        <div class="group/stat">
-                            <div class="text-[10px] font-black text-white/40 uppercase tracking-widest">Height</div>
-                            <div class="text-white font-black">{{ $user->height ? $user->height . ' cm' : '-' }}</div>
+                        <div class="pt-4 grid grid-cols-2 gap-4 text-center">
+                            <div class="group/stat">
+                                <div class="text-[10px] font-black text-white/40 uppercase tracking-widest">Weight</div>
+                                <div class="text-white font-black">{{ $user->weight ? $user->weight . ' kg' : '-' }}</div>
+                            </div>
+                            <div class="group/stat">
+                                <div class="text-[10px] font-black text-white/40 uppercase tracking-widest">Height</div>
+                                <div class="text-white font-black">{{ $user->height ? $user->height . ' cm' : '-' }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            @elseif(strtolower($user->role) === 'admin')
+                <!-- Admin Statistics Snapshot -->
+                <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-[2rem] shadow-xl shadow-red-500/20 overflow-hidden relative group">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500"></div>
+                    <div class="px-8 py-6 flex items-center gap-3 relative">
+                        <span class="material-icons-round text-white/80">admin_panel_settings</span>
+                        <h3 class="font-bold text-white">Admin Statistics</h3>
+                    </div>
+                    <div class="p-8 space-y-6 relative">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-white/10 rounded-2xl p-4 backdrop-blur-md border border-white/10">
+                                <label class="text-[9px] font-black text-white/50 uppercase tracking-widest block mb-1 text-center">Users Managed</label>
+                                <div class="text-2xl font-black text-white text-center">{{ \App\Models\User::count() }}</div>
+                                <div class="text-[10px] font-bold text-center mt-1 text-white/60 uppercase">Total</div>
+                            </div>
+                            <div class="bg-white/10 rounded-2xl p-4 backdrop-blur-md border border-white/10">
+                                <label class="text-[9px] font-black text-white/50 uppercase tracking-widest block mb-1 text-center">System Status</label>
+                                <div class="text-2xl font-black text-white text-center">Active</div>
+                                <div class="text-[10px] font-bold text-center mt-1 text-white/60 uppercase">Online</div>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-white/10 rounded-2xl p-4 border border-white/5 hover:bg-white/[0.15] transition-all">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="material-icons-round text-sm text-amber-400">security</span>
+                                    <label class="text-[10px] font-black text-white/70 uppercase tracking-widest">Admin Access Level</label>
+                                </div>
+                                <p class="text-xs text-white leading-relaxed font-medium">
+                                    Full system administrator with access to all management features.
+                                </p>
+                            </div>
+                            <div class="bg-white/10 rounded-2xl p-4 border border-white/5 hover:bg-white/[0.15] transition-all">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="material-icons-round text-sm text-blue-400">verified_user</span>
+                                    <label class="text-[10px] font-black text-white/70 uppercase tracking-widest">Account Status</label>
+                                </div>
+                                <p class="text-xs text-white leading-relaxed font-medium">
+                                    {{ $user->active ? 'Active Administrator' : 'Suspended Account' }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="pt-4 grid grid-cols-2 gap-4 text-center">
+                            <div class="group/stat">
+                                <div class="text-[10px] font-black text-white/40 uppercase tracking-widest">Member Since</div>
+                                <div class="text-white font-black">{{ $user->created_at->format('M Y') }}</div>
+                            </div>
+                            <div class="group/stat">
+                                <div class="text-[10px] font-black text-white/40 uppercase tracking-widest">Last Login</div>
+                                <div class="text-white font-black">{{ $user->last_login ? $user->last_login->diffForHumans() : 'Never' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
 
         <!-- Main Content -->

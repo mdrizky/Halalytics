@@ -182,6 +182,16 @@ class AuthController extends Controller
                 ], 403);
             }
 
+            // Restrict Android app login to only 'user' and 'ahli_gizi' roles
+            $userRole = strtolower($user->role ?? $user->getRoleNames()->first() ?? '');
+            if (!in_array($userRole, ['user', 'ahli_gizi'], true)) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 'error',
+                    'message' => 'Aplikasi Android hanya dapat diakses oleh role User dan Ahli Gizi.',
+                ], 403);
+            }
+
             $token = $this->issueAuthToken($user);
 
             $this->updateLoginStreak($user);
@@ -266,6 +276,16 @@ class AuthController extends Controller
                 }
             }
 
+            // Restrict Android app login to only 'user' and 'ahli_gizi' roles
+            $userRole = strtolower($user->role ?? $user->getRoleNames()->first() ?? '');
+            if (!in_array($userRole, ['user', 'ahli_gizi'], true)) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 'error',
+                    'message' => 'Aplikasi Android hanya dapat diakses oleh role User dan Ahli Gizi.',
+                ], 403);
+            }
+
             $token = $this->issueAuthToken($user);
             $this->updateLoginStreak($user);
             $user->last_login = now();
@@ -338,6 +358,16 @@ class AuthController extends Controller
                     $user->social_provider = 'facebook';
                     $user->save();
                 }
+            }
+
+            // Restrict Android app login to only 'user' and 'ahli_gizi' roles
+            $userRole = strtolower($user->role ?? $user->getRoleNames()->first() ?? '');
+            if (!in_array($userRole, ['user', 'ahli_gizi'], true)) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 'error',
+                    'message' => 'Aplikasi Android hanya dapat diakses oleh role User dan Ahli Gizi.',
+                ], 403);
             }
 
             $token = $this->issueAuthToken($user);
