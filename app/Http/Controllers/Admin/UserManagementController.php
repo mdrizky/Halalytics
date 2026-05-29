@@ -92,7 +92,7 @@ class UserManagementController extends Controller
             'full_name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $id . ',id_user',
             'phone' => 'sometimes|string|max:20',
-            'role' => 'sometimes|in:admin,user,nutritionist',
+            'role' => 'sometimes|in:admin,user,ahli_gizi,nutritionist',
             'active' => 'sometimes|boolean',
             'avatar_url' => 'sometimes|url|nullable',
             'birth_date' => 'sometimes|date|nullable',
@@ -104,6 +104,10 @@ class UserManagementController extends Controller
             'profile_visibility' => 'sometimes|in:public,private,friends',
             'show_health_tips' => 'sometimes|boolean',
         ]);
+
+        if (isset($validated['role']) && in_array($validated['role'], ['nutritionist', 'expert'], true)) {
+            $validated['role'] = 'ahli_gizi';
+        }
 
         $user->update($validated);
 

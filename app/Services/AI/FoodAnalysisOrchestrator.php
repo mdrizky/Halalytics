@@ -3,6 +3,7 @@
 namespace App\Services\AI;
 
 use App\Models\AiLog;
+use App\Services\ImageSearchService;
 use App\Services\GeminiService;
 use Illuminate\Support\Facades\Log;
 

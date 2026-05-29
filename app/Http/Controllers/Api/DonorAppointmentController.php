@@ -15,11 +15,17 @@ class DonorAppointmentController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'event_id' => 'required|exists:blood_events,id',
+            'age' => 'required|integer|min:17|max:65',
+            'weight_kg' => 'required|numeric|min:45',
             'screening_answers' => 'required|array', // expected array of booleans/strings from self-screening
+        ], [
+            'age.min' => 'Usia minimal untuk donor darah adalah 17 tahun.',
+            'age.max' => 'Usia maksimal untuk donor darah adalah 65 tahun.',
+            'weight_kg.min' => 'Berat badan minimal untuk donor darah adalah 45 kg.',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json(['status' => 'error', 'message' => $validator->errors()->first(), 'errors' => $validator->errors()], 422);
         }
 
         $user = $request->user();
@@ -55,8 +61,11 @@ class DonorAppointmentController extends Controller
         $appointment = DonorAppointment::create([
             'user_id' => $user->id_user,
             'event_id' => $event->id,
+            'qr_code' => 'DONOR-' . strtoupper(uniqid()),
+            'queue_number' => DonorAppointment::where('event_id', $event->id)->count() + 1,
             'screening_passed' => $passed,
             'screening_notes' => $notes ?: 'All good',
+            'weight_kg' => $request->weight_kg,
             'status' => $passed ? 'pending' : 'rejected'
         ]);
 

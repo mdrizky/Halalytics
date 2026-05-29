@@ -11,14 +11,16 @@
 @section('content')
 <div class="flex items-center justify-between mb-8">
     <div>
-        <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Blood Donation Events</h2>
-        <p class="text-slate-500 text-sm mt-1">Manage blood donation campaigns and locations.</p>
+        <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Blood Donation Hub</h2>
+        <p class="text-slate-500 text-sm mt-1">Manage blood stocks, events, appointments, and emergencies.</p>
     </div>
     <a href="{{ route('admin.blood-events.create') }}" class="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all shadow-sm">
         <span class="material-icons-round text-sm">add</span>
         <span class="text-sm font-medium">Create Event</span>
     </a>
 </div>
+
+@include('admin.donor.tabs')
 
 <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
     <div class="overflow-x-auto">

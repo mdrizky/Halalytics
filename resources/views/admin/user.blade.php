@@ -50,10 +50,45 @@
     </div>
 </div>
 
+<!-- Role Segmentation -->
+@php
+    $roleTabs = [
+        'all' => ['label' => 'Semua Role', 'icon' => 'users', 'count' => $stats['total_users'] ?? 0],
+        'user' => ['label' => 'User Biasa', 'icon' => 'user', 'count' => $stats['total_regular_users'] ?? 0],
+        'ahli_gizi' => ['label' => 'Ahli Gizi', 'icon' => 'user-md', 'count' => $stats['total_nutritionists'] ?? 0],
+        'admin' => ['label' => 'Admin', 'icon' => 'shield-alt', 'count' => $stats['total_admins'] ?? 0],
+    ];
+    $activeRole = request('role', 'all');
+@endphp
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-body" style="padding: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
+        @foreach($roleTabs as $roleKey => $tab)
+            @php
+                $tabUrl = route('admin.user.index', array_filter(array_merge(request()->except(['page', 'role']), [
+                    'role' => $roleKey === 'all' ? null : $roleKey,
+                ]), fn ($value) => $value !== null && $value !== ''));
+                $isActive = ($roleKey === 'all' && !$activeRole) || $activeRole === $roleKey;
+            @endphp
+            <a href="{{ $tabUrl }}"
+               class="btn {{ $isActive ? 'btn-primary' : 'btn-outline' }}"
+               style="padding: 10px 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-{{ $tab['icon'] }}"></i>
+                {{ $tab['label'] }}
+                <span class="badge" style="background: {{ $isActive ? 'rgba(255,255,255,.2)' : 'rgba(0,0,0,.06)' }}; color: inherit; border: 1px solid currentColor;">
+                    {{ number_format($tab['count']) }}
+                </span>
+            </a>
+        @endforeach
+    </div>
+</div>
+
 <!-- Search & Filters -->
 <div class="card" style="margin-bottom: 24px;">
     <div class="card-body">
         <form action="{{ url('/admin/user') }}" method="GET" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 16px; align-items: center;">
+            @if(request('role'))
+                <input type="hidden" name="role" value="{{ request('role') }}">
+            @endif
             <div class="input-group" style="position: relative; margin-bottom: 0;">
                 <i class="fas fa-search" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, email, or username..." style="width: 100%; padding: 12px 12px 12px 48px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light); outline: none;">
@@ -114,11 +149,17 @@
                             <div style="font-size: 11px; color: var(--text-muted);">{{ $user->phone ?: 'No phone' }}</div>
                         </td>
                         <td style="padding: 16px;">
-                            @if($user->role == 'admin')
-                                <span class="badge" style="background: rgba(45, 106, 79, 0.1); color: var(--primary-color); border: 1px solid var(--primary-color);">ADMIN</span>
-                            @else
-                                <span class="badge" style="background: rgba(0, 0, 0, 0.05); color: var(--text-muted); border: 1px solid var(--border-color);">USER</span>
-                            @endif
+                            @php
+                                $roleKey = strtolower($user->role ?? 'user');
+                                $roleMeta = match($roleKey) {
+                                    'admin' => ['label' => 'ADMIN', 'color' => '#DC2626', 'bg' => 'rgba(220,38,38,.08)', 'border' => 'rgba(220,38,38,.24)'],
+                                    'ahli_gizi', 'nutritionist', 'expert' => ['label' => 'AHLI GIZI', 'color' => '#059669', 'bg' => 'rgba(5,150,105,.08)', 'border' => 'rgba(5,150,105,.24)'],
+                                    default => ['label' => 'USER', 'color' => 'var(--primary-color)', 'bg' => 'rgba(0,77,64,.08)', 'border' => 'rgba(0,77,64,.20)'],
+                                };
+                            @endphp
+                            <span class="badge" style="background: {{ $roleMeta['bg'] }}; color: {{ $roleMeta['color'] }}; border: 1px solid {{ $roleMeta['border'] }};">
+                                {{ $roleMeta['label'] }}
+                            </span>
                         </td>
                         <td style="padding: 16px;">
                             @if($user->active)
@@ -156,6 +197,16 @@
                             <div style="display: flex; gap: 8px; justify-content: flex-end;">
                                 <a href="{{ route('admin.user.show', $user->id_user) }}" class="btn btn-outline" style="padding: 8px; color: var(--accent-color); border-color: var(--accent-color);" title="View Detail"><i class="fas fa-eye"></i></a>
                                 <a href="{{ route('admin.user.edit', $user->id_user) }}" class="btn btn-outline" style="padding: 8px; color: var(--primary-color); border-color: var(--primary-color);"><i class="fas fa-user-edit"></i></a>
+                                <form action="{{ route('admin.user.role', $user->id_user) }}" method="POST" style="display: inline-flex;">
+                                    @csrf
+                                    @method('PATCH')
+                                    <select name="role" onchange="this.form.submit()" title="Ganti Role"
+                                            style="width: 104px; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light); font-size: 11px; font-weight: 700;">
+                                        <option value="user" {{ $roleKey === 'user' ? 'selected' : '' }}>User</option>
+                                        <option value="ahli_gizi" {{ in_array($roleKey, ['ahli_gizi', 'nutritionist', 'expert']) ? 'selected' : '' }}>Ahli Gizi</option>
+                                        <option value="admin" {{ $roleKey === 'admin' ? 'selected' : '' }}>Admin</option>
+                                    </select>
+                                </form>
                                 
                                 <form action="{{ route('admin.user.toggle', $user->id_user) }}" method="POST" style="display: inline;">
                                     @csrf
@@ -177,7 +228,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 48px; color: var(--text-muted);">No users found.</td>
+                        <td colspan="8" style="text-align: center; padding: 48px; color: var(--text-muted);">No users found.</td>
                     </tr>
                     @endforelse
                 </tbody>

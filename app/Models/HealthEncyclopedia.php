@@ -15,6 +15,10 @@ class HealthEncyclopedia extends Model
         'title',
         'summary',
         'content',
+        'causes',
+        'symptoms',
+        'treatments',
+        'halal_notes',
         'source_link',
     ];
 }

@@ -32,7 +32,10 @@ class AdminUserController extends Controller
             'total_users' => $totalUsers,
             'active_users' => $activeUsers,
             'total_scans' => $totalScans,
-            'user_change' => abs($userChange)
+            'user_change' => abs($userChange),
+            'total_regular_users' => User::where('role', 'user')->count(),
+            'total_nutritionists' => User::whereIn('role', ['ahli_gizi', 'nutritionist'])->count(),
+            'total_admins' => User::where('role', 'admin')->count(),
         ];
         
         // Users with scan count
@@ -128,8 +131,14 @@ class AdminUserController extends Controller
             'medical_history' => 'nullable|string|max:2000',
             'weight' => 'nullable|numeric|min:1|max:500',
             'height' => 'nullable|numeric|min:1|max:300',
-            'role' => 'required|in:admin,user,nutritionist',
+            'role' => 'required|in:admin,user,ahli_gizi',
             'active' => 'required|boolean',
+            'gender' => 'nullable|in:male,female',
+            'birth_date' => 'nullable|date',
+            'goal' => 'nullable|string|max:255',
+            'diet_preference' => 'nullable|string|max:255',
+            'activity_level' => 'nullable|in:sedentary,light,moderate,active,very_active',
+            'bio' => 'nullable|string|max:2000',
         ]);
 
         $validated['username'] = $this->generateUsername(
@@ -160,6 +169,14 @@ class AdminUserController extends Controller
 
         $user->update($validated);
 
+        if (method_exists($user, 'syncRoles')) {
+            try {
+                $user->syncRoles([$validated['role']]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to sync Spatie role', ['user_id' => $user->id_user, 'role' => $validated['role']]);
+            }
+        }
+
         return redirect()->route('admin.user.index')->with('success', 'User berhasil diperbarui');
     }
 
@@ -176,6 +193,11 @@ class AdminUserController extends Controller
         $user->delete();
 
         return redirect()->route('admin.user.index')->with('success', 'User berhasil dihapus');
+    }
+
+    public function destroy($id_user)
+    {
+        return $this->hapus($id_user);
     }
 
     // Create user form
@@ -239,7 +261,7 @@ class AdminUserController extends Controller
             'username' => 'nullable|string|max:255|unique:users,username',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'required|in:admin,user,nutritionist,ahli_gizi',
+            'role' => 'required|in:admin,user,ahli_gizi',
             'phone' => 'nullable|string|max:20',
             'blood_type' => 'nullable|string|in:A+,A-,B+,B-,AB+,AB-,O+,O-,A,B,AB,O',
             'allergy' => 'nullable|string',
@@ -272,6 +294,14 @@ class AdminUserController extends Controller
                 : null,
             'active' => array_key_exists('active', $validated) ? (bool) $validated['active'] : 1,
         ]);
+
+        if (method_exists($user, 'assignRole')) {
+            try {
+                $user->assignRole($validated['role']);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to assign Spatie role', ['user_id' => $user->id_user, 'role' => $validated['role']]);
+            }
+        }
 
         return redirect()->route('admin.user.index')->with('success', 'User berhasil ditambahkan');
     }
@@ -334,8 +364,8 @@ class AdminUserController extends Controller
             }
         }
 
-        $newRole = $request->input('role', 'user');
-        if (!in_array($newRole, ['admin', 'user'])) {
+        $newRole = $this->normalizeRole($request->input('role', 'user'));
+        if (!in_array($newRole, ['admin', 'user', 'ahli_gizi'], true)) {
             $response = [
                 'success' => false,
                 'message' => 'Role tidak valid!'
@@ -371,6 +401,7 @@ class AdminUserController extends Controller
             'full_name' => trim((string) ($request->input('full_name') ?? $request->input('name') ?? '')),
             'email' => trim((string) $request->input('email', '')),
             'phone' => trim((string) ($request->input('phone') ?? $request->input('phone_number') ?? '')),
+            'role' => $this->normalizeRole($request->input('role', 'user')),
             'blood_type' => $this->normalizeBloodType($request->input('blood_type')),
             'allergy' => $this->normalizeTextField($request->input('allergy', $request->input('allergies'))),
             'medical_history' => $this->normalizeTextField($request->input('medical_history')),
@@ -401,9 +432,29 @@ class AdminUserController extends Controller
         return $text !== '' ? $text : null;
     }
 
+    private function normalizeRole(mixed $role): string
+    {
+        $value = Str::lower(trim((string) ($role ?? 'user')));
+
+        return match ($value) {
+            'admin' => 'admin',
+            'ahli_gizi', 'nutritionist', 'expert', 'pakar_gizi' => 'ahli_gizi',
+            default => 'user',
+        };
+    }
+
     private function buildUsersQuery(Request $request)
     {
         $query = User::withCount('scans')->withCount('scanHistories');
+
+        if ($request->filled('role') && $request->role !== 'all') {
+            $role = $this->normalizeRole($request->role);
+            if ($role === 'ahli_gizi') {
+                $query->whereIn('role', ['ahli_gizi', 'nutritionist']);
+            } else {
+                $query->where('role', $role);
+            }
+        }
 
         if ($request->filled('search')) {
             $search = trim((string) $request->search);

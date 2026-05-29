@@ -11,10 +11,12 @@
 @section('content')
 <div class="flex items-center justify-between mb-8">
     <div>
-        <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Blood Stock Management</h2>
-        <p class="text-slate-500 text-sm mt-1">Monitor real-time availability of blood types.</p>
+        <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Blood Donation Hub</h2>
+        <p class="text-slate-500 text-sm mt-1">Manage blood stocks, events, appointments, and emergencies.</p>
     </div>
 </div>
+
+@include('admin.donor.tabs')
 
 <!-- Summary Cards -->
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

@@ -32,13 +32,19 @@ Route::get('/download', [App\Http\Controllers\Promo\PageController::class, 'down
 Route::get('/privacy', [App\Http\Controllers\Promo\PageController::class, 'privacy'])->name('privacy');
 Route::get('/blog', [App\Http\Controllers\Promo\BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [App\Http\Controllers\Promo\BlogController::class, 'show'])->name('blog.show');
-Route::get('/contact', [App\Http\Controllers\Promo\ContactController::class, 'send'])->name('contact.send');
+Route::post('/contact', [App\Http\Controllers\Promo\ContactController::class, 'send'])->name('contact.send');
 Route::post('/ai/chat', [App\Http\Controllers\Promo\PageController::class, 'aiChat'])->name('promo.ai_chat');
 Route::get('/lang/{locale}', function ($locale) {
     if (in_array($locale, ['en', 'id'])) {
         session(['locale' => $locale]);
     }
-    return redirect()->back();
+    
+    $previousUrl = url()->previous();
+    if ($previousUrl && strpos($previousUrl, '/lang/') === false) {
+        return redirect($previousUrl);
+    }
+    
+    return redirect('/');
 })->name('lang.switch');
 
 // New Health Services Routes
@@ -178,7 +184,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/user/{id}/edit', [AdminUserController::class, 'edit'])->name('admin.user.edit')->middleware('role:admin');
     Route::put('/admin/user/{id}', [AdminUserController::class, 'update'])->name('admin.user.update')->middleware('role:admin');
     Route::delete('/admin/user/{id}', [AdminUserController::class, 'destroy'])->name('admin.user.destroy')->middleware('role:admin');
-    Route::post('/admin/user/{id}/toggle', [AdminUserController::class, 'toggleActive'])->name('admin.user.toggle')->middleware('role:admin');
+    Route::match(['post', 'patch'], '/admin/user/{id}/toggle', [AdminUserController::class, 'toggleStatus'])->name('admin.user.toggle')->middleware('role:admin');
     Route::patch('/admin/users/{id}/role', [AdminUserController::class, 'changeRole'])->name('admin.user.role')->middleware('role:admin');
 
     // Nutritionist Management (Separate from Users)
@@ -304,6 +310,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('admin/bpom')->middleware('role:admin')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\BpomAdminController::class, 'index'])->name('admin.bpom.index');
         Route::post('/sync-external', [\App\Http\Controllers\Admin\BpomAdminController::class, 'syncExternal'])->name('admin.bpom.sync');
+        Route::post('/auto-categorize', [\App\Http\Controllers\Admin\BpomAdminController::class, 'batchAutoCategorize'])->name('admin.bpom.auto_categorize');
         Route::get('/{id}', [\App\Http\Controllers\Admin\BpomAdminController::class, 'show'])->name('admin.bpom.show');
         Route::post('/{id}/verify', [\App\Http\Controllers\Admin\BpomAdminController::class, 'verify'])->name('admin.bpom.verify');
         Route::delete('/{id}', [\App\Http\Controllers\Admin\BpomAdminController::class, 'destroy'])->name('admin.bpom.destroy');
@@ -318,6 +325,16 @@ Route::middleware('auth')->group(function () {
         Route::put('/{id}', [\App\Http\Controllers\Admin\ArticleAdminController::class, 'update'])->name('admin.articles.update');
         Route::delete('/{id}', [\App\Http\Controllers\Admin\ArticleAdminController::class, 'destroy'])->name('admin.articles.destroy');
         Route::post('/{id}/toggle', [\App\Http\Controllers\Admin\ArticleAdminController::class, 'togglePublish'])->name('admin.articles.toggle');
+    });
+
+    // Health Encyclopedia Management (Admin)
+    Route::prefix('admin/encyclopedia')->middleware('role:admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\HealthEncyclopediaAdminController::class, 'index'])->name('admin.encyclopedia.index');
+        Route::get('/create', [\App\Http\Controllers\Admin\HealthEncyclopediaAdminController::class, 'create'])->name('admin.encyclopedia.create');
+        Route::post('/', [\App\Http\Controllers\Admin\HealthEncyclopediaAdminController::class, 'store'])->name('admin.encyclopedia.store');
+        Route::get('/{id}/edit', [\App\Http\Controllers\Admin\HealthEncyclopediaAdminController::class, 'edit'])->name('admin.encyclopedia.edit');
+        Route::put('/{id}', [\App\Http\Controllers\Admin\HealthEncyclopediaAdminController::class, 'update'])->name('admin.encyclopedia.update');
+        Route::delete('/{id}', [\App\Http\Controllers\Admin\HealthEncyclopediaAdminController::class, 'destroy'])->name('admin.encyclopedia.destroy');
     });
 
     // ═══ NEW ADMIN MODULES ═══
@@ -358,6 +375,17 @@ Route::middleware('auth')->group(function () {
         Route::put('/{campaign}', [\App\Http\Controllers\Admin\NotificationCampaignController::class, 'update'])->name('admin.campaigns.update');
         Route::delete('/{campaign}', [\App\Http\Controllers\Admin\NotificationCampaignController::class, 'destroy'])->name('admin.campaigns.destroy');
         Route::post('/{campaign}/send', [\App\Http\Controllers\Admin\NotificationCampaignController::class, 'send'])->name('admin.campaigns.send');
+    });
+
+    // Donation Campaigns
+    Route::prefix('admin/donation-campaigns')->middleware('role:admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\DonationCampaignController::class, 'index'])->name('admin.donation-campaigns.index');
+        Route::get('/create', [\App\Http\Controllers\Admin\DonationCampaignController::class, 'create'])->name('admin.donation-campaigns.create');
+        Route::post('/', [\App\Http\Controllers\Admin\DonationCampaignController::class, 'store'])->name('admin.donation-campaigns.store');
+        Route::get('/{donationCampaign}', [\App\Http\Controllers\Admin\DonationCampaignController::class, 'show'])->name('admin.donation-campaigns.show');
+        Route::get('/{donationCampaign}/edit', [\App\Http\Controllers\Admin\DonationCampaignController::class, 'edit'])->name('admin.donation-campaigns.edit');
+        Route::put('/{donationCampaign}', [\App\Http\Controllers\Admin\DonationCampaignController::class, 'update'])->name('admin.donation-campaigns.update');
+        Route::delete('/{donationCampaign}', [\App\Http\Controllers\Admin\DonationCampaignController::class, 'destroy'])->name('admin.donation-campaigns.destroy');
     });
 
     // API Health Monitor

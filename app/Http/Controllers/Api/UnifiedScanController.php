@@ -7,6 +7,9 @@ use App\Models\ProductModel;
 use App\Services\AI\CategoryDetectorService;
 use App\Services\OpenFoodFactsService;
 use App\Models\ScanModel;
+use App\Models\FamilyProfile;
+use App\Models\MedicalProfile;
+use App\Services\AI\FoodAnalysisOrchestrator;
 use App\Services\CrowdSourcedReportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -16,15 +19,18 @@ class UnifiedScanController extends Controller
     protected $universalService;
     protected $crowdService;
     protected CategoryDetectorService $categoryDetector;
+    protected FoodAnalysisOrchestrator $orchestrator;
 
     public function __construct(
         \App\Services\UniversalProductService $universalService,
         CrowdSourcedReportService $crowdService,
-        CategoryDetectorService $categoryDetector
+        CategoryDetectorService $categoryDetector,
+        FoodAnalysisOrchestrator $orchestrator
     ) {
         $this->universalService = $universalService;
         $this->crowdService = $crowdService;
         $this->categoryDetector = $categoryDetector;
+        $this->orchestrator = $orchestrator;
     }
 
     /**
@@ -34,7 +40,8 @@ class UnifiedScanController extends Controller
     public function scan(Request $request)
     {
         $request->validate([
-            'barcode' => 'required|string'
+            'barcode' => 'required|string',
+            'family_mode' => 'nullable|boolean'
         ]);
 
         $barcode = $request->barcode;
@@ -59,14 +66,66 @@ class UnifiedScanController extends Controller
                 'category' => $standardized['category'] ?? '',
             ]);
 
+            // 1. Primary User Analysis
+            $medicalProfile = MedicalProfile::where('id_user', $user->id_user)->first();
+            $userContext = [
+                'user_id' => $user->id_user,
+                'name' => $user->full_name,
+                'age' => $user->age,
+                'gender' => $user->gender,
+                'medical_history' => $user->medical_history,
+                'allergies' => $user->allergy,
+                'thresholds' => $medicalProfile ? $medicalProfile->thresholds : null,
+            ];
+
+            $analysis = $this->orchestrator->analyzeIngredients(
+                $standardized['ingredients_text'] ?? '',
+                $userContext,
+                array_merge($standardized, ['source' => $source])
+            );
+
             $response = [
                 'success' => true,
                 'source' => $source,
                 'data' => $this->formatStandardizedResponse($standardized, $source, $productData),
+                'analysis' => $analysis,
                 'detected_category' => $detectedCategory,
                 'message' => 'Produk ditemukan (' . $source . ')',
                 'needs_verification' => $source !== 'bpom' && ($productData->verification_status ?? '') !== 'verified',
             ];
+
+            // 2. Family Box Analysis (Feature 3)
+            if ($request->family_mode || $request->has('include_family')) {
+                $familyMembers = FamilyProfile::where('user_id', $user->id_user)->get();
+                $familyResults = [];
+
+                foreach ($familyMembers as $member) {
+                    $memberContext = [
+                        'name' => $member->name,
+                        'age' => $member->age,
+                        'gender' => $member->gender,
+                        'medical_history' => $member->medical_history,
+                        'allergies' => $member->allergies,
+                        'thresholds' => $member->thresholds,
+                    ];
+
+                    $memberAnalysis = $this->orchestrator->analyzeIngredients(
+                        $standardized['ingredients_text'] ?? '',
+                        $memberContext,
+                        array_merge($standardized, ['source' => $source])
+                    );
+
+                    $familyResults[] = [
+                        'member_id' => $member->id,
+                        'name' => $member->name,
+                        'relationship' => $member->relationship,
+                        'is_safe' => $memberAnalysis['consumption_risk'] !== 'high',
+                        'risk_level' => $memberAnalysis['consumption_risk'],
+                        'warnings' => $memberAnalysis['personal_warnings'] ?? [],
+                    ];
+                }
+                $response['family_box'] = $familyResults;
+            }
 
             // Add crowd-sourced status
             if ($productData instanceof ProductModel) {
@@ -122,10 +181,10 @@ class UnifiedScanController extends Controller
     private function recordScan($user, $product)
     {
         ScanModel::create([
-            'user_id' => $user->id,
+            'user_id' => $user->id_user,
             'product_id' => $product->id_product,
-            'scanned_at' => now(),
-            'status' => 'success'
+            'tanggal_scan' => now(),
+            'status_halal' => $product->status ?? 'syubhat',
         ]);
     }
 

@@ -25,8 +25,9 @@ class PageController extends Controller
         
         // Data for specialized services
         $medicines = \App\Models\Medicine::take(6)->get();
+        $diseases = \App\Models\HealthEncyclopedia::where('alphabet', 'A')->take(12)->get();
 
-        return view('promo.home', compact('settings', 'latestBlogs', 'externalArticles', 'medicines'));
+        return view('promo.home', compact('settings', 'latestBlogs', 'externalArticles', 'medicines', 'diseases'));
     }
 
     public function specialized($slug)
@@ -110,7 +111,7 @@ class PageController extends Controller
     }
 
     /**
-     * AI Halalytics Assistant chat endpoint.
+     * AI Halalytics Assistant chat endpoint (Hilda).
      */
     public function aiChat(
         \Illuminate\Http\Request $request,
@@ -118,64 +119,43 @@ class PageController extends Controller
         \App\Services\AI\PromptBuilderService $promptBuilder
     ) {
         $message = $request->input('message');
-        if (empty($message)) {
-            return response()->json(['error' => 'Pesan tidak boleh kosong.'], 400);
+        if (!$message) {
+            return response()->json(['reply' => 'Ada yang bisa Hilda bantu?']);
         }
 
         try {
-            $msgLower = strtolower($message);
-            $isHalalQuery = false;
-            $isMedicalQuery = false;
+            $roleInstructions = "Anda adalah Hilda, asisten AI resmi Halalytics. Tugas Anda adalah membantu pengguna memahami kesehatan, nutrisi, dan kehalalan produk secara akurat dan profesional.";
 
-            // Keywords for halal analysis
-            $halalKeywords = ['halal', 'haram', 'syubhat', 'kandungan', 'ingredien', 'komposisi', 'babi', 'alkohol', 'gelatin', 'e-number', 'e300', 'e120', 'emulsifier', 'lesitin', 'enzim', 'unsur'];
-            foreach ($halalKeywords as $kw) {
-                if (str_contains($msgLower, $kw)) {
-                    $isHalalQuery = true;
-                    break;
-                }
+            // Deteksi konteks secara sederhana
+            if (preg_match('/(obat|sakit|gejala|pusing|mual|demam)/i', $message)) {
+                $roleInstructions .= " Fokuskan jawaban pada informasi medis yang tervalidasi. Ingatkan pengguna untuk tetap berkonsultasi dengan dokter jika gejala berlanjut.";
+            } elseif (preg_match('/(halal|haram|babi|gelatin|syubhat|bpom|mui)/i', $message)) {
+                $roleInstructions .= " Fokuskan jawaban pada panduan kehalalan bahan makanan dan obat-obatan sesuai standar MUI dan BPOM.";
+            } elseif (preg_match('/(makan|diet|nutrisi|kalori|vitamin|gizi)/i', $message)) {
+                $roleInstructions .= " Fokuskan jawaban pada tips nutrisi seimbang, kebutuhan kalori, and gaya hidup sehat.";
             }
 
-            // Keywords for medical/health
-            $medicalKeywords = ['sakit', 'obat', 'penyakit', 'gejala', 'pusing', 'demam', 'dosis', 'resep', 'interaksi', 'diabetes', 'jantung', 'hipertensi', 'kolesterol', 'dokter', 'medis', 'efek samping', 'klinik'];
-            foreach ($medicalKeywords as $kw) {
-                if (str_contains($msgLower, $kw)) {
-                    $isMedicalQuery = true;
-                    break;
-                }
-            }
-
-            if ($isHalalQuery) {
-                $roleInstructions = "Anda adalah AI Halalytics, pakar verifikasi kehalalan produk, bahan tambahan pangan (E-numbers), dan hukum makanan dalam Islam.
-Analisis kehalalan bahan yang ditanyakan dengan rinci:
-1. Jelaskan titik kritis kehalalan bahan tersebut (misal: sumber hewani vs nabati).
-2. Sebutkan status hukumnya (Halal, Haram, atau Syubhat).
-3. Berikan saran alternatif halal jika bahan tersebut syubhat/haram.
-JANGAN mengklaim sertifikasi resmi jika tidak ada data BPJPH/MUI. Jawab dengan nada sopan dan mendidik.";
-            } elseif ($isMedicalQuery) {
-                $roleInstructions = "Anda adalah AI Halalytics, asisten kesehatan dan informasi medis terpercaya.
-Berikan informasi medis dengan ketentuan ketat:
-1. Sertakan DISCLAIMER medis yang jelas bahwa informasi ini hanya bersifat edukatif dan bukan pengganti diagnosis dokter profesional.
-2. Jelaskan gejala, fungsi obat, atau penyakit yang ditanyakan berdasarkan literatur kesehatan ilmiah terkini.
-3. Berikan saran gaya hidup sehat, asupan gizi, atau pertolongan pertama yang aman.
-4. Ingatkan untuk berkonsultasi ke fasilitas kesehatan terdekat.";
-            } else {
-                $roleInstructions = "Anda adalah AI Halalytics, asisten virtual ramah untuk kesehatan, gizi, dan produk halal.
-Jawab sapaan atau pertanyaan umum pengguna dengan ramah, hangat, dan berikan gambaran singkat mengenai fitur utama Halalytics (Scan Produk BPOM/Halal, Cek Interaksi Obat, Komunitas Donor Darah, Konsultasi Ahli Gizi).";
-            }
-
-            $systemPrompt = $promptBuilder->build('user_chat', [
+            $finalPrompt = $promptBuilder->build('user_chat', [
+                'user_name' => 'Pengguna Halalytics',
+                'user_age' => 'Dewasa',
+                'user_diseases' => 'Tidak disebutkan',
+                'user_allergies' => 'Tidak disebutkan',
                 'user_message' => $message,
-            ], $roleInstructions . "\n\nPertanyaan pengguna: {user_message}");
+            ], $roleInstructions . "\n\nPertanyaan: {user_message}\n\nJawaban Hilda:");
 
-            $reply = $gemini->generateText($systemPrompt);
+            $reply = $gemini->generateText($finalPrompt);
 
-            return response()->json(['reply' => trim($reply)]);
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('AI Halalytics Chat error: ' . $e->getMessage());
             return response()->json([
-                'reply' => 'Maaf, sistem AI Halalytics sedang sibuk. Silakan coba kirim ulang pertanyaan Anda sebentar lagi. 😊'
+                'success' => true,
+                'reply' => $reply
             ]);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('AI Chat Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'reply' => 'Maaf, Hilda sedang tidak bisa merespon. Silakan coba lagi nanti.'
+            ], 500);
         }
     }
 }

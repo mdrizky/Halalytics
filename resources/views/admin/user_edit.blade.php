@@ -129,8 +129,7 @@
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Role</label>
                             <select name="role" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
                                 <option value="user" {{ old('role', $user->role) == 'user' ? 'selected' : '' }}>User</option>
-                                <option value="ahli_gizi" {{ old('role', $user->role) == 'ahli_gizi' ? 'selected' : '' }}>Ahli Gizi</option>
-                                <option value="nutritionist" {{ old('role', $user->role) == 'nutritionist' ? 'selected' : '' }}>Nutritionist (Legacy)</option>
+                                <option value="ahli_gizi" {{ in_array(old('role', $user->role), ['ahli_gizi', 'nutritionist', 'expert']) ? 'selected' : '' }}>Ahli Gizi</option>
                                 <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
                             </select>
                         </div>
@@ -201,6 +200,61 @@
                     <div>
                         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Medical History</label>
                         <textarea name="medical_history" rows="4" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Add chronic illnesses or important medical notes">{{ old('medical_history', $user->medical_history) }}</textarea>
+                    </div>
+                </div>
+
+                <div class="p-6 border-t border-slate-100 dark:border-slate-800">
+                    <h3 class="text-md font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                        <span class="material-icons-round text-primary text-xl">person_search</span>
+                        Data Personal & Profil Lengkap
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <!-- Gender -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Jenis Kelamin</label>
+                            <select name="gender" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="">Pilih Gender</option>
+                                <option value="male" {{ old('gender', $user->gender) == 'male' ? 'selected' : '' }}>Laki-Laki</option>
+                                <option value="female" {{ old('gender', $user->gender) == 'female' ? 'selected' : '' }}>Perempuan</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Birth Date -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Tanggal Lahir</label>
+                            <input type="date" name="birth_date" value="{{ old('birth_date', $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->format('Y-m-d') : '') }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <!-- Goal -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Target Diet / Goal</label>
+                            <input type="text" name="goal" value="{{ old('goal', $user->goal) }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="e.g. Lose weight, Maintain">
+                        </div>
+                        <!-- Diet Preference -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Preferensi Diet</label>
+                            <input type="text" name="diet_preference" value="{{ old('diet_preference', $user->diet_preference) }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="e.g. Keto, Vegan">
+                        </div>
+                        <!-- Activity Level -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Level Aktivitas</label>
+                            <select name="activity_level" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="">Pilih Level Aktivitas</option>
+                                <option value="sedentary" {{ old('activity_level', $user->activity_level) == 'sedentary' ? 'selected' : '' }}>Sangat Jarang Olahraga (Sedentary)</option>
+                                <option value="light" {{ old('activity_level', $user->activity_level) == 'light' ? 'selected' : '' }}>Ringan (1-3 kali/minggu)</option>
+                                <option value="moderate" {{ old('activity_level', $user->activity_level) == 'moderate' ? 'selected' : '' }}>Sedang (3-5 kali/minggu)</option>
+                                <option value="active" {{ old('activity_level', $user->activity_level) == 'active' ? 'selected' : '' }}>Aktif (Setiap Hari)</option>
+                                <option value="very_active" {{ old('activity_level', $user->activity_level) == 'very_active' ? 'selected' : '' }}>Sangat Aktif (Atlet/Fisik Berat)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Bio / Deskripsi (Ahli Gizi/Pakar)</label>
+                        <textarea name="bio" rows="3" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Deskripsi singkat, spesialisasi, atau background profesional">{{ old('bio', $user->bio) }}</textarea>
                     </div>
                 </div>
                 

@@ -207,46 +207,42 @@
                 <span class="text-sm flex-1">Requests</span>
                 <span class="text-[10px] bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-md font-bold text-amber-600 border border-amber-200 dark:border-amber-700">NEW</span>
             </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.kategori*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.kategori.index') }}">
-                <span class="material-icons-round text-[20px]">category</span>
-                <span class="text-sm flex-1">Categories</span>
-                <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200 dark:border-slate-700">{{ number_format($global_category_count) }}</span>
-            </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.bpom*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.bpom.index') }}">
-                <span class="material-symbols-outlined text-[20px]">verified_user</span>
-                <span class="text-sm flex-1">BPOM Data</span>
-                <span class="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-bold border border-primary/20">VERIFY</span>
-            </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.ingredients*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.ingredients.index') }}">
-                <span class="material-icons-round text-[20px]">science</span>
-                <span class="text-sm flex-1">Ingredients</span>
-                <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200 dark:border-slate-700">NEW</span>
-            </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.banner*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.banner') }}">
-                <span class="material-icons-round text-[20px]">view_carousel</span>
-                <span class="text-sm flex-1">Banner Slider</span>
-                <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200 dark:border-slate-700">{{ number_format($global_banner_count) }}</span>
-            </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.campaigns*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.campaigns.index') }}">
-                <span class="material-icons-round text-[20px]">campaign</span>
-                <span class="text-sm flex-1">Campaigns</span>
-                <span class="text-[10px] bg-primary/10 dark:bg-primary/15 px-1.5 py-0.5 rounded-md font-bold text-primary border border-primary/20 dark:border-primary/30">FCM</span>
-            </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.promo.blog*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.promo.blog.index') }}">
-                <span class="material-icons-round text-[20px]">article</span>
-                <span class="text-sm flex-1">Articles</span>
-                <span class="text-[10px] bg-primary/10 dark:bg-primary/15 px-1.5 py-0.5 rounded-md font-bold text-primary border border-primary/20 dark:border-primary/30">CMS</span>
-            </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.street-foods*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.street-foods.index') }}">
-                <span class="material-icons-round text-[20px]">restaurant</span>
-                <span class="text-sm flex-1">Street Foods</span>
-                <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200 dark:border-slate-700">{{ number_format($global_street_food_count) }}</span>
-            </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.forbidden*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.forbidden.index') }}">
-                <span class="material-icons-round text-[20px]">block</span>
-                <span class="text-sm flex-1">Forbidden Ingredients</span>
-                <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200 dark:border-slate-700">SAFETY</span>
-            </a>
+            @php $isMasterDataActive = request()->routeIs('admin.kategori*') || request()->routeIs('admin.bpom*') || request()->routeIs('admin.ingredients*') || request()->routeIs('admin.forbidden*') || request()->routeIs('admin.encyclopedia*'); @endphp
+            <div class="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Master Data</div>
+            <div class="relative">
+                <button type="button" onclick="document.getElementById('masterDataMenu').classList.toggle('hidden');" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg {{ $isMasterDataActive ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all">
+                    <div class="flex items-center space-x-3">
+                        <span class="material-icons-round text-[20px]">dataset</span>
+                        <span class="text-sm">Master Data</span>
+                    </div>
+                    <span class="material-icons-round text-[18px]">expand_more</span>
+                </button>
+                <div id="masterDataMenu" class="mt-1 space-y-1 pl-11 {{ $isMasterDataActive ? '' : 'hidden' }}">
+                    <a class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('admin.kategori*') ? 'text-primary font-bold bg-primary/5' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800' }} transition-all text-sm" href="{{ route('admin.kategori.index') }}">Categories</a>
+                    <a class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('admin.bpom*') ? 'text-primary font-bold bg-primary/5' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800' }} transition-all text-sm" href="{{ route('admin.bpom.index') }}">BPOM Data</a>
+                    <a class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('admin.ingredients*') ? 'text-primary font-bold bg-primary/5' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800' }} transition-all text-sm" href="{{ route('admin.ingredients.index') }}">Ingredients</a>
+                    <a class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('admin.forbidden*') ? 'text-primary font-bold bg-primary/5' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800' }} transition-all text-sm" href="{{ route('admin.forbidden.index') }}">Forbidden Ingredients</a>
+                    <a class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('admin.encyclopedia*') ? 'text-primary font-bold bg-primary/5' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800' }} transition-all text-sm" href="{{ route('admin.encyclopedia.index') }}">Health Encyclopedia</a>
+                </div>
+            </div>
+
+            @php $isContentActive = request()->routeIs('admin.banner*') || request()->routeIs('admin.campaigns*') || request()->routeIs('admin.promo.blog*') || request()->routeIs('admin.street-foods*'); @endphp
+            <div class="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Content & Promos</div>
+            <div class="relative">
+                <button type="button" onclick="document.getElementById('contentMenu').classList.toggle('hidden');" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg {{ $isContentActive ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all">
+                    <div class="flex items-center space-x-3">
+                        <span class="material-icons-round text-[20px]">content_copy</span>
+                        <span class="text-sm">Content Mgmt</span>
+                    </div>
+                    <span class="material-icons-round text-[18px]">expand_more</span>
+                </button>
+                <div id="contentMenu" class="mt-1 space-y-1 pl-11 {{ $isContentActive ? '' : 'hidden' }}">
+                    <a class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('admin.banner*') ? 'text-primary font-bold bg-primary/5' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800' }} transition-all text-sm" href="{{ route('admin.banner') }}">Banner Slider</a>
+                    <a class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('admin.campaigns*') ? 'text-primary font-bold bg-primary/5' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800' }} transition-all text-sm" href="{{ route('admin.campaigns.index') }}">Campaigns</a>
+                    <a class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('admin.promo.blog*') ? 'text-primary font-bold bg-primary/5' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800' }} transition-all text-sm" href="{{ route('admin.promo.blog.index') }}">Articles</a>
+                    <a class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('admin.street-foods*') ? 'text-primary font-bold bg-primary/5' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800' }} transition-all text-sm" href="{{ route('admin.street-foods.index') }}">Street Foods</a>
+                </div>
+            </div>
             
             <div class="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Expansion Modules</div>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('halal-products*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('halal-products.index') }}">
@@ -262,22 +258,28 @@
                 <span class="material-icons-round text-[20px]">notifications_active</span>
                 <span class="text-sm flex-1">Notifications</span>
             </a>
+            @php $isDonorActive = request()->routeIs('admin.blood-stocks*') || request()->routeIs('admin.blood-events*') || request()->routeIs('admin.blood-appointments*') || request()->routeIs('admin.blood-emergency*'); @endphp
             <div class="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Blood Donation</div>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.blood-stocks*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.blood-stocks.index') }}">
-                <span class="material-icons-round text-[20px]">bloodtype</span>
-                <span class="text-sm flex-1">Blood Stocks</span>
-            </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.blood-events*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.blood-events.index') }}">
-                <span class="material-icons-round text-[20px]">event</span>
-                <span class="text-sm flex-1">Donor Events</span>
-            </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.blood-appointments*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.blood-appointments.index') }}">
-                <span class="material-icons-round text-[20px]">groups</span>
-                <span class="text-sm flex-1">Appointments</span>
-            </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.blood-emergency*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.blood-emergency.index') }}">
-                <span class="material-icons-round text-[20px]">emergency</span>
-                <span class="text-sm flex-1">Emergency Calls</span>
+            <div class="relative">
+                <button type="button" onclick="document.getElementById('donorMenu').classList.toggle('hidden');" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg {{ $isDonorActive ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all">
+                    <div class="flex items-center space-x-3">
+                        <span class="material-icons-round text-[20px]">bloodtype</span>
+                        <span class="text-sm">Donation Hub</span>
+                    </div>
+                    <span class="material-icons-round text-[18px]">expand_more</span>
+                </button>
+                <div id="donorMenu" class="mt-1 space-y-1 pl-11 {{ $isDonorActive ? '' : 'hidden' }}">
+                    <a class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('admin.blood-stocks*') ? 'text-primary font-bold bg-primary/5' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800' }} transition-all text-sm" href="{{ route('admin.blood-stocks.index') }}">Blood Stocks</a>
+                    <a class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('admin.blood-events*') ? 'text-primary font-bold bg-primary/5' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800' }} transition-all text-sm" href="{{ route('admin.blood-events.index') }}">Donor Events</a>
+                    <a class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('admin.blood-appointments*') ? 'text-primary font-bold bg-primary/5' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800' }} transition-all text-sm" href="{{ route('admin.blood-appointments.index') }}">Appointments</a>
+                    <a class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('admin.blood-emergency*') ? 'text-primary font-bold bg-primary/5' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800' }} transition-all text-sm" href="{{ route('admin.blood-emergency.index') }}">Emergency Calls</a>
+                </div>
+            </div>
+
+            <div class="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Charity & Funding</div>
+            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.donation-campaigns*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.donation-campaigns.index') }}">
+                <span class="material-icons-round text-[20px]">volunteer_activism</span>
+                <span class="text-sm flex-1">Donation Campaigns</span>
             </a>
             <div class="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">AI Health Suite</div>
             <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.health-features*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.health-features.index') }}">
@@ -285,19 +287,21 @@
                 <span class="text-sm flex-1">Health Features</span>
                 <span class="text-[10px] bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-md font-bold text-emerald-600 border border-emerald-200 dark:border-emerald-700">AI</span>
             </a>
+            @php $isActivityActive = request()->routeIs('admin.scan*') || request()->routeIs('admin.report*'); @endphp
             <div class="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Activity & Reports</div>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.scan*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.scan.index') }}">
-                <span class="material-icons-round text-[20px]">history</span>
-                <span class="text-sm flex-1">Scan History</span>
-                <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200 dark:border-slate-700">{{ number_format($global_scan_count) }}</span>
-            </a>
-            <a class="flex items-center space-x-3 px-3 py-2.5 rounded-lg {{ request()->routeIs('admin.report*') ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all" href="{{ route('admin.report.index') }}">
-                <span class="material-icons-round text-[20px]">assessment</span>
-                <span class="text-sm flex-1">Product Reports</span>
-                @if($global_report_count > 0)
-                <span class="text-[10px] bg-primary/10 dark:bg-primary/15 px-1.5 py-0.5 rounded-md font-bold text-primary border border-primary/20 dark:border-primary/30 animate-pulse-slow">{{ number_format($global_report_count) }}</span>
-                @endif
-            </a>
+            <div class="relative">
+                <button type="button" onclick="document.getElementById('activityMenu').classList.toggle('hidden');" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg {{ $isActivityActive ? 'nav-active' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }} transition-all">
+                    <div class="flex items-center space-x-3">
+                        <span class="material-icons-round text-[20px]">assessment</span>
+                        <span class="text-sm">Reports Hub</span>
+                    </div>
+                    <span class="material-icons-round text-[18px]">expand_more</span>
+                </button>
+                <div id="activityMenu" class="mt-1 space-y-1 pl-11 {{ $isActivityActive ? '' : 'hidden' }}">
+                    <a class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('admin.scan*') ? 'text-primary font-bold bg-primary/5' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800' }} transition-all text-sm" href="{{ route('admin.scan.index') }}">Scan History</a>
+                    <a class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('admin.report*') ? 'text-primary font-bold bg-primary/5' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800' }} transition-all text-sm" href="{{ route('admin.report.index') }}">Product Reports</a>
+                </div>
+            </div>
         </nav>
         <div class="p-4 border-t border-slate-100 dark:border-slate-800">
             @auth
@@ -622,6 +626,19 @@
         return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
     }
     
+    // ==================== SCROLL RESTORATION ====================
+    const sidebarScroll = document.querySelector('nav');
+    
+    // Restore sidebar scroll position
+    if (localStorage.getItem('sidebarScrollY')) {
+        sidebarScroll.scrollTop = parseInt(localStorage.getItem('sidebarScrollY'));
+    }
+    
+    // Save sidebar scroll position
+    sidebarScroll?.addEventListener('scroll', () => {
+        localStorage.setItem('sidebarScrollY', sidebarScroll.scrollTop);
+    });
+
     // ==================== DARK MODE ====================
     if (localStorage.getItem('darkMode') === 'true') {
         document.documentElement.classList.add('dark');

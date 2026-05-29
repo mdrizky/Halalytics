@@ -10,10 +10,12 @@ use App\Services\GeminiService;
 class MedicalProfileController extends Controller
 {
     protected $geminiService;
+    protected $thresholdService;
 
-    public function __construct(GeminiService $geminiService)
+    public function __construct(GeminiService $geminiService, \App\Services\Health\NutritionalThresholdService $thresholdService)
     {
         $this->geminiService = $geminiService;
+        $this->thresholdService = $thresholdService;
     }
     /**
      * Ambil profil medis user
@@ -23,34 +25,52 @@ class MedicalProfileController extends Controller
         $user = $request->user();
         $profile = MedicalProfile::where('id_user', $user->id_user)->first();
 
-        // FALLBACK: Ambil data dari tabel users jika profile medis belum dibuat
-        $weight = $profile ? $profile->weight_kg : ($user->weight ?: $user->weight_kg ?: 0);
-        $height = $profile ? $profile->height_cm : ($user->height ?: 0);
-        
-        $bmi = 0;
-        $bmiCategory = 'unknown';
-        
-        if ($height > 0) {
-            $heightM = $height / 100;
-            $bmi = round($weight / ($heightM * $heightM), 1);
-            $bmiCategory = $this->getBmiCategoryLabel($bmi);
+        if (!$profile) {
+            // FALLBACK: Ambil data dari tabel users jika profile medis belum dibuat
+            $weight = ($user->weight ?: $user->weight_kg ?: 0);
+            $height = ($user->height ?: 0);
+            
+            $bmi = 0;
+            $bmiCategory = 'unknown';
+            
+            if ($height > 0) {
+                $heightM = $height / 100;
+                $bmi = round($weight / ($heightM * $heightM), 1);
+                $bmiCategory = $this->getBmiCategoryLabel($bmi);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'weight_kg' => (float) $weight,
+                    'height_cm' => (float) $height,
+                    'drug_allergies' => [],
+                    'food_allergies' => [],
+                    'chronic_diseases' => $user->medical_history,
+                    'has_gerd' => false,
+                    'activity_level' => 'sedentary',
+                    'daily_calories_target' => 2000,
+                    'daily_sugar_limit_g' => 50.0,
+                    'daily_sodium_limit_mg' => 2300,
+                    'daily_fat_limit_g' => 67.0,
+                    'blood_type' => $user->blood_type,
+                    'additional_notes' => null,
+                    'bmi' => $bmi,
+                    'bmi_category' => $bmiCategory,
+                    'updated_at' => $user->updated_at?->toISOString(),
+                ],
+                'message' => 'Menggunakan data profil dasar user',
+            ]);
         }
 
         return response()->json([
             'success' => true,
-            'data' => [
-                'weight_kg' => (float) $weight,
-                'height_cm' => (float) $height,
-                'drug_allergies' => $profile->drug_allergies ?? [],
-                'chronic_diseases' => $profile->chronic_diseases ?? $user->medical_history,
-                'has_gerd' => $profile->has_gerd ?? false,
-                'blood_type' => $profile->blood_type ?? $user->blood_type,
-                'additional_notes' => $profile->additional_notes ?? null,
-                'bmi' => $bmi ?: ($profile->bmi ?? 0),
-                'bmi_category' => $bmiCategory,
-                'updated_at' => ($profile->updated_at ?? $user->updated_at)?->toISOString(),
-            ],
-            'message' => $profile ? 'Profil medis ditemukan' : 'Menggunakan data profil dasar user',
+            'data' => array_merge($profile->toArray(), [
+                'bmi' => $profile->bmi,
+                'bmi_category' => $profile->bmi_category,
+                'updated_at' => $profile->updated_at?->toISOString(),
+            ]),
+            'message' => 'Profil medis ditemukan',
         ]);
     }
 
@@ -72,15 +92,35 @@ class MedicalProfileController extends Controller
             'height_cm' => 'nullable|numeric|min:50|max:250',
             'drug_allergies' => 'nullable|array',
             'drug_allergies.*' => 'string|max:100',
+            'food_allergies' => 'nullable|array',
+            'food_allergies.*' => 'string|max:100',
             'chronic_diseases' => 'nullable|string|max:2000',
             'has_gerd' => 'nullable|boolean',
+            'activity_level' => 'nullable|string|in:sedentary,light,moderate,active,very_active',
             'blood_type' => 'nullable|in:A,B,AB,O',
             'additional_notes' => 'nullable|string|max:2000',
         ]);
 
+        $user = $request->user();
+        
+        // Calculate Nutritional Thresholds
+        $thresholds = $this->thresholdService->calculateThresholds([
+            'weight_kg' => $validated['weight_kg'] ?? ($user->weight ?? 0),
+            'height_cm' => $validated['height_cm'] ?? ($user->height ?? 0),
+            'age' => $user->age ?? 25,
+            'gender' => $user->gender ?? 'male',
+            'activity_level' => $validated['activity_level'] ?? 'sedentary',
+            'conditions' => $validated['chronic_diseases'] ?? ($user->medical_history ?? ''),
+        ]);
+
         $profile = MedicalProfile::updateOrCreate(
-            ['id_user' => $request->user()->id_user],
-            $validated
+            ['id_user' => $user->id_user],
+            array_merge($validated, [
+                'daily_calories_target' => $thresholds['calories'],
+                'daily_sugar_limit_g' => $thresholds['sugar_g'],
+                'daily_sodium_limit_mg' => $thresholds['sodium_mg'],
+                'daily_fat_limit_g' => $thresholds['fat_g'],
+            ])
         );
 
         return response()->json([
@@ -89,6 +129,7 @@ class MedicalProfileController extends Controller
             'data' => [
                 'bmi' => $profile->bmi,
                 'bmi_category' => $profile->bmi_category,
+                'thresholds' => $thresholds,
             ],
         ]);
     }

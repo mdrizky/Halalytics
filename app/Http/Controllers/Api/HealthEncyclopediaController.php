@@ -3,60 +3,82 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
 use App\Models\HealthEncyclopedia;
+use Illuminate\Http\Request;
 
 class HealthEncyclopediaController extends Controller
 {
     public function index(Request $request)
     {
-        $query = HealthEncyclopedia::query();
+        try {
+            $query = HealthEncyclopedia::query();
 
-        // Optional filter by type (obat, penyakit, hidup_sehat, keluarga)
-        if ($request->has('type') && in_array($request->type, ['obat', 'penyakit', 'hidup_sehat', 'keluarga'])) {
-            $query->where('type', $request->type);
-        }
+            // Filter by type if provided
+            if ($request->has('type')) {
+                $query->where('type', $request->type);
+            }
 
-        // Search
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
-            $query->where('title', 'like', "%{$search}%");
-        }
+            // Filter by alphabet if provided
+            if ($request->has('alphabet')) {
+                $query->where('alphabet', strtoupper($request->alphabet));
+            }
 
-        // Fetch all matching records, sorted by title
-        $encyclopedias = $query->orderBy('title', 'asc')->get();
+            // Search by title
+            if ($request->has('search')) {
+                $query->where('title', 'like', '%' . $request->search . '%');
+            }
 
-        if ($encyclopedias->isEmpty() && !$request->filled('search')) {
+            $items = $query->orderBy('title', 'asc')->get();
+
+            // If database is empty, return fallback data
+            if ($items->isEmpty()) {
+                $items = $this->fallbackEncyclopediaItems($request->type);
+            }
+
             return response()->json([
                 'success' => true,
-                'data' => $this->fallbackEncyclopediaItems($request->input('type')),
-                'fallback_mode' => true,
+                'data' => $items
             ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch encyclopedia items: ' . $e->getMessage(),
+                'data' => $this->fallbackEncyclopediaItems($request->type) // Always return fallback on error
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'data' => $encyclopedias,
-            'fallback_mode' => false,
-        ]);
     }
 
     public function show($id)
     {
-        $encyclopedia = HealthEncyclopedia::find($id);
+        try {
+            $item = HealthEncyclopedia::find($id);
 
-        if (!$encyclopedia) {
+            if (!$item) {
+                // Try to find in fallback
+                $fallback = collect($this->fallbackEncyclopediaItems())->firstWhere('id', (int)$id);
+                if ($fallback) {
+                    return response()->json([
+                        'success' => true,
+                        'data' => $fallback
+                    ]);
+                }
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Item not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $item
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Not found'
-            ], 404);
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'data' => $encyclopedia
-        ]);
     }
 
     private function fallbackEncyclopediaItems(?string $type = null): array

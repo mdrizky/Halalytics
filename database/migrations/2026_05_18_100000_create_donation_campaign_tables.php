@@ -19,7 +19,8 @@ return new class extends Migration
                 $table->decimal('collected_amount', 15, 2)->default(0);
                 $table->unsignedInteger('donor_count')->default(0);
                 $table->enum('category', [
-                    'kesehatan', 'pangan_halal', 'stunting', 'pendidikan', 'darurat', 'platform',
+                    'bencana', 'kesehatan', 'pendidikan', 'darurat', 'pangan', 'donor_darah', 'pangan_halal', 'stunting', 'platform',
+                    'kemanusiaan', 'masjid', 'zakat', 'yatim', 'lainnya'
                 ])->default('kesehatan');
                 $table->boolean('is_active')->default(true);
                 $table->boolean('is_urgent')->default(false);

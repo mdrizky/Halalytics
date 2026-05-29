@@ -4,6 +4,7 @@ namespace App\Services\AI;
 
 use App\Models\ForbiddenIngredient;
 use App\Models\Ingredient;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
@@ -64,110 +65,122 @@ class HalalAnalyzerService
 
     public function analyze(string $ingredientsText): array
     {
-        $normalized = Str::lower($ingredientsText);
-        $flags = [];
+        $cacheKey = 'halal_analysis_v2_' . md5(Str::lower($ingredientsText));
+        
+        return Cache::remember($cacheKey, now()->addDays(30), function () use ($ingredientsText) {
+            $normalized = Str::lower($ingredientsText);
+            $flags = [];
 
-        // Check haram keywords
-        foreach ($this->haramKeywords as $keyword) {
-            if (str_contains($normalized, $keyword)) {
-                $flags[] = [
-                    'name' => $keyword,
-                    'status' => 'haram',
-                    'note' => 'Bahan terindikasi tidak halal — ' . $this->haramNote($keyword),
-                ];
-            }
-        }
-
-        // Check syubhat keywords
-        foreach ($this->syubhatKeywords as $keyword) {
-            if (str_contains($normalized, $keyword)) {
-                // Don't add duplicate if already flagged as haram
-                $alreadyFlagged = collect($flags)->contains(fn ($f) => Str::lower($f['name']) === $keyword);
-                if (! $alreadyFlagged) {
+            // 1. Check haram keywords (Static)
+            foreach ($this->haramKeywords as $keyword) {
+                if (str_contains($normalized, $keyword)) {
                     $flags[] = [
                         'name' => $keyword,
-                        'status' => 'syubhat',
-                        'note' => 'Perlu verifikasi sumber bahan — ' . $this->syubhatNote($keyword),
+                        'status' => 'haram',
+                        'note' => 'Bahan terindikasi tidak halal — ' . $this->haramNote($keyword),
                     ];
                 }
             }
-        }
 
-        // Check health danger keywords (separate from halal)
-        $healthWarnings = [];
-        foreach ($this->dangerousHealthKeywords as $keyword) {
-            if (str_contains($normalized, $keyword)) {
-                $healthWarnings[] = $keyword;
+            // 2. Check syubhat keywords (Static)
+            foreach ($this->syubhatKeywords as $keyword) {
+                if (str_contains($normalized, $keyword)) {
+                    $alreadyFlagged = collect($flags)->contains(fn ($f) => Str::lower($f['name'] ?? '') === $keyword);
+                    if (! $alreadyFlagged) {
+                        $flags[] = [
+                            'name' => $keyword,
+                            'status' => 'syubhat',
+                            'note' => 'Perlu verifikasi sumber bahan — ' . $this->syubhatNote($keyword),
+                        ];
+                    }
+                }
             }
-        }
 
-        // Check database: ForbiddenIngredients (admin-managed blacklist)
-        $dbForbidden = Cache::remember('forbidden_ingredients_active', 3600, function () {
-            if (! \Schema::hasTable('forbidden_ingredients')) {
-                return collect();
+            // 3. Check database: ForbiddenIngredients (Admin-managed)
+            if (Schema::hasTable('forbidden_ingredients')) {
+                $dbForbidden = ForbiddenIngredient::where('is_active', true)->get();
+                foreach ($dbForbidden as $forbidden) {
+                    $name = Str::lower($forbidden->name ?? '');
+                    if ($name !== '' && str_contains($normalized, $name)) {
+                        $flags[] = [
+                            'name' => $forbidden->name,
+                            'status' => $forbidden->status ?? 'haram',
+                            'note' => $forbidden->reason ?? 'Termasuk dalam daftar bahan terlarang Halalytics.',
+                        ];
+                    }
+                }
             }
-            return ForbiddenIngredient::query()->where('is_active', true)->get();
+
+            // 4. Check database: Ingredients Knowledge Base
+            if (Schema::hasTable('ingredients')) {
+                $dbMatches = Ingredient::query()
+                    ->active()
+                    ->whereIn('halal_status', ['haram', 'syubhat'])
+                    ->get()
+                    ->filter(fn ($ing) => str_contains($normalized, Str::lower($ing->name ?? '')))
+                    ->map(fn ($ing) => [
+                        'name' => $ing->name,
+                        'status' => $ing->halal_status,
+                        'note' => $ing->description ?? 'Ditemukan di database bahan Halalytics.',
+                    ]);
+
+                $flags = array_merge($flags, $dbMatches->values()->all());
+            }
+
+            // Deduplicate flags
+            $flags = collect($flags)->unique(fn($f) => Str::lower($f['name'] ?? ''))->values()->all();
+
+            // 5. Check health danger keywords
+            $healthWarnings = [];
+            foreach ($this->dangerousHealthKeywords as $keyword) {
+                if (str_contains($normalized, $keyword)) {
+                    $healthWarnings[] = $keyword;
+                }
+            }
+
+            // Determine overall status
+            $status = 'halal';
+            $score = 100;
+            $reason = 'Semua bahan terindikasi aman dan halal.';
+
+            if (collect($flags)->contains('status', 'haram')) {
+                $status = 'haram';
+                $score = 0;
+                $reason = 'Ditemukan bahan yang tidak halal.';
+            } elseif (collect($flags)->contains('status', 'syubhat')) {
+                $status = 'syubhat';
+                $score = 55;
+                $reason = 'Ditemukan bahan yang perlu diverifikasi sumbernya.';
+            }
+
+            return [
+                'status' => $status,
+                'score' => $score,
+                'reason' => $reason,
+                'flags' => $flags,
+                'health_warnings' => $healthWarnings,
+                'is_ai' => false,
+                'nutrition_grade' => $this->calculateNutritionGrade($score, $healthWarnings),
+                'ai_recommendation' => $this->getAIRecommendation($status, $healthWarnings)
+            ];
         });
+    }
 
-        foreach ($dbForbidden as $forbidden) {
-            $name = Str::lower($forbidden->name ?? '');
-            if ($name !== '' && str_contains($normalized, $name)) {
-                $flags[] = [
-                    'name' => $forbidden->name,
-                    'status' => $forbidden->status ?? 'haram',
-                    'note' => $forbidden->reason ?? 'Termasuk dalam daftar bahan terlarang Halalytics.',
-                ];
-            }
-        }
+    private function calculateNutritionGrade($score, $warnings): string
+    {
+        if ($score < 50 || count($warnings) > 2) return 'E';
+        if ($score < 70 || count($warnings) > 1) return 'D';
+        if ($score < 85) return 'C';
+        if ($score < 95) return 'B';
+        return 'A';
+    }
 
-        // Check database: Ingredients knowledge base
-        if (\Schema::hasTable('ingredients')) {
-            $dbMatches = Ingredient::query()
-                ->active()
-                ->whereIn('halal_status', ['haram', 'syubhat'])
-                ->get()
-                ->filter(fn ($ing) => str_contains($normalized, Str::lower($ing->name)))
-                ->map(fn ($ing) => [
-                    'name' => $ing->name,
-                    'status' => $ing->halal_status,
-                    'note' => $ing->description ?? 'Ditemukan di database bahan Halalytics.',
-                ]);
-
-            $flags = array_merge($flags, $dbMatches->values()->all());
-        }
-
-        // Deduplicate flags by name
-        $seen = [];
-        $uniqueFlags = [];
-        foreach ($flags as $flag) {
-            $key = Str::lower($flag['name']);
-            if (! isset($seen[$key])) {
-                $seen[$key] = true;
-                $uniqueFlags[] = $flag;
-            }
-        }
-
-        // Determine overall status
-        $status = 'halal';
-        if (collect($uniqueFlags)->contains(fn ($f) => ($f['status'] ?? '') === 'haram')) {
-            $status = 'haram';
-        } elseif (collect($uniqueFlags)->contains(fn ($f) => ($f['status'] ?? '') === 'syubhat')) {
-            $status = 'syubhat';
-        }
-
-        $score = match ($status) {
-            'haram' => 15,
-            'syubhat' => 55,
-            default => empty($uniqueFlags) ? 88 : 75,
-        };
-
-        return [
-            'halal_status' => $status,
-            'halal_score' => $score,
-            'flags' => $uniqueFlags,
-            'health_warnings' => $healthWarnings,
-            'summary' => $this->summary($status, $uniqueFlags),
-        ];
+    private function getAIRecommendation($status, $warnings): string
+    {
+        if ($status === 'haram') return 'Hindari produk ini. Mengandung bahan yang dilarang.';
+        if ($status === 'syubhat') return 'Berhati-hatilah. Sumber bahan belum terverifikasi sepenuhnya.';
+        if (count($warnings) > 0) return 'Halal, namun konsumsi secukupnya karena tinggi ' . implode(', ', $warnings) . '.';
+        return 'Sangat direkomendasikan! Halal dan sehat.';
     }
 
     private function haramNote(string $keyword): string

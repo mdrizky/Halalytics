@@ -23,20 +23,15 @@ class PromptBuilderService
      *
      * @param  array<string, mixed>  $variables
      */
-    public function build(string $type, array $variables = [], ?string $fallbackTemplate = null): string
+    public function build(string $featureKey, array $variables = [], ?string $fallbackTemplate = null): string
     {
-        $featureKey = self::TYPE_MAP[$type] ?? $type;
-        $record = AiPrompt::forFeature($featureKey);
+        // If fallbackTemplate is provided, use it directly (allows code-level override)
+        $template = $fallbackTemplate;
 
-        $template = $record?->system_prompt
-            ?? $fallbackTemplate
-            ?? $this->defaultTemplate($type);
+        if (!$template) {
+            $record = AiPrompt::forFeature($featureKey);
 
-        if ($record && $record->user_prompt_template) {
-            $userPart = $record->buildUserPrompt($variables);
-            if (trim($userPart) !== '') {
-                $template = trim($template) . "\n\n" . $userPart;
-            }
+            $template = $record?->system_prompt ?? $this->defaultTemplate($featureKey);
         }
 
         return $this->injectVariables($template, $variables);

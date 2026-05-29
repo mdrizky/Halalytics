@@ -61,11 +61,22 @@ class OpenRouterService
             if ($response->successful()) {
                 $content = $response->json('choices.0.message.content');
                 if ($content) {
-                    // Extract JSON if model wrapped it in markdown
-                    $content = preg_replace('/```json/i', '', $content);
-                    $content = preg_replace('/```/i', '', $content);
+                    // Extract JSON if model wrapped it in markdown or added extra text
+                    if (preg_match('/\{.*\}/s', $content, $matches)) {
+                        $content = $matches[0];
+                    }
+                    
                     $decoded = json_decode(trim($content), true);
-                    return is_array($decoded) ? $decoded : [];
+                    
+                    if (is_array($decoded)) {
+                        // Ensure required fields exist
+                        return array_merge([
+                            'status' => 'doubtful',
+                            'score' => 50,
+                            'reason' => 'Analisis selesai',
+                            'risky_ingredients' => []
+                        ], $decoded);
+                    }
                 }
             } else {
                 Log::error('OpenRouter API Error: ' . $response->body());

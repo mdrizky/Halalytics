@@ -91,6 +91,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // USER & PROFILE
     Route::prefix('user')->group(function () {
         Route::get('/profile', [ApiController::class, 'profile']);
+        Route::get('/get-profile', [\App\Http\Controllers\Api\UserController::class, 'getProfile']); // Added for more standard endpoint
         Route::post('/profile', [ApiController::class, 'updateProfile']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/stats', [ApiController::class, 'getUserStats']);
@@ -288,6 +289,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/medical-profile', [\App\Http\Controllers\Api\MedicalProfileController::class, 'store']);
     Route::post('/ai/bmi-advice', [\App\Http\Controllers\Api\MedicalProfileController::class, 'getAiBmiAdvice']);
     Route::get('/medical-reports', [\App\Http\Controllers\Api\MedicalProfileController::class, 'getReports']);
+
+    // FAMILY PROFILES
+    Route::prefix('user/family')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\FamilyController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Api\FamilyController::class, 'store']);
+        Route::put('/{id}', [\App\Http\Controllers\Api\FamilyController::class, 'update']);
+        Route::delete('/{id}', [\App\Http\Controllers\Api\FamilyController::class, 'destroy']);
+    });
 
     // EMERGENCY
     Route::post('/emergency/trigger', [\App\Http\Controllers\Api\EmergencyController::class, 'triggerEmergency']);

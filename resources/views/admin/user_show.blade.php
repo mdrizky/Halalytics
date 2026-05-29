@@ -28,12 +28,12 @@
                     @php
                         $roleDisplay = match(strtolower($user->role)) {
                             'admin' => 'Admin',
-                            'expert', 'nutritionist' => 'Ahli Gizi',
+                            'expert', 'nutritionist', 'ahli_gizi' => 'Ahli Gizi',
                             default => 'User'
                         };
                         $badgeClass = match(strtolower($user->role)) {
                             'admin' => 'bg-red-50 text-red-600 border border-red-200/60 dark:bg-red-500/10 dark:text-red-400',
-                            'expert', 'nutritionist' => 'bg-emerald-50 text-emerald-600 border border-emerald-200/60 dark:bg-emerald-500/10 dark:text-emerald-400',
+                            'expert', 'nutritionist', 'ahli_gizi' => 'bg-emerald-50 text-emerald-600 border border-emerald-200/60 dark:bg-emerald-500/10 dark:text-emerald-400',
                             default => 'bg-blue-50 text-blue-600 border border-blue-200/60 dark:bg-blue-500/10 dark:text-blue-400'
                         };
                     @endphp
@@ -60,7 +60,7 @@
                 Edit Profile
             </button>
             @if($user->role !== 'admin')
-            <form action="{{ route('admin.users.destroy', $user->id_user) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini?')">
+            <form action="{{ route('admin.user.destroy', $user->id_user) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini?')">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="px-6 py-3 rounded-2xl bg-red-50 border border-red-100 text-red-600 font-bold text-sm shadow-sm hover:shadow-md hover:bg-red-100 transition-all flex items-center gap-2">

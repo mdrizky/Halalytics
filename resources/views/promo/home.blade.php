@@ -99,6 +99,63 @@
         gap: 8px;
         justify-content: center;
     }
+
+    /* Glassmorphism Refinement */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px 0 rgba(0, 77, 64, 0.05);
+    }
+
+    /* Search Bar Premium */
+    .hero-search {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        max-width: 600px;
+        border: 1px solid #f1f5f9;
+        transition: all 0.3s;
+    }
+    .hero-search:focus-within {
+        box-shadow: 0 15px 50px rgba(0, 77, 64, 0.12);
+        transform: translateY(-2px);
+        border-color: var(--brand-secondary);
+    }
+    .hero-search input {
+        border: none;
+        outline: none;
+        padding: 12px 20px;
+        flex: 1;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--brand-text);
+    }
+
+    /* Expert Card */
+    .expert-card {
+        background: white;
+        border-radius: 24px;
+        padding: 24px;
+        border: 1px solid #f1f5f9;
+        transition: all 0.3s;
+        text-align: center;
+    }
+    .expert-card:hover {
+        border-color: var(--brand-accent);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+    }
+    .expert-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 30px;
+        margin: 0 auto 16px;
+        object-fit: cover;
+        background: #f8fafc;
+    }
     .char-btn {
         width: 36px;
         height: 36px;
@@ -237,7 +294,17 @@
             <p class="text-lg md:text-xl text-slate-500 leading-relaxed max-w-xl">
                 Asisten pintar kesehatan terintegrasi pertama yang menghubungkan kecerdasan buatan AI dengan basis data obat-obatan BPOM serta sertifikasi halal resmi. Cepat, akurat, dan aman.
             </p>
-            <div class="flex flex-wrap gap-4 pt-2">
+            
+            <!-- Modern Search Bar -->
+            <div class="hero-search mt-4">
+                <span class="pl-4 text-slate-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </span>
+                <input type="text" placeholder="Cari obat, penyakit, atau pakar..." onfocus="this.placeholder=''" onblur="this.placeholder='Cari obat, penyakit, atau pakar...'">
+                <button class="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all">Cari</button>
+            </div>
+
+            <div class="flex flex-wrap gap-4 pt-4">
                 <a href="{{ route('download') }}" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-4 rounded-2xl font-black text-lg hover:from-emerald-500 hover:to-teal-500 transition-all duration-300 shadow-xl shadow-emerald-700/25 flex items-center gap-3">
                     Download Aplikasi
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
@@ -295,6 +362,40 @@
         </div>
     </div>
 </div>
+
+<!-- ===== ARTIKEL TERBARU (Health News) ===== -->
+<section class="py-24 bg-white">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="flex flex-col md:flex-row justify-between items-end mb-12">
+            <div>
+                <h2 class="section-title">Informasi Kesehatan Terpercaya</h2>
+                <p class="section-subtitle">Dapatkan tips dan berita kesehatan terbaru yang telah divalidasi oleh tim medis Halalytics.</p>
+            </div>
+            <a href="{{ route('blog.index') }}" class="text-emerald-700 font-black hover:underline mb-8 flex items-center gap-2">
+                Lihat Semua Artikel <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            @foreach($latestBlogs ?? [] as $blog)
+            <div class="group cursor-pointer" onclick="location.href='{{ route('blog.show', $blog->slug) }}'">
+                <div class="aspect-[16/10] rounded-3xl overflow-hidden mb-6 shadow-sm group-hover:shadow-xl transition-all duration-500">
+                    <img src="{{ $blog->image_url ?? 'https://images.unsplash.com/photo-1505751172107-573225a91200?q=80&w=800' }}" alt="{{ $blog->title }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                </div>
+                <div class="inline-block px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest rounded-full mb-4">
+                    {{ $blog->category ?? 'Kesehatan' }}
+                </div>
+                <h4 class="text-xl font-black text-slate-900 group-hover:text-emerald-700 transition-colors mb-3 line-clamp-2">
+                    {{ $blog->title }}
+                </h4>
+                <p class="text-sm text-slate-500 leading-relaxed line-clamp-3">
+                    {{ Str::limit(strip_tags($blog->content), 120) }}
+                </p>
+            </div>
+            @endforeach
+        </div>
+    </div>
+</section>
 
 <!-- ===== PARTNERS INFINITE MARQUEE SLIDER ===== -->
 <div class="bg-white/60 border-y border-slate-200/50 py-8 relative z-20">
@@ -418,7 +519,62 @@
     </div>
 </section>
 
-<!-- BELI OBAT & SUPLEMEN (Halodoc Style) -->
+<!-- ===== TANYA PAKAR (Specialist Section) ===== -->
+<section class="py-24 bg-slate-50/50">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="flex flex-col md:flex-row justify-between items-end mb-12">
+            <div>
+                <h2 class="section-title">Tanya Pakar Halalytics</h2>
+                <p class="section-subtitle">Konsultasikan kesehatan Anda dengan tenaga medis profesional yang memahami standar halal.</p>
+            </div>
+            <a href="{{ route('download') }}" class="text-emerald-700 font-black hover:underline mb-8 flex items-center gap-2">
+                Lihat Semua Pakar <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            @php
+            $experts = [
+                ['name' => 'dr. Sarah Annisa', 'spec' => 'Spesialis Gizi Klinik', 'img' => 'expert-1.png', 'rate' => '98%', 'price' => '50.000'],
+                ['name' => 'dr. Ahmad Fauzi', 'spec' => 'Dokter Umum & Halal Auditor', 'img' => 'expert-2.png', 'rate' => '100%', 'price' => '35.000'],
+                ['name' => 'apt. Rina Wati', 'spec' => 'Apoteker (Spesialis Obat Halal)', 'img' => 'expert-3.png', 'rate' => '96%', 'price' => '25.000'],
+                ['name' => 'dr. Linda Kusuma', 'spec' => 'Spesialis Kebidanan (Obgyn)', 'img' => 'expert-4.png', 'rate' => '99%', 'price' => '65.000']
+            ];
+            @endphp
+
+            @foreach($experts as $e)
+            <div class="expert-card group cursor-pointer" onclick="location.href='{{ route('download') }}'">
+                <div class="relative inline-block mb-4">
+                    <div class="expert-avatar overflow-hidden border-4 border-white shadow-sm group-hover:border-emerald-100 transition-all">
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode($e['name']) }}&background=E6FFFA&color=004D40&bold=true&size=128" alt="{{ $e['name'] }}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="absolute bottom-4 right-0 bg-emerald-500 w-5 h-5 rounded-full border-2 border-white"></div>
+                </div>
+                <h4 class="font-black text-slate-900 mb-1">{{ $e['name'] }}</h4>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{{ $e['spec'] }}</p>
+                
+                <div class="flex items-center justify-center gap-4 mb-6">
+                    <div class="text-center">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Kepuasan</p>
+                        <p class="text-sm font-black text-emerald-600">{{ $e['rate'] }}</p>
+                    </div>
+                    <div class="w-px h-8 bg-slate-100"></div>
+                    <div class="text-center">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Mulai Dari</p>
+                        <p class="text-sm font-black text-slate-800">Rp{{ $e['price'] }}</p>
+                    </div>
+                </div>
+
+                <button class="w-full py-3 bg-slate-900 text-white rounded-xl font-black text-xs group-hover:bg-emerald-600 transition-all shadow-lg shadow-slate-900/10 group-hover:shadow-emerald-600/20">
+                    Chat Sekarang
+                </button>
+            </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+<!-- ===== BELI OBAT & SUPLEMEN (Halodoc Style) ===== -->
 <section class="py-24 bg-white">
     <div class="max-w-7xl mx-auto px-6">
         <div class="flex flex-col md:flex-row justify-between items-end mb-12">
@@ -606,23 +762,6 @@
                     <p id="due_val" class="text-2xl font-black text-amber-700 mt-1">12 Desember 2026</p>
                 </div>
             </div>
-
-            <!-- 5. Tes Ketajaman Mata -->
-            <div class="pro-card shadow-xl border-gray-100 lg:col-span-2">
-                <h3 class="text-2xl font-black text-gray-900 mb-8 flex items-center gap-4">
-                    <span class="text-3xl">👁️</span> Tes Ketajaman Mata (Snellen)
-                </h3>
-                <p class="text-sm text-gray-500 mb-6">Berdiri 1 meter dari layar dan coba baca huruf di bawah ini satu per satu dengan satu mata tertutup.</p>
-                <div class="snellen-box">
-                    <div class="snellen-char text-6xl">E</div>
-                    <div class="snellen-char text-4xl">F P</div>
-                    <div class="snellen-char text-2xl">T O Z</div>
-                    <div class="snellen-char text-xl">L P E D</div>
-                </div>
-                <div class="mt-8 text-center">
-                    <button class="px-8 py-3 bg-gray-800 text-white font-black rounded-xl" onclick="alert('Tes selesai! Jika Anda kesulitan membaca baris terbawah, segera konsultasikan ke dokter mata.')">Selesai Tes</button>
-                </div>
-            </div>
         </div>
     </div>
 </section>
@@ -642,65 +781,13 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="dictionary-grid">
-            @php
-            $diseases = [
-                [
-                    'name' => 'Abdominal Migrain',
-                    'desc' => 'Nyeri perut parah yang sering terjadi pada anak-anak.',
-                    'causes' => 'Faktor genetika, ketidakseimbangan zat kimia otak (serotonin), stres psikologis, kelelahan fisik, serta pemicu makanan tertentu (cokelat, MSG, keju olahan).',
-                    'symptoms' => 'Nyeri perut tumpul/melilit di sekitar pusar, mual, muntah berulang, kulit pucat, serta sensitivitas terhadap cahaya.',
-                    'treatments' => 'Istirahat di ruangan sunyi dan gelap, hidrasi cairan yang cukup, obat pereda nyeri sesuai anjuran dokter, serta pengelolaan stres anak.',
-                    'halal' => 'Pastikan makanan olahan yang dikonsumsi anak bebas dari emulsifier syubhat atau rennet hewani non-halal pada keju.'
-                ],
-                [
-                    'name' => 'Abses Gigi',
-                    'desc' => 'Kumpulan nanah di gigi atau gusi akibat infeksi bakteri.',
-                    'causes' => 'Bakteri mulut yang menembus pulpa gigi melalui gigi berlubang, luka gusi, serta kebersihan gigi dan mulut yang buruk.',
-                    'symptoms' => 'Nyeri berdenyut konstan yang menjalar ke rahang/telinga, gusi bengkak kemerahan, sensitif suhu ekstrem, demam, dan rasa pahit di mulut.',
-                    'treatments' => 'Drainase nanah oleh dokter gigi, perawatan saluran akar (root canal), pencabutan gigi yang rusak parah, serta konsumsi antibiotik.',
-                    'halal' => 'Pilih obat kumur antiseptik tanpa kandungan alkohol (etanol industri) bebas syubhat dan pasta gigi bersertifikasi halal.'
-                ],
-                [
-                    'name' => 'Acne Vulgaris',
-                    'desc' => 'Masalah kulit berupa jerawat akibat penyumbatan pori-pori.',
-                    'causes' => 'Produksi minyak (sebum) berlebih oleh kelenjar sebasea, penyumbatan folikel rambut oleh sel kulit mati, infeksi bakteri Cutibacterium acnes, serta ketidakseimbangan hormon.',
-                    'symptoms' => 'Komedo hitam/putih, papula merah meradang, pustul (benjolan bernanah), hingga kusta/nodul keras yang nyeri di wajah, leher, atau dada.',
-                    'treatments' => 'Gunakan pembersih wajah berbahan asam salisilat/benzoil peroksida, batasi makanan tinggi gula/susu, konsultasi obat topikal retinoid.',
-                    'halal' => 'Pastikan produk kosmetik, pembersih wajah, dan serum bebas dari plasenta, kolagen hewani non-halal, atau gelatin babi.'
-                ],
-                [
-                    'name' => 'Anemia',
-                    'desc' => 'Kondisi kekurangan sel darah merah yang sehat dalam tubuh.',
-                    'causes' => 'Kekurangan zat besi kronis, defisiensi Vitamin B12 atau Asam Folat, pendarahan dalam, atau gangguan produksi sel darah merah di sumsum tulang.',
-                    'symptoms' => 'Letih lesu berkepanjangan, wajah dan telapak tangan pucat, sesak napas saat aktivitas ringan, pusing, tangan dan kaki terasa dingin.',
-                    'treatments' => 'Konsumsi suplemen zat besi, vitamin C untuk penyerapan, serta peningkatan asupan makanan bergizi (daging merah halal, sayuran hijau).',
-                    'halal' => 'Saat membeli suplemen zat besi atau multivitamin B-kompleks, pastikan cangkang kapsul terbuat dari gelatin sapi halal atau kapsul nabati (selulosa).'
-                ],
-                [
-                    'name' => 'Asma',
-                    'desc' => 'Penyempitan saluran pernapasan akibat peradangan kronis.',
-                    'causes' => 'Sensitivitas saluran pernapasan terhadap alergen lingkungan (debu, bulu hewan, polusi, asap rokok), perubahan cuaca dingin, atau stres.',
-                    'symptoms' => 'Batuk berulang (terutama malam/pagi hari), sesak napas parah, suara mengi (bengek) saat membuang napas, dada terasa terikat.',
-                    'treatments' => 'Gunakan inhaler pereda (bronkodilator) untuk serangan akut, inhaler pencegah (steroid hirup), serta hindari pemicu alergen.',
-                    'halal' => 'Periksa kandungan propelan dan pembawa (solven) pada obat semprot inhaler agar bersih dari kontaminasi alkohol industri tidak halal.'
-                ],
-                [
-                    'name' => 'Alergi Makanan',
-                    'desc' => 'Reaksi sistem imun terhadap protein tertentu dalam makanan.',
-                    'causes' => 'Sistem kekebalan tubuh mendeteksi protein tertentu (seperti pada udang, kacang, telur, susu) sebagai ancaman berbahaya dan melepaskan histamin.',
-                    'symptoms' => 'Gatal-gatal kemerahan di kulit, bibir atau mata bengkak, kram perut, diare, muntah, hingga sesak napas berat (syok anafilaksis).',
-                    'treatments' => 'Hindari makanan pemicu secara ketat, bawa antihistamin darurat, serta suntikan epinefrin untuk reaksi anafilaksis berat.',
-                    'halal' => 'Waspadai kandungan bahan tambahan pangan tersembunyi (E-numbers) pada makanan olahan yang berpotensi memicu reaksi alergi dan berstatus syubhat.'
-                ]
-            ];
-            @endphp
-            @foreach($diseases as $d)
+            @foreach($diseases ?? [] as $d)
             <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer group" onclick="openDictionaryDetail({{ json_encode($d) }})">
                 <div class="flex justify-between items-start mb-2">
-                    <h4 class="font-black text-gray-900 group-hover:text-emerald-700 transition-colors">{{ $d['name'] }}</h4>
-                    <span class="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">A</span>
+                    <h4 class="font-black text-gray-900 group-hover:text-emerald-700 transition-colors">{{ $d->title ?? $d['name'] ?? 'Penyakit' }}</h4>
+                    <span class="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">{{ $d->alphabet ?? 'A' }}</span>
                 </div>
-                <p class="text-sm text-gray-500 leading-relaxed line-clamp-2">{{ $d['desc'] }}</p>
+                <p class="text-sm text-gray-500 leading-relaxed line-clamp-2">{{ $d->summary ?? $d['desc'] ?? '' }}</p>
                 <div class="mt-4 flex items-center text-xs font-extrabold text-emerald-600 gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     Lihat Selengkapnya <span>&rarr;</span>
                 </div>
@@ -841,79 +928,55 @@ function calculateRisk(){let s=0;if(document.getElementById('risk_smoke').checke
 function calculateDueDate(){const h=document.getElementById('hpht_date').value;if(!h){alert('Masukkan tanggal HPHT!');return}const d=new Date(h);d.setDate(d.getDate()+7);d.setMonth(d.getMonth()-3);d.setFullYear(d.getFullYear()+1);document.getElementById('due_val').innerText=d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});document.getElementById('due_res').classList.remove('hidden')}
 
 // Health Dictionary Interactive Controls
-const diseaseDataset = {
-    'A': [
-        { name: 'Abdominal Migrain', desc: 'Nyeri perut parah yang sering terjadi pada anak-anak.', causes: 'Faktor genetika, ketidakseimbangan zat kimia otak (serotonin), stres psikologis, kelelahan fisik, serta pemicu makanan tertentu (cokelat, MSG, keju olahan).', symptoms: 'Nyeri perut tumpul/melilit di sekitar pusar, mual, muntah berulang, kulit pucat, serta sensitivitas terhadap cahaya.', treatments: 'Istirahat di ruangan sunyi dan gelap, hidrasi cairan yang cukup, obat pereda nyeri sesuai anjuran dokter, serta pengelolaan stres anak.', halal: 'Pastikan makanan olahan yang dikonsumsi anak bebas dari emulsifier syubhat atau rennet hewani non-halal pada keju.' },
-        { name: 'Abses Gigi', desc: 'Kumpulan nanah di gigi atau gusi akibat infeksi bakteri.', causes: 'Bakteri mulut yang menembus pulpa gigi melalui gigi berlubang, luka gusi, serta kebersihan gigi dan mulut yang buruk.', symptoms: 'Nyeri berdenyut konstan yang menjalar ke rahang/telinga, gusi bengkak kemerahan, sensitif suhu ekstrem, demam, dan rasa pahit di mulut.', treatments: 'Drainase nanah oleh dokter gigi, perawatan saluran akar (root canal), pencabutan gigi yang rusak parah, serta konsumsi antibiotik.', halal: 'Pilih obat kumur antiseptik tanpa kandungan alkohol (etanol industri) bebas syubhat dan pasta gigi bersertifikasi halal.' },
-        { name: 'Acne Vulgaris', desc: 'Masalah kulit berupa jerawat akibat penyumbatan pori-pori.', causes: 'Produksi minyak (sebum) berlebih oleh kelenjar sebasea, penyumbatan folikel rambut oleh sel kulit mati, infeksi bakteri Cutibacterium acnes, serta ketidakseimbangan hormon.', symptoms: 'Komedo hitam/putih, papula merah meradang, pustul (benjolan bernanah), hingga kusta/nodul keras yang nyeri di wajah, leher, atau dada.', treatments: 'Gunakan pembersih wajah berbahan asam salisilat/benzoil peroksida, batasi makanan tinggi gula/susu, konsultasi obat topikal retinoid.', halal: 'Pastikan produk kosmetik, pembersih wajah, dan serum bebas dari plasenta, kolagen hewani non-halal, atau gelatin babi.' },
-        { name: 'Anemia', desc: 'Kondisi kekurangan sel darah merah yang sehat dalam tubuh.', causes: 'Kekurangan zat besi kronis, defisiensi Vitamin B12 atau Asam Folat, pendarahan dalam, atau gangguan produksi sel darah merah di sumsum tulang.', symptoms: 'Letih lesu berkepanjangan, wajah dan telapak tangan pucat, sesak napas saat aktivitas ringan, pusing, tangan dan kaki terasa dingin.', treatments: 'Konsumsi suplemen zat besi, vitamin C untuk penyerapan, serta peningkatan asupan makanan bergizi (daging merah halal, sayuran hijau).', halal: 'Saat membeli suplemen zat besi atau multivitamin B-kompleks, pastikan cangkang kapsul terbuat dari gelatin sapi halal atau kapsul nabati (selulosa).' },
-        { name: 'Asma', desc: 'Penyempitan saluran pernapasan akibat peradangan kronis.', causes: 'Sensitivitas saluran pernapasan terhadap alergen lingkungan (debu, bulu hewan, polusi, asap rokok), perubahan cuaca dingin, atau stres.', symptoms: 'Batuk berulang (terutama malam/pagi hari), sesak napas parah, suara mengi (bengek) saat membuang napas, dada terasa terikat.', treatments: 'Gunakan inhaler pereda (bronkodilator) untuk serangan akut, inhaler pencegah (steroid hirup), serta hindari pemicu alergen.', halal: 'Periksa kandungan propelan dan pembawa (solven) pada obat semprot inhaler agar bersih dari kontaminasi alkohol industri tidak halal.' },
-        { name: 'Alergi Makanan', desc: 'Reaksi sistem imun terhadap protein tertentu dalam makanan.', causes: 'Sistem kekebalan tubuh mendeteksi protein tertentu (seperti pada udang, kacang, telur, susu) sebagai ancaman berbahaya dan melepaskan histamin.', symptoms: 'Gatal-gatal kemerahan di kulit, bibir atau mata bengkak, kram perut, diare, muntah, hingga sesak napas berat (syok anafilaksis).', treatments: 'Hindari makanan pemicu secara ketat, bawa antihistamin darurat, serta suntikan epinefrin untuk reaksi anafilaksis berat.', halal: 'Waspadai kandungan bahan tambahan pangan tersembunyi (E-numbers) pada makanan olahan yang berpotensi memicu reaksi alergi dan berstatus syubhat.' }
-    ]
+let diseaseDataset = {
+    'A': @json($diseases ?? [])
+    
 };
 
 function filterAlphabet(letter) {
-    // Update active letter button
     document.querySelectorAll('.char-btn').forEach(btn => {
-        if (btn.innerText === letter) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
+        if (btn.innerText === letter) btn.classList.add('active');
+        else btn.classList.remove('active');
     });
 
     const grid = document.getElementById('dictionary-grid');
-    grid.innerHTML = '';
+    grid.innerHTML = '<div class="col-span-full py-12 text-center"><div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-600 border-t-transparent"></div></div>';
 
-    const items = diseaseDataset[letter] || [];
-    if (items.length > 0) {
-        items.forEach(d => {
-            const card = document.createElement('div');
-            card.className = 'bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer group';
-            card.onclick = () => openDictionaryDetail(d);
-            card.innerHTML = `
-                <div class="flex justify-between items-start mb-2">
-                    <h4 class="font-black text-gray-900 group-hover:text-emerald-700 transition-colors">${d.name}</h4>
-                    <span class="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">${letter}</span>
-                </div>
-                <p class="text-sm text-gray-500 leading-relaxed line-clamp-2">${d.desc}</p>
-                <div class="mt-4 flex items-center text-xs font-extrabold text-emerald-600 gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Lihat Selengkapnya <span>&rarr;</span>
-                </div>
-            `;
-            grid.appendChild(card);
+    fetch(`/api/health-encyclopedia?alphabet=${letter}`)
+        .then(r => r.json())
+        .then(res => {
+            grid.innerHTML = '';
+            if (res.success && res.data.length > 0) {
+                res.data.forEach(d => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer group';
+                    card.onclick = () => openDictionaryDetail(d);
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-black text-gray-900 group-hover:text-emerald-700 transition-colors">${d.title}</h4>
+                            <span class="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">${d.alphabet}</span>
+                        </div>
+                        <p class="text-sm text-gray-500 leading-relaxed line-clamp-2">${d.summary || ''}</p>
+                    `;
+                    grid.appendChild(card);
+                });
+            } else {
+                grid.innerHTML = '<div class="col-span-full py-20 text-center"><p class="text-slate-400 font-black">Data belum tersedia.</p></div>';
+            }
         });
-    } else {
-        // Render dynamic empty state
-        const emptyState = document.createElement('div');
-        emptyState.className = 'col-span-full bg-white border border-dashed border-slate-200 rounded-3xl p-12 text-center flex flex-col items-center justify-center';
-        emptyState.innerHTML = `
-            <div class="w-16 h-16 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center text-3xl mb-4">🔍</div>
-            <h4 class="font-black text-slate-800 mb-2">Belum Ada Istilah untuk Huruf "${letter}"</h4>
-            <p class="text-slate-500 text-sm max-w-sm mb-6 leading-relaxed">
-                Kami terus memperbarui database kamus kesehatan halal kami. Anda dapat bertanya langsung kepada Hilda AI untuk istilah ini.
-            </p>
-            <button onclick="toggleAI(); askChip('Jelaskan istilah medis berawalan ${letter} dan kaitannya dengan panduan halal')" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-sm transition-all shadow-lg shadow-emerald-700/10 flex items-center gap-2">
-                Tanyakan Hilda AI 🤖
-            </button>
-        `;
-        grid.appendChild(emptyState);
-    }
 }
 
 function openDictionaryDetail(data) {
-    document.getElementById('dict-title').innerText = data.name;
-    document.getElementById('dict-desc').innerText = data.desc;
+    document.getElementById('dict-title').innerText = data.title || data.name;
+    document.getElementById('dict-desc').innerText = data.summary || data.desc || '';
     document.getElementById('dict-causes').innerText = data.causes || 'Data tidak tersedia';
     document.getElementById('dict-symptoms').innerText = data.symptoms || 'Data tidak tersedia';
     document.getElementById('dict-treatments').innerText = data.treatments || 'Data tidak tersedia';
-    document.getElementById('dict-halal').innerText = data.halal || 'Data tidak tersedia';
+    document.getElementById('dict-halal').innerText = data.halal_notes || data.halal || 'Data tidak tersedia';
 
     const modal = document.getElementById('dict-modal');
     modal.style.display = 'flex';
-    setTimeout(() => {
-        document.getElementById('dict-modal-card').style.transform = 'scale(1)';
-    }, 50);
+    setTimeout(() => { document.getElementById('dict-modal-card').style.transform = 'scale(1)'; }, 50);
 }
 
 function closeDictionaryDetail() {
@@ -935,6 +998,6 @@ function toggleAI(){const p=document.getElementById('ai-panel'),f=document.getEl
 function askChip(t){document.getElementById('ai-input').value=t;sendAIMessage()}
 
 function sendAIMessage(){const i=document.getElementById('ai-input'),c=document.getElementById('chat-messages'),t=i.value.trim();if(!t)return;const u=document.createElement('div');u.className='ai-bubble-msg user';u.innerText=t;c.appendChild(u);i.value='';c.scrollTop=c.scrollHeight;const tp=document.createElement('div');tp.innerHTML='<span></span><span></span><span></span>';tp.className='ai-typing';c.appendChild(tp);c.scrollTop=c.scrollHeight;
-fetch('/ai/chat',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({message:t})}).then(response=>response.json()).then(data=>{tp.remove();const b=document.createElement('div');b.className='ai-bubble-msg';b.innerHTML=data.reply||'Maaf, ada kendala koneksi dengan AI Halalytics.';c.appendChild(b);c.scrollTop=c.scrollHeight}).catch(error=>{tp.remove();const b=document.createElement('div');b.className='ai-bubble-msg';b.innerHTML='Maaf, gagal menghubungi server AI Halalytics. Coba lagi nanti.';c.appendChild(b);c.scrollTop=c.scrollHeight})}
+fetch('{{ route('promo.ai_chat') }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({message:t})}).then(response=>response.json()).then(data=>{tp.remove();const b=document.createElement('div');b.className='ai-bubble-msg';b.innerHTML=data.reply||'Maaf, ada kendala koneksi dengan AI Halalytics.';c.appendChild(b);c.scrollTop=c.scrollHeight}).catch(error=>{tp.remove();const b=document.createElement('div');b.className='ai-bubble-msg';b.innerHTML='Maaf, gagal menghubungi server AI Halalytics. Coba lagi nanti.';c.appendChild(b);c.scrollTop=c.scrollHeight})}
 </script>
 @endsection

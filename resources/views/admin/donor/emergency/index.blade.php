@@ -11,10 +11,12 @@
 @section('content')
 <div class="flex items-center justify-between mb-8">
     <div>
-        <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Emergency Broadcast</h2>
-        <p class="text-slate-500 text-sm mt-1">Request urgent blood donations and notify matching donors via FCM.</p>
+        <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Blood Donation Hub</h2>
+        <p class="text-slate-500 text-sm mt-1">Manage blood stocks, events, appointments, and emergencies.</p>
     </div>
 </div>
+
+@include('admin.donor.tabs')
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Broadcast Form -->

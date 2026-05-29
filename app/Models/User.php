@@ -83,6 +83,9 @@ class User extends Authenticatable implements FilamentUser
         'onboarding_progress',
         'onboarding_level',
         'onboarding_completed_at',
+        'is_voluntary_donor',
+        'donor_latitude',
+        'donor_longitude',
     ];
 
     protected $hidden = [
@@ -126,10 +129,6 @@ class User extends Authenticatable implements FilamentUser
         }
     }
 
-    public function getAuthIdentifierName()
-    {
-        return 'username';
-    }
 
     public function activities()
     {
@@ -275,5 +274,15 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->hasRole('admin');
+    }
+
+    public function scopeVoluntaryDonors($query)
+    {
+        return $query->where('is_voluntary_donor', true);
+    }
+
+    public function scopeByBloodType($query, $bloodType)
+    {
+        return $query->where('blood_type', $bloodType);
     }
 }

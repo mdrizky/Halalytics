@@ -50,7 +50,7 @@
         <div class="hero-pattern hidden md:flex w-1/2 p-12 flex-col justify-between text-white relative">
             <div class="z-10">
                 <div class="flex items-center gap-3 mb-8">
-                    <img src="{{ asset('images/logo_halalytics.png') }}" alt="Halalytics Logo" class="h-12 w-auto bg-white/20 p-2 rounded-xl backdrop-blur-sm shadow-sm" onerror="this.onerror=null; this.src='{{ asset('images/logo.png') }}'">
+                    <img src="{{ asset('images/logo.png') }}" alt="Halalytics Logo" class="h-12 w-auto bg-white/20 p-2 rounded-xl backdrop-blur-sm shadow-sm">
                     <h1 class="text-4xl font-extrabold tracking-tight">Halalytics</h1>
                 </div>
                 <div class="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-3xl max-w-lg">

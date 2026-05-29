@@ -62,9 +62,19 @@ class EmergencyController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $mapped = $requests->map(function ($req) {
+            return [
+                'id' => $req->id,
+                'blood_type' => $req->blood_type_needed,
+                'hospital' => $req->hospital_name,
+                'reason' => $req->notes ?: 'Dibutuhkan Segera',
+                'created_at' => $req->created_at->toIso8601String()
+            ];
+        });
+
         return response()->json([
             'status' => 'success',
-            'data' => $requests
+            'data' => $mapped
         ]);
     }
 }

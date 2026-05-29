@@ -182,4 +182,13 @@ class UserController extends Controller
             'message' => 'FCM Token updated successfully',
         ]);
     }
+
+    public function getProfile(Request $request)
+    {
+        $user = $request->user();
+        return response()->json([
+            'success' => true,
+            'user' => $user
+        ]);
+    }
 }

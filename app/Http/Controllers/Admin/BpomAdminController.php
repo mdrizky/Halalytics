@@ -145,4 +145,39 @@ class BpomAdminController extends Controller
 
         return back()->with('success', $message);
     }
+
+    /**
+     * Batch auto-categorize all BPOM products based on registration number prefix.
+     * Uses the BPOM registration prefix convention:
+     *   NA/NC/ND → kosmetik, MD/ML/FF → pangan, TR/TI → obat_tradisional,
+     *   SD/SI → suplemen, DB/DK/DT/DL → obat
+     */
+    public function batchAutoCategorize()
+    {
+        $products = BpomData::whereNotNull('nomor_reg')
+            ->where('nomor_reg', '!=', '')
+            ->get();
+
+        $updated = 0;
+
+        foreach ($products as $product) {
+            $prefix = strtoupper(substr(trim($product->nomor_reg), 0, 2));
+
+            $newCategory = match ($prefix) {
+                'NA', 'NC', 'ND' => 'kosmetik',
+                'MD', 'ML', 'FF' => 'pangan',
+                'TR', 'TI' => 'obat_tradisional',
+                'SD', 'SI' => 'suplemen',
+                'DB', 'DK', 'DT', 'DL' => 'obat',
+                default => null,
+            };
+
+            if ($newCategory && $product->kategori !== $newCategory) {
+                $product->update(['kategori' => $newCategory]);
+                $updated++;
+            }
+        }
+
+        return back()->with('success', "Auto-kategorisasi selesai. {$updated} produk di-update dari total {$products->count()} produk.");
+    }
 }

@@ -305,6 +305,9 @@ class ApiController extends Controller
             'notifications_enabled' => 'nullable|boolean',
             'profile_visibility' => 'nullable|in:public,private,friends',
             'show_health_tips' => 'nullable|boolean',
+            'is_voluntary_donor' => 'nullable|boolean',
+            'donor_latitude' => 'nullable|numeric',
+            'donor_longitude' => 'nullable|numeric',
         ];
 
         $request->validate($rules);
@@ -332,7 +335,8 @@ class ApiController extends Controller
             'goal', 'diet_preference', 'activity_level', 'address', 'language',
             'age', 'height', 'weight', 'bmi', 'notif_enabled', 'dark_mode',
             'avatar_url', 'birth_date', 'gender', 'bio', 'dietary_preferences',
-            'allergies', 'notifications_enabled', 'profile_visibility', 'show_health_tips'
+            'allergies', 'notifications_enabled', 'profile_visibility', 'show_health_tips',
+            'is_voluntary_donor', 'donor_latitude', 'donor_longitude'
         ]));
 
         $user->save();

@@ -12,7 +12,9 @@ class MedicineReminder extends Model
     protected $primaryKey = 'id_reminder';
     protected $fillable = [
         'id_user',
+        'id_family_profile',
         'id_medicine',
+        'dosage',
         'symptoms',
         'schedule_times',
         'frequency_per_day',
@@ -40,6 +42,11 @@ class MedicineReminder extends Model
     public function medicine()
     {
         return $this->belongsTo(Medicine::class, 'id_medicine');
+    }
+
+    public function familyProfile()
+    {
+        return $this->belongsTo(FamilyProfile::class, 'id_family_profile');
     }
 
     // Scopes

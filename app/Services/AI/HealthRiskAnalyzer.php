@@ -19,9 +19,25 @@ class HealthRiskAnalyzer
         $age       = (int)   ($userContext['age'] ?? $userContext['user_age'] ?? 0);
         $ingredients = Str::lower((string) ($userContext['ingredients_text'] ?? ''));
 
-        $sugarRisk  = $nutrition['sugar_risk']  ?? 'rendah';
-        $sodiumRisk = $nutrition['sodium_risk'] ?? 'rendah';
-        $fatRisk    = $nutrition['fat_risk']    ?? 'rendah';
+        // Personalized Limits
+        $limits = $userContext['thresholds'] ?? [
+            'sugar_g' => 50.0,
+            'sodium_mg' => 2300.0,
+            'fat_g' => 67.0,
+            'calories' => 2000.0,
+        ];
+
+        $nutritValues = $nutrition['nutrition_values'] ?? [];
+        $sugarValue = (float) ($nutritValues['sugars_g'] ?? 0);
+        $sodiumValue = (float) ($nutritValues['sodium_mg'] ?? 0);
+        $fatValue = (float) ($nutritValues['fat_g'] ?? 0);
+
+        // Calculate risk based on personalized limits (per 100g)
+        // If 100g of product contains more than 30% of daily limit, mark as high risk
+        $sugarRisk  = $sugarValue > ($limits['sugar_g'] * 0.3) ? 'tinggi' : ($sugarValue > ($limits['sugar_g'] * 0.15) ? 'sedang' : 'rendah');
+        $sodiumRisk = $sodiumValue > ($limits['sodium_mg'] * 0.3) ? 'tinggi' : ($sodiumValue > ($limits['sodium_mg'] * 0.15) ? 'sedang' : 'rendah');
+        $fatRisk    = $fatValue > ($limits['fat_g'] * 0.3) ? 'tinggi' : ($fatValue > ($limits['fat_g'] * 0.15) ? 'sedang' : 'rendah');
+        
         $healthScore = (int) ($nutrition['health_score'] ?? 100);
 
         // ─── Kondisi Medis ───────────────────────────────────────────────────

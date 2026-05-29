@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\ScanModel;
 use App\Models\IntakeLog;
+use App\Models\MedicalProfile;
 use Carbon\Carbon;
 
 class AIAssistantController extends Controller
@@ -48,6 +49,8 @@ class AIAssistantController extends Controller
         $text = $request->ingredients_text;
         $user = Auth::user();
 
+        $medicalProfile = MedicalProfile::where('id_user', $user->id_user)->first();
+
         $userContext = [
             'name' => $user->full_name,
             'age' => $user->age,
@@ -58,6 +61,7 @@ class AIAssistantController extends Controller
             'diet_preference' => $user->diet_preference ?? null,
             'bmi' => $user->bmi ?? null,
             'activity_level' => $user->activity_level ?? null,
+            'thresholds' => $medicalProfile ? $medicalProfile->thresholds : null,
         ];
 
         // FITUR 3: String matching for Watchlist
@@ -155,11 +159,12 @@ class AIAssistantController extends Controller
             'items_count' => $logs->count()
         ];
 
-        // Theoretical limits (can be customized based on profile later)
-        $limits = [
+        $medicalProfile = MedicalProfile::where('id_user', $user->id_user)->first();
+        $limits = $medicalProfile ? $medicalProfile->thresholds : [
+            'calories' => 2000,
             'sugar_g' => 50,
             'sodium_mg' => 2300,
-            'calories' => 2000
+            'fat_g' => 67,
         ];
 
         return response()->json([
@@ -205,11 +210,12 @@ class AIAssistantController extends Controller
             'scan_items_count' => (int) $scanHistories->count(),
         ];
 
-        $limits = [
+        $medicalProfile = MedicalProfile::where('id_user', $user->id_user)->first();
+        $limits = $medicalProfile ? $medicalProfile->thresholds : [
+            'calories' => 2000.0,
             'sugar_g' => 50.0,
             'sodium_mg' => 2300.0,
             'fat_g' => 67.0,
-            'calories' => 2000.0,
         ];
 
         $sugarPct = min(200, ($totals['sugar_g'] / $limits['sugar_g']) * 100);
@@ -377,7 +383,19 @@ class AIAssistantController extends Controller
                 ->where('tanggal_scan', '>=', $startDate)
                 ->get();
 
-            if ($scans->isEmpty()) {
+            $intakes = \App\Models\DailyIntake::where('user_id', $user->id_user)
+                ->where('intake_date', '>=', $startDate->toDateString())
+                ->get();
+
+            $medicalProfile = MedicalProfile::where('id_user', $user->id_user)->first();
+            $thresholds = $medicalProfile ? $medicalProfile->thresholds : [
+                'calories' => 2000,
+                'sugar_g' => 50,
+                'sodium_mg' => 2300,
+                'fat_g' => 67,
+            ];
+
+            if ($scans->isEmpty() && $intakes->isEmpty()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'No activity found in the last ' . $days . ' days',
@@ -390,26 +408,24 @@ class AIAssistantController extends Controller
                 'halal_count' => $scans->where('status_halal', 'halal')->count(),
                 'haram_count' => $scans->where('status_halal', 'haram')->count(),
                 'syubhat_count' => $scans->where('status_halal', 'syubhat')->count(),
-                'healthy_count' => $scans->where('status_kesehatan', 'sehat')->count(),
-                'unhealthy_count' => $scans->where('status_kesehatan', 'tidak_sehat')->count(),
+                'avg_daily_calories' => round($intakes->avg('total_calories'), 1),
+                'avg_daily_sugar' => round($intakes->avg('total_sugar_g'), 1),
+                'avg_daily_sodium' => round($intakes->avg('total_sodium_mg'), 1),
                 'top_categories' => $scans->groupBy('kategori')->map->count()->sortDesc()->take(3),
-                'recent_products' => $scans->take(3)->pluck('nama_produk')->toArray()
             ];
 
             // 2. Build prompt for Gemini
-            $prompt = "Provide a brief personal weekly health & halal summary based on these scan stats: " . json_encode($stats) . ". 
+            $prompt = "Provide a professional personal weekly health & halal summary based on these stats: " . json_encode($stats) . ". 
             The user profile is: " . json_encode([
-                'allergy' => $user->allergy,
                 'medical_history' => $user->medical_history,
-                'goal' => $user->goal
+                'goal' => $user->goal,
+                'thresholds' => $thresholds
             ]) . ". 
-            Format as JSON: {'summary': 'text', 'tips': ['tip1', 'tip2'], 'highlight': 'text'}";
+            Format as JSON: {'summary': 'text in Indonesian', 'tips': ['tip1', 'tip2'], 'highlight': 'text', 'score': 0-100}";
 
             $insight = null;
             try {
                 $insight = $this->geminiService->generateCustomContent($prompt);
-                
-                // Decode if it's a string, or parse if array
                 if (is_string($insight)) {
                     $insight = json_decode($insight, true);
                 }
@@ -419,7 +435,7 @@ class AIAssistantController extends Controller
                     'summary' => 'Analisis AI sedang tidak tersedia.',
                     'tips' => ['Lanjutkan kebiasaan baik Anda.'],
                     'highlight' => 'Tetap Sehat!',
-                    'error' => $e->getMessage()
+                    'score' => 70
                 ];
             }
 
@@ -427,7 +443,8 @@ class AIAssistantController extends Controller
                 'success' => true,
                 'message' => 'Weekly report generated successfully',
                 'stats' => $stats,
-                'insight' => $insight
+                'insight' => $insight,
+                'thresholds' => $thresholds
             ]);
 
         } catch (\Exception $e) {

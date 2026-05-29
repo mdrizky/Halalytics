@@ -21,7 +21,7 @@ class FcmService
         $serverKey = config('services.fcm.server_key');
         
         if (!$serverKey) {
-            Log.warning('FCM Server Key not found in config. Notification not sent.');
+            Log::warning('FCM Server Key not found in config. Notification not sent.');
             return false;
         }
 
@@ -46,14 +46,14 @@ class FcmService
             ])->post('https://fcm.googleapis.com/fcm/send', $payload);
 
             if ($response->successful()) {
-                Log.info("FCM Sent to $to: " . $response->body());
+                Log::info("FCM Sent to $to: " . $response->body());
                 return true;
             }
 
-            Log.error("FCM Error for $to: " . $response->body());
+            Log::error("FCM Error for $to: " . $response->body());
             return false;
         } catch (\Exception $e) {
-            Log.error("FCM Exception: " . $e->getMessage());
+            Log::error("FCM Exception: " . $e->getMessage());
             return false;
         }
     }

@@ -26,6 +26,12 @@
                 <i class="fas fa-magic"></i> <span class="btn-text">Sync BPOM (Kosmetik)</span>
             </button>
         </form>
+        <form action="{{ route('admin.bpom.auto_categorize') }}" method="POST" onsubmit="this.querySelector('button').disabled=true; this.querySelector('.btn-text').textContent='Categorizing...';">
+            @csrf
+            <button type="submit" class="btn btn-outline" style="border-color: var(--primary-color); color: var(--primary-color);">
+                <i class="fas fa-tags"></i> <span class="btn-text">Auto Categorize</span>
+            </button>
+        </form>
     </div>
 </div>
 

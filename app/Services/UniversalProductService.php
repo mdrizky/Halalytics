@@ -6,18 +6,25 @@ use App\Models\BpomData;
 use App\Models\Medicine;
 use App\Models\ProductModel;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class UniversalProductService
 {
     protected $safetyChecker;
     protected $externalApiService;
     protected $geminiService;
+    protected $bpomMuiService;
 
-    public function __construct(SafetyCheckerService $safetyChecker, ExternalApiService $externalApiService, GeminiService $geminiService)
-    {
+    public function __construct(
+        SafetyCheckerService $safetyChecker, 
+        ExternalApiService $externalApiService, 
+        GeminiService $geminiService,
+        BpomMuiService $bpomMuiService
+    ) {
         $this->safetyChecker = $safetyChecker;
         $this->externalApiService = $externalApiService;
         $this->geminiService = $geminiService;
+        $this->bpomMuiService = $bpomMuiService;
     }
 
     /**
@@ -34,6 +41,28 @@ class UniversalProductService
                 'found' => true,
                 'data' => $bpomProduct,
                 'standardized' => $this->standardizeBpom($bpomProduct)
+            ];
+        }
+
+        // 1.2 REAL-TIME BPOM CHECK (If not in local DB)
+        $officialBpom = $this->bpomMuiService->searchBpom($barcode);
+        if ($officialBpom['found']) {
+            return [
+                'source' => 'bpom_official',
+                'found' => true,
+                'data' => $officialBpom,
+                'standardized' => $this->standardizeOfficialBpom($officialBpom)
+            ];
+        }
+
+        // 1.3 REAL-TIME MUI CHECK
+        $officialMui = $this->bpomMuiService->searchMui($barcode);
+        if ($officialMui['found']) {
+            return [
+                'source' => 'mui_official',
+                'found' => true,
+                'data' => $officialMui,
+                'standardized' => $this->standardizeOfficialMui($officialMui)
             ];
         }
 
@@ -63,7 +92,7 @@ class UniversalProductService
 
         // 3. Check Open Food Facts API v2 (with 24h caching + 5s timeout)
         $cacheKey = "product_off_{$barcode}";
-        $productData = \Cache::remember($cacheKey, 86400, function () use ($barcode) {
+        $productData = Cache::remember($cacheKey, 86400, function () use ($barcode) {
             try {
                 $offResponse = Http::timeout(5)->get("https://world.openfoodfacts.org/api/v2/product/{$barcode}.json", [
                     'fields' => 'product_name,code,image_url,image_front_url,ingredients_list,nutriments,_id,completeness,brands,quantity,packaging,labels,nutriscore_grade,nova_group,stores,countries'
@@ -91,7 +120,7 @@ class UniversalProductService
 
         // 4. Check Open Beauty Facts API v2 (with 24h caching + 5s timeout)
         $obfCacheKey = "product_obf_{$barcode}";
-        $obfProductData = \Cache::remember($obfCacheKey, 86400, function () use ($barcode) {
+        $obfProductData = Cache::remember($obfCacheKey, 86400, function () use ($barcode) {
             try {
                 $obfResponse = Http::timeout(5)->get("https://world.openbeautyfacts.org/api/v2/product/{$barcode}.json", [
                     'fields' => 'product_name,code,image_url,image_front_url,ingredients_list,nutriments,_id,completeness,brands,quantity,packaging,labels,nutriscore_grade,nova_group,stores,countries'
@@ -266,6 +295,46 @@ class UniversalProductService
             'stores' => $data['stores'] ?? null,
             'countries' => $data['countries'] ?? null,
         ]);
+    }
+
+    private function standardizeOfficialBpom($item)
+    {
+        return [
+            'barcode' => $item['barcode'] ?? null,
+            'name' => $item['nama_produk'],
+            'brand' => $item['merk'],
+            'image_url' => null,
+            'ingredients_text' => null,
+            'status_halal' => 'verified',
+            'halal_certificate' => $item['nomor_registrasi'],
+            'certification_body' => $item['pendaftar'],
+            'category' => 'Pangan/Obat (BPOM)',
+            'source' => 'bpom_official',
+            'nutriscore' => null,
+            'additives' => [],
+            'allergens' => [],
+            'safety_alerts' => []
+        ];
+    }
+
+    private function standardizeOfficialMui($item)
+    {
+        return [
+            'barcode' => $item['barcode'] ?? null,
+            'name' => $item['nama_produk'],
+            'brand' => $item['nama_produsen'],
+            'image_url' => null,
+            'ingredients_text' => null,
+            'status_halal' => 'halal',
+            'halal_certificate' => $item['nomor_sertifikat'],
+            'certification_body' => 'LPPOM MUI',
+            'category' => 'Terverifikasi Halal',
+            'source' => 'mui_official',
+            'nutriscore' => null,
+            'additives' => [],
+            'allergens' => [],
+            'safety_alerts' => []
+        ];
     }
 
     private function standardizeBpom($product)
