@@ -59,6 +59,8 @@ Route::get('/articles/recommended', [HealthArticleController::class, 'recommende
 Route::get('/articles/{slug}', [HealthArticleController::class, 'show']);
 Route::get('/encyclopedia', [EncyclopediaController::class, 'index']);
 Route::get('/encyclopedia/{id}', [EncyclopediaController::class, 'show']);
+Route::get('/health-encyclopedia', [\App\Http\Controllers\Api\HealthEncyclopediaController::class, 'index']);
+Route::get('/health-encyclopedia/{id}', [\App\Http\Controllers\Api\HealthEncyclopediaController::class, 'show']);
 Route::prefix('mental-health')->group(function () {
     Route::get('/topics', [MentalHealthController::class, 'topics']);
     Route::get('/articles', [MentalHealthController::class, 'articles']);
@@ -225,10 +227,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/health/metrics/summary', [\App\Http\Controllers\Api\HealthMetricController::class, 'summary']);
     Route::get('/health/diary', [\App\Http\Controllers\Api\HealthMetricController::class, 'diary']);
     Route::post('/health/analyze', [\App\Http\Controllers\Api\HealthMetricController::class, 'analyze']);
-
-    // HEALTH ENCYCLOPEDIA
-    Route::get('/health-encyclopedia', [\App\Http\Controllers\Api\HealthEncyclopediaController::class, 'index']);
-    Route::get('/health-encyclopedia/{id}', [\App\Http\Controllers\Api\HealthEncyclopediaController::class, 'show']);
 
     // PRODUCT REQUESTS (Crowdsourcing)
     Route::post('/product-requests', [\App\Http\Controllers\Api\ProductRequestController::class, 'store']);

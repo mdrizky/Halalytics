@@ -1,243 +1,242 @@
-@extends('admin.master')
+@extends('admin.layouts.admin_layout')
 
-@section('title', 'User Management | Halalytics')
+@section('title', 'User Intelligence Center | Halalytics Admin')
 
-@section('breadcrumb-items')
-    <i class="fas fa-chevron-right" style="font-size: 10px; color: var(--text-muted);"></i>
-    <span style="color: var(--primary-color); font-weight: 700;">Users</span>
+@section('breadcrumb')
+<span class="text-slate-400">Administration</span>
+<span class="material-icons-round text-slate-300 text-sm">chevron_right</span>
+<span class="font-semibold text-slate-700 dark:text-slate-200">User Management</span>
 @endsection
 
 @section('content')
-<div class="dashboard-header" style="margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-end;">
-    <div>
-        <h1 style="margin: 0; font-size: 28px; color: var(--primary-color);">User Management</h1>
-        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 14px;">Kelola akun pengguna, atur role, dan pantau aktivitas scan komunitas.</p>
-    </div>
-    <div style="display: flex; gap: 12px;">
-        <a href="{{ route('admin.user.export') }}" class="btn btn-outline">
-            <i class="fas fa-file-export"></i> Export CSV
-        </a>
-        <a href="{{ route('admin.user.create') }}" class="btn btn-primary">
-            <i class="fas fa-user-plus"></i> Add New User
-        </a>
-    </div>
-</div>
-
-<!-- Stats Row -->
-<div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 32px;">
-    <div class="card stat-card">
-        <div class="card-body">
-            <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Total Registrations</div>
-            <div style="display: flex; align-items: baseline; gap: 12px;">
-                <div style="font-size: 28px; font-weight: 800; color: var(--text-main);">{{ number_format($stats['total_users']) }}</div>
-                <div style="font-size: 12px; color: var(--success); font-weight: 700;"><i class="fas fa-arrow-up"></i> {{ $stats['user_change'] }}%</div>
-            </div>
+<div class="space-y-8">
+    <!-- Sophisticated Header -->
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+        <div class="space-y-2">
+            <h2 class="text-4xl font-black text-slate-900 dark:text-white tracking-tight">User Management</h2>
+            <p class="text-slate-500 dark:text-slate-400 font-medium max-w-2xl">
+                Kelola ekosistem pengguna Halalytics. Pantau aktivitas scan, atur hak akses profesional, dan analisis pertumbuhan komunitas secara realtime.
+            </p>
         </div>
-    </div>
-    
-    <div class="card stat-card">
-        <div class="card-body">
-            <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Active Accounts</div>
-            <div style="font-size: 28px; font-weight: 800; color: var(--primary-color);">{{ number_format($stats['active_users']) }}</div>
-        </div>
-    </div>
-    
-    <div class="card stat-card">
-        <div class="card-body">
-            <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Community Scans</div>
-            <div style="font-size: 28px; font-weight: 800; color: var(--accent-color);">{{ number_format($stats['total_scans']) }}</div>
-        </div>
-    </div>
-</div>
-
-<!-- Role Segmentation -->
-@php
-    $roleTabs = [
-        'all' => ['label' => 'Semua Role', 'icon' => 'users', 'count' => $stats['total_users'] ?? 0],
-        'user' => ['label' => 'User Biasa', 'icon' => 'user', 'count' => $stats['total_regular_users'] ?? 0],
-        'ahli_gizi' => ['label' => 'Ahli Gizi', 'icon' => 'user-md', 'count' => $stats['total_nutritionists'] ?? 0],
-        'admin' => ['label' => 'Admin', 'icon' => 'shield-alt', 'count' => $stats['total_admins'] ?? 0],
-    ];
-    $activeRole = request('role', 'all');
-@endphp
-<div class="card" style="margin-bottom: 24px;">
-    <div class="card-body" style="padding: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
-        @foreach($roleTabs as $roleKey => $tab)
-            @php
-                $tabUrl = route('admin.user.index', array_filter(array_merge(request()->except(['page', 'role']), [
-                    'role' => $roleKey === 'all' ? null : $roleKey,
-                ]), fn ($value) => $value !== null && $value !== ''));
-                $isActive = ($roleKey === 'all' && !$activeRole) || $activeRole === $roleKey;
-            @endphp
-            <a href="{{ $tabUrl }}"
-               class="btn {{ $isActive ? 'btn-primary' : 'btn-outline' }}"
-               style="padding: 10px 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 8px;">
-                <i class="fas fa-{{ $tab['icon'] }}"></i>
-                {{ $tab['label'] }}
-                <span class="badge" style="background: {{ $isActive ? 'rgba(255,255,255,.2)' : 'rgba(0,0,0,.06)' }}; color: inherit; border: 1px solid currentColor;">
-                    {{ number_format($tab['count']) }}
-                </span>
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="{{ route('admin.user.export') }}" class="inline-flex items-center gap-2 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-5 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 transition-all">
+                <span class="material-icons-round text-lg">file_download</span>
+                EXPORT DATA
             </a>
-        @endforeach
+            <a href="{{ route('admin.user.create') }}" class="inline-flex items-center gap-2 rounded-2xl bg-slate-900 dark:bg-white px-6 py-3 text-sm font-bold text-white dark:text-slate-900 shadow-xl hover:opacity-90 transition-all transform hover:-translate-y-1">
+                <span class="material-icons-round text-lg">person_add</span>
+                REGISTER NEW USER
+            </a>
+        </div>
     </div>
-</div>
 
-<!-- Search & Filters -->
-<div class="card" style="margin-bottom: 24px;">
-    <div class="card-body">
-        <form action="{{ url('/admin/user') }}" method="GET" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 16px; align-items: center;">
-            @if(request('role'))
-                <input type="hidden" name="role" value="{{ request('role') }}">
-            @endif
-            <div class="input-group" style="position: relative; margin-bottom: 0;">
-                <i class="fas fa-search" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, email, or username..." style="width: 100%; padding: 12px 12px 12px 48px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light); outline: none;">
+    <!-- Analytics Dashboard Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-7 border border-slate-200/60 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+            <div class="absolute -right-6 -top-6 h-32 w-32 bg-primary/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
+            <div class="relative z-10">
+                <div class="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-5">
+                    <span class="material-icons-round">groups</span>
+                </div>
+                <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Total Registrations</p>
+                <div class="flex items-baseline gap-3">
+                    <h3 class="text-3xl font-black text-slate-900 dark:text-white">{{ number_format($stats['total_users']) }}</h3>
+                    <span class="flex items-center text-xs font-bold text-emerald-500">
+                        <span class="material-icons-round text-sm">trending_up</span>
+                        {{ $stats['user_change'] }}%
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-7 border border-slate-200/60 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+            <div class="absolute -right-6 -top-6 h-32 w-32 bg-emerald-500/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
+            <div class="relative z-10">
+                <div class="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-5">
+                    <span class="material-icons-round">how_to_reg</span>
+                </div>
+                <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Active Accounts</p>
+                <h3 class="text-3xl font-black text-slate-900 dark:text-white">{{ number_format($stats['active_users']) }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-7 border border-slate-200/60 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+            <div class="absolute -right-6 -top-6 h-32 w-32 bg-amber-500/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
+            <div class="relative z-10">
+                <div class="h-12 w-12 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-5">
+                    <span class="material-icons-round">qr_code_scanner</span>
+                </div>
+                <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Community Scans</p>
+                <h3 class="text-3xl font-black text-slate-900 dark:text-white">{{ number_format($stats['total_scans']) }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-7 border border-slate-200/60 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+            <div class="absolute -right-6 -top-6 h-32 w-32 bg-blue-500/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
+            <div class="relative z-10">
+                <div class="h-12 w-12 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-5">
+                    <span class="material-icons-round">medication</span>
+                </div>
+                <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Health Experts</p>
+                <h3 class="text-3xl font-black text-slate-900 dark:text-white">{{ number_format($stats['total_nutritionists']) }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Search Control Center -->
+    <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/20">
+        <form action="{{ route('admin.user.index') }}" method="GET" class="flex flex-col xl:flex-row gap-6">
+            <div class="flex-1 relative">
+                <span class="material-icons-round absolute left-5 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                <input
+                    type="text"
+                    name="search"
+                    value="{{ request('search') }}"
+                    class="w-full rounded-2xl border-none bg-slate-50 dark:bg-slate-800 pl-14 pr-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/20 transition-all"
+                    placeholder="Search by identity, email, or username..."
+                >
             </div>
             
-            <select name="status" style="padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light);">
-                <option value="all">All Status</option>
-                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                <option value="blocked" {{ request('status') == 'blocked' ? 'selected' : '' }}>Blocked</option>
-            </select>
-            
-            <select name="sort" style="padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light);">
-                <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Sort by Joined Date</option>
-                <option value="username" {{ request('sort') == 'username' ? 'selected' : '' }}>Sort by Username</option>
-                <option value="scans_count" {{ request('sort') == 'scans_count' ? 'selected' : '' }}>Sort by Scan Count</option>
-            </select>
-            
-            <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">
-                <i class="fas fa-filter"></i> Apply
-            </button>
+            <div class="flex flex-wrap items-center gap-4">
+                <select name="role" class="rounded-2xl border-none bg-slate-50 dark:bg-slate-800 px-6 py-4 text-sm font-bold text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-primary/20 cursor-pointer">
+                    <option value="">All Roles</option>
+                    <option value="user" {{ request('role') == 'user' ? 'selected' : '' }}>Regular Users</option>
+                    <option value="ahli_gizi" {{ request('role') == 'ahli_gizi' ? 'selected' : '' }}>Nutritionists</option>
+                    <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Administrators</option>
+                </select>
+
+                <select name="status" class="rounded-2xl border-none bg-slate-50 dark:bg-slate-800 px-6 py-4 text-sm font-bold text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-primary/20 cursor-pointer">
+                    <option value="all">All Status</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active Only</option>
+                    <option value="blocked" {{ request('status') == 'blocked' ? 'selected' : '' }}>Blocked Only</option>
+                </select>
+
+                <button type="submit" class="rounded-2xl bg-primary px-8 py-4 text-sm font-black text-white shadow-lg shadow-primary/20 hover:opacity-90 transition-all">
+                    APPLY FILTERS
+                </button>
+            </div>
         </form>
     </div>
-</div>
 
-<!-- User Table -->
-<div class="card">
-    <div class="card-body" style="padding: 0;">
-        <div class="table-container">
-            <table style="border-collapse: collapse; width: 100%;">
+    <!-- Main User Registry -->
+    <div class="bg-white dark:bg-slate-900 rounded-[3rem] border border-slate-200/60 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
                 <thead>
-                    <tr>
-                        <th style="padding: 16px 24px;">User Information</th>
-                        <th style="padding: 16px;">Contact</th>
-                        <th style="padding: 16px;">Role</th>
-                        <th style="padding: 16px;">Status</th>
-                        <th style="padding: 16px; text-align: center;">Medical</th>
-                        <th style="padding: 16px; text-align: center;">Scans</th>
-                        <th style="padding: 16px;">Joined Date</th>
-                        <th style="padding: 16px 24px; text-align: right;">Actions</th>
+                    <tr class="bg-slate-50/50 dark:bg-slate-800/50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                        <th class="px-8 py-6">User Profile</th>
+                        <th class="px-8 py-6">Security & Role</th>
+                        <th class="px-8 py-6">Medical Insights</th>
+                        <th class="px-8 py-6">Activity Metrics</th>
+                        <th class="px-8 py-6 text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     @forelse($users as $user)
-                    <tr>
-                        <td style="padding: 16px 24px;">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--bg-light); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); overflow: hidden;">
-                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($user->full_name) }}&background=random&color=fff" style="width: 100%; height: 100%; object-fit: cover;">
+                        <tr class="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all duration-300">
+                            <td class="px-8 py-7">
+                                <div class="flex items-center gap-5">
+                                    <div class="h-14 w-14 rounded-2xl bg-slate-100 dark:bg-slate-800 border-2 border-white dark:border-slate-700 shadow-sm overflow-hidden group-hover:scale-105 transition-transform duration-500">
+                                        <img src="https://ui-avatars.com/api/?name={{ urlencode($user->full_name) }}&background=00bbc2&color=fff&bold=true" class="h-full w-full object-cover">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <p class="text-sm font-black text-slate-900 dark:text-white">{{ $user->full_name }}</p>
+                                        <p class="text-xs font-bold text-slate-400 flex items-center gap-1.5">
+                                            <span class="material-icons-round text-xs">alternate_email</span>
+                                            {{ $user->username }}
+                                        </p>
+                                        <p class="text-[10px] font-bold text-slate-400/80">{{ $user->email }}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <div style="font-weight: 700; color: var(--text-main);">{{ $user->full_name }}</div>
-                                    <div style="font-size: 12px; color: var(--text-muted);">{{ '@' . $user->username }}</div>
+                            </td>
+                            <td class="px-8 py-7">
+                                @php
+                                    $roleKey = strtolower($user->role ?? 'user');
+                                    $roleMeta = match($roleKey) {
+                                        'admin' => ['label' => 'ADMINISTRATOR', 'color' => 'text-rose-600', 'bg' => 'bg-rose-50', 'border' => 'border-rose-100'],
+                                        'ahli_gizi', 'nutritionist', 'expert' => ['label' => 'HEALTH EXPERT', 'color' => 'text-emerald-600', 'bg' => 'bg-emerald-50', 'border' => 'border-emerald-100'],
+                                        default => ['label' => 'COMMUNITY USER', 'color' => 'text-primary', 'bg' => 'bg-primary/5', 'border' => 'border-primary/10'],
+                                    };
+                                @endphp
+                                <div class="space-y-2">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-lg {{ $roleMeta['bg'] }} {{ $roleMeta['color'] }} {{ $roleMeta['border'] }} border text-[10px] font-black tracking-widest uppercase">
+                                        {{ $roleMeta['label'] }}
+                                    </span>
+                                    <div class="flex items-center gap-2">
+                                        <div class="h-2 w-2 rounded-full {{ $user->active ? 'bg-emerald-500' : 'bg-rose-500' }}"></div>
+                                        <span class="text-[10px] font-black {{ $user->active ? 'text-emerald-600' : 'text-rose-600' }} uppercase">{{ $user->active ? 'Verified & Active' : 'Account Blocked' }}</span>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td style="padding: 16px;">
-                            <div style="font-size: 13px; color: var(--text-main);">{{ $user->email }}</div>
-                            <div style="font-size: 11px; color: var(--text-muted);">{{ $user->phone ?: 'No phone' }}</div>
-                        </td>
-                        <td style="padding: 16px;">
-                            @php
-                                $roleKey = strtolower($user->role ?? 'user');
-                                $roleMeta = match($roleKey) {
-                                    'admin' => ['label' => 'ADMIN', 'color' => '#DC2626', 'bg' => 'rgba(220,38,38,.08)', 'border' => 'rgba(220,38,38,.24)'],
-                                    'ahli_gizi', 'nutritionist', 'expert' => ['label' => 'AHLI GIZI', 'color' => '#059669', 'bg' => 'rgba(5,150,105,.08)', 'border' => 'rgba(5,150,105,.24)'],
-                                    default => ['label' => 'USER', 'color' => 'var(--primary-color)', 'bg' => 'rgba(0,77,64,.08)', 'border' => 'rgba(0,77,64,.20)'],
-                                };
-                            @endphp
-                            <span class="badge" style="background: {{ $roleMeta['bg'] }}; color: {{ $roleMeta['color'] }}; border: 1px solid {{ $roleMeta['border'] }};">
-                                {{ $roleMeta['label'] }}
-                            </span>
-                        </td>
-                        <td style="padding: 16px;">
-                            @if($user->active)
-                                <span style="display: flex; align-items: center; gap: 6px; color: var(--success); font-size: 12px; font-weight: 700;">
-                                    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--success);"></span> Active
-                                </span>
-                            @else
-                                <span style="display: flex; align-items: center; gap: 6px; color: var(--danger); font-size: 12px; font-weight: 700;">
-                                    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--danger);"></span> Blocked
-                                </span>
-                            @endif
-                        </td>
-                        <td style="padding: 16px; text-align: center;">
-                            @if($user->bmi)
-                                <div style="font-weight: 700; color: {{ $user->bmi > 25 ? '#F59E0B' : 'var(--primary-color)' }}; font-size: 13px;">
-                                    {{ $user->bmi }} <span style="font-size: 10px; font-weight: 500; color: var(--text-muted);">BMI</span>
+                            </td>
+                            <td class="px-8 py-7">
+                                <div class="flex flex-wrap gap-2">
+                                    @if($user->bmi)
+                                        <div class="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-center">
+                                            <p class="text-[10px] font-bold text-slate-400 leading-none mb-1">BMI</p>
+                                            <p class="text-xs font-black text-slate-700 dark:text-slate-200">{{ $user->bmi }}</p>
+                                        </div>
+                                    @endif
+                                    @if($user->blood_type)
+                                        <div class="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-100 text-center">
+                                            <p class="text-[10px] font-bold text-rose-300 leading-none mb-1">BLOOD</p>
+                                            <p class="text-xs font-black text-rose-600">{{ $user->blood_type }}</p>
+                                        </div>
+                                    @endif
+                                    @if(!$user->bmi && !$user->blood_type)
+                                        <span class="text-xs font-bold text-slate-300 italic">No health data</span>
+                                    @endif
                                 </div>
-                            @endif
-                            @if($user->blood_type)
-                                <span class="badge" style="background: rgba(231, 76, 60, 0.1); color: #E74C3C; border: 1px solid #E74C3C; font-size: 10px; margin-top: 4px;">
-                                    Type {{ $user->blood_type }}
-                                </span>
-                            @endif
-                            @if(!$user->bmi && !$user->blood_type)
-                                <span style="color: var(--text-muted); font-size: 11px;">-</span>
-                            @endif
-                        </td>
-                        <td style="padding: 16px; text-align: center;">
-                            <div style="font-weight: 800; color: var(--primary-color);">{{ number_format(($user->scans_count ?? 0) + ($user->scan_histories_count ?? 0)) }}</div>
-                        </td>
-                        <td style="padding: 16px; font-size: 12px; color: var(--text-muted);">
-                            {{ $user->created_at->format('d M Y') }}
-                        </td>
-                        <td style="padding: 16px 24px; text-align: right;">
-                            <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                                <a href="{{ route('admin.user.show', $user->id_user) }}" class="btn btn-outline" style="padding: 8px; color: var(--accent-color); border-color: var(--accent-color);" title="View Detail"><i class="fas fa-eye"></i></a>
-                                <a href="{{ route('admin.user.edit', $user->id_user) }}" class="btn btn-outline" style="padding: 8px; color: var(--primary-color); border-color: var(--primary-color);"><i class="fas fa-user-edit"></i></a>
-                                <form action="{{ route('admin.user.role', $user->id_user) }}" method="POST" style="display: inline-flex;">
-                                    @csrf
-                                    @method('PATCH')
-                                    <select name="role" onchange="this.form.submit()" title="Ganti Role"
-                                            style="width: 104px; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light); font-size: 11px; font-weight: 700;">
-                                        <option value="user" {{ $roleKey === 'user' ? 'selected' : '' }}>User</option>
-                                        <option value="ahli_gizi" {{ in_array($roleKey, ['ahli_gizi', 'nutritionist', 'expert']) ? 'selected' : '' }}>Ahli Gizi</option>
-                                        <option value="admin" {{ $roleKey === 'admin' ? 'selected' : '' }}>Admin</option>
-                                    </select>
-                                </form>
-                                
-                                <form action="{{ route('admin.user.toggle', $user->id_user) }}" method="POST" style="display: inline;">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="btn btn-outline" style="padding: 8px; color: {{ $user->active ? 'var(--danger)' : 'var(--success)' }}; border-color: var(--border-color);" title="{{ $user->active ? 'Block User' : 'Unblock User' }}">
-                                        <i class="fas fa-{{ $user->active ? 'ban' : 'check' }}"></i>
-                                    </button>
-                                </form>
-                                
-                                @if($user->role != 'admin')
-                                <form action="{{ route('admin.user.destroy', $user->id_user) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini selamanya?');" style="display: inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-outline" style="padding: 8px; color: var(--danger); border-color: var(--danger);"><i class="fas fa-trash"></i></button>
-                                </form>
-                                @endif
-                            </div>
-                        </td>
-                    </tr>
+                            </td>
+                            <td class="px-8 py-7">
+                                <div class="flex items-center gap-4">
+                                    <div class="text-center">
+                                        <p class="text-xl font-black text-primary">{{ number_format(($user->scans_count ?? 0) + ($user->scan_histories_count ?? 0)) }}</p>
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Total Scans</p>
+                                    </div>
+                                    <div class="h-8 w-px bg-slate-100 dark:bg-slate-800"></div>
+                                    <div>
+                                        <p class="text-[10px] font-bold text-slate-400">Joined On</p>
+                                        <p class="text-xs font-black text-slate-700 dark:text-slate-200">{{ $user->created_at->format('d M Y') }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-8 py-7 text-right">
+                                <div class="flex justify-end items-center gap-2">
+                                    <a href="{{ route('admin.user.show', $user->id_user) }}" class="h-10 w-10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-primary/10 hover:text-primary transition-all" title="Full Analytics">
+                                        <span class="material-icons-round">analytics</span>
+                                    </a>
+                                    <a href="{{ route('admin.user.edit', $user->id_user) }}" class="h-10 w-10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-primary/10 hover:text-primary transition-all" title="Edit Profile">
+                                        <span class="material-icons-round">manage_accounts</span>
+                                    </a>
+                                    <div class="h-6 w-px bg-slate-100 dark:bg-slate-800 mx-1"></div>
+                                    <form action="{{ route('admin.user.toggle', $user->id_user) }}" method="POST" class="inline">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="h-10 w-10 rounded-xl flex items-center justify-center {{ $user->active ? 'text-rose-400 hover:bg-rose-50 hover:text-rose-600' : 'text-emerald-400 hover:bg-emerald-50 hover:text-emerald-600' }} transition-all" title="{{ $user->active ? 'Suspend Account' : 'Activate Account' }}">
+                                            <span class="material-icons-round">{{ $user->active ? 'block' : 'check_circle' }}</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="8" style="text-align: center; padding: 48px; color: var(--text-muted);">No users found.</td>
-                    </tr>
+                        <tr>
+                            <td colspan="5" class="px-8 py-20 text-center">
+                                <div class="flex flex-col items-center">
+                                    <div class="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-4">
+                                        <span class="material-icons-round text-4xl">person_search</span>
+                                    </div>
+                                    <p class="text-slate-400 font-bold">No users found matching your search criteria.</p>
+                                </div>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </div>
-    <div class="card-footer" style="padding: 16px 24px;">
-        {{ $users->links() }}
+        <div class="px-8 py-6 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800">
+            {{ $users->links() }}
+        </div>
     </div>
 </div>
-
 @endsection

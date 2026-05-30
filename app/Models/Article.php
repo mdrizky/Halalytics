@@ -28,4 +28,14 @@ class Article extends Model
             'category' => $this->category,
         ], 'article');
     }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        return $this->image;
+    }
+
+    public function getFormattedDateAttribute(): string
+    {
+        return optional($this->created_at)->format('d M Y') ?? '-';
+    }
 }

@@ -1,79 +1,78 @@
 @extends('admin.layouts.admin_layout')
 
-@section('title', 'Foods & Beverages Hub - Halalytics Admin')
+@section('title', 'Universal Inventory | Halalytics Admin')
 
 @section('breadcrumb')
-<span class="text-slate-400">Catalog</span>
+<span class="text-slate-400">Logistics</span>
 <span class="material-icons-round text-slate-300 text-sm">chevron_right</span>
-<span class="font-semibold text-slate-700 dark:text-slate-200">Foods & Beverages</span>
+<span class="font-semibold text-slate-700 dark:text-slate-200">Universal Inventory Hub</span>
 @endsection
 
 @section('content')
-<div class="space-y-6">
-    <!-- Header Section -->
-    <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
-        <div>
-            <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Foods & Beverages Inventory</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-2xl">
-                Management of internal F&B products and external Open Food Facts catalog.
+<div class="space-y-8">
+    <!-- Sophisticated Header -->
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+        <div class="space-y-2">
+            <h2 class="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Product Inventory</h2>
+            <p class="text-slate-500 dark:text-slate-400 font-medium max-w-2xl">
+                Pusat kendali inventaris global Halalytics. Kelola produk lokal dan pantau sinkronisasi database eksternal dari Open Food Facts, Open Beauty Facts, dan OpenFDA.
             </p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
-            <a href="{{ route('admin.product.create') }}" class="inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all transform hover:-translate-y-1">
-                <span class="material-icons-round text-lg">add</span>
+            <button onclick="document.getElementById('add-product-modal').classList.remove('hidden')" class="inline-flex items-center gap-2 rounded-2xl bg-slate-900 dark:bg-white px-6 py-3 text-sm font-bold text-white dark:text-slate-900 shadow-xl hover:opacity-90 transition-all transform hover:-translate-y-1">
+                <span class="material-icons-round text-lg">add_box</span>
                 ADD LOCAL PRODUCT
-            </a>
+            </button>
         </div>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-            <div class="absolute -right-4 -top-4 h-24 w-24 bg-primary/5 rounded-full group-hover:scale-110 transition-transform"></div>
-            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total Products</p>
-            <div class="mt-4 flex items-end justify-between">
-                <div>
-                    <h3 class="text-3xl font-extrabold text-slate-900 dark:text-white">{{ number_format(($productStats['local_total'] ?? 0) + ($productStats['off_total'] ?? 0) + ($productStats['obf_total'] ?? 0) + ($productStats['fda_total'] ?? 0)) }}</h3>
-                </div>
-                <div class="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+    <!-- Inventory Analytics Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-7 border border-slate-200/60 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+            <div class="absolute -right-6 -top-6 h-32 w-32 bg-primary/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
+            <div class="relative z-10">
+                <div class="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-5">
                     <span class="material-icons-round">inventory_2</span>
                 </div>
+                <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Local Inventory</p>
+                <h3 class="text-3xl font-black text-slate-900 dark:text-white">{{ number_format($localProducts->total()) }}</h3>
+                <p class="text-[10px] font-bold text-emerald-500 mt-2 flex items-center gap-1">
+                    <span class="material-icons-round text-xs">verified</span>
+                    100% VERIFIED
+                </p>
             </div>
         </div>
-        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-            <div class="absolute -right-4 -top-4 h-24 w-24 bg-emerald-500/5 rounded-full group-hover:scale-110 transition-transform"></div>
-            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Verified Local</p>
-            <div class="mt-4 flex items-end justify-between">
-                <div>
-                    <h3 class="text-3xl font-extrabold text-slate-900 dark:text-white">{{ number_format($productStats['local_verified'] ?? 0) }}</h3>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-7 border border-slate-200/60 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+            <div class="absolute -right-6 -top-6 h-32 w-32 bg-emerald-500/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
+            <div class="relative z-10">
+                <div class="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-5">
+                    <span class="material-icons-round">restaurant</span>
                 </div>
-                <div class="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 flex items-center justify-center">
-                    <span class="material-icons-round">verified</span>
-                </div>
+                <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Food Database (OFF)</p>
+                <h3 class="text-3xl font-black text-slate-900 dark:text-white">{{ number_format($offProducts->total()) }}</h3>
             </div>
         </div>
-        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-            <div class="absolute -right-4 -top-4 h-24 w-24 bg-amber-500/5 rounded-full group-hover:scale-110 transition-transform"></div>
-            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Wait for Sync</p>
-            <div class="mt-4 flex items-end justify-between">
-                <div>
-                    <h3 class="text-3xl font-extrabold text-slate-900 dark:text-white">{{ number_format(($productStats['local_total'] ?? 0) - ($productStats['local_verified'] ?? 0)) }}</h3>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-7 border border-slate-200/60 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+            <div class="absolute -right-6 -top-6 h-32 w-32 bg-pink-500/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
+            <div class="relative z-10">
+                <div class="h-12 w-12 rounded-2xl bg-pink-500/10 text-pink-600 flex items-center justify-center mb-5">
+                    <span class="material-icons-round">face</span>
                 </div>
-                <div class="h-12 w-12 rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 flex items-center justify-center">
-                    <span class="material-icons-round">sync</span>
-                </div>
+                <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Cosmetics (OBF)</p>
+                <h3 class="text-3xl font-black text-slate-900 dark:text-white">{{ number_format($obfProducts->total()) }}</h3>
             </div>
         </div>
-        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-            <div class="absolute -right-4 -top-4 h-24 w-24 bg-blue-500/5 rounded-full group-hover:scale-110 transition-transform"></div>
-            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">External Items</p>
-            <div class="mt-4 flex items-end justify-between">
-                <div>
-                    <h3 class="text-3xl font-extrabold text-slate-900 dark:text-white">{{ number_format(($productStats['off_total'] ?? 0) + ($productStats['obf_total'] ?? 0) + ($productStats['fda_total'] ?? 0)) }}</h3>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-7 border border-slate-200/60 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+            <div class="absolute -right-6 -top-6 h-32 w-32 bg-blue-500/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
+            <div class="relative z-10">
+                <div class="h-12 w-12 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-5">
+                    <span class="material-icons-round">medication</span>
                 </div>
-                <div class="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center">
-                    <span class="material-icons-round">cloud_done</span>
-                </div>
+                <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Medicine (FDA)</p>
+                <h3 class="text-3xl font-black text-slate-900 dark:text-white">{{ number_format($fdaProducts->total()) }}</h3>
             </div>
         </div>
     </div>
@@ -111,10 +110,22 @@
 
     <!-- Tab Navigation -->
     <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-px">
-        <button onclick="switchTab('local')" id="tab-local" class="tab-btn px-6 py-3 text-sm font-bold border-b-2 transition-all border-primary text-primary">LOCAL INVENTORY</button>
-        <button onclick="switchTab('off')" id="tab-off" class="tab-btn px-6 py-3 text-sm font-bold border-b-2 transition-all border-transparent text-slate-400 hover:text-slate-600">FOODS (OFF)</button>
-        <button onclick="switchTab('obf')" id="tab-obf" class="tab-btn px-6 py-3 text-sm font-bold border-b-2 transition-all border-transparent text-slate-400 hover:text-slate-600">COSMETICS (OBF)</button>
-        <button onclick="switchTab('fda')" id="tab-fda" class="tab-btn px-6 py-3 text-sm font-bold border-b-2 transition-all border-transparent text-slate-400 hover:text-slate-600">MEDICINES (FDA)</button>
+        <button onclick="switchTab('local')" id="tab-local" class="tab-btn px-6 py-3 text-sm font-black border-b-2 transition-all border-primary text-primary flex items-center gap-2">
+            <span class="material-icons-round text-sm">inventory</span>
+            LOCAL ASSETS
+        </button>
+        <button onclick="switchTab('off')" id="tab-off" class="tab-btn px-6 py-3 text-sm font-black border-b-2 transition-all border-transparent text-slate-400 hover:text-slate-600 flex items-center gap-2">
+            <span class="material-icons-round text-sm">restaurant</span>
+            FOODS (OFF)
+        </button>
+        <button onclick="switchTab('obf')" id="tab-obf" class="tab-btn px-6 py-3 text-sm font-black border-b-2 transition-all border-transparent text-slate-400 hover:text-slate-600 flex items-center gap-2">
+            <span class="material-icons-round text-sm">face</span>
+            COSMETICS (OBF)
+        </button>
+        <button onclick="switchTab('fda')" id="tab-fda" class="tab-btn px-6 py-3 text-sm font-black border-b-2 transition-all border-transparent text-slate-400 hover:text-slate-600 flex items-center gap-2">
+            <span class="material-icons-round text-sm">medication</span>
+            MEDICINES (FDA)
+        </button>
     </div>
 
     <!-- Inventory Sections -->
@@ -213,18 +224,22 @@
                         <span class="inline-flex items-center rounded-full bg-emerald-500/5 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-emerald-600 border border-emerald-500/10">
                             {{ number_format($offProducts->total()) }} FOOD
                         </span>
-                        <a href="{{ route('admin.products.off.index') }}" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all">
-                            <span class="material-icons-round text-sm">search</span>
-                            SEARCH LIVE DATABASE
-                        </a>
+                        <form action="{{ route('admin.product.sync', 'off') }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all">
+                                <span class="material-icons-round text-sm">sync</span>
+                                SYNC LIVE OFF
+                            </button>
+                        </form>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead>
-                            <tr class="bg-slate-50/50 dark:bg-slate-800/50 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                                <th class="px-8 py-5">Product Entity</th>
-                                <th class="px-8 py-5">Source</th>
+                            <tr class="bg-slate-50/50 dark:bg-slate-800/50 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                <th class="px-8 py-5">Product Intelligence</th>
+                                <th class="px-8 py-5">Category & Brands</th>
+                                <th class="px-8 py-5">Status & Source</th>
                                 <th class="px-8 py-5 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -233,7 +248,7 @@
                                 <tr class="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all">
                                     <td class="px-8 py-6">
                                         <div class="flex items-center gap-4">
-                                            <div class="h-10 w-10 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800 shadow-sm">
+                                            <div class="h-12 w-12 overflow-hidden rounded-xl border-2 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-sm group-hover:scale-105 transition-transform duration-500">
                                                 <img src="{{ $product->image }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/food-placeholder.svg'">
                                             </div>
                                             <div>
@@ -243,14 +258,43 @@
                                         </div>
                                     </td>
                                     <td class="px-8 py-6">
-                                        <span class="inline-flex px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 text-[10px] font-bold uppercase">OFF Global</span>
+                                        <div class="space-y-1">
+                                            <p class="text-xs font-black text-slate-700 dark:text-slate-200">{{ $product->category_name ?: 'Food & Beverage' }}</p>
+                                            <p class="text-[10px] font-bold text-slate-400">{{ $product->brand ?: 'Global Brand' }}</p>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <div class="space-y-2">
+                                            <div class="flex items-center gap-2">
+                                                <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                <span class="inline-flex px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 text-[10px] font-black tracking-widest uppercase">OFF GLOBAL DB</span>
+                                            </div>
+                                            <span class="inline-flex px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/20 text-amber-600 text-[10px] font-black tracking-widest uppercase border border-amber-100 dark:border-amber-800/50">SYUBHAT (PENDING)</span>
+                                        </div>
                                     </td>
                                     <td class="px-8 py-6 text-right">
-                                        <a href="{{ route('admin.product.show', $product->id_product) }}" class="text-primary hover:underline text-xs font-bold">VIEW DETAIL</a>
+                                        <div class="flex justify-end gap-2">
+                                            <a href="{{ route('admin.product.show', $product->id_product) }}" class="h-9 w-9 rounded-xl flex items-center justify-center text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-all" title="Full Analytics">
+                                                <span class="material-icons-round text-lg">analytics</span>
+                                            </a>
+                                            <a href="{{ route('admin.product.edit', $product->id_product) }}" class="h-9 w-9 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                                                <span class="material-icons-round text-lg">edit</span>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="3" class="px-8 py-10 text-center text-slate-400">No Food data found.</td></tr>
+                                <tr>
+                                    <td colspan="4" class="px-8 py-20 text-center">
+                                        <div class="flex flex-col items-center">
+                                            <div class="h-16 w-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300 mb-4">
+                                                <span class="material-icons-round text-3xl">restaurant</span>
+                                            </div>
+                                            <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No Food data found.</p>
+                                            <p class="text-slate-300 text-xs mt-1">Try syncing with Open Food Facts.</p>
+                                        </div>
+                                    </td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -275,14 +319,22 @@
                         <span class="inline-flex items-center rounded-full bg-pink-500/5 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-pink-600 border border-pink-500/10">
                             {{ number_format($obfProducts->total()) }} COSMETICS
                         </span>
+                        <form action="{{ route('admin.product.sync', 'obf') }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="inline-flex items-center gap-2 rounded-2xl bg-pink-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-pink-500/20 hover:bg-pink-600 transition-all">
+                                <span class="material-icons-round text-sm">sync</span>
+                                SYNC LIVE OBF
+                            </button>
+                        </form>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead>
-                            <tr class="bg-slate-50/50 dark:bg-slate-800/50 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                                <th class="px-8 py-5">Product Entity</th>
-                                <th class="px-8 py-5">Source</th>
+                            <tr class="bg-slate-50/50 dark:bg-slate-800/50 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                <th class="px-8 py-5">Beauty Intelligence</th>
+                                <th class="px-8 py-5">Brand & Manufacturer</th>
+                                <th class="px-8 py-5">Status & Source</th>
                                 <th class="px-8 py-5 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -291,7 +343,7 @@
                                 <tr class="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all">
                                     <td class="px-8 py-6">
                                         <div class="flex items-center gap-4">
-                                            <div class="h-10 w-10 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800 shadow-sm">
+                                            <div class="h-12 w-12 overflow-hidden rounded-xl border-2 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-sm group-hover:scale-105 transition-transform duration-500">
                                                 <img src="{{ $product->image }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/cosmetic-placeholder.svg'">
                                             </div>
                                             <div>
@@ -301,14 +353,43 @@
                                         </div>
                                     </td>
                                     <td class="px-8 py-6">
-                                        <span class="inline-flex px-2 py-0.5 rounded-md bg-pink-50 dark:bg-pink-900/20 text-pink-600 text-[10px] font-bold uppercase">OBF Global</span>
+                                        <div class="space-y-1">
+                                            <p class="text-xs font-black text-slate-700 dark:text-slate-200">{{ $product->brand ?: 'Global Beauty' }}</p>
+                                            <p class="text-[10px] font-bold text-slate-400">Manufactured Internationally</p>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <div class="space-y-2">
+                                            <div class="flex items-center gap-2">
+                                                <span class="h-2 w-2 rounded-full bg-pink-500 animate-pulse"></span>
+                                                <span class="inline-flex px-2 py-0.5 rounded-md bg-pink-50 dark:bg-pink-900/20 text-pink-600 text-[10px] font-black tracking-widest uppercase">OBF GLOBAL DB</span>
+                                            </div>
+                                            <span class="inline-flex px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/20 text-amber-600 text-[10px] font-black tracking-widest uppercase border border-amber-100 dark:border-amber-800/50">SYUBHAT (PENDING)</span>
+                                        </div>
                                     </td>
                                     <td class="px-8 py-6 text-right">
-                                        <a href="{{ route('admin.product.show', $product->id_product) }}" class="text-primary hover:underline text-xs font-bold">VIEW DETAIL</a>
+                                        <div class="flex justify-end gap-2">
+                                            <a href="{{ route('admin.product.show', $product->id_product) }}" class="h-9 w-9 rounded-xl flex items-center justify-center text-slate-400 hover:bg-pink-50 hover:text-pink-600 transition-all" title="Full Analytics">
+                                                <span class="material-icons-round text-lg">analytics</span>
+                                            </a>
+                                            <a href="{{ route('admin.product.edit', $product->id_product) }}" class="h-9 w-9 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                                                <span class="material-icons-round text-lg">edit</span>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="3" class="px-8 py-10 text-center text-slate-400">No Beauty data found.</td></tr>
+                                <tr>
+                                    <td colspan="4" class="px-8 py-20 text-center">
+                                        <div class="flex flex-col items-center">
+                                            <div class="h-16 w-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300 mb-4">
+                                                <span class="material-icons-round text-3xl">face</span>
+                                            </div>
+                                            <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No Beauty data found.</p>
+                                            <p class="text-slate-300 text-xs mt-1">Try syncing with Open Beauty Facts.</p>
+                                        </div>
+                                    </td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -333,14 +414,22 @@
                         <span class="inline-flex items-center rounded-full bg-blue-500/5 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-blue-600 border border-blue-500/10">
                             {{ number_format($fdaProducts->total()) }} MEDICINES
                         </span>
+                        <form action="{{ route('admin.product.sync', 'fda') }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="inline-flex items-center gap-2 rounded-2xl bg-blue-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-blue-500/20 hover:bg-blue-600 transition-all">
+                                <span class="material-icons-round text-sm">sync</span>
+                                SYNC LIVE FDA
+                            </button>
+                        </form>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead>
                             <tr class="bg-slate-50/50 dark:bg-slate-800/50 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                                <th class="px-8 py-5">Medicine Entity</th>
-                                <th class="px-8 py-5">Source</th>
+                                <th class="px-8 py-5">Medicine Intelligence</th>
+                                <th class="px-8 py-5">Manufacturer & Brand</th>
+                                <th class="px-8 py-5">Global Source</th>
                                 <th class="px-8 py-5 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -349,24 +438,53 @@
                                 <tr class="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all">
                                     <td class="px-8 py-6">
                                         <div class="flex items-center gap-4">
-                                            <div class="h-10 w-10 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800 shadow-sm">
-                                                <img src="{{ $product->image }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/medicine-placeholder.svg'">
+                                            <div class="h-12 w-12 overflow-hidden rounded-xl border-2 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-sm group-hover:scale-105 transition-transform duration-500">
+                                                <img src="{{ $product->image_url }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/medicine-placeholder.svg'">
                                             </div>
                                             <div>
                                                 <p class="text-sm font-extrabold text-slate-900 dark:text-white line-clamp-1">{{ $product->name }}</p>
-                                                <p class="mt-1 text-[10px] font-bold text-slate-400 tracking-tighter">{{ $product->barcode ?: ($product->brand_name ?: 'FDA-DB') }}</p>
+                                                <p class="mt-1 text-[10px] font-bold text-slate-400 tracking-tighter">{{ $product->barcode ?: 'FDA-REG-NONE' }}</p>
+                                                @if($product->generic_name)
+                                                    <p class="text-[9px] font-black text-primary/60 uppercase mt-0.5">{{ $product->generic_name }}</p>
+                                                @endif
                                             </div>
                                         </div>
                                     </td>
                                     <td class="px-8 py-6">
-                                        <span class="inline-flex px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-600 text-[10px] font-bold uppercase">FDA Global</span>
+                                        <div class="space-y-1">
+                                            <p class="text-xs font-black text-slate-700 dark:text-slate-200">{{ $product->manufacturer ?: 'Unknown Mfr' }}</p>
+                                            <p class="text-[10px] font-bold text-slate-400">{{ $product->brand_name ?: 'Generic Brand' }}</p>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <div class="flex items-center gap-2">
+                                            <span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+                                            <span class="inline-flex px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-600 text-[10px] font-black tracking-widest uppercase">FDA GLOBAL DB</span>
+                                        </div>
                                     </td>
                                     <td class="px-8 py-6 text-right">
-                                        <a href="{{ route('admin.product.show', $product->id_medicine) }}" class="text-primary hover:underline text-xs font-bold">VIEW DETAIL</a>
+                                        <div class="flex justify-end gap-2">
+                                            <a href="{{ route('admin.product.show', $product->id_medicine) }}" class="h-9 w-9 rounded-xl flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-all" title="Full Analytics">
+                                                <span class="material-icons-round text-lg">analytics</span>
+                                            </a>
+                                            <a href="{{ route('admin.product.edit', $product->id_medicine) }}" class="h-9 w-9 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                                                <span class="material-icons-round text-lg">edit</span>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="3" class="px-8 py-10 text-center text-slate-400">No Medicine data found.</td></tr>
+                                <tr>
+                                    <td colspan="4" class="px-8 py-20 text-center">
+                                        <div class="flex flex-col items-center">
+                                            <div class="h-16 w-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300 mb-4">
+                                                <span class="material-icons-round text-3xl">medical_services</span>
+                                            </div>
+                                            <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No Medicine data found.</p>
+                                            <p class="text-slate-300 text-xs mt-1">Try syncing with FDA Live Database.</p>
+                                        </div>
+                                    </td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -382,19 +500,21 @@
 @push('scripts')
 <script>
     function switchTab(tab) {
-        // Update buttons
+        // Hide all sections
+        document.querySelectorAll('.tab-section').forEach(el => el.classList.add('hidden'));
+        // Show selected section
+        document.getElementById('section-' + tab).classList.remove('hidden');
+
+        // Reset all buttons
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('border-primary', 'text-primary');
             btn.classList.add('border-transparent', 'text-slate-400');
         });
-        document.getElementById('tab-' + tab).classList.add('border-primary', 'text-primary');
-        document.getElementById('tab-' + tab).classList.remove('border-transparent', 'text-slate-400');
 
-        // Update sections
-        document.querySelectorAll('.tab-section').forEach(section => {
-            section.classList.add('hidden');
-        });
-        document.getElementById('section-' + tab).classList.remove('hidden');
+        // Set active button
+        const activeBtn = document.getElementById('tab-' + tab);
+        activeBtn.classList.remove('border-transparent', 'text-slate-400');
+        activeBtn.classList.add('border-primary', 'text-primary');
 
         // Save tab to local storage if needed
         localStorage.setItem('admin_product_tab', tab);

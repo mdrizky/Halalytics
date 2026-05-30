@@ -316,9 +316,21 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [\App\Http\Controllers\Admin\BpomAdminController::class, 'destroy'])->name('admin.bpom.destroy');
     });
 
-    // Consolidated Product Hub replaces legacy medicine/cosmetic routes
-
-    // Articles Management (Admin)
+    // Consolidated Product Hub
+    Route::get('/admin/product', [AdminProductController::class, 'admin_product'])->name('admin.product.index')->middleware('role:admin');
+    Route::post('/admin/product/sync/{source}', [AdminProductController::class, 'syncExternal'])->name('admin.product.sync')->middleware('role:admin');
+    Route::get('/admin/product/create', [AdminProductController::class, 'create'])->name('admin.product.create')->middleware('role:admin');
+    Route::post('/admin/product', [AdminProductController::class, 'store'])->name('admin.product.store')->middleware('role:admin');
+    Route::get('/admin/product/{id}', [AdminProductController::class, 'show'])->name('admin.product.show')->middleware('role:admin');
+    Route::get('/admin/product/{id}/edit', [AdminProductController::class, 'edit'])->name('admin.product.edit')->middleware('role:admin');
+    Route::put('/admin/product/{id}', [AdminProductController::class, 'update'])->name('admin.product.update')->middleware('role:admin');
+    Route::delete('/admin/product/{id}', [AdminProductController::class, 'destroy'])->name('admin.product.destroy')->middleware('role:admin');
+    Route::patch('/admin/product/{id}/toggle', [AdminProductController::class, 'toggleActive'])->name('admin.product.toggle')->middleware('role:admin');
+    Route::post('/admin/product/batch-ai-verify', [AdminProductController::class, 'batchAiVerify'])->name('admin.product.batch-ai-verify')->middleware('role:admin');
+    Route::post('/admin/product/apply-batch-ai-verify', [AdminProductController::class, 'applyBatchAiVerify'])->name('admin.product.apply-batch-ai-verify')->middleware('role:admin');
+    Route::get('/admin/ocr-scanner', [AdminProductController::class, 'ocrScanner'])->name('admin.ocr-scanner')->middleware('role:admin');
+    
+    // User Management (Admin)
     Route::prefix('admin/articles')->middleware('role:admin')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\ArticleAdminController::class, 'index'])->name('admin.articles.index');
         Route::post('/', [\App\Http\Controllers\Admin\ArticleAdminController::class, 'store'])->name('admin.articles.store');

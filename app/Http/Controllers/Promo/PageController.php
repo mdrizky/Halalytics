@@ -26,8 +26,14 @@ class PageController extends Controller
         // Data for specialized services
         $medicines = \App\Models\Medicine::take(6)->get();
         $diseases = \App\Models\HealthEncyclopedia::where('alphabet', 'A')->take(12)->get();
+        
+        // Get user statistics for "Ketersediaan Pakar" section replacement
+        $stats = [
+            'total_users' => \App\Models\User::count(),
+            'active_doctors' => \App\Models\User::where('role', 'ahli_gizi')->count(),
+        ];
 
-        return view('promo.home', compact('settings', 'latestBlogs', 'externalArticles', 'medicines', 'diseases'));
+        return view('promo.home', compact('settings', 'latestBlogs', 'externalArticles', 'medicines', 'diseases', 'stats'));
     }
 
     public function specialized($slug)
@@ -120,30 +126,36 @@ class PageController extends Controller
     ) {
         $message = $request->input('message');
         if (!$message) {
-            return response()->json(['reply' => 'Ada yang bisa Hilda bantu?']);
+            return response()->json(['reply' => 'Halo! Ada yang bisa Hilda bantu mengenai kesehatan, nutrisi, atau kehalalan produk?']);
         }
 
         try {
-            $roleInstructions = "Anda adalah Hilda, asisten AI resmi Halalytics. Tugas Anda adalah membantu pengguna memahami kesehatan, nutrisi, dan kehalalan produk secara akurat dan profesional.";
+            // Instruksi yang lebih mendalam agar jawaban tidak kaku/template
+            $roleInstructions = "Anda adalah Hilda, asisten AI resmi Halalytics. Jawablah dengan nada yang ramah, profesional, dan sangat informatif. Gunakan format markdown (bold, list) agar mudah dibaca. 
+            
+            Prinsip jawaban Anda:
+            1. Jika mengenai kesehatan: Berikan penjelasan medis yang mudah dimengerti namun mendalam. Berikan tips gaya hidup sehat yang praktis.
+            2. Jika mengenai kehalalan: Jelaskan berdasarkan standar MUI/BPJPH. Berikan informasi tentang titik kritis bahan jika relevan.
+            3. Jika mengenai obat: Jelaskan fungsi umum dan ingatkan pentingnya resep dokter untuk obat keras.
+            
+            HINDARI jawaban singkat yang terasa seperti bot. Berikan konteks tambahan yang bermanfaat bagi pengguna.";
 
-            // Deteksi konteks secara sederhana
-            if (preg_match('/(obat|sakit|gejala|pusing|mual|demam)/i', $message)) {
-                $roleInstructions .= " Fokuskan jawaban pada informasi medis yang tervalidasi. Ingatkan pengguna untuk tetap berkonsultasi dengan dokter jika gejala berlanjut.";
-            } elseif (preg_match('/(halal|haram|babi|gelatin|syubhat|bpom|mui)/i', $message)) {
-                $roleInstructions .= " Fokuskan jawaban pada panduan kehalalan bahan makanan dan obat-obatan sesuai standar MUI dan BPOM.";
-            } elseif (preg_match('/(makan|diet|nutrisi|kalori|vitamin|gizi)/i', $message)) {
-                $roleInstructions .= " Fokuskan jawaban pada tips nutrisi seimbang, kebutuhan kalori, and gaya hidup sehat.";
+            // Deteksi konteks secara dinamis untuk menyesuaikan gaya bahasa
+            if (preg_match('/(obat|sakit|gejala|pusing|mual|demam|virus|bakteri|infeksi)/i', $message)) {
+                $roleInstructions .= " Fokuskan jawaban pada edukasi medis. Berikan langkah-langkah P3K atau pertolongan pertama jika memungkinkan.";
+            } elseif (preg_match('/(halal|haram|babi|gelatin|syubhat|bpom|mui|alkohol|emulsifier|lecithin)/i', $message)) {
+                $roleInstructions .= " Fokuskan pada edukasi kehalalan bahan pangan dan kosmetik. Jelaskan mengapa suatu bahan dianggap syubhat atau haram.";
+            } elseif (preg_match('/(makan|diet|nutrisi|kalori|vitamin|gizi|protein|karbohidrat|lemak)/i', $message)) {
+                $roleInstructions .= " Fokuskan pada panduan gizi seimbang dan manajemen berat badan yang sehat.";
             }
 
             $finalPrompt = $promptBuilder->build('user_chat', [
                 'user_name' => 'Pengguna Halalytics',
-                'user_age' => 'Dewasa',
-                'user_diseases' => 'Tidak disebutkan',
-                'user_allergies' => 'Tidak disebutkan',
                 'user_message' => $message,
-            ], $roleInstructions . "\n\nPertanyaan: {user_message}\n\nJawaban Hilda:");
+            ], $roleInstructions . "\n\nPertanyaan Pengguna: {user_message}\n\nJawaban Detail Hilda:");
 
-            $reply = $gemini->generateText($finalPrompt);
+            // Tingkatkan temperature sedikit agar lebih kreatif (0.8) dan max tokens lebih besar
+            $reply = $gemini->generateText($finalPrompt, 0.8, 3072);
 
             return response()->json([
                 'success' => true,
@@ -154,7 +166,7 @@ class PageController extends Controller
             \Illuminate\Support\Facades\Log::error('AI Chat Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'reply' => 'Maaf, Hilda sedang tidak bisa merespon. Silakan coba lagi nanti.'
+                'reply' => 'Maaf, Hilda sedang beristirahat sejenak untuk memperbarui sistem. Silakan coba sapa Hilda lagi beberapa saat lagi ya!'
             ], 500);
         }
     }

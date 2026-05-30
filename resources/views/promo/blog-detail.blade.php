@@ -79,7 +79,7 @@
 @endsection
 
 @section('content')
-<section class="article-hero text-white pt-24 pb-16">
+<header class="article-hero text-white pt-24 pb-16">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center">
             <span class="inline-flex bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
@@ -89,22 +89,27 @@
             <div class="mt-5 flex items-center justify-center gap-4 text-white/75 text-sm">
                 <span>{{ $blog->formatted_date }}</span>
                 <span>•</span>
-                <span>{{ $blog->views }}x dibaca</span>
+                <span>{{ number_format($blog->views) }}x dibaca</span>
             </div>
         </div>
     </div>
-</section>
+</header>
 
-<section class="bg-slate-50 py-12">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <article class="article-wrap overflow-hidden">
+<main class="py-16 bg-slate-50">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+            <!-- Article Image -->
             @if($blog->image)
-            <img src="{{ $blog->image_url }}" alt="{{ $blog->title }}" class="w-full h-[320px] md:h-[420px] object-cover">
+            <div class="mb-12 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-emerald-900/10 border-8 border-white">
+                <img src="{{ $blog->image }}" alt="{{ $blog->title }}" class="w-full h-auto object-cover">
+            </div>
             @endif
-            <div class="p-6 md:p-10">
-                <div class="article-content">
+
+            <!-- Article Content -->
+            <div class="bg-white p-8 md:p-16 rounded-[3rem] shadow-sm border border-slate-100">
+                <article class="prose prose-slate prose-lg max-w-none prose-headings:font-black prose-headings:text-slate-900 prose-p:leading-relaxed prose-a:text-emerald-600 prose-img:rounded-3xl">
                     {!! $blog->content !!}
-                </div>
+                </article>
 
                 <div class="mt-10 pt-6 border-t border-slate-200 flex flex-col md:flex-row justify-between gap-4">
                     <div class="flex items-center gap-3">

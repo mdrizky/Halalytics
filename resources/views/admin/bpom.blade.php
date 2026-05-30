@@ -20,12 +20,6 @@
                 <i class="fas fa-sync-alt"></i> <span class="btn-text">Sync BPOM (Semua Kategori)</span>
             </button>
         </form>
-        <form action="{{ route('admin.bpom.sync') }}?focus=cosmetics" method="POST" onsubmit="this.querySelector('button').disabled=true; this.querySelector('.btn-text').textContent='Syncing...';">
-            @csrf
-            <button type="submit" class="btn btn-outline" style="border-color: var(--accent-color); color: var(--accent-color);">
-                <i class="fas fa-magic"></i> <span class="btn-text">Sync BPOM (Kosmetik)</span>
-            </button>
-        </form>
         <form action="{{ route('admin.bpom.auto_categorize') }}" method="POST" onsubmit="this.querySelector('button').disabled=true; this.querySelector('.btn-text').textContent='Categorizing...';">
             @csrf
             <button type="submit" class="btn btn-outline" style="border-color: var(--primary-color); color: var(--primary-color);">

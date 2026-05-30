@@ -207,10 +207,10 @@ class AdminProductController extends Controller
         }
 
         $product = ProductModel::create(array_merge($data, [
-        'source' => 'local',
-        'active' => true,
-        'verification_status' => 'verified'
-    ]));
+            'source' => 'local',
+            'active' => true,
+            'verification_status' => 'verified'
+        ]));
 
         $this->notificationService->broadcast(
             'Produk baru ditambahkan',
@@ -225,6 +225,115 @@ class AdminProductController extends Controller
         );
 
         return redirect()->route('admin.product.index')->with('success', 'Produk berhasil ditambahkan!');
+    }
+
+    /**
+     * External API Synchronization
+     */
+    public function syncExternal(Request $request, $source)
+    {
+        try {
+            $count = 0;
+            switch ($source) {
+                case 'off':
+                    $service = app(\App\Services\OpenFoodFactsService::class);
+                    // Fetch some popular food categories to populate the local cache
+                    $categories = ['snacks', 'beverages', 'dairy', 'biscuits'];
+                    foreach ($categories as $cat) {
+                        $result = $service->searchProducts($cat, 10);
+                        if ($result['success'] && !empty($result['products'])) {
+                            foreach ($result['products'] as $p) {
+                                $this->saveExternalProduct([
+                                    'barcode' => $p['barcode'] ?? $p['code'] ?? null,
+                                    'product_name' => $p['name'] ?? null,
+                                    'ingredients_text' => $p['ingredients'] ?? null,
+                                    'image_url' => $p['image'] ?? null,
+                                ], 'open_food_facts');
+                                $count++;
+                            }
+                        }
+                    }
+                    break;
+                case 'obf':
+                    $service = app(\App\Services\External\OpenBeautyFactsService::class);
+                    $categories = ['face-creams', 'shampoos', 'soaps'];
+                    foreach ($categories as $cat) {
+                        $products = $service->search($cat, 1, 10);
+                        foreach ($products as $p) {
+                            $this->saveExternalProduct([
+                                'barcode' => $p['code'] ?? null,
+                                'product_name' => $p['product_name'] ?? null,
+                                'ingredients_text' => $p['ingredients_text'] ?? null,
+                                'image_url' => $p['image_url'] ?? null,
+                            ], 'open_beauty_facts');
+                            $count++;
+                        }
+                    }
+                    break;
+                case 'fda':
+                    $service = app(\App\Services\External\OpenFDAService::class);
+                    // OpenFDA search is different, usually by brand or class
+                    $terms = ['paracetamol', 'ibuprofen', 'amoxicillin'];
+                    foreach ($terms as $term) {
+                        $results = $service->searchDrug($term);
+                        foreach ($results as $p) {
+                            $openfda = $p['openfda'] ?? [];
+                            $this->saveExternalMedicine([
+                                'id' => $p['set_id'] ?? null,
+                                'brand_name' => $openfda['brand_name'][0] ?? null,
+                                'generic_name' => $openfda['generic_name'][0] ?? null,
+                                'labeler_name' => $openfda['manufacturer_name'][0] ?? null,
+                                'product_ndc' => $openfda['product_ndc'][0] ?? null
+                            ]);
+                            $count++;
+                        }
+                    }
+                    break;
+            }
+
+            return back()->with('success', "Successfully synced $count items from $source.");
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Sync $source failed: " . $e->getMessage());
+            return back()->with('error', "Sync failed: " . $e->getMessage());
+        }
+    }
+
+    private function saveExternalProduct($data, $source)
+    {
+        // Map source to allowed enum values in database
+        $allowedSources = ['local', 'open_food_facts', 'umkm', 'user_ocr', 'open_beauty_facts', 'openfda'];
+        $dbSource = in_array($source, $allowedSources) ? $source : 'open_food_facts';
+
+        return ProductModel::updateOrCreate(
+            ['barcode' => $data['barcode']],
+            [
+                'nama_product' => $data['product_name'] ?? 'Unknown External Product',
+                'komposisi' => $data['ingredients_text'] ?? null,
+                'status' => 'syubhat', // Default for external
+                'source' => $dbSource,
+                'image' => $data['image_url'] ?? null,
+                'verification_status' => 'needs_review'
+            ]
+        );
+    }
+
+    private function saveExternalMedicine($data)
+    {
+        // Use name as the key for updateOrCreate since it's unique in database
+        $name = $data['brand_name'] ?? $data['generic_name'] ?? 'Unknown Medicine';
+        
+        return \App\Models\Medicine::updateOrCreate(
+            ['name' => $name], // Use name as unique identifier
+            [
+                'brand_name' => $data['brand_name'] ?? null,
+                'generic_name' => $data['generic_name'] ?? null,
+                'manufacturer' => $data['labeler_name'] ?? null,
+                'source' => 'openfda',
+                'halal_status' => 'syubhat',
+                'barcode' => $data['product_ndc'] ?? null,
+                'active' => true
+            ]
+        );
     }
 
     // form edit produk
