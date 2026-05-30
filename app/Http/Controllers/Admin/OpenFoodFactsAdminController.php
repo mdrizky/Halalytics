@@ -98,6 +98,26 @@ class OpenFoodFactsAdminController extends Controller
                 ->with('info', 'Produk sudah pernah diimport. Anda dapat mengeditnya di sini.');
         }
 
+        // Try to find a matching category
+        $kategoriId = null;
+        if (!empty($offProduct['categories_tags'])) {
+            // Take the first meaningful category tag (e.g., en:biscuits -> biscuits)
+            $offCat = null;
+            foreach ($offProduct['categories_tags'] as $tag) {
+                if (str_contains($tag, 'en:')) {
+                    $offCat = str_replace('en:', '', $tag);
+                    break;
+                }
+            }
+
+            if ($offCat) {
+                $match = \App\Models\KategoriModel::where('nama_kategori', 'like', "%{$offCat}%")->first();
+                if ($match) {
+                    $kategoriId = $match->id_kategori;
+                }
+            }
+        }
+
         // Import with admin-specified halal status
         $product = ProductModel::create([
             'nama_product' => $offProduct['product_name'],
@@ -111,6 +131,7 @@ class OpenFoodFactsAdminController extends Controller
             'is_imported_from_off' => true,
             'verification_status' => 'verified', // Admin import = verified
             'status' => $request->input('halal_status', 'syubhat'),
+            'kategori_id' => $kategoriId,
             'data_completeness_score' => $offProduct['completeness'] ?? 0,
             'active' => true,
             'needs_manual_review' => false

@@ -214,9 +214,12 @@ $spec = $specData[$data['slug'] ?? ''] ?? $specData['diabetes'];
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             @foreach($relatedArticles as $article)
             <div class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 group cursor-pointer" onclick="location.href='{{ route('blog.show', $article->slug) }}'">
-                <div class="w-full h-48 bg-emerald-50 flex items-center justify-center text-6xl">📝</div>
+                <div class="w-full h-48 bg-emerald-50 overflow-hidden">
+                    @php $imgId = $article->id; $imgCat = $article->category ?? 'health'; $imgTitle = $article->title; @endphp
+                    <img src="{{ $article->image_url }}" alt="{{ $article->title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.onerror=null;this.src='https://loremflickr.com/600/400/{{ urlencode($imgCat) }}?lock={{ $imgId }}'">
+                </div>
                 <div class="p-6">
-                    <h4 class="font-black text-gray-900 mb-2 leading-tight">{{ $article->title }}</h4>
+                    <h4 class="font-black text-gray-900 mb-2 leading-tight group-hover:text-emerald-600 transition-colors">{{ $article->title }}</h4>
                     <p class="text-sm text-gray-500 line-clamp-2">{{ $article->excerpt }}</p>
                 </div>
             </div>

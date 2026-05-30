@@ -55,6 +55,40 @@
             </div>
         </div>
 
+        <hr class="border-slate-100 dark:border-slate-800 my-4">
+
+        <div class="space-y-4">
+            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between">
+                Konfigurasi AI Hilda
+                @php
+                    $hasApiKey = !empty(config('services.gemini.key'));
+                @endphp
+                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black {{ $hasApiKey ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600' }}">
+                    <span class="w-1.5 h-1.5 rounded-full {{ $hasApiKey ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500' }}"></span>
+                    {{ $hasApiKey ? 'API KEY TERDETEKSI' : 'API KEY TIDAK DITEMUKAN' }}
+                </span>
+            </h3>
+            
+            <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">
+                        <span class="material-icons-round">wifi_off</span>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold">Paksa Mode Offline (Hilda)</h4>
+                        <p class="text-xs text-slate-500 mt-0.5">Jika diaktifkan, AI akan selalu menggunakan jawaban cadangan tanpa menghubungi server cloud (Gemini).</p>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <input type="hidden" name="ai_force_offline" value="0">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="ai_force_offline" value="1" class="sr-only peer" {{ ($settings['ai_force_offline'] ?? '0') == '1' ? 'checked' : '' }}>
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <div class="pt-2">
             <button type="submit" class="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition">Simpan Pengaturan</button>
         </div>

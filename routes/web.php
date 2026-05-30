@@ -34,6 +34,7 @@ Route::get('/blog', [App\Http\Controllers\Promo\BlogController::class, 'index'])
 Route::get('/blog/{slug}', [App\Http\Controllers\Promo\BlogController::class, 'show'])->name('blog.show');
 Route::post('/contact', [App\Http\Controllers\Promo\ContactController::class, 'send'])->name('contact.send');
 Route::post('/ai/chat', [App\Http\Controllers\Promo\PageController::class, 'aiChat'])->name('promo.ai_chat');
+Route::post('/ai/bmi-advice', [App\Http\Controllers\Promo\PageController::class, 'bmiAiAdvice'])->name('promo.bmi_ai_advice');
 Route::get('/lang/{locale}', function ($locale) {
     if (in_array($locale, ['en', 'id'])) {
         session(['locale' => $locale]);

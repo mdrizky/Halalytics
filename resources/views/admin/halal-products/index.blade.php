@@ -33,7 +33,7 @@
                 <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                            <img src="{{ $product->image_url }}" alt="{{ $product->product_name }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/placeholders/product-placeholder.svg') }}'">
+                            <img src="{{ $product->image_url }}" alt="{{ $product->product_name }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://loremflickr.com/200/200/{{ urlencode($product->product_name) }},product?lock={{ $product->id }}'">
                         </div>
                         <div>
                             <div class="font-bold text-slate-800 dark:text-white text-sm">{{ $product->product_name }}</div>

@@ -56,13 +56,13 @@
                     <div class="space-y-3">
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Tampilan Depan</p>
                         <div class="aspect-[3/4] bg-slate-50 dark:bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 flex items-center justify-center p-4">
-                            <img src="{{ $request->image_front }}" alt="Front" class="w-full h-full object-contain hover:scale-105 transition-transform duration-500" onerror="this.onerror=null;this.src='/images/placeholders/product-placeholder.svg'">
+                            <img src="{{ $request->image_front }}" alt="Front" class="w-full h-full object-contain hover:scale-105 transition-transform duration-500" onerror="this.onerror=null;this.src='https://loremflickr.com/400/600/{{ urlencode($request->product_name) }},product?lock={{ $request->id }}'">
                         </div>
                     </div>
                     <div class="space-y-3">
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Tampilan Belakang (Komposisi)</p>
                         <div class="aspect-[3/4] bg-slate-50 dark:bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 flex items-center justify-center p-4">
-                            <img src="{{ $request->image_back }}" alt="Back" class="w-full h-full object-contain hover:scale-105 transition-transform duration-500" onerror="this.onerror=null;this.src='/images/placeholders/product-placeholder.svg'">
+                            <img src="{{ $request->image_back }}" alt="Back" class="w-full h-full object-contain hover:scale-105 transition-transform duration-500" onerror="this.onerror=null;this.src='https://loremflickr.com/400/600/{{ urlencode($request->product_name) }},ingredients?lock={{ $request->id + 100 }}'">
                         </div>
                     </div>
                 </div>

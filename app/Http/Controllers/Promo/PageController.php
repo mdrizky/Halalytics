@@ -170,4 +170,40 @@ class PageController extends Controller
             ], 500);
         }
     }
+
+    public function bmiAiAdvice(
+        \Illuminate\Http\Request $request,
+        \App\Services\GeminiService $gemini
+    ) {
+        $weight = $request->input('weight');
+        $height = $request->input('height');
+        
+        if (!$weight || !$height) {
+            return response()->json(['success' => false, 'message' => 'Data berat dan tinggi tidak lengkap.'], 400);
+        }
+
+        $prompt = "Tolong berikan json: {bmi: number, status: string, recommendations: array, risks: array} untuk orang dengan tinggi: {$height} cm dan berat: {$weight} kg. Berikan saran gizi dan olahraga yang sangat spesifik dan membantu.";
+        
+        try {
+            $result = $gemini->generateCustomContent($prompt, 0.4, 2048);
+            
+            if (is_array($result)) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $result
+                ]);
+            }
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Format AI tidak valid.'
+            ], 500);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

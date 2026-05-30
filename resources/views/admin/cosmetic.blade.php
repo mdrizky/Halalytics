@@ -107,10 +107,7 @@
                         <td style="padding: 16px 24px;">
                             <div style="display: flex; align-items: center; gap: 16px;">
                                 <div style="width: 44px; height: 44px; border-radius: 10px; background: var(--bg-light); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border-color); flex-shrink: 0;">
-                                    @if($item->image_url)
-                                        <img src="{{ $item->image_url }}" alt="" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none';">
-                                    @endif
-                                    <i class="fas fa-magic" style="font-size: 18px; color: var(--text-muted);"></i>
+                                    <img src="{{ $item->image_url }}" alt="" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null;this.src='https://loremflickr.com/100/100/{{ urlencode($item->nama_produk) }},cosmetic?lock={{ $item->id }}'">
                                 </div>
                                 <div>
                                     <div style="font-weight: 700; color: var(--text-main); font-size: 14px; line-height: 1.2;">{{ Str::limit($item->nama_produk, 40) }}</div>

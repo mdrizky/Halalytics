@@ -249,7 +249,7 @@
                                     <td class="px-8 py-6">
                                         <div class="flex items-center gap-4">
                                             <div class="h-12 w-12 overflow-hidden rounded-xl border-2 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-sm group-hover:scale-105 transition-transform duration-500">
-                                                <img src="{{ $product->image }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/food-placeholder.svg'">
+                                                <img src="{{ $product->image }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='https://loremflickr.com/200/200/{{ urlencode($product->nama_product) }},food?lock={{ $product->id_product }}'">
                                             </div>
                                             <div>
                                                 <p class="text-sm font-extrabold text-slate-900 dark:text-white line-clamp-1">{{ $product->nama_product }}</p>
@@ -344,7 +344,7 @@
                                     <td class="px-8 py-6">
                                         <div class="flex items-center gap-4">
                                             <div class="h-12 w-12 overflow-hidden rounded-xl border-2 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-sm group-hover:scale-105 transition-transform duration-500">
-                                                <img src="{{ $product->image }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/cosmetic-placeholder.svg'">
+                                                <img src="{{ $product->image }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='https://loremflickr.com/200/200/{{ urlencode($product->nama_product) }},cosmetic?lock={{ $product->id_product }}'">
                                             </div>
                                             <div>
                                                 <p class="text-sm font-extrabold text-slate-900 dark:text-white line-clamp-1">{{ $product->nama_product }}</p>
@@ -439,7 +439,7 @@
                                     <td class="px-8 py-6">
                                         <div class="flex items-center gap-4">
                                             <div class="h-12 w-12 overflow-hidden rounded-xl border-2 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-sm group-hover:scale-105 transition-transform duration-500">
-                                                <img src="{{ $product->image_url }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/medicine-placeholder.svg'">
+                                                <img src="{{ $product->image_url }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='https://loremflickr.com/200/200/{{ urlencode($product->name) }},medicine?lock={{ $product->id_medicine }}'">
                                             </div>
                                             <div>
                                                 <p class="text-sm font-extrabold text-slate-900 dark:text-white line-clamp-1">{{ $product->name }}</p>

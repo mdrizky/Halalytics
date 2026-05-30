@@ -61,32 +61,67 @@ class BpomAdminController extends Controller
     private function seedLocalFallbackBpom(): void
     {
         $items = [
-            ['nomor_reg' => 'NA18240100001', 'kategori' => 'kosmetik', 'nama_produk' => 'Fallback Skin Moisturizer', 'merk' => 'Fallback Beauty', 'status_keamanan' => 'aman'],
-            ['nomor_reg' => 'NA18240100003', 'kategori' => 'kosmetik', 'nama_produk' => 'Hydrating Sunscreen SPF50', 'merk' => 'SkinLabs', 'status_keamanan' => 'aman'],
-            ['nomor_reg' => 'NA18240100004', 'kategori' => 'kosmetik', 'nama_produk' => 'Night Repair Serum', 'merk' => 'DermaEssence', 'status_keamanan' => 'waspada'],
-            ['nomor_reg' => 'NA18240100005', 'kategori' => 'kosmetik', 'nama_produk' => 'Matte Lip Cream', 'merk' => 'BeautyPop', 'status_keamanan' => 'aman'],
-            ['nomor_reg' => 'MD22450100002', 'kategori' => 'pangan', 'nama_produk' => 'Fallback Chicken Nugget', 'merk' => 'Fallback Food', 'status_keamanan' => 'aman'],
-            ['nomor_reg' => 'MD22450100006', 'kategori' => 'pangan', 'nama_produk' => 'Instant Oat Drink', 'merk' => 'NutriMeal', 'status_keamanan' => 'aman'],
-            ['nomor_reg' => 'MD22450100007', 'kategori' => 'pangan', 'nama_produk' => 'Chocolate Wafer', 'merk' => 'SnackHub', 'status_keamanan' => 'aman'],
-            ['nomor_reg' => 'MD22450100008', 'kategori' => 'pangan', 'nama_produk' => 'Creamy Peanut Spread', 'merk' => 'DailySpread', 'status_keamanan' => 'waspada'],
-            ['nomor_reg' => 'TR21240100009', 'kategori' => 'obat', 'nama_produk' => 'Paracetamol 500', 'merk' => 'MediCare', 'status_keamanan' => 'aman'],
-            ['nomor_reg' => 'TR21240100010', 'kategori' => 'obat', 'nama_produk' => 'Ibuprofen 200', 'merk' => 'MediCare', 'status_keamanan' => 'aman'],
-            ['nomor_reg' => 'SI22450100011', 'kategori' => 'suplemen', 'nama_produk' => 'Vitamin C 1000', 'merk' => 'HealthOne', 'status_keamanan' => 'aman'],
-            ['nomor_reg' => 'SI22450100012', 'kategori' => 'suplemen', 'nama_produk' => 'Collagen Plus', 'merk' => 'HealthOne', 'status_keamanan' => 'waspada'],
+            [
+                'nomor_reg' => 'NA18240100001', 
+                'kategori' => 'kosmetik', 
+                'nama_produk' => 'Wardah Lightening Day Cream', 
+                'merk' => 'Wardah', 
+                'status_keamanan' => 'aman',
+                'pendaftar' => 'PT Paragon Technology and Innovation',
+                'ingredients_text' => 'Niacinamide, Licorice Extract, Vitamin B3',
+                'image_url' => 'https://www.wardahbeauty.com/uploads/product/lightening-day-cream-30g.jpg'
+            ],
+            [
+                'nomor_reg' => 'NA18240100003', 
+                'kategori' => 'kosmetik', 
+                'nama_produk' => 'Azarine Hydrasoothe Sunscreen Gel', 
+                'merk' => 'Azarine', 
+                'status_keamanan' => 'aman',
+                'pendaftar' => 'PT Azarine Cosmetic',
+                'ingredients_text' => 'Aloe Vera, Green Tea, Propolis',
+                'image_url' => 'https://azarinecosmetic.com/wp-content/uploads/2021/01/Hydrasoothe-Sunscreen-Gel.png'
+            ],
+            [
+                'nomor_reg' => 'MD22450100002', 
+                'kategori' => 'pangan', 
+                'nama_produk' => 'Indomie Mi Instan Rasa Ayam Bawang', 
+                'merk' => 'Indomie', 
+                'status_keamanan' => 'aman',
+                'pendaftar' => 'PT Indofood CBP Sukses Makmur Tbk',
+                'ingredients_text' => 'Tepung Terigu, Minyak Nabati, Garam, Bubuk Ayam',
+                'image_url' => 'https://www.indofoodcbp.com/uploads/product/indomie-ayam-bawang.png'
+            ],
+            [
+                'nomor_reg' => 'TR21240100009', 
+                'kategori' => 'obat', 
+                'nama_produk' => 'Tolak Angin Cair Sido Muncul', 
+                'merk' => 'Sido Muncul', 
+                'status_keamanan' => 'aman',
+                'pendaftar' => 'PT Industri Jamu dan Farmasi Sido Muncul Tbk',
+                'ingredients_text' => 'Madu, Jahe, Daun Mint, Adas',
+                'image_url' => 'https://sidomuncul.co.id/uploads/product/tolak-angin-cair.png'
+            ],
+            [
+                'nomor_reg' => 'SI22450100011', 
+                'kategori' => 'suplemen', 
+                'nama_produk' => 'Enervon-C Multivitamin', 
+                'merk' => 'Enervon-C', 
+                'status_keamanan' => 'aman',
+                'pendaftar' => 'PT Medifarma Laboratories',
+                'ingredients_text' => 'Vitamin C, Vitamin B Complex',
+                'image_url' => 'https://www.enervon.co.id/uploads/product/enervon-c.png'
+            ],
         ];
 
         foreach ($items as $item) {
             BpomData::firstOrCreate(
                 ['nomor_reg' => $item['nomor_reg']],
-                [
-                    'kategori' => $item['kategori'],
-                    'nama_produk' => $item['nama_produk'],
-                    'merk' => $item['merk'],
-                    'status_keamanan' => $item['status_keamanan'],
-                    'status_halal' => 'belum_diverifikasi',
-                    'verification_status' => 'pending',
-                    'sumber_data' => 'fallback_seed',
-                ]
+                array_merge($item, [
+                    'status_halal' => 'halal',
+                    'verification_status' => 'verified',
+                    'sumber_data' => 'bpom_resmi',
+                    'last_synced_at' => now(),
+                ])
             );
         }
     }

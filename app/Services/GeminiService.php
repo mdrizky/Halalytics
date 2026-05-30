@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\PromoSetting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -763,6 +764,13 @@ PROMPT;
 
     private function requestGemini(array $parts, float $temperature = 0.3, ?string $responseMimeType = null, int $maxTokens = 2048): ?string
     {
+        // Check if admin forced offline mode
+        $forceOffline = PromoSetting::where('key', 'ai_force_offline')->value('value');
+        if ($forceOffline === '1') {
+            Log::info('Gemini: Offline mode is forced via admin settings.');
+            return null;
+        }
+
         if (!$this->hasApiKey()) {
             Log::warning('Gemini: No API key configured. All AI features will use fallback templates.');
             return null;
@@ -927,6 +935,8 @@ PROMPT;
     private function fallbackTextResponse(string $prompt): string
     {
         $lower = Str::lower($prompt);
+        $userQuestion = $this->extractUserQuestionFromPrompt($prompt);
+        $lowerQuestion = Str::lower($userQuestion);
 
         if (Str::contains($lower, ['json array', 'format kembalian wajib json array', 'maksimal 3 langkah p3k'])) {
             return json_encode([
@@ -950,18 +960,45 @@ PROMPT;
             $heightCm = (float) ($heightMatch[1] ?? 0);
             $weightKg = (float) ($weightMatch[1] ?? 0);
             $bmi = ($heightCm > 0) ? round($weightKg / (($heightCm / 100) ** 2), 1) : 0;
-            $status = $bmi >= 30 ? 'obesitas' : ($bmi >= 25 ? 'overweight' : ($bmi >= 18.5 ? 'normal' : 'underweight'));
+            
+            $recommendations = [];
+            if ($bmi < 18.5) {
+                $status = 'underweight';
+                $recommendations = [
+                    'Tingkatkan asupan kalori dengan makanan padat nutrisi seperti kacang-kacangan, alpukat, dan protein hewani halal.',
+                    'Makan lebih sering dengan porsi kecil tapi berkualitas (5-6 kali sehari).',
+                    'Lakukan latihan beban ringan untuk membangun massa otot, bukan hanya lemak.'
+                ];
+            } elseif ($bmi < 25) {
+                $status = 'normal';
+                $recommendations = [
+                    'Pertahankan pola makan gizi seimbang sesuai panduan Piring Makanku dari Kemenkes.',
+                    'Rutin berolahraga minimal 150 menit per minggu untuk menjaga kebugaran jantung.',
+                    'Pastikan hidrasi cukup dan tidur berkualitas 7-8 jam sehari.'
+                ];
+            } elseif ($bmi < 30) {
+                $status = 'overweight';
+                $recommendations = [
+                    'Kurangi asupan karbohidrat olahan dan gula tambahan (minuman manis).',
+                    'Perbanyak konsumsi serat dari sayuran hijau untuk memberikan rasa kenyang lebih lama.',
+                    'Tingkatkan aktivitas fisik harian seperti naik tangga atau jalan kaki 10.000 langkah.'
+                ];
+            } else {
+                $status = 'obesitas';
+                $recommendations = [
+                    'Sangat disarankan untuk berkonsultasi dengan ahli gizi untuk program penurunan berat badan yang aman.',
+                    'Fokus pada defisit kalori yang konsisten namun tetap memenuhi kebutuhan nutrisi mikro.',
+                    'Lakukan pemeriksaan kesehatan berkala untuk memantau risiko kolesterol dan tekanan darah.'
+                ];
+            }
+
             return json_encode([
                 'bmi' => $bmi,
                 'status' => $status,
-                'recommendations' => [
-                    'Jaga pola makan seimbang dan kurangi minuman tinggi gula.',
-                    'Lakukan aktivitas fisik rutin minimal 30 menit per hari.',
-                    'Pantau berat badan dan lingkar perut tiap minggu.',
-                ],
+                'recommendations' => $recommendations,
                 'risks' => $bmi >= 25
-                    ? ['Risiko metabolik meningkat bila pola makan tidak dikontrol.']
-                    : ['Tetap jaga konsistensi pola hidup sehat.'],
+                    ? ['Risiko penyakit degeneratif seperti diabetes dan hipertensi meningkat.']
+                    : ['Kondisi tubuh relatif aman, tetap waspada pada pola makan.'],
             ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
 
@@ -986,16 +1023,17 @@ PROMPT;
         }
 
         // --- CONVERSATIONAL CHAT FALLBACKS (TINGKAT DEWA) ---
-        if (Str::contains($lower, ['cara memakai', 'memakai aplikasi', 'panduan', 'cara menggunakan', 'tutorial', 'fitur'])) {
-            return "Halo! Berikut adalah panduan singkat cara menggunakan aplikasi **AI Halalytics**:\n\n" .
-                   "1. **Pindai Barcode (Scan)**: Tekan tombol scan di navigasi bawah untuk memindai barcode produk makanan, minuman, obat, atau skincare. Aplikasi akan secara instan menganalisis kandungan bahan kritis halal & risiko kesehatannya secara real-time!\n" .
-                   "2. **Tanya AI Halalytics (Chat)**: Tanyakan apa saja tentang kandungan produk, gejala penyakit, resep alternatif halal, atau tips gizi sehat langsung di ruang obrolan ini.\n" .
-                   "3. **Cari Produk**: Gunakan kolom pencarian di halaman utama untuk melihat katalog detail produk lokal maupun database global OpenFoodFacts secara cepat.\n" .
-                   "4. **Profil Kesehatan (Health Profile)**: Masukkan riwayat alergi atau kondisi medis Anda di halaman profil untuk mendapatkan peringatan otomatis yang disesuaikan saat memindai produk.\n\n" .
-                   "Selamat menjelajah! Semoga hidup Anda senantiasa sehat, halal, dan berkah! 🌿";
+        if (Str::contains($lowerQuestion, ['cara memakai', 'memakai aplikasi', 'panduan', 'cara menggunakan', 'tutorial', 'fitur', 'kemampuan', 'bisa apa', 'apa saja yang kamu bisa', 'fitur hilda'])) {
+            return "Halo! Saya adalah **Hilda**, asisten AI cerdas Anda di Halalytics. Berikut adalah hal-hal hebat yang bisa saya lakukan untuk Anda:\n\n" .
+                   "1. **Analisis Produk**: Sebutkan bahan-bahan produk, saya akan beri tahu status halal dan risiko kesehatannya.\n" .
+                   "2. **Edukasi Penyakit**: Tanyakan gejala penyakit (seperti DBD, TBC, Diabetes), saya akan jelaskan fase dan penanganannya.\n" .
+                   "3. **Panduan Gizi & Diet**: Saya bisa memberi saran menu diet sehat, cara menghitung kalori, dan tips hidup sehat.\n" .
+                   "4. **Cek Skincare**: Kirim daftar komposisi kosmetik Anda, saya akan analisis titik kritis halalnya.\n" .
+                   "5. **Konsultasi Obat**: Tanyakan fungsi obat atau interaksinya dengan makanan tertentu.\n\n" .
+                   "Ada yang ingin Anda tanyakan sekarang? Saya siap membantu! 😊";
         }
 
-        if (Str::contains($lower, ['diabetes', 'kencing manis', 'gula darah', 'glukosa'])) {
+        if (Str::contains($lowerQuestion, ['diabetes', 'kencing manis', 'gula darah', 'glukosa'])) {
             return "**Diabetes Melitus** adalah kondisi kesehatan kronis yang ditandai dengan tingginya kadar gula (glukosa) di dalam darah.\n\n" .
                    "### 🚨 Gejala Umum Diabetes:\n" .
                    "- **Poliuria**: Sering buang air kecil, terutama pada malam hari.\n" .
@@ -1011,7 +1049,7 @@ PROMPT;
                    "Silakan konsultasikan dengan dokter atau Ahli Gizi Halalytics untuk mendapatkan rekomendasi menu diet diabetes yang lebih personal! 🩺";
         }
 
-        if (Str::contains($lower, ['skincare', 'kosmetik', 'makeup', 'lipstik', 'bedak', 'kecantikan'])) {
+        if (Str::contains($lowerQuestion, ['skincare', 'kosmetik', 'makeup', 'lipstik', 'bedak', 'kecantikan'])) {
             return "Halo! Dalam memilih kosmetik atau skincare, pastikan Anda selalu memperhatikan **Titik Kritis Halal** dan keamanannya:\n\n" .
                    "- **Gelatin & Kolagen**: Sangat sering bersumber dari babi atau hewan yang disembelih tidak sesuai syariat. Selalu pilih produk dengan logo sertifikasi halal resmi.\n" .
                    "- **Plasenta & Sel Punca**: Berasal dari organ mamalia yang haram digunakan dalam produk kecantikan luar.\n" .
@@ -1019,7 +1057,7 @@ PROMPT;
                    "Anda dapat memindai list bahan komposisi kosmetik Anda menggunakan kamera OCR Halalytics untuk analisis keamanan dan halal instan! 💖";
         }
 
-        if (Str::contains($lower, ['diet', 'berat badan', 'kalori', 'kurus', 'fat loss', 'kegemukan'])) {
+        if (Str::contains($lowerQuestion, ['diet', 'berat badan', 'kalori', 'kurus', 'fat loss', 'kegemukan'])) {
             return "Pola diet sehat bukan berarti tidak makan, melainkan mengatur asupan kalori dan nutrisi seimbang untuk jangka panjang:\n\n" .
                    "### 🥗 Tips Diet Sehat Halalytics:\n" .
                    "1. **Defisit Kalori Sehat**: Kurangi asupan kalori harian sekitar 300-500 kalori dari kebutuhan harian total Anda secara bertahap.\n" .
@@ -1029,7 +1067,7 @@ PROMPT;
                    "Gunakan asisten gizi Halalytics untuk memantau kalori harian, asupan air, serta nutrisi makanan harian Anda secara otomatis! 🏃‍♂️";
         }
 
-        if (Str::contains($lower, ['hipertensi', 'darah tinggi', 'tensi', 'garam', 'natrium'])) {
+        if (Str::contains($lowerQuestion, ['hipertensi', 'darah tinggi', 'tensi', 'garam', 'natrium'])) {
             return "**Hipertensi (Tekanan Darah Tinggi)** sering disebut sebagai 'silent killer' karena kerap kali tidak menunjukkan gejala awal yang jelas.\n\n" .
                    "### ⚠️ Langkah Mengontrol Tekanan Darah:\n" .
                    "- **Diet DASH (Dietary Approaches to Stop Hypertension)**: Perbanyak konsumsi sayuran hijau, buah-buahan, gandum utuh, dan protein rendah lemak seperti ikan.\n" .
@@ -1039,14 +1077,79 @@ PROMPT;
                    "Pantau tensi Anda secara berkala dan manfaatkan fitur konsultasi gizi kami untuk asupan rendah garam yang lezat! 🩺";
         }
 
-        if (Str::contains($lower, ['halo', 'hai', 'pagi', 'siang', 'sore', 'malam', 'tanya', 'siapa'])) {
+        if (Str::contains($lowerQuestion, ['gejala', 'sakit apa', 'kenapa saya', 'penyebab'])) {
+            // Knowledge base for common diseases (offline mode)
+            if (Str::contains($lowerQuestion, ['dbd', 'demam berdarah', 'dengue'])) {
+                return "🦟 **Gejala Demam Berdarah Dengue (DBD)** umumnya muncul 4-10 hari setelah gigitan nyamuk dan berkembang melalui 3 fase:\n\n" .
+                       "**1. Fase Awal (Hari 1-3)**:\n" .
+                       "- Demam tinggi mendadak (39-40°C).\n" .
+                       "- Sakit kepala parah (area dahi) & nyeri belakang bola mata.\n" .
+                       "- Nyeri otot, tulang, dan sendi.\n" .
+                       "- Mual, muntah, dan muncul bintik merah di kulit.\n\n" .
+                       "**2. Fase Kritis (Hari 3-7)**:\n" .
+                       "- *Sangat Berbahaya!* Suhu tubuh turun drastis (di bawah 37,5°C).\n" .
+                       "- Badan lemas, gelisah, atau perdarahan ringan (mimisan/gusi).\n" .
+                       "- Nyeri perut hebat & muntah terus-menerus.\n\n" .
+                       "**3. Fase Pemulihan**:\n" .
+                       "- Suhu kembali normal & nafsu makan pulih.\n\n" .
+                       "🏥 **Kapan ke Dokter?** Segera ke RS jika demam >3 hari tidak turun atau muncul tanda fase kritis. Untuk penanganan terpercaya, Anda bisa konsultasi melalui Halodoc atau RS Siloam/Tzu Chi terdekat.";
+            }
+
+            if (Str::contains($lowerQuestion, ['tbc', 'tuberkulosis', 'batuk darah', 'flek paru'])) {
+                return "🫁 **Gejala Tuberkulosis (TBC)** adalah infeksi bakteri *Mycobacterium tuberculosis* yang menyerang paru-paru:\n\n" .
+                       "**Gejala Utama:**\n" .
+                       "- **Batuk Berdahak**: Berlangsung selama 2-3 minggu atau lebih.\n" .
+                       "- **Batuk Darah**: Mengeluarkan dahak yang bercampur darah.\n" .
+                       "- **Nyeri Dada**: Rasa sakit saat bernapas atau batuk.\n\n" .
+                       "**Gejala Tambahan:**\n" .
+                       "- Demam dan menggigil secara berkala.\n" .
+                       "- **Berkeringat di Malam Hari**: Meskipun tidak melakukan aktivitas fisik.\n" .
+                       "- Penurunan berat badan secara drastis tanpa sebab.\n" .
+                       "- Lemas dan hilangnya nafsu makan.\n\n" .
+                       "🛡️ **Pencegahan:** Vaksinasi BCG dan menjaga ventilasi rumah tetap baik. TBC dapat disembuhkan dengan pengobatan rutin minimal 6 bulan tanpa putus. Segera hubungi Puskesmas terdekat!";
+            }
+
+            if (Str::contains($lowerQuestion, ['sakit perut', 'lambung', 'maag', 'gerd', 'perut nyeri', 'mulas'])) {
+                return "🤢 **Penyebab Sakit Perut** sangat beragam tergantung lokasi nyerinya:\n\n" .
+                       "**1. Perut Atas (Lambung/Maag):**\n" .
+                       "- Biasanya disebabkan oleh naiknya asam lambung (GERD), gastritis, atau telat makan.\n" .
+                       "- Gejala: Perih, kembung, dan rasa panas di dada.\n\n" .
+                       "**2. Perut Kanan Bawah (Usus Buntu):**\n" .
+                       "- Nyeri tajam yang semakin parah saat berjalan atau batuk.\n" .
+                       "- *Waspada!* Ini kondisi darurat yang butuh tindakan medis segera.\n\n" .
+                       "**3. Perut Tengah/Seluruh (Diare/Keracunan):**\n" .
+                       "- Sering disertai mulas, kram, dan buang air besar cair.\n" .
+                       "- Pastikan minum oralit atau air kelapa untuk mencegah dehidrasi.\n\n" .
+                       "**4. Faktor Lain:** Stres, konstipasi (susah BAB), atau intoleransi makanan (misal: alergi susu).\n\n" .
+                       "🩺 **Tips:** Kompres air hangat pada area yang nyeri. Jika nyeri hebat menetap lebih dari 6 jam, segera konsultasikan ke dokter.";
+            }
+
+            return "Halo! Mengidentifikasi gejala secara dini adalah langkah awal yang baik untuk kesehatan Anda.\n\n" .
+                   "Beberapa gejala umum yang sering ditanyakan:\n" .
+                   "- **Demam/Pusing**: Bisa jadi indikasi kelelahan atau infeksi awal. Pastikan istirahat cukup dan hidrasi.\n" .
+                   "- **Batuk/Sesak**: Perhatikan durasinya. Jika lebih dari 2 minggu (seperti pada TBC atau Asma), segera konsultasikan ke dokter.\n" .
+                   "- **Nyeri Lambung**: Sering terkait dengan pola makan atau stres (Maag/GERD).\n\n" .
+                   "**Penting**: AI Halalytics hanya memberikan informasi edukasi. Mohon sampaikan gejala spesifik Anda (misal: 'gejala TBC') agar saya bisa memberikan info yang lebih tepat, atau hubungi ahli medis kami untuk diagnosis resmi! 🩺";
+        }
+
+        if (Str::contains($lowerQuestion, ['halo', 'hai', 'pagi', 'siang', 'sore', 'malam', 'tanya', 'siapa', 'kenalan'])) {
             return "Halo! Saya **AI Halalytics** 🤖 asisten cerdas kesehatan, gizi, diet, obat, dan produk halal Anda. Silakan tanyakan apa saja!\n\n" .
                    "Untuk mendapatkan jawaban terbaik, silakan tanyakan mengenai:\n" .
                    "- 🍎 **Tips Gizi & Diet Sehat** (misal: 'Bagaimana diet untuk diabetes?')\n" .
                    "- 💊 **Keamanan & Kehalalan Bahan** (misal: 'Apakah gelatin halal?')\n" .
                    "- 🩺 **Edukasi Gejala Penyakit** (misal: 'Apa gejala asam urat?')\n" .
                    "- 🧼 **Bahan Kosmetik/Skincare** (misal: 'Kandungan skincare yang berbahaya')\n\n" .
-                   "*Catatan: Jawaban AI ini adalah untuk edukasi awal. Selalu verifikasi dengan dokter ahli untuk tindakan medis resmi.*";
+                   "Ketik **'kemampuan'** untuk melihat daftar fitur lengkap saya!";
+        }
+
+        if (Str::contains($lowerQuestion, ['apa yang kamu bisa', 'kemampuan', 'bisa apa', 'fitur', 'apa aja'])) {
+            return "Halo! Saya adalah **Hilda**, asisten AI cerdas Anda. Berikut hal-hal yang bisa saya bantu:\n\n" .
+                   "1. **Cek Halal**: Analisis bahan kritis dalam makanan & kosmetik.\n" .
+                   "2. **Edukasi Gejala**: Penjelasan fase penyakit seperti DBD, TBC, dll.\n" .
+                   "3. **Saran Gizi**: Tips diet sehat, manajemen berat badan, dan kalori.\n" .
+                   "4. **Panduan Hidrasi**: Menghitung target air minum harian.\n" .
+                   "5. **Interaksi Obat**: Informasi dasar penggunaan obat-obatan.\n\n" .
+                   "Silakan ajukan pertanyaan spesifik Anda! 😊";
         }
 
         return $this->buildContextualFallbackFromPrompt($prompt);
@@ -1090,14 +1193,14 @@ PROMPT;
         }
 
         if ($userQuestion !== '') {
-            return "**AI Halalytics (mode offline)**\n\n"
-                . "Terima kasih atas pertanyaan Anda. Saat ini koneksi ke model AI utama sedang terbatas, "
-                . "namun berikut panduan singkat:\n\n"
-                . "• Untuk **cek produk**: gunakan Scan Barcode di aplikasi.\n"
-                . "• Untuk **halal & bahan**: sebutkan daftar bahan/komposisi agar kami analisis.\n"
-                . "• Untuk **kesehatan & diet**: jelaskan kondisi Anda (diabetes, hipertensi, alergi) agar saran lebih personal.\n\n"
+            return "🤖 **AI Halalytics (Mode Hemat)**\n\n"
+                . "Terima kasih atas pertanyaan Anda. Saat ini saya sedang dalam mode hemat data, "
+                . "namun saya tetap bisa membantu Anda dengan:\n\n"
+                . "• **Cek Halal**: Sebutkan bahan produk untuk saya analisis.\n"
+                . "• **Gejala Penyakit**: Tanyakan gejala (misal: 'apa gejala DBD').\n"
+                . "• **Tips Sehat**: Tanyakan tips gizi atau diet.\n\n"
                 . "**Pertanyaan Anda:** \"{$userQuestion}\"\n\n"
-                . "Silakan coba lagi sebentar lagi atau hubungi ahli gizi melalui menu konsultasi.";
+                . "Silakan coba lagi sebentar lagi untuk jawaban yang lebih cerdas (Cloud Mode), atau tanyakan hal spesifik di atas! 🙏";
         }
 
         return "Halo! Saya **AI Halalytics**. Saat ini layanan AI cloud sedang terbatas, tetapi Anda tetap bisa:\n"
@@ -1109,15 +1212,18 @@ PROMPT;
 
     private function extractUserQuestionFromPrompt(string $prompt): string
     {
+        if (preg_match('/pertanyaan(?:\s+pengguna)?:\s*(.+?)(?:\n\nJawaban Detail Hilda:|$)/is', $prompt, $matches)) {
+            return trim($matches[1]);
+        }
+
         if (preg_match('/pertanyaan(?:\s+pengguna)?:\s*(.+)$/is', $prompt, $matches)) {
             return trim($matches[1]);
         }
 
-        if (preg_match('/daftar bahan:\s*(.+?)(?:\n|profil pengguna:)/is', $prompt, $matches)) {
-            return 'Analisis bahan: ' . trim($matches[1]);
-        }
-
-        return trim(Str::limit(preg_replace('/\s+/', ' ', $prompt) ?? $prompt, 280));
+        // Clean up common system instructions if they somehow leaked into the prompt
+        $clean = preg_replace('/Anda adalah Hilda.*?Prinsip jawaban Anda:.*?HINDARI jawaban singkat.*?Jawaban Detail Hilda:/is', '', $prompt);
+        
+        return trim(Str::limit(preg_replace('/\s+/', ' ', $clean) ?? $clean, 500));
     }
 
     private function extractIngredientsFromPrompt(string $prompt): string

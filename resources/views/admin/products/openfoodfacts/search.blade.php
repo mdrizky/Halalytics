@@ -39,10 +39,11 @@
                 <div class="card h-100 border-0 shadow-sm card-hover">
                     <!-- Product Image -->
                     <div style="position: relative; height: 220px; overflow: hidden; background: #f8f9fa;">
-                        <img src="{{ $product['image'] ?? 'https://via.placeholder.com/400x300?text=No+Image' }}" 
+                        <img src="{{ $product['image'] ?? '' }}" 
                              class="card-img-top" 
                              style="width: 100%; height: 100%; object-fit: contain; padding: 10px;"
-                             alt="{{ $product['nama_product'] }}">
+                             alt="{{ $product['nama_product'] }}"
+                             onerror="this.onerror=null;this.src='https://loremflickr.com/400/300/{{ urlencode($product['nama_product']) }},food?lock={{ $product['off_product_id'] ?? 1 }}'">
                         
                         @if($product['completeness'] > 80)
                         <span class="badge bg-success" style="position: absolute; top: 15px; right: 15px;">

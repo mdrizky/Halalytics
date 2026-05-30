@@ -75,7 +75,12 @@
                         </span>
                     </td>
                     <td class="px-5 py-4">
-                        <div class="text-sm font-bold text-slate-800 dark:text-white">{{ $item->title }}</div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+                                <img src="https://loremflickr.com/100/100/{{ urlencode($item->type) }},medical?lock={{ $item->id }}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="text-sm font-bold text-slate-800 dark:text-white">{{ $item->title }}</div>
+                        </div>
                     </td>
                     <td class="px-5 py-4">
                         @php

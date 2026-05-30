@@ -134,7 +134,7 @@
                                 <div class="flex items-center gap-4">
                                     <div class="relative group/img cursor-pointer" onclick="viewImage('{{ $frontImage }}', 'Front View - {{ $item->product_name }}')">
                                         <div class="h-24 w-20 overflow-hidden rounded-2xl border-2 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-md transition-all duration-300 group-hover/img:scale-105 group-hover/img:shadow-xl group-hover/img:border-primary/50">
-                                            <img src="{{ $frontImage }}" alt="Front" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/product-placeholder.svg'">
+                                            <img src="{{ $frontImage }}" alt="Front" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='https://loremflickr.com/200/200/{{ urlencode($item->product_name) }},product?lock={{ $item->id }}'">
                                         </div>
                                         <div class="absolute -top-2 -right-2 h-6 w-6 bg-primary text-white rounded-xl flex items-center justify-center border-2 border-white dark:border-slate-900 shadow-sm">
                                             <span class="material-icons-round text-[12px]">zoom_in</span>
@@ -142,7 +142,7 @@
                                     </div>
                                     <div class="relative group/img cursor-pointer" onclick="viewImage('{{ $backImage }}', 'Back View - {{ $item->product_name }}')">
                                         <div class="h-24 w-20 overflow-hidden rounded-2xl border-2 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-md transition-all duration-300 group-hover/img:scale-105 group-hover/img:shadow-xl group-hover/img:border-slate-400">
-                                            <img src="{{ $backImage }}" alt="Back" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/product-placeholder.svg'">
+                                            <img src="{{ $backImage }}" alt="Back" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='https://loremflickr.com/200/200/{{ urlencode($item->product_name) }},ingredients?lock={{ $item->id + 100 }}'">
                                         </div>
                                         <div class="absolute -top-2 -right-2 h-6 w-6 bg-slate-700 text-white rounded-xl flex items-center justify-center border-2 border-white dark:border-slate-900 shadow-sm">
                                             <span class="material-icons-round text-[12px]">zoom_in</span>
@@ -182,7 +182,7 @@
                                             APPROVE
                                         </button>
                                     </form>
-                                    <button onclick="openRejectModal({{ $item->id }}, '{{ $item->product_name }}')" class="h-10 w-10 rounded-xl border border-rose-200 dark:border-rose-900/50 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all flex items-center justify-center">
+                                    <button onclick="openRejectModal({{ $item->id }}, @js($item->product_name))" class="h-10 w-10 rounded-xl border border-rose-200 dark:border-rose-900/50 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all flex items-center justify-center">
                                         <span class="material-icons-round text-lg">block</span>
                                     </button>
                                 </div>

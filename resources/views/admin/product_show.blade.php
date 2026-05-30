@@ -16,7 +16,7 @@
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div class="flex items-center gap-6">
             <div class="h-24 w-24 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2 shadow-xl">
-                <img src="{{ $product->image }}" alt="{{ $product->nama_product ?? $product->name }}" class="h-full w-full object-contain rounded-2xl" onerror="this.onerror=null;this.src='/images/placeholders/product-placeholder.svg'">
+                <img src="{{ $product->image ?? $product->image_url }}" alt="{{ $product->nama_product ?? $product->name }}" class="h-full w-full object-contain rounded-2xl" onerror="this.onerror=null;this.src='https://loremflickr.com/400/400/{{ urlencode($product->nama_product ?? $product->name) }},{{ $type === 'medicine' ? 'medicine' : 'food' }}?lock={{ $product->id_product ?? $product->id_medicine }}'">
             </div>
             <div>
                 <div class="flex items-center gap-3 mb-1">

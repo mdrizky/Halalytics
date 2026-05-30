@@ -88,12 +88,7 @@
                     <td class="px-5 py-4">
                         <div class="flex items-center gap-4">
                             <div class="w-14 h-14 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex-shrink-0 flex items-center justify-center">
-                                @if($article->image)
-                                    <img src="{{ $article->image }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                    <span class="material-icons-round text-slate-400 text-2xl hidden">newspaper</span>
-                                @else
-                                    <span class="material-icons-round text-slate-400 text-2xl">newspaper</span>
-                                @endif
+                                <img src="{{ $article->image }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://loremflickr.com/200/200/{{ urlencode($article->category) }},news?lock={{ $article->id }}'">
                             </div>
                             <div>
                                 <div class="text-sm font-bold text-slate-800 dark:text-white line-clamp-1" title="{{ $article->title }}">{{ $article->title }}</div>

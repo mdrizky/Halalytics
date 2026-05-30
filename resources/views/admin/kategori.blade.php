@@ -98,7 +98,7 @@
                 <div class="flex items-start justify-between relative z-10">
                     <div class="flex items-center gap-4 min-w-0">
                         <div class="h-20 w-20 overflow-hidden rounded-[2rem] border-2 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-lg group-hover:scale-105 transition-transform duration-500">
-                            <img src="{{ $item->thumbnail_url }}" alt="{{ $item->nama_kategori }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/product-placeholder.svg'">
+                            <img src="{{ $item->thumbnail_url }}" alt="{{ $item->nama_kategori }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='https://loremflickr.com/200/200/{{ urlencode($item->nama_kategori) }},product,category?lock={{ $item->id_kategori }}'">
                         </div>
                         <div class="min-w-0">
                             <h3 class="text-xl font-extrabold text-slate-900 dark:text-white truncate">{{ $item->nama_kategori }}</h3>
@@ -109,7 +109,12 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-1">
-                        <button onclick="editCategory({{ $item->id_kategori }}, @js($item->nama_kategori), @js($item->description))" class="h-10 w-10 rounded-full text-slate-400 hover:bg-primary/10 hover:text-primary transition-all">
+                        <button 
+                            data-id="{{ $item->id_kategori }}"
+                            data-name="{{ $item->nama_kategori }}"
+                            data-desc="{{ $item->description }}"
+                            onclick="editCategory(this.dataset.id, this.dataset.name, this.dataset.desc)" 
+                            class="h-10 w-10 rounded-full text-slate-400 hover:bg-primary/10 hover:text-primary transition-all">
                             <span class="material-icons-round text-lg">edit</span>
                         </button>
                         <form action="{{ route('admin.kategori.destroy', $item->id_kategori) }}" method="POST" onsubmit="return confirm('Delete this category and all its product mappings?')">

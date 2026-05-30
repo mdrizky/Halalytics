@@ -62,7 +62,7 @@
                         <td style="padding: 16px 24px;">
                             <div style="display: flex; align-items: center; gap: 16px;">
                                 <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(231, 76, 60, 0.1); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(231, 76, 60, 0.2); flex-shrink: 0;">
-                                    <i class="fas fa-skull-crossbones" style="font-size: 18px; color: var(--danger);"></i>
+                                    <img src="{{ $ing->image_url ?? '' }}" alt="" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null;this.src='https://loremflickr.com/100/100/{{ urlencode($ing->name) }},hazard,danger?lock={{ $ing->id }}'">
                                 </div>
                                 <div>
                                     <div style="font-weight: 700; color: var(--text-main); font-size: 14px;">{{ $ing->name }}</div>

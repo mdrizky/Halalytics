@@ -62,7 +62,7 @@
         @forelse($banners as $banner)
             <article class="surface-card overflow-hidden rounded-3xl">
                 <div class="relative h-56 bg-slate-100 dark:bg-slate-800">
-                    <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/banner-placeholder.svg'">
+                    <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='https://loremflickr.com/800/400/{{ urlencode($banner->title) }},banner,advertising?lock={{ $banner->id }}'">
                     <div class="absolute left-4 top-4 flex items-center gap-2">
                         <span class="inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase {{ $banner->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-900/80 text-white' }}">
                             {{ $banner->is_active ? 'Active' : 'Inactive' }}
@@ -83,7 +83,14 @@
                             <p class="mt-1 text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $banner->updated_at->diffForHumans() }}</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="openEditModal({{ $banner->id }}, @js($banner->title), @js($banner->description), {{ (int) $banner->position }}, {{ $banner->is_active ? 'true' : 'false' }})" class="inline-flex items-center rounded-full border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary transition">
+                            <button 
+                                data-id="{{ $banner->id }}"
+                                data-title="{{ $banner->title }}"
+                                data-desc="{{ $banner->description }}"
+                                data-pos="{{ (int) $banner->position }}"
+                                data-active="{{ $banner->is_active ? 'true' : 'false' }}"
+                                onclick="openEditModal(this.dataset.id, this.dataset.title, this.dataset.desc, this.dataset.pos, this.dataset.active)" 
+                                class="inline-flex items-center rounded-full border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary transition">
                                 Edit
                             </button>
                             <form action="{{ route('admin.banner.destroy', $banner->id) }}" method="POST" onsubmit="return confirm('Hapus banner ini?')">

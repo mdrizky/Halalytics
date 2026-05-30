@@ -102,7 +102,7 @@
                             <td class="ps-4">
                                 <div class="d-flex align-items-center">
                                     <div class="avatar avatar-sm bg-light rounded overflow-hidden me-3" style="width: 40px; height: 40px;">
-                                        <img src="{{ $product->image_url }}" alt="" class="w-full h-full object-cover" onerror="this.src='/images/placeholders/product-placeholder.svg'">
+                                        <img src="{{ $product->image_url }}" alt="" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://loremflickr.com/100/100/{{ urlencode($product->nama_product) }},food?lock={{ $product->id_product }}'">
                                     </div>
                                     <div>
                                         <div class="fw-bold text-slate-800 small">{{ $product->nama_product }}</div>

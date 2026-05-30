@@ -96,11 +96,12 @@
                 @foreach($externalArticles as $article)
                 <article class="blog-card overflow-hidden flex flex-col">
                     @if(!empty($article['image_url']))
-                    <img src="{{ $article['image_url'] }}" alt="{{ $article['title'] }}" class="w-full h-48 object-cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                    @endif
-                    <div class="w-full h-48 bg-gradient-to-br from-[#E0F2F1] to-white items-center justify-center hidden">
-                        <span class="text-[#004D40] font-bold">Halalytics News Feed</span>
+                    <img src="{{ $article['image_url'] }}" alt="{{ $article['title'] }}" class="w-full h-48 object-cover" onerror="this.src='https://loremflickr.com/800/480/health,medical?lock={{ crc32($article['title']) }}'">
+                    @else
+                    <div class="w-full h-48 bg-gradient-to-br from-[#E0F2F1] to-white flex items-center justify-center">
+                         <img src="https://loremflickr.com/800/480/health,medical?lock={{ crc32($article['title']) }}" class="w-full h-full object-cover">
                     </div>
+                    @endif
                     <div class="p-6 flex flex-col flex-grow">
                         <div class="flex items-center justify-between gap-2">
                             <span class="inline-flex px-3 py-1 rounded-full bg-[#E0F2F1] text-[#004D40] text-xs font-bold">{{ $article['source'] }}</span>
@@ -123,11 +124,10 @@
             @foreach($blogs as $blog)
             <article class="blog-card overflow-hidden flex flex-col">
                 <a href="{{ route('blog.show', $blog->slug) }}" class="block shrink-0">
-                    @if($blog->image)
-                    <img src="{{ $blog->image_url }}" alt="{{ $blog->title }}" class="w-full h-52 object-cover">
-                    @else
-                    <div class="w-full h-52 bg-gradient-to-br from-[#E0F2F1] to-white"></div>
-                    @endif
+                    <img src="{{ $blog->image_url }}" 
+                         alt="{{ $blog->title }}" 
+                         class="w-full h-52 object-cover"
+                         onerror="this.src='https://loremflickr.com/800/520/{{ urlencode($blog->category ?? 'health') }}?lock={{ $blog->id }}'">
                 </a>
                 <div class="p-6 flex flex-col flex-grow">
                     <div class="flex items-center justify-between mb-3">

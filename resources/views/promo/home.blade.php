@@ -13,7 +13,7 @@
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
-                    Halalytics AI v2.0 – Kini Lebih Cerdas & Responsif
+                    Halalytics AI v2.0 - Kini Lebih Cerdas & Responsif
                 </div>
                 
                 <h1 class="text-5xl lg:text-7xl font-black text-slate-900 leading-[1.1] tracking-tight">
@@ -124,19 +124,27 @@
     <div class="container mx-auto px-4">
         <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
             <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest mb-4">
+                    <span class="material-icons-round text-xs">auto_stories</span>
+                    Edukasi Halal & Sehat
+                </div>
                 <h2 class="text-4xl font-black text-slate-900 tracking-tight">Wawasan Halal & Sehat</h2>
                 <p class="text-slate-500 mt-2 font-medium">Informasi terkini dari pakar nutrisi dan kesehatan Halalytics.</p>
             </div>
-            <a href="{{ route('blog.index') }}" class="text-emerald-600 font-black flex items-center gap-2 hover:gap-3 transition-all">
-                Lihat Semua Artikel <span>&rarr;</span>
+            <a href="{{ route('blog.index') }}" class="group bg-white border border-slate-100 px-6 py-3 rounded-2xl text-emerald-600 font-black flex items-center gap-2 hover:bg-emerald-50 transition-all shadow-sm">
+                Lihat Semua Artikel 
+                <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
             </a>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             @foreach($latestBlogs as $blog)
             <div class="group bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-emerald-900/5 transition-all duration-500 transform hover:-translate-y-2">
-                <div class="aspect-[16/10] overflow-hidden relative">
-                    <img src="{{ $blog->image_url }}" alt="{{ $blog->title }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                <div class="aspect-[16/10] overflow-hidden relative bg-slate-100">
+                    <img src="{{ $blog->image_url }}" 
+                         alt="{{ $blog->title }}" 
+                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                         onerror="this.src='https://picsum.photos/seed/{{ $blog->id }}/800/500'">
                     <div class="absolute top-4 left-4">
                         <span class="bg-white/90 backdrop-blur-md text-emerald-600 text-[10px] font-black px-3 py-1.5 rounded-full shadow-sm">
                             {{ $blog->category ?? 'Edukasi' }}
@@ -160,9 +168,6 @@
     </div>
 </section>
 
-    </div>
-</section>
-
 <!-- Health Tools / Calculator Section -->
 <section class="py-24 bg-white" id="health-check">
     <div class="container mx-auto px-4">
@@ -179,23 +184,23 @@
                     Gunakan kalkulator medis berbasis standar internasional untuk mengetahui profil kesehatan Anda. Data Anda aman dan diproses secara privat oleh sistem AI kami.
                 </p>
 
-                <div class="grid sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="p-6 rounded-3xl border border-slate-100 bg-slate-50/50 hover:border-emerald-200 transition-all group">
                         <div class="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">⚖️</div>
                         <h4 class="font-black text-slate-900 mb-1">Kalkulator BMI</h4>
                         <p class="text-xs text-slate-500">Cek indeks massa tubuh dan berat badan ideal Anda.</p>
                     </div>
-                    <div class="p-6 rounded-3xl border border-slate-100 bg-slate-50/50 hover:border-emerald-200 transition-all group">
+                    <div onclick="openWaterModal()" class="p-6 rounded-3xl border border-slate-100 bg-slate-50/50 hover:border-emerald-200 transition-all group cursor-pointer">
                         <div class="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">💧</div>
                         <h4 class="font-black text-slate-900 mb-1">Target Air Minum</h4>
                         <p class="text-xs text-slate-500">Hitung kebutuhan hidrasi harian berdasarkan berat badan.</p>
                     </div>
-                    <div class="p-6 rounded-3xl border border-slate-100 bg-slate-50/50 hover:border-emerald-200 transition-all group">
+                    <div onclick="openHPLModal()" class="p-6 rounded-3xl border border-slate-100 bg-slate-50/50 hover:border-emerald-200 transition-all group cursor-pointer">
                         <div class="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">🤰</div>
                         <h4 class="font-black text-slate-900 mb-1">Estimasi HPL</h4>
                         <p class="text-xs text-slate-500">Hitung hari perkiraan lahir untuk ibu hamil.</p>
                     </div>
-                    <div class="p-6 rounded-3xl border border-slate-100 bg-slate-50/50 hover:border-emerald-200 transition-all group">
+                    <div onclick="openEyeModal()" class="p-6 rounded-3xl border border-slate-100 bg-slate-50/50 hover:border-emerald-200 transition-all group cursor-pointer">
                         <div class="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">👁️</div>
                         <h4 class="font-black text-slate-900 mb-1">Skrining Mata</h4>
                         <p class="text-xs text-slate-500">Tes ketajaman mata sederhana (Snellen Chart).</p>
@@ -249,7 +254,13 @@
                                 <div class="p-6 rounded-3xl bg-emerald-50 border border-emerald-100">
                                     <div class="flex justify-between items-end mb-4">
                                         <div>
-                                            <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Hasil Analisis</p>
+                                            <div class="flex items-center gap-1.5 mb-1">
+                                                <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Hasil Analisis</p>
+                                                <span class="px-1.5 py-0.5 rounded-md bg-emerald-600 text-[8px] font-black text-white flex items-center gap-0.5">
+                                                    <span class="material-icons-round text-[10px]">auto_awesome</span>
+                                                    AI POWERED
+                                                </span>
+                                            </div>
                                             <h4 id="bmi-status" class="text-xl font-black text-slate-900">Normal</h4>
                                         </div>
                                         <div class="text-right">
@@ -257,7 +268,10 @@
                                             <p id="bmi-score" class="text-3xl font-black text-emerald-600">22.4</p>
                                         </div>
                                     </div>
-                                    <p id="bmi-advice" class="text-xs text-slate-600 leading-relaxed font-medium">Bagus! Berat badan Anda ideal. Pertahankan pola makan sehat dan rutin berolahraga ya.</p>
+                                    <div id="bmi-advice" class="text-xs text-slate-600 leading-relaxed font-medium"></div>
+                                    <button onclick="resetBMI()" class="mt-6 w-full py-3 rounded-xl border border-emerald-200 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all">
+                                        Cek Ulang Lagi
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -291,7 +305,7 @@
             @endphp
 
             @foreach($mainServices as $service)
-            <a href="{{ $service['link'] }}" class="group p-8 rounded-[2.5rem] transition-all duration-500 hover:shadow-xl hover:-translate-y-1" style="background-color: {{ $service['color'] }}">
+            <a href="{{ $service['link'] }}" class="block group p-8 rounded-[2.5rem] transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-900/5 hover:-translate-y-1" style="background-color: {{ $service['color'] }};">
                 <div class="text-4xl mb-6 transform transition-transform group-hover:scale-110 duration-500">{{ $service['icon'] }}</div>
                 <h4 class="text-lg font-black text-slate-900 mb-2">{{ $service['name'] }}</h4>
                 <p class="text-xs text-slate-600 leading-relaxed font-medium">{{ $service['desc'] }}</p>
@@ -325,7 +339,8 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="dictionary-grid">
             @foreach($diseases ?? [] as $d)
             <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer group" 
-                 onclick="openDictionaryDetail(@js($d))">
+                 data-disease='@json($d)'
+                 onclick="openDictionaryDetail(JSON.parse(this.dataset.disease))">
                 <div class="flex justify-between items-start mb-2">
                     <h4 class="font-black text-gray-900 group-hover:text-emerald-700 transition-colors">{{ $d->title ?? ($d['title'] ?? 'Penyakit') }}</h4>
                     <span class="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">{{ $d->alphabet ?? ($d['alphabet'] ?? 'A') }}</span>
@@ -452,6 +467,83 @@
     </div>
 </div>
 
+<!-- Screening Tool Modals -->
+<div id="water-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white w-full max-w-md rounded-[3rem] p-8 shadow-2xl scale-95 transition-transform duration-300 overflow-hidden relative">
+        <button onclick="closeWaterModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
+            <span class="material-icons-round">close</span>
+        </button>
+        <h3 class="text-2xl font-black text-slate-900 mb-2 flex items-center gap-2">💧 Target Air Minum</h3>
+        <p class="text-xs text-slate-500 font-medium mb-8">Hitung kebutuhan air harian Anda sesuai berat badan.</p>
+        
+        <div class="space-y-6">
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Berat Badan Anda (kg)</label>
+                <input type="number" id="water-weight" placeholder="Contoh: 60" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-emerald-500 transition-all">
+            </div>
+            <button onclick="calculateWater()" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20">
+                Hitung Target
+            </button>
+            <div id="water-result" class="hidden p-6 rounded-3xl bg-blue-50 border border-blue-100 text-center animate-fade-in">
+                <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Target Harian Anda</p>
+                <p id="water-score" class="text-3xl font-black text-blue-600 mb-2">2.1 Liter</p>
+                <p class="text-[10px] text-blue-500 font-bold leading-relaxed mb-4">Setara dengan sekitar 8-9 gelas air per hari.</p>
+                <button onclick="resetWater()" class="w-full py-2 rounded-xl border border-blue-200 text-blue-600 text-[10px] font-black uppercase tracking-widest hover:bg-blue-100 transition-all">
+                    Hitung Ulang
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="hpl-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white w-full max-w-md rounded-[3rem] p-8 shadow-2xl scale-95 transition-transform duration-300 overflow-hidden relative">
+        <button onclick="closeHPLModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
+            <span class="material-icons-round">close</span>
+        </button>
+        <h3 class="text-2xl font-black text-slate-900 mb-2 flex items-center gap-2">🤰 Estimasi HPL</h3>
+        <p class="text-xs text-slate-500 font-medium mb-8">Hitung Hari Perkiraan Lahir berdasarkan hari pertama haid terakhir.</p>
+        
+        <div class="space-y-6">
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Hari Pertama Haid Terakhir (HPHT)</label>
+                <input type="date" id="hpl-date" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-emerald-500 transition-all">
+            </div>
+            <button onclick="calculateHPL()" class="w-full bg-rose-500 text-white py-4 rounded-2xl font-black hover:bg-rose-600 transition-all shadow-lg shadow-rose-500/20">
+                Hitung Estimasi
+            </button>
+            <div id="hpl-result" class="hidden p-6 rounded-3xl bg-rose-50 border border-rose-100 text-center animate-fade-in">
+                <p class="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">Estimasi Kelahiran</p>
+                <p id="hpl-score" class="text-2xl font-black text-rose-600 mb-1">-</p>
+                <p class="text-[10px] text-rose-400 font-bold leading-relaxed">Estimasi ini menggunakan aturan Naegele (280 hari).</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="eye-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white w-full max-w-lg rounded-[3rem] p-8 shadow-2xl scale-95 transition-transform duration-300 overflow-hidden relative">
+        <button onclick="closeEyeModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
+            <span class="material-icons-round">close</span>
+        </button>
+        <h3 class="text-2xl font-black text-slate-900 mb-2 flex items-center gap-2">👁️ Skrining Mata</h3>
+        <p class="text-xs text-slate-500 font-medium mb-8">Posisikan layar 1 meter dari mata Anda dan coba baca huruf terkecil.</p>
+        
+        <div class="bg-slate-50 p-8 rounded-[2rem] flex flex-col items-center gap-6 select-none">
+            <div class="text-[60px] font-black text-slate-900 leading-none">E</div>
+            <div class="text-[40px] font-black text-slate-900 leading-none flex gap-4"><span>F</span> <span>P</span></div>
+            <div class="text-[25px] font-black text-slate-900 leading-none flex gap-4"><span>T</span> <span>O</span> <span>Z</span></div>
+            <div class="text-[15px] font-black text-slate-900 leading-none flex gap-4"><span>L</span> <span>P</span> <span>E</span> <span>D</span></div>
+            <div class="text-[10px] font-black text-slate-700 leading-none flex gap-4 italic">Bisa baca baris ini? Penglihatan Anda sangat tajam!</div>
+        </div>
+        
+        <div class="mt-8 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+            <p class="text-[10px] text-emerald-700 font-bold leading-relaxed">
+                <strong>Catatan:</strong> Ini adalah skrining dasar. Jika Anda merasa penglihatan kabur, segera konsultasikan ke dokter spesialis mata.
+            </p>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -473,16 +565,73 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// BMI Reset
+function resetBMI() {
+    document.getElementById('bmi-result').classList.add('hidden');
+    document.getElementById('bmi-weight').value = '';
+    document.getElementById('bmi-height').value = '';
+    document.getElementById('bmi-weight').focus();
+}
+
+// Water Intake Logic
+function openWaterModal() {
+    document.getElementById('water-modal').style.display = 'flex';
+}
+function closeWaterModal() {
+    document.getElementById('water-modal').style.display = 'none';
+}
+function resetWater() {
+    document.getElementById('water-result').classList.add('hidden');
+    document.getElementById('water-weight').value = '';
+    document.getElementById('water-weight').focus();
+}
+function calculateWater() {
+    const w = parseFloat(document.getElementById('water-weight').value);
+    if (!w) return;
+    const result = (w * 0.035).toFixed(1);
+    document.getElementById('water-score').innerText = result + ' Liter';
+    document.getElementById('water-result').classList.remove('hidden');
+}
+
+// HPL Logic
+function openHPLModal() {
+    document.getElementById('hpl-modal').style.display = 'flex';
+}
+function closeHPLModal() {
+    document.getElementById('hpl-modal').style.display = 'none';
+}
+function calculateHPL() {
+    const d = document.getElementById('hpl-date').value;
+    if (!d) return;
+    let date = new Date(d);
+    date.setDate(date.getDate() + 7);
+    date.setMonth(date.getMonth() - 3);
+    date.setFullYear(date.getFullYear() + 1);
+    
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    document.getElementById('hpl-score').innerText = date.toLocaleDateString('id-ID', options);
+    document.getElementById('hpl-result').classList.remove('hidden');
+}
+
+// Eye Logic
+function openEyeModal() {
+    document.getElementById('eye-modal').style.display = 'flex';
+}
+function closeEyeModal() {
+    document.getElementById('eye-modal').style.display = 'none';
+}
+
 function calculateBMI() {
     const w = parseFloat(document.getElementById('bmi-weight').value);
-    const h = parseFloat(document.getElementById('bmi-height').value) / 100;
+    const h = parseFloat(document.getElementById('bmi-height').value);
     
     if (!w || !h) {
         alert('Mohon isi berat dan tinggi badan dengan benar.');
         return;
     }
 
-    const bmi = (w / (h * h)).toFixed(1);
+    const hMeter = h / 100;
+    const bmi = (w / (hMeter * hMeter)).toFixed(1);
     const res = document.getElementById('bmi-result');
     const score = document.getElementById('bmi-score');
     const status = document.getElementById('bmi-status');
@@ -490,7 +639,61 @@ function calculateBMI() {
 
     score.innerText = bmi;
     res.classList.remove('hidden');
+    advice.innerHTML = '<div class="flex items-center gap-2 text-emerald-600 font-bold"><div class="animate-spin rounded-full h-4 w-4 border-2 border-emerald-600 border-t-transparent"></div> Menganalisis dengan AI...</div>';
 
+    // Call AI for better advice
+    fetch("{{ route('promo.bmi_ai_advice') }}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': "{{ csrf_token() }}"
+        },
+        body: JSON.stringify({ weight: w, height: h })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success && res.data) {
+            const data = res.data;
+            status.innerText = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+            
+            // Set color based on status
+            const statusMap = {
+                'underweight': 'text-amber-600',
+                'normal': 'text-emerald-600',
+                'overweight': 'text-orange-600',
+                'obesitas': 'text-rose-600'
+            };
+            status.className = `text-xl font-black ${statusMap[data.status] || 'text-slate-900'}`;
+            
+            // Format recommendations as a nice list
+            let adviceHtml = '<ul class="space-y-2 mt-2">';
+            data.recommendations.forEach(rec => {
+                adviceHtml += `<li class="flex items-start gap-2">
+                    <span class="material-icons-round text-emerald-500 text-sm mt-0.5">check_circle</span>
+                    <span>${rec}</span>
+                </li>`;
+            });
+            adviceHtml += '</ul>';
+            
+            if (data.risks && data.risks.length > 0) {
+                adviceHtml += '<div class="mt-4 p-3 bg-rose-50 rounded-2xl border border-rose-100">';
+                adviceHtml += '<p class="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">Risiko Kesehatan</p>';
+                adviceHtml += `<p class="text-xs text-rose-700 font-medium">${data.risks[0]}</p>`;
+                adviceHtml += '</div>';
+            }
+            
+            advice.innerHTML = adviceHtml;
+        } else {
+            // Fallback to basic logic if AI fails
+            setBasicBMIAdvice(bmi, status, advice);
+        }
+    })
+    .catch(() => {
+        setBasicBMIAdvice(bmi, status, advice);
+    });
+}
+
+function setBasicBMIAdvice(bmi, status, advice) {
     if (bmi < 18.5) {
         status.innerText = 'Kekurangan Berat Badan';
         status.className = 'text-xl font-black text-amber-600';
@@ -510,11 +713,16 @@ function calculateBMI() {
     }
 }
 
-// Data from Server (Safe Passing)
-const serverData = {
-    diseases: JSON.parse(atob('{{ base64_encode(json_encode($diseases ?? [])) }}')),
-    stats: JSON.parse(atob('{{ base64_encode(json_encode($stats ?? [])) }}'))
-};
+// Server Data Passing
+</script>
+<script id="server-data" type="application/json">
+    @json([
+        'diseases' => $diseases ?? [],
+        'stats' => $stats ?? []
+    ])
+</script>
+<script>
+const serverData = JSON.parse(document.getElementById('server-data').textContent);
 
 // Health Dictionary Interactive Controls
 function filterAlphabet(letter) {
@@ -657,7 +865,7 @@ function sendAIMessage() {
     m.appendChild(l);
     m.scrollTop = m.scrollHeight;
 
-    fetch('{{ route('promo.ai_chat') }}', {
+    fetch("{{ route('promo.ai_chat') }}", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -693,6 +901,15 @@ document.getElementById('dict-modal').addEventListener('click', function(e) {
     if (e.target === this) {
         closeDictionaryDetail();
     }
+});
+
+// Close screening modals on click outside
+[document.getElementById('water-modal'), document.getElementById('hpl-modal'), document.getElementById('eye-modal')].forEach(modal => {
+    modal?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    });
 });
 </script>
 

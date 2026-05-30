@@ -61,7 +61,7 @@
                 <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
-                            <img src="{{ $ing->image }}" alt="{{ $ing->name }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name='+encodeURIComponent('{{ $ing->name }}')+'&background=random';">
+                            <img src="{{ $ing->image }}" alt="{{ $ing->name }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://loremflickr.com/100/100/{{ urlencode($ing->name) }},toxic,danger?lock={{ $ing->id }}';">
                         </div>
                         <div>
                             <div class="font-bold text-sm text-slate-800 dark:text-white">{{ $ing->name }}</div>
@@ -102,7 +102,17 @@
                 <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 max-w-xs truncate">{{ $ing->reason }}</td>
                 <td class="px-6 py-4 text-right">
                     <div class="flex items-center justify-end gap-2">
-                        <button onclick="openEditModal({{ $ing->id }}, '{{ addslashes($ing->name) }}', '{{ $ing->code }}', '{{ $ing->type }}', '{{ $ing->risk_level }}', '{{ addslashes($ing->reason) }}', '{{ addslashes($ing->description) }}', '{{ $ing->aliases ? implode(', ', $ing->aliases) : '' }}')" class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all">
+                        <button 
+                            data-id="{{ $ing->id }}"
+                            data-name="{{ $ing->name }}"
+                            data-code="{{ $ing->code }}"
+                            data-type="{{ $ing->type }}"
+                            data-risk="{{ $ing->risk_level }}"
+                            data-reason="{{ $ing->reason }}"
+                            data-desc="{{ $ing->description }}"
+                            data-aliases="{{ $ing->aliases ? implode(', ', $ing->aliases) : '' }}"
+                            onclick="openEditModal(this.dataset.id, this.dataset.name, this.dataset.code, this.dataset.type, this.dataset.risk, this.dataset.reason, this.dataset.desc, this.dataset.aliases)" 
+                            class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all">
                             <span class="material-icons-round text-lg">edit</span>
                         </button>
                         <form action="{{ route('admin.forbidden.destroy', $ing->id) }}" method="POST" onsubmit="return confirm('Delete this ingredient?')">

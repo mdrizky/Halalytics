@@ -304,6 +304,19 @@ class AdminProductController extends Controller
         $allowedSources = ['local', 'open_food_facts', 'umkm', 'user_ocr', 'open_beauty_facts', 'openfda'];
         $dbSource = in_array($source, $allowedSources) ? $source : 'open_food_facts';
 
+        // Try to auto-categorize based on name
+        $kategoriId = null;
+        if (!empty($data['product_name'])) {
+            $name = strtolower($data['product_name']);
+            if (str_contains($name, 'milk') || str_contains($name, 'susu')) {
+                $kategoriId = \App\Models\KategoriModel::where('nama_kategori', 'like', '%susu%')->orWhere('nama_kategori', 'like', '%dairy%')->first()?->id_kategori;
+            } elseif (str_contains($name, 'snack') || str_contains($name, 'chiki') || str_contains($name, 'chips')) {
+                $kategoriId = \App\Models\KategoriModel::where('nama_kategori', 'like', '%snack%')->orWhere('nama_kategori', 'like', '%camilan%')->first()?->id_kategori;
+            } elseif (str_contains($name, 'drink') || str_contains($name, 'water') || str_contains($name, 'juice')) {
+                $kategoriId = \App\Models\KategoriModel::where('nama_kategori', 'like', '%minuman%')->orWhere('nama_kategori', 'like', '%beverage%')->first()?->id_kategori;
+            }
+        }
+
         return ProductModel::updateOrCreate(
             ['barcode' => $data['barcode']],
             [
@@ -312,6 +325,7 @@ class AdminProductController extends Controller
                 'status' => 'syubhat', // Default for external
                 'source' => $dbSource,
                 'image' => $data['image_url'] ?? null,
+                'kategori_id' => $kategoriId,
                 'verification_status' => 'needs_review'
             ]
         );
@@ -331,6 +345,7 @@ class AdminProductController extends Controller
                 'source' => 'openfda',
                 'halal_status' => 'syubhat',
                 'barcode' => $data['product_ndc'] ?? null,
+                'category' => 'Obat-obatan',
                 'active' => true
             ]
         );

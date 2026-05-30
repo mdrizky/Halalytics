@@ -27,10 +27,11 @@
                     <div class="row g-4">
                         <div class="col-md-4">
                             <div class="rounded-3 overflow-hidden bg-light p-2 border" style="height: 200px;">
-                                <img src="{{ $offProduct['image'] ?? 'https://via.placeholder.com/400?text=No+Image' }}" 
+                                <img src="{{ $offProduct['image'] ?? '' }}" 
                                      class="w-100 h-100" 
                                      style="object-fit: contain;"
-                                     alt="{{ $offProduct['nama_product'] }}">
+                                     alt="{{ $offProduct['nama_product'] }}"
+                                     onerror="this.onerror=null;this.src='https://loremflickr.com/400/400/{{ urlencode($offProduct['nama_product']) }},food?lock={{ $offProduct['barcode'] ?? 1 }}'">
                             </div>
                         </div>
                         <div class="col-md-8">

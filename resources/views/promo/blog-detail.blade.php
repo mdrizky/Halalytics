@@ -99,11 +99,10 @@
     <div class="container mx-auto px-4">
         <div class="max-w-4xl mx-auto">
             <!-- Article Image -->
-            @if($blog->image)
-            <div class="mb-12 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-emerald-900/10 border-8 border-white">
-                <img src="{{ $blog->image }}" alt="{{ $blog->title }}" class="w-full h-auto object-cover">
+            <div class="mb-12 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-emerald-900/10 border-8 border-white bg-slate-100">
+                @php $mainImgId = $blog->id; $mainImgCat = $blog->category ?? 'health'; @endphp
+                <img src="{{ $blog->image_url }}" alt="{{ $blog->title }}" class="w-full h-auto object-cover" onerror="this.onerror=null;this.src='https://loremflickr.com/1200/600/{{ urlencode($mainImgCat) }}?lock={{ $mainImgId }}'">
             </div>
-            @endif
 
             <!-- Article Content -->
             <div class="bg-white p-8 md:p-16 rounded-[3rem] shadow-sm border border-slate-100">
@@ -135,11 +134,8 @@
             @foreach($relatedBlogs as $related)
             <article class="related-card overflow-hidden">
                 <a href="{{ route('blog.show', $related->slug) }}" class="block">
-                    @if($related->image)
-                    <img src="{{ $related->image_url }}" alt="{{ $related->title }}" class="w-full h-48 object-cover">
-                    @else
-                    <div class="w-full h-48 bg-gradient-to-br from-emerald-200 via-teal-100 to-primary/20"></div>
-                    @endif
+                    @php $relImgId = $related->id; $relImgCat = $related->category ?? 'health'; @endphp
+                    <img src="{{ $related->image_url }}" alt="{{ $related->title }}" class="w-full h-48 object-cover" onerror="this.onerror=null;this.src='https://loremflickr.com/600/400/{{ urlencode($relImgCat) }}?lock={{ $relImgId }}'">
                 </a>
                 <div class="p-6">
                     <span class="inline-flex px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">{{ $related->category ?? 'Edukasi' }}</span>

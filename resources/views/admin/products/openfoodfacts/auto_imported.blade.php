@@ -49,7 +49,7 @@
                             <td class="px-4 py-3">
                                 <div class="d-flex align-items-center">
                                     <div class="avatar avatar-sm me-3 border rounded">
-                                        <img src="{{ $product->image ?? 'https://via.placeholder.com/50' }}" class="avatar-img rounded" style="object-fit: contain;">
+                                        <img src="{{ $product->image ?? '' }}" class="avatar-img rounded" style="object-fit: contain;" onerror="this.onerror=null;this.src='https://loremflickr.com/100/100/{{ urlencode($product->nama_product) }},food?lock={{ $product->id_product }}'">
                                     </div>
                                     <div>
                                         <h5 class="mb-0 text-dark">{{ $product->nama_product }}</h5>
