@@ -29,18 +29,23 @@ class AdminProductController extends Controller
      */
     public function show($id)
     {
-        $product = ProductModel::with('kategori')->withCount('scans')->find($id);
-        
-        // If not found in ProductModel, check Medicine model
-        if (!$product) {
-            $medicine = \App\Models\Medicine::where('id_medicine', $id)->first();
-            if ($medicine) {
-                return view('admin.product_show', ['product' => $medicine, 'type' => 'medicine']);
-            }
-            return redirect()->route('admin.product.index')->with('error', 'Product not found');
+        // First check Medicine model (id could be id_medicine or barcode)
+        $medicine = \App\Models\Medicine::where('id_medicine', $id)
+            ->orWhere('barcode', $id)
+            ->first();
+
+        if ($medicine) {
+            return view('admin.product_show', ['product' => $medicine, 'type' => 'medicine']);
         }
 
-        return view('admin.product_show', ['product' => $product, 'type' => 'general']);
+        // Then check ProductModel
+        $product = ProductModel::with('kategori')->withCount('scans')->find($id);
+        
+        if ($product) {
+            return view('admin.product_show', ['product' => $product, 'type' => 'general']);
+        }
+
+        return redirect()->route('admin.product.index')->with('error', 'Product not found');
     }
 
     /**

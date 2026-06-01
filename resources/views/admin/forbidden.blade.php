@@ -234,6 +234,24 @@
     function closeModal() {
         modal.style.display = 'none';
     }
+
+    // Handle Edit Button Clicks
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-edit');
+        if (btn) {
+            const data = btn.dataset;
+            openEditModal(
+                data.id, 
+                data.name, 
+                data.code, 
+                data.type, 
+                data.risk, 
+                data.reason, 
+                data.description, 
+                data.aliases
+            );
+        }
+    });
     
     window.onclick = function(event) {
         if (event.target == modal) closeModal();

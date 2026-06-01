@@ -14,6 +14,7 @@ use App\Models\Medicine;
 use App\Models\NotificationCampaign;
 use App\Models\Article;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;

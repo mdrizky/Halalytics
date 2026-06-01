@@ -21,9 +21,9 @@ class Article extends Model
         'status' => 'string',
     ];
 
-    public function getImageAttribute($value): ?string
+    public function getResolvedImageAttribute(): ?string
     {
-        return app(DisplayImageService::class)->resolve($value, [
+        return app(DisplayImageService::class)->resolve($this->attributes['image'] ?? null, [
             'name' => $this->title,
             'category' => $this->category,
         ], 'article');
@@ -31,7 +31,7 @@ class Article extends Model
 
     public function getImageUrlAttribute(): ?string
     {
-        return $this->image;
+        return $this->resolved_image;
     }
 
     public function getFormattedDateAttribute(): string

@@ -207,22 +207,27 @@ $spec = $specData[$data['slug'] ?? ''] ?? $specData['diabetes'];
 </section>
 
 <!-- RELATED ARTICLES -->
-@if($relatedArticles->count() > 0)
+@if(isset($relatedArticles) && $relatedArticles->count() > 0)
 <section class="py-24 bg-white">
     <div class="max-w-7xl mx-auto px-6">
         <h2 class="text-3xl font-black text-gray-900 mb-12">Artikel Terkait</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             @foreach($relatedArticles as $article)
-            <div class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 group cursor-pointer" onclick="location.href='{{ route('blog.show', $article->slug) }}'">
+            <a href="{{ route('blog.show', $article->slug) }}" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 group block">
                 <div class="w-full h-48 bg-emerald-50 overflow-hidden">
                     @php $imgId = $article->id; $imgCat = $article->category ?? 'health'; $imgTitle = $article->title; @endphp
-                    <img src="{{ $article->image_url }}" alt="{{ $article->title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.onerror=null;this.src='https://loremflickr.com/600/400/{{ urlencode($imgCat) }}?lock={{ $imgId }}'">
+                    <img src="{{ $article->image_url }}"
+                         alt="{{ $article->title }}"
+                         loading="lazy"
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                         data-fallback="https://loremflickr.com/600/400/{{ urlencode($imgCat) }}?lock={{ $imgId }}"
+                         onerror="handleImgError(this, this.dataset.fallback)">
                 </div>
                 <div class="p-6">
                     <h4 class="font-black text-gray-900 mb-2 leading-tight group-hover:text-emerald-600 transition-colors">{{ $article->title }}</h4>
                     <p class="text-sm text-gray-500 line-clamp-2">{{ $article->excerpt }}</p>
                 </div>
-            </div>
+            </a>
             @endforeach
         </div>
     </div>

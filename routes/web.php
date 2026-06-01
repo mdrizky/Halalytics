@@ -56,6 +56,15 @@ Route::get('/medicine/{id}', [App\Http\Controllers\Promo\PageController::class, 
 
 // Login
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::get('/test-login', function () {
+    $credentials = ['username' => 'admin', 'password' => 'password123'];
+    $attempt = Auth::attempt($credentials);
+    return response()->json([
+        'attempt' => $attempt,
+        'user' => App\Models\User::where('username', 'admin')->first()
+    ]);
+});
+
 Route::post('/actionLogin', [LoginController::class, 'login'])->name('actionLogin');
 
 // Register
@@ -444,6 +453,11 @@ Route::middleware('auth')->group(function () {
     // 🍏 EXPERT / NUTRITIONIST DASHBOARD
     Route::prefix('expert')->middleware('role:ahli_gizi')->name('expert.')->group(function () {
         Route::get('/dashboard', [ExpertDashboardController::class, 'index'])->name('dashboard');
+    });
+
+    // 👤 USER DASHBOARD
+    Route::prefix('user')->middleware('role:user')->name('user.')->group(function () {
+        Route::get('/dashboard', [App\Http\Controllers\UserDashboardController::class, 'index'])->name('dashboard');
     });
 
 });

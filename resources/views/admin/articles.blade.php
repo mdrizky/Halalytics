@@ -146,7 +146,13 @@
                                                 <i class="fas fa-{{ $article->is_published ? 'eye-slash' : 'eye' }}"></i>
                                             </button>
                                         </form>
-                                        <button onclick="editArticle({{ $article->id }}, '{{ addslashes($article->title) }}', '{{ addslashes($article->category) }}', '{{ addslashes($article->author) }}', '{{ addslashes($article->content) }}', '{{ addslashes($article->image) }}')" class="btn btn-outline" style="padding: 8px; color: var(--primary-color); border-color: var(--primary-color);">
+                                        <button onclick="editArticle({{ $article->id }}, this)" 
+                                            data-title="{{ $article->title }}"
+                                            data-category="{{ $article->category }}"
+                                            data-author="{{ $article->author }}"
+                                            data-content="{{ $article->content }}"
+                                            data-image="{{ $article->image }}"
+                                            class="btn btn-outline" style="padding: 8px; color: var(--primary-color); border-color: var(--primary-color);">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <form action="{{ route('admin.articles.destroy', $article->id) }}" method="POST" onsubmit="return confirm('Hapus artikel ini?');" style="display: inline;">
@@ -373,7 +379,13 @@
         document.getElementById('editModal').style.display = 'none';
     }
 
-    function editArticle(id, title, category, author, content, image) {
+    function editArticle(id, btn) {
+        const title = btn.getAttribute('data-title') || '';
+        const category = btn.getAttribute('data-category') || 'health';
+        const author = btn.getAttribute('data-author') || '';
+        const content = btn.getAttribute('data-content') || '';
+        const image = btn.getAttribute('data-image') || '';
+
         const form = document.getElementById('editArticleForm');
         form.action = `/admin/articles/${id}`;
         

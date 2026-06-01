@@ -96,10 +96,14 @@
                 @foreach($externalArticles as $article)
                 <article class="blog-card overflow-hidden flex flex-col">
                     @if(!empty($article['image_url']))
-                    <img src="{{ $article['image_url'] }}" alt="{{ $article['title'] }}" class="w-full h-48 object-cover" onerror="this.src='https://loremflickr.com/800/480/health,medical?lock={{ crc32($article['title']) }}'">
+                    <img src="{{ $article['image_url'] }}" 
+                         alt="{{ $article['title'] }}" 
+                         class="w-full h-48 object-cover" 
+                         data-fallback="https://loremflickr.com/800/480/health,medical?lock={{ crc32($article['title']) }}"
+                         onerror="handleImgError(this, this.dataset.fallback)">
                     @else
                     <div class="w-full h-48 bg-gradient-to-br from-[#E0F2F1] to-white flex items-center justify-center">
-                         <img src="https://loremflickr.com/800/480/health,medical?lock={{ crc32($article['title']) }}" class="w-full h-full object-cover">
+                         <img src="https://loremflickr.com/800/480/health,medical?lock={{ crc32($article['title']) }}" alt="Placeholder" class="w-full h-full object-cover">
                     </div>
                     @endif
                     <div class="p-6 flex flex-col flex-grow">
@@ -127,7 +131,8 @@
                     <img src="{{ $blog->image_url }}" 
                          alt="{{ $blog->title }}" 
                          class="w-full h-52 object-cover"
-                         onerror="this.src='https://loremflickr.com/800/520/{{ urlencode($blog->category ?? 'health') }}?lock={{ $blog->id }}'">
+                         data-fallback="https://loremflickr.com/800/520/{{ urlencode($blog->category ?? 'health') }}?lock={{ $blog->id }}"
+                         onerror="handleImgError(this, this.dataset.fallback)">
                 </a>
                 <div class="p-6 flex flex-col flex-grow">
                     <div class="flex items-center justify-between mb-3">

@@ -47,7 +47,7 @@ class HealthArticleController extends Controller
                     'content' => (string) $article->content,
                     'ai_summary' => (string) $article->ai_summary,
                     'category' => (string) ($article->category ?: 'Kesehatan'),
-                    'image_url' => $article->image,
+                    'image_url' => $article->resolved_image,
                     'published_at' => optional($article->created_at)->toIso8601String(),
                     'source' => 'halalytics',
                     'source_url' => $article->source_url ?: route('blog.show', $article->slug),

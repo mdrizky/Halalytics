@@ -277,7 +277,7 @@ class AdminUserController extends Controller
             $validated['email']
         );
 
-        User::create([
+        $user = User::create([
             'full_name' => $validated['full_name'],
             'username' => $validated['username'],
             'email' => $validated['email'],

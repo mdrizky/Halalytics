@@ -115,7 +115,7 @@
 @push('scripts')
 <script>
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-const ocrBaseUrl = @json(url('/admin/ocr'));
+const ocrBaseUrl = "{{ url('/admin/ocr') }}";
 let currentFilter = 'pending';
 let currentDetail = null;
 
@@ -185,6 +185,7 @@ async function loadOcrProducts() {
 
 function renderOcrRow(product) {
     const image = product.front_image_url || product.back_image_url;
+    const fallbackImage = 'https://loremflickr.com/100/100/product,box?lock=' + product.id;
     const confidence = Number(product.confidence_level || product.confidence_score || 0);
     const statusClass = product.status === 'approved'
         ? 'bg-emerald-100 text-emerald-700'

@@ -22,10 +22,11 @@ class LoginController extends Controller
             $user = Auth::user();
             if ($user->role === 'admin') {
                 return redirect()->route('admin.dashboard');
+            } elseif ($user->role === 'ahli_gizi') {
+                return redirect()->route('expert.dashboard');
+            } else {
+                return redirect()->route('user.dashboard');
             }
-            // User portal has been decommissioned — redirect to app download
-            Auth::logout();
-            return redirect()->route('download')->with('error', 'Portal user hanya tersedia di aplikasi Android.');
         }
         return redirect()->route('login');
     }
@@ -39,6 +40,9 @@ class LoginController extends Controller
         ]);
 
         $credentials = $request->only('username', 'password');
+        
+        // Debug
+        // dd($credentials, Auth::attempt($credentials), User::where('username', $credentials['username'])->first());
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
@@ -57,11 +61,11 @@ class LoginController extends Controller
 
             if ($user->role === 'admin') {
                 return redirect()->route('admin.dashboard');
+            } elseif ($user->role === 'ahli_gizi') {
+                return redirect()->route('expert.dashboard');
+            } else {
+                return redirect()->route('user.dashboard');
             }
-
-            // User portal decommissioned — block web login for non-admin
-            Auth::logout();
-            return redirect()->route('download')->with('error', 'Silakan gunakan aplikasi Android untuk mengakses fitur pengguna.');
         }
 
         // ✅ Kalau gagal login

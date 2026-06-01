@@ -187,6 +187,13 @@
         </div>
     </nav>
 
+    <script>
+        function handleImgError(img, fallbackUrl) {
+            img.onerror = null;
+            img.src = fallbackUrl;
+        }
+    </script>
+
     <!-- ===== KONTEN UTAMA ===== -->
     <main class="pt-16">
         <!-- Flash Messages -->

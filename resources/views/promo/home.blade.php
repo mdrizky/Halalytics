@@ -305,7 +305,9 @@
             @endphp
 
             @foreach($mainServices as $service)
-            <a href="{{ $service['link'] }}" class="block group p-8 rounded-[2.5rem] transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-900/5 hover:-translate-y-1" style="background-color: {{ $service['color'] }};">
+            <a href="{{ $service['link'] }}" 
+               class="block group p-8 rounded-[2.5rem] transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-900/5 hover:-translate-y-1" 
+               data-service-bg="{{ $service['color'] }}">
                 <div class="text-4xl mb-6 transform transition-transform group-hover:scale-110 duration-500">{{ $service['icon'] }}</div>
                 <h4 class="text-lg font-black text-slate-900 mb-2">{{ $service['name'] }}</h4>
                 <p class="text-xs text-slate-600 leading-relaxed font-medium">{{ $service['desc'] }}</p>
@@ -337,10 +339,10 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="dictionary-grid">
-            @foreach($diseases ?? [] as $d)
+            @forelse($diseases ?? [] as $d)
             <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer group" 
-                 data-disease='@json($d)'
-                 onclick="openDictionaryDetail(JSON.parse(this.dataset.disease))">
+                 data-disease="{{ json_encode($d) }}"
+                 onclick="openDictionaryDetail(JSON.parse(this.getAttribute('data-disease')))">
                 <div class="flex justify-between items-start mb-2">
                     <h4 class="font-black text-gray-900 group-hover:text-emerald-700 transition-colors">{{ $d->title ?? ($d['title'] ?? 'Penyakit') }}</h4>
                     <span class="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">{{ $d->alphabet ?? ($d['alphabet'] ?? 'A') }}</span>
@@ -350,7 +352,11 @@
                     Lihat Selengkapnya <span>&rarr;</span>
                 </div>
             </div>
-            @endforeach
+            @empty
+            <div class="col-span-full py-20 text-center bg-white rounded-3xl border border-dashed border-slate-200">
+                <p class="text-slate-400 font-black">Data ensiklopedia belum tersedia.</p>
+            </div>
+            @endforelse
         </div>
     </div>
 </section>
@@ -544,6 +550,10 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('styles')
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 @endsection
 
 @section('scripts')
@@ -904,13 +914,18 @@ document.getElementById('dict-modal').addEventListener('click', function(e) {
 });
 
 // Close screening modals on click outside
-[document.getElementById('water-modal'), document.getElementById('hpl-modal'), document.getElementById('eye-modal')].forEach(modal => {
-    modal?.addEventListener('click', function(e) {
-        if (e.target === this) {
-            this.style.display = 'none';
-        }
+    [document.getElementById('water-modal'), document.getElementById('hpl-modal'), document.getElementById('eye-modal')].forEach(modal => {
+        modal?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+            }
+        });
     });
-});
+
+    // Set dynamic background colors for service cards
+    document.querySelectorAll('[data-service-bg]').forEach(el => {
+        el.style.backgroundColor = el.dataset.serviceBg;
+    });
 </script>
 
 <style>

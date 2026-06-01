@@ -62,7 +62,7 @@
         @forelse($banners as $banner)
             <article class="surface-card overflow-hidden rounded-3xl">
                 <div class="relative h-56 bg-slate-100 dark:bg-slate-800">
-                    <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='https://loremflickr.com/800/400/{{ urlencode($banner->title) }},banner,advertising?lock={{ $banner->id }}'">
+                    <img src="{{ $banner->image_url }}{{ str_contains($banner->image_url, '?') ? '&' : '?' }}v={{ strtotime($banner->updated_at) }}" alt="{{ $banner->title }}" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='https://loremflickr.com/800/400/{{ urlencode($banner->title) }},banner,advertising?lock={{ $banner->id }}'">
                     <div class="absolute left-4 top-4 flex items-center gap-2">
                         <span class="inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase {{ $banner->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-900/80 text-white' }}">
                             {{ $banner->is_active ? 'Active' : 'Inactive' }}
