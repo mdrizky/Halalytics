@@ -156,6 +156,7 @@ class ProductController extends Controller
             Log::warning('ProductController::search failed', ['q' => $q, 'error' => $e->getMessage()]);
 
             $locals = ProductModel::query()
+                ->with('kategori')
                 ->where(function ($query) use ($q) {
                     $query->where('nama_product', 'like', "%{$q}%")
                         ->orWhere('barcode', 'like', "%{$q}%")
@@ -187,6 +188,7 @@ class ProductController extends Controller
         $limit = min(50, max(1, (int) $request->get('limit', 10)));
 
         $items = ProductModel::query()
+            ->with('kategori')
             ->where(function ($q) {
                 $q->whereNull('active')->orWhere('active', true);
             })

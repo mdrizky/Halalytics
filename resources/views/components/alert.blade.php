@@ -30,6 +30,8 @@ $defaultIcons = [
 ];
 
 $iconHtml = $icon ?? $defaultIcons[$type] ?? '';
+// Only allow raw SVG output if it matches one of the predefined icons
+$safeIcon = in_array($iconHtml, $defaultIcons, true) ? $iconHtml : ($defaultIcons[$type] ?? '');
 $allClasses = trim(implode(' ', array_filter(['border rounded-md p-4', $typeClasses, $class])));
 @endphp
 
@@ -37,7 +39,7 @@ $allClasses = trim(implode(' ', array_filter(['border rounded-md p-4', $typeClas
     <div class="flex">
         <div class="flex-shrink-0">
             <span class="{{ $iconClasses }}">
-                {!! $iconHtml !!}
+                {!! $safeIcon !!}
             </span>
         </div>
         <div class="ml-3 flex-1">

@@ -33,6 +33,11 @@ use App\Http\Controllers\Api\BpomController;
 use App\Http\Controllers\Api\SkincareController;
 use App\Http\Controllers\Api\MentalHealthController;
 use App\Http\Controllers\Api\HelpCenterController;
+use App\Http\Controllers\Api\AuthControllerV2;
+use App\Http\Controllers\Api\SkincareController;
+use App\Http\Controllers\Api\RecipeController;
+use App\Http\Controllers\Api\MentalHealthController;
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\SyncController;
 use App\Http\Controllers\Api\NutritionistDashboardController;
 use App\Http\Controllers\Api\NutritionConsultationController;
@@ -50,6 +55,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/auth/google', [AuthController::class, 'googleLogin']);
 Route::post('/auth/facebook', [AuthController::class, 'facebookLogin']);
+Route::post('/auth/sync', [AuthController::class, 'syncUser']);
 Route::get('/banners', [BannerController::class, 'index']);
 Route::get('/categories', [App\Http\Controllers\Api\CategoryController::class, 'index']);
 
@@ -64,11 +70,13 @@ Route::get('/health-encyclopedia/{id}', [\App\Http\Controllers\Api\HealthEncyclo
 Route::prefix('mental-health')->group(function () {
     Route::get('/topics', [MentalHealthController::class, 'topics']);
     Route::get('/articles', [MentalHealthController::class, 'articles']);
+    Route::get('/experts', [MentalHealthController::class, 'experts']);
     Route::get('/questions/{type}', [MentalHealthController::class, 'getQuestions']);
 });
 Route::prefix('help')->group(function () {
     Route::get('/categories', [HelpCenterController::class, 'categories']);
     Route::get('/faq', [HelpCenterController::class, 'faq']);
+    Route::post('/request', [HelpCenterController::class, 'submitRequest']);
 });
 
 // PRODUCTS (Hybrid Search)
@@ -98,6 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/stats', [ApiController::class, 'getUserStats']);
         Route::get('/daily-insight', [UserHealthInsightController::class, 'getDailyInsight']);
+        Route::post('/change-password', [AuthControllerV2::class, 'changePassword']);
     });
 
     // SCAN & HISTORY
@@ -115,6 +124,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/history', [OCRController::class, 'history']);
         Route::get('/sync', [OCRController::class, 'syncIngredients']);
         Route::post('/scan-result', [OCRController::class, 'scanResult']);
+        Route::post('/save', [OCRController::class, 'scanResult']);
     });
 
     // MEDICINES & REMINDERS
@@ -150,6 +160,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('skincare')->group(function () {
         Route::post('/analyze', [SkincareController::class, 'analyze']);
         Route::post('/safety', [SkincareController::class, 'safetyCheck']);
+        Route::post('/halal-check', [SkincareController::class, 'getHalalStatus']);
     });
 
     // HALAL ALTERNATIVES
@@ -271,6 +282,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/bmi-advice', [\App\Http\Controllers\Api\MedicalProfileController::class, 'getAiBmiAdvice']);
     });
 
+    // RECIPES
+    Route::prefix('recipes')->group(function () {
+        Route::get('/', [RecipeController::class, 'index']);
+        Route::get('/{id}', [RecipeController::class, 'show']);
+        Route::get('/{id}/substitution', [RecipeController::class, 'getSubstitution']);
+    });
+
     // MEAL AI
     Route::post('/meal/analyze', [\App\Http\Controllers\Api\MealAiController::class, 'analyzeMeal']);
 
@@ -319,6 +337,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/monitor/stats', [\App\Http\Controllers\Api\AdminMonitorController::class, 'getDashboardStats']);
         Route::get('/monitor/feed', [\App\Http\Controllers\Api\AdminMonitorController::class, 'getActivityFeed']);
         Route::get('/products/pending', [\App\Http\Controllers\Api\ContributionController::class, 'pending']);
+        Route::put('/products/{id}/approve', [AdminController::class, 'approveProduct']);
+        Route::put('/products/{id}/reject', [AdminController::class, 'rejectProduct']);
         Route::get('/ai/logs', [\App\Http\Controllers\Api\AdminAiLogController::class, 'index']);
         Route::get('/ai/stats', [\App\Http\Controllers\Api\AdminAiLogController::class, 'stats']);
     });

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\ProductModel;
 use App\Models\DailyIntake;
 use App\Models\ScanHistory;
-use App\Models\ScanModel; // Legacy
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 

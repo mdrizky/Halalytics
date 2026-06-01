@@ -3,13 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\OnboardingStep;
 use App\Models\ProductModel;
-use App\Models\ScanModel;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class OnboardingController extends Controller
 {

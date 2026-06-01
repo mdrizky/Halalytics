@@ -18,7 +18,8 @@ class UserDashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $recentScans = ScanModel::where('id_user', $user->id_user)
+        $recentScans = ScanModel::with('product')
+            ->where('id_user', $user->id_user)
             ->latest('tanggal_scan')
             ->limit(5)
             ->get();

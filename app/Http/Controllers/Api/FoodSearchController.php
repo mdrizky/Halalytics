@@ -22,7 +22,8 @@ class FoodSearchController extends Controller
         $perPage = $request->get('per_page', 20);
 
         // Search in products table
-        $products = ProductModel::where('nama_product', 'LIKE', "%{$query}%")
+        $products = ProductModel::with('kategori')
+            ->where('nama_product', 'LIKE', "%{$query}%")
             ->orWhere('brand', 'LIKE', "%{$query}%")
             ->limit(10)
             ->get()

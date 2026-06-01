@@ -63,7 +63,8 @@ class AdminController extends Controller
      */
     public function getPendingProducts()
     {
-        $products = ProductModel::where(function ($query) {
+        $products = ProductModel::with('kategori')
+            ->where(function ($query) {
                 $query->where('approval_status', 'pending')
                     ->orWhere('verification_status', 'pending')
                     ->orWhere('verification_status', 'needs_review');

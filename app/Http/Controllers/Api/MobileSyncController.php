@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\ProductModel;
 use App\Models\KategoriModel;
 use App\Models\ScanModel;
-use App\Models\HalalProduct;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
