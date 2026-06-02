@@ -652,4 +652,28 @@ class AdminController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+    public function updateUser(Request $request, $id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User tidak ditemukan.',
+            ], 404);
+        }
+
+        $allowedFields = ['full_name', 'email', 'phone', 'blood_type', 'is_active', 'role'];
+        $data = $request->only($allowedFields);
+
+        if (!empty($data)) {
+            $user->update($data);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data user berhasil diperbarui.',
+        ]);
+    }
 }

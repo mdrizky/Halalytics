@@ -30,12 +30,9 @@ class DisplayImageService
             }
         }
 
-        return $this->fallbackUrl($context['category'] ?? null, $type);
-    }
+        $name = $context['name'] ?? null;
 
-    public function fallbackUrl(?string $category = null, string $type = 'product'): string
-    {
-        return $this->productImageService->fallbackUrl($category, $type);
+        return $this->productImageService->fallbackUrl($context['category'] ?? null, $type, $name);
     }
 
     private function normalizeLocalPath(?string $path): ?string

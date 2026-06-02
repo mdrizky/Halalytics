@@ -25,9 +25,9 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center">
             <span class="inline-flex px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-wider">About Halalytics</span>
-            <h1 class="mt-5 text-4xl md:text-5xl font-extrabold text-slate-900">Misi Kami: Membuat Keputusan Konsumsi Lebih Aman dan Halal</h1>
+            <h1 class="mt-5 text-4xl md:text-5xl font-extrabold text-slate-900">Misi Kami: Kesehatan Holistik dengan Kepastian Halal</h1>
             <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">
-                Kami membangun platform yang membantu user memahami apa yang mereka konsumsi dengan cara yang cepat, transparan, dan mudah dipraktikkan.
+                Kami membangun super app yang membantu pengguna memahami status kehalalan, gizi, dan keamanan produk — plus mengelola kesehatan keluarga, donor darah, dan konsultasi dengan pakar — cepat, transparan, dan terintegrasi AI.
             </p>
         </div>
     </div>
@@ -38,13 +38,13 @@
         <article class="about-card p-8">
             <h2 class="text-2xl font-extrabold text-slate-900">Kenapa Halalytics Dibangun</h2>
             <p class="text-slate-600 mt-3 leading-relaxed">
-                Banyak konsumen kesulitan membaca komposisi produk, menilai status halal bahan teknis, atau memahami risiko interaksi obat. Halalytics lahir untuk menutup gap ini lewat pengalaman scan yang sederhana namun berbasis data.
+                Banyak konsumen Muslim kesulitan memverifikasi kehalalan produk, membaca komposisi bahan teknis (E-numbers), memahami interaksi obat, atau menemukan donor darah saat darurat. Halalytics lahir untuk menjawab semua kebutuhan ini dalam satu aplikasi: scan barcode → analisis AI → hasil halal, gizi, dan keamanan dalam hitungan detik.
             </p>
         </article>
         <article class="about-card p-8">
             <h2 class="text-2xl font-extrabold text-slate-900">Pendekatan Produk Kami</h2>
             <p class="text-slate-600 mt-3 leading-relaxed">
-                Kami fokus pada usability dan akurasi: informasi harus cepat dipahami, bisa ditindaklanjuti, dan tetap terbuka terhadap validasi sumber data.
+                Kami fokus pada integrasi dan kemudahan: scanner produk, asisten AI HILDA, pengecekan interaksi obat, analisis skincare, pantauan nutrisi, donor darah, konsultasi gizi, dan ensiklopedia kesehatan — semuanya dalam satu genggaman. Informasi harus cepat dipahami, akurat, dan bisa ditindaklanjuti.
             </p>
         </article>
     </div>
@@ -55,9 +55,10 @@
         <h2 class="text-3xl font-extrabold text-slate-900 text-center mb-10">Pilar Utama</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             @foreach([
-                ['Data Terpercaya', 'Integrasi database publik dan sumber resmi untuk menjaga kualitas informasi.'],
-                ['AI Kontekstual', 'Model AI menganalisis bahan, interaksi, dan pola risiko sesuai konteks produk.'],
-                ['User-Centered UX', 'Output dibuat ringkas, jelas, dan mudah dipakai di situasi harian.'],
+                ['Data Terpercaya', 'Terintegrasi dengan BPOM, Open Food Facts, Open Beauty Facts, OpenFDA, MUI, JAKIM, dan Google Places — semua diverifikasi multi-sumber.'],
+                ['AI Kontekstual', 'Gemini AI menganalisis komposisi bahan, interaksi obat, pola risiko, dan preferensi personal — bukan sekadar pencocokan kata kunci.'],
+                ['Fitur Lengkap', 'Unified Scanner, Drug Interaction Checker, Pill Identification, Blood Donation Hub, Nutritionist Chat, Skincare BPOM Checker, AI Assistant Hilda, Health Encyclopedia, dan masih banyak lagi.'],
+                ['User-Centered UX', 'Antarmuka modern dengan dark mode, Material Design, notifikasi real-time, dukungan bahasa Indonesia & Inggris, dan akses offline.'],
             ] as $pillar)
             <div class="about-card p-6">
                 <h3 class="text-xl font-extrabold text-slate-900">{{ $pillar[0] }}</h3>

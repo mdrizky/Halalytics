@@ -205,19 +205,6 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [AdminNutritionistController::class, 'destroy'])->name('destroy');
     });
 
-    // Product Management (Consolidated)
-    Route::get('/admin/product', [AdminProductController::class, 'admin_product'])->name('admin.product.index')->middleware('role:admin');
-    Route::get('/admin/product/create', [AdminProductController::class, 'create'])->name('admin.product.create')->middleware('role:admin');
-    Route::get('/admin/product/ocr', [AdminProductController::class, 'ocrScanner'])->name('admin.product.ocr')->middleware('role:admin');
-    Route::post('/admin/product/store', [AdminProductController::class, 'store'])->name('admin.product.store')->middleware('role:admin');
-    Route::get('/admin/product/{id}', [AdminProductController::class, 'show'])->name('admin.product.show')->middleware('role:admin');
-    Route::get('/admin/product/{id}/edit', [AdminProductController::class, 'edit'])->name('admin.product.edit')->middleware('role:admin');
-    Route::put('/admin/product/{id}', [AdminProductController::class, 'update'])->name('admin.product.update')->middleware('role:admin');
-    Route::delete('/admin/product/{id}', [AdminProductController::class, 'destroy'])->name('admin.product.destroy')->middleware('role:admin');
-    Route::patch('/admin/product/{id}/toggle-active', [AdminProductController::class, 'toggleActive'])->name('admin.product.toggle_active')->middleware('role:admin');
-    Route::post('/admin/product/batch-ai-verify', [AdminProductController::class, 'batchAiVerify'])->name('admin.product.batch_ai_verify')->middleware('role:admin');
-    Route::post('/admin/product/apply-batch-ai-verify', [AdminProductController::class, 'applyBatchAiVerify'])->name('admin.product.apply_batch_ai_verify')->middleware('role:admin');
-
     // Scan CRUD
     Route::get('/admin/scan', [AdminScanController::class, 'index'])->name('admin.scan.index')->middleware('role:admin');
     Route::get('/admin/scan/create', [AdminScanController::class, 'create'])->name('admin.scan.create')->middleware('role:admin');
@@ -453,6 +440,9 @@ Route::middleware('auth')->group(function () {
     // 🍏 EXPERT / NUTRITIONIST DASHBOARD
     Route::prefix('expert')->middleware('role:ahli_gizi')->name('expert.')->group(function () {
         Route::get('/dashboard', [ExpertDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/patients', [ExpertDashboardController::class, 'patients'])->name('patients');
+        Route::get('/consultations', [ExpertDashboardController::class, 'consultations'])->name('consultations');
+        Route::get('/meal-plans', [ExpertDashboardController::class, 'mealPlans'])->name('meal-plans');
     });
 
     // 👤 USER DASHBOARD

@@ -33,6 +33,21 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Paginator::useBootstrap();
+
+        // Warn about missing critical env vars in non-production (logs only)
+        if (app()->environment('local') && !app()->runningInConsole()) {
+            $criticalKeys = [
+                'GEMINI_API_KEY' => 'Gemini AI key — AI features will fail',
+                'REVERB_APP_KEY' => 'Reverb app key — WebSockets broken',
+                'REVERB_APP_SECRET' => 'Reverb app secret — WebSockets broken',
+            ];
+            foreach ($criticalKeys as $key => $hint) {
+                if (blank(env($key)) || str_contains((string) env($key), 'your_new_')) {
+                    logger()->warning("Halalytics: Missing env {$key} — {$hint}");
+                }
+            }
+        }
+
         // View Composer for Admin Global Stats
         view()->composer('admin.*', function ($view) {
             $safeCount = function (string $table, callable $resolver): int {

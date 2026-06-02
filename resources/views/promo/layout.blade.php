@@ -47,7 +47,8 @@
         :root {
             --promo-primary: #004D40;
             --promo-primary-deep: #00372e;
-            --promo-secondary: #26A69A;
+            --promo-secondary: #4DB6AC;
+            --promo-accent: #D4AF37;
             --promo-container: #E0F2F1;
             --promo-background: #F4F9F8;
             --promo-surface: #FFFFFF;
@@ -56,8 +57,8 @@
         }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--promo-background); color: var(--promo-ink); }
         h1, h2, h3, h4, .font-brand { font-family: 'Space Grotesk', sans-serif; }
-        .gradient-bg { background: linear-gradient(135deg, #004D40 0%, #26A69A 100%); }
-        .gradient-text { background: linear-gradient(135deg, #004D40, #26A69A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .gradient-bg { background: linear-gradient(135deg, #004D40 0%, #4DB6AC 50%, #D4AF37 100%); }
+        .gradient-text { background: linear-gradient(135deg, #004D40, #4DB6AC, #D4AF37); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
         .card-hover:hover { transform: translateY(-4px) rotateX(2deg); box-shadow: 0 24px 48px rgba(0, 77, 64, 0.14); }
         .promo-link { color: #4b5563; transition: color .2s ease; }
@@ -159,8 +160,9 @@
                         </div>
                     </div>
                     
-                    <a href="{{ route('download') }}" class="promo-btn font-semibold px-5 py-2 rounded-full">
-                        {{ __('messages.nav_download') }}
+                    <a href="{{ route('download') }}" class="promo-btn font-semibold px-5 py-2 rounded-full relative overflow-hidden group">
+                        <span class="relative z-10">{{ __('messages.nav_download') }}</span>
+                        <span class="absolute inset-0 bg-gradient-to-r from-[#004D40] via-[#4DB6AC] to-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
                     </a>
                 </div>
 
@@ -241,7 +243,7 @@
                         </span>
                     </a>
                     <p class="text-sm text-gray-400 leading-relaxed max-w-md">
-                        {{ $settings['site_description'] ?? 'E-Health Super App berbasis AI terintegrasi pertama yang menghubungkan database BPOM, analisis titik kritis halal, skrining nutrisi pintar, dan pencarian donor darah siaga dalam satu genggaman.' }}
+                        {{ $settings['site_description'] ?? 'Super App kesehatan & halal berbasis AI: scanner produk, cek kehalalan, interaksi obat, AI asisten HILDA, konsultasi gizi, donor darah, dan ensiklopedia kesehatan — semua dalam satu genggaman.' }}
                     </p>
                     <!-- Social Media Icons with Premium Hover Transitions -->
                     <div class="flex items-center space-x-4 pt-2">
@@ -308,7 +310,7 @@
                         </a>
                         <p class="text-xs text-gray-500 mt-3 flex items-center gap-2">
                             <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                            Versi {{ $settings['app_version'] ?? '1.0.0' }} • Berbasis Android
+                            Versi {{ $settings['app_version'] ?? '4.0.0' }} • Android
                         </p>
                     </div>
                 </div>

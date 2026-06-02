@@ -224,9 +224,23 @@ class ProductImageService
             ?? '/images/placeholders/' . $type . '-placeholder.svg';
     }
 
-    public function fallbackUrl(?string $category = null, string $type = 'product'): string
+    public function fallbackUrl(?string $category = null, string $type = 'product', ?string $name = null): string
     {
-        return $this->toPublicUrl($this->fallbackPath($category, $type));
+        if ($type === 'product' && !blank($name)) {
+            $searchTerm = Str::slug($name, '+');
+            return "https://source.unsplash.com/400x400/?{$searchTerm}";
+        }
+
+        $categorySearch = match (Str::lower($category ?? '')) {
+            'makanan', 'food' => 'food',
+            'minuman', 'drink', 'beverage' => 'beverage',
+            'kosmetik', 'cosmetic' => 'cosmetics',
+            'obat', 'medicine' => 'medicine',
+            'ingredient' => 'ingredients',
+            default => blank($category) ? 'product' : Str::slug($category, '+'),
+        };
+
+        return "https://source.unsplash.com/400x400/?{$categorySearch}";
     }
 
     public function resolveCategoryKey(

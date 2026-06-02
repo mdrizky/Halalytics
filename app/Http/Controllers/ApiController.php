@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\DisplayImageService;
+use App\Http\Requests\UpdateProfileRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -268,38 +269,19 @@ class ApiController extends Controller
         ], 200);
     }
     //Update data profile
-    public function updateProfile(Request $request)
+    public function updateProfile(UpdateProfileRequest $request)
     {
         $user = Auth::user();
         if (!$user) {
             return response()->json(['response_code' => 401, 'message' => 'Unauthorized'], 401);
         }
 
-        $rules = [
-            'full_name' => 'nullable|string|max:100',
+        $extraRules = [
             'email' => 'nullable|email|unique:users,email,' . $user->id_user . ',id_user',
-            'phone' => 'nullable|string|max:20',
-            'blood_type' => 'nullable|string|max:5',
-            'allergy' => 'nullable|string',
-            'medical_history' => 'nullable|string',
-            'goal' => 'nullable|string',
-            'diet_preference' => 'nullable|string',
-            'activity_level' => 'nullable|string',
-            'address' => 'nullable|string',
-            'language' => 'nullable|string',
-            'age' => 'nullable|integer',
-            'height' => 'nullable|numeric',
-            'weight' => 'nullable|numeric',
             'bmi' => 'nullable|numeric',
             'notif_enabled' => 'nullable|boolean',
             'dark_mode' => 'nullable|boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            
-            // New profile fields
             'avatar_url' => 'nullable|url',
-            'birth_date' => 'nullable|date',
-            'gender' => 'nullable|in:male,female,other',
-            'bio' => 'nullable|string|max:500',
             'dietary_preferences' => 'nullable|array',
             'allergies' => 'nullable|array',
             'notifications_enabled' => 'nullable|boolean',
@@ -310,7 +292,7 @@ class ApiController extends Controller
             'donor_longitude' => 'nullable|numeric',
         ];
 
-        $request->validate($rules);
+        $request->validate($extraRules);
 
         // Upload foto profil baru
         if ($request->hasFile('image')) {

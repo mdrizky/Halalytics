@@ -44,22 +44,47 @@
             </div>
             
             <nav class="flex-1 px-4 space-y-1 mt-4">
-                <a href="{{ route('expert.dashboard') }}" class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-bold">
+                <a href="{{ route('expert.dashboard') }}" class="flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('expert.dashboard') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-500 hover:bg-slate-50 transition-all' }}">
                     <span class="material-icons-round">dashboard</span>
                     <span class="text-sm">Dashboard</span>
                 </a>
-                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
+                <a href="{{ route('expert.patients') }}" class="flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('expert.patients') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-500 hover:bg-slate-50 transition-all' }}">
                     <span class="material-icons-round">people</span>
                     <span class="text-sm">Daftar Pasien</span>
                 </a>
-                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
+                <a href="{{ route('expert.consultations') }}" class="flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('expert.consultations') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-500 hover:bg-slate-50 transition-all' }}">
                     <span class="material-icons-round">chat</span>
                     <span class="text-sm">Konsultasi</span>
                 </a>
-                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
+                <a href="{{ route('expert.meal-plans') }}" class="flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('expert.meal-plans') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-500 hover:bg-slate-50 transition-all' }}">
                     <span class="material-icons-round">restaurant_menu</span>
                     <span class="text-sm">Meal Plan</span>
                 </a>
+
+                @php $isScheduleActive = request()->routeIs('expert.schedule*'); @endphp
+                <div class="relative">
+                    <button type="button" onclick="document.getElementById('expertMoreMenu').classList.toggle('hidden');" class="w-full flex items-center justify-between px-4 py-3 rounded-xl {{ $isScheduleActive ? 'bg-primary/10 text-primary font-bold' : 'text-slate-500 hover:bg-slate-50 transition-all' }}">
+                        <div class="flex items-center space-x-3">
+                            <span class="material-icons-round text-[20px]">more_horiz</span>
+                            <span class="text-sm">Lainnya</span>
+                        </div>
+                        <span class="material-icons-round text-[18px]">expand_more</span>
+                    </button>
+                    <div id="expertMoreMenu" class="mt-1 space-y-1 pl-11 hidden">
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-50 transition-all text-sm">
+                            <span class="material-icons-round text-[18px]">message</span>
+                            <span class="text-sm">Pesan</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-50 transition-all text-sm">
+                            <span class="material-icons-round text-[18px]">calendar_month</span>
+                            <span class="text-sm">Janji Temu</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-50 transition-all text-sm">
+                            <span class="material-icons-round text-[18px]">settings</span>
+                            <span class="text-sm">Pengaturan</span>
+                        </a>
+                    </div>
+                </div>
             </nav>
 
             <div class="p-4 border-t border-slate-50">

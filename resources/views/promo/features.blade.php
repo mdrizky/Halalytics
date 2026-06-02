@@ -46,9 +46,9 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
                 <span class="inline-flex px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-wider">Feature Suite</span>
-                <h1 class="mt-5 text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight">Fitur Lengkap untuk Keputusan Produk yang Lebih Aman</h1>
+                <h1 class="mt-5 text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight">Super App Kesehatan & Halal Terlengkap</h1>
                 <p class="mt-4 text-lg text-slate-600 max-w-xl">
-                    Halalytics menggabungkan analisis halal, nutrisi, dan interaksi obat dalam satu alur yang cepat dipakai user.
+                    Scan barcode, cek status halal & nutrisi, deteksi interaksi obat, konsultasi AI, donor darah, dan kelola kesehatan keluarga — semua dalam satu aplikasi.
                 </p>
                 <div class="mt-8 flex flex-col sm:flex-row gap-3">
                     <a href="{{ route('download') }}" class="inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl">Coba Aplikasi</a>
@@ -86,12 +86,14 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach([
-                ['Halal Confidence Score', 'Memeriksa bahan kritis, aditif, dan istilah teknis untuk status halal lebih jelas.'],
-                ['Drug Interaction Checker', 'Deteksi potensi konflik obat dan berikan kategori risiko yang mudah dipahami.'],
-                ['Health Score System', 'Rangkum kualitas gizi produk agar keputusan konsumsi lebih cepat.'],
-                ['Ingredient Deep Dive', 'User bisa telusuri tiap ingredient: fungsi, risiko, dan konteks halal.'],
-                ['Smart Medicine Reminder', 'Jadwal minum obat dengan kontrol reminder yang fleksibel.'],
-                ['Data Integrations', 'Terhubung ke BPOM, Open Food Facts, OpenFDA, dan sumber relevan lain.'],
+                ['Scanner Produk Cerdas', 'Scan barcode untuk cek status halal, nutrisi, dan informasi lengkap produk dari database BPOM & Open Food Facts.'],
+                ['HILDA AI Assistant', 'Tanya apa saja tentang kesehatan, gizi, obat, dan produk halal — dijawab instan oleh AI.'],
+                ['Drug Interaction Checker', 'Deteksi potensi konflik antar obat dengan kategori risiko Major, Moderate, dan Minor.'],
+                ['Skincare & Kosmetik Analyzer', 'Analisis keamanan dan kehalalan produk kecantikan serta kosmetik secara otomatis.'],
+                ['Health Score & Nutrition Tracker', 'Pantau asupan gula, kalori, dan nutrisi harian dengan skor kesehatan personal.'],
+                ['Donor Darah & Stok Darah', 'Cek ketersediaan stok darah, daftar donor, dan kelola jadwal donor dengan mudah.'],
+                ['Konsultasi Ahli Gizi', 'Chat langsung dengan ahli gizi profesional untuk rekomendasi diet dan pola makan.'],
+                ['Ensiklopedia Kesehatan', 'Database penyakit, obat, dan istilah medis lengkap dengan tinjauan titik kritis halal.'],
             ] as $item)
             <article class="feature-card p-6">
                 <h3 class="text-xl font-extrabold text-slate-900">{{ $item[0] }}</h3>
@@ -119,10 +121,7 @@
                     <div class="screen w-full h-full">
                         <div class="h-7 bg-slate-950"></div>
                         <img src="{{ asset($ss[1]) }}" alt="{{ $ss[0] }}" class="w-full h-[calc(100%-1.75rem)] object-cover"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="hidden w-full h-[calc(100%-1.75rem)] bg-gradient-to-br from-emerald-50 to-teal-50 items-center justify-center text-center px-4 text-xs text-slate-500">
-                            Tambahkan SS: <code class="mx-1">public/{{ $ss[1] }}</code>
-                        </div>
+                             onerror="this.onerror=null;this.parentElement.classList.add('bg-gradient-to-br','from-emerald-50','to-teal-50','flex','items-center','justify-center','text-center','p-4');this.parentElement.innerHTML='<span class=text-xs\\ text-slate-500>📱 Preview</span>'">
                     </div>
                 </div>
                 <p class="text-center mt-3 text-sm font-bold text-slate-700">{{ $ss[0] }}</p>

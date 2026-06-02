@@ -34,9 +34,6 @@ use App\Http\Controllers\Api\SkincareController;
 use App\Http\Controllers\Api\MentalHealthController;
 use App\Http\Controllers\Api\HelpCenterController;
 use App\Http\Controllers\Api\AuthControllerV2;
-use App\Http\Controllers\Api\SkincareController;
-use App\Http\Controllers\Api\RecipeController;
-use App\Http\Controllers\Api\MentalHealthController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\SyncController;
 use App\Http\Controllers\Api\NutritionistDashboardController;
@@ -65,6 +62,12 @@ Route::get('/articles/recommended', [HealthArticleController::class, 'recommende
 Route::get('/articles/{slug}', [HealthArticleController::class, 'show']);
 Route::get('/encyclopedia', [EncyclopediaController::class, 'index']);
 Route::get('/encyclopedia/{id}', [EncyclopediaController::class, 'show']);
+Route::get('/encyclopedia/e-number/{eNumber}', [EncyclopediaController::class, 'searchByENumber']);
+Route::prefix('local')->group(function () {
+    Route::get('/encyclopedia', [EncyclopediaController::class, 'index']);
+    Route::get('/encyclopedia/{id}', [EncyclopediaController::class, 'show']);
+    Route::get('/encyclopedia/e-number/{eNumber}', [EncyclopediaController::class, 'searchByENumber']);
+});
 Route::get('/health-encyclopedia', [\App\Http\Controllers\Api\HealthEncyclopediaController::class, 'index']);
 Route::get('/health-encyclopedia/{id}', [\App\Http\Controllers\Api\HealthEncyclopediaController::class, 'show']);
 Route::prefix('mental-health')->group(function () {
@@ -87,6 +90,17 @@ Route::prefix('products')->group(function () {
     Route::get('/recommendations', [ProductController::class, 'recommendations']);
     Route::get('/external/{barcode}', [ProductExternalController::class, 'detail']);
     Route::get('/product-detail', [ProductController::class, 'detailProduct']);
+});
+
+// EXTERNAL PRODUCT SEARCH (Android ExternalApiService)
+Route::prefix('external')->group(function () {
+    Route::get('/search', [ProductExternalController::class, 'search']);
+    Route::get('/product/{barcode}', [ProductExternalController::class, 'detail']);
+    Route::get('/halal', [ProductExternalController::class, 'halal']);
+    Route::get('/vegetarian', [ProductExternalController::class, 'vegetarian']);
+    Route::get('/vegan', [ProductExternalController::class, 'vegan']);
+    Route::get('/brand/{brand}', [ProductExternalController::class, 'brand']);
+    Route::get('/category/{category}', [ProductExternalController::class, 'category']);
 });
 Route::prefix('v1/products')->group(function () {
     Route::get('/popular', [ProductController::class, 'popular']);
@@ -121,8 +135,17 @@ Route::middleware('auth:sanctum')->group(function () {
     // OCR & INGREDIENTS (Consolidated)
     Route::prefix('ocr')->group(function () {
         Route::post('/submit', [OCRController::class, 'submitOCR']);
+        Route::post('/check-duplicate', [OCRController::class, 'checkDuplicateOCR']);
+        Route::get('/product/{id}', [OCRController::class, 'getOCRProduct']);
+        Route::put('/product/{id}', [OCRController::class, 'updateOCRProduct']);
+        Route::get('/admin/products', [OCRController::class, 'getAdminProducts']);
+        Route::put('/admin/product/{id}/verify', [OCRController::class, 'updateOCRProduct']);
+        Route::post('/favorites/add', [OCRController::class, 'addToFavorites']);
+        Route::delete('/favorites/remove/{id}', [OCRController::class, 'removeFromFavorites']);
+        Route::get('/favorites', [OCRController::class, 'getFavorites']);
         Route::get('/history', [OCRController::class, 'history']);
         Route::get('/sync', [OCRController::class, 'syncIngredients']);
+        Route::get('/statistics', [OCRController::class, 'statistics']);
         Route::post('/scan-result', [OCRController::class, 'scanResult']);
         Route::post('/save', [OCRController::class, 'scanResult']);
     });
@@ -131,6 +154,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('medicines')->group(function () {
         Route::get('/', [MedicineController::class, 'index']);
         Route::post('/search', [MedicineController::class, 'searchMedicine']);
+        Route::get('/search', [MedicineController::class, 'searchMedicine']);
         Route::post('/analyze-symptoms', [MedicineController::class, 'analyzeSymptoms']);
         Route::post('/schedule', [MedicineController::class, 'generateSafeSchedule']);
         Route::post('/check', [MedicineController::class, 'checkHalal']);
@@ -155,6 +179,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('bpom')->group(function () {
         Route::get('/search', [BpomController::class, 'search']);
         Route::post('/check', [BpomController::class, 'check']);
+        Route::get('/check', [BpomController::class, 'check']);
         Route::post('/analyze', [BpomController::class, 'analyze']);
     });
     Route::prefix('skincare')->group(function () {
@@ -184,9 +209,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // NOTIFICATIONS
     Route::prefix('notifications')->group(function () {
         Route::get('/', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
+        Route::get('/new-products', [\App\Http\Controllers\Api\NotificationController::class, 'newProducts']);
+        Route::get('/status-updates', [\App\Http\Controllers\Api\NotificationController::class, 'statusUpdates']);
         Route::get('/unread-count', [\App\Http\Controllers\Api\NotificationController::class, 'unreadCount']);
         Route::post('/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
         Route::post('/read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
+        Route::post('/mark-read', [\App\Http\Controllers\Api\NotificationController::class, 'markReadFromBody']);
+        Route::delete('/{id}', [\App\Http\Controllers\Api\NotificationController::class, 'destroy']);
     });
 
     // SCAN HISTORY (Realtime)
@@ -267,6 +296,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/chat', [\App\Http\Controllers\Api\AIAssistantController::class, 'chat']);
         Route::post('/feedback', [\App\Http\Controllers\Api\AdminAiLogController::class, 'feedback']);
         Route::post('/analyze', [\App\Http\Controllers\Api\AIAssistantController::class, 'analyzeIngredients']);
+        Route::post('/analyze-ingredients', [\App\Http\Controllers\Api\AIAssistantController::class, 'analyzeIngredients']);
         Route::get('/weekly-report', [\App\Http\Controllers\Api\AIAssistantController::class, 'generateWeeklyReport']);
         Route::get('/personal-risk-score', [\App\Http\Controllers\Api\AIAssistantController::class, 'getPersonalRiskScore']);
         Route::get('/daily-intake', [\App\Http\Controllers\Api\AIAssistantController::class, 'getDailyIntake']);
@@ -291,6 +321,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // MEAL AI
     Route::post('/meal/analyze', [\App\Http\Controllers\Api\MealAiController::class, 'analyzeMeal']);
+
+    // HEALTH REMINDERS
+    Route::post('/health/reminders/advanced', [\App\Http\Controllers\Api\MedicationReminderController::class, 'store']);
 
     // HALAL CHECK
     Route::post('/halal/check', [\App\Http\Controllers\Api\HalalCheckController::class, 'check']);
@@ -333,6 +366,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         Route::get('/stats', [MobileSyncController::class, 'getScanStats']);
         Route::get('/users', [MobileSyncController::class, 'getUserStats']);
+        Route::put('/users/{id}', [AdminController::class, 'updateUser']);
         Route::get('/dashboard/stats', [\App\Http\Controllers\Api\AdminMonitorController::class, 'getDashboardStats']);
         Route::get('/monitor/stats', [\App\Http\Controllers\Api\AdminMonitorController::class, 'getDashboardStats']);
         Route::get('/monitor/feed', [\App\Http\Controllers\Api\AdminMonitorController::class, 'getActivityFeed']);
@@ -357,6 +391,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/blood-appointments/{id}', [\App\Http\Controllers\Api\DonorAppointmentController::class, 'cancel']);
     Route::get('/donor-card', [\App\Http\Controllers\Api\DonorAppointmentController::class, 'donorCard']);
     Route::post('/fcm-token', [\App\Http\Controllers\Api\UserController::class, 'updateFcmToken']);
+    Route::post('/donor/voluntary-status', [\App\Http\Controllers\Api\DonorAppointmentController::class, 'voluntaryStatus']);
 });
 
 // 🩸 BLOOD DONATION (PUBLIC)

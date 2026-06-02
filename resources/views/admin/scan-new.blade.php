@@ -141,7 +141,7 @@
                                 @php
                                     $productImage = $scan->product->image ?? $scan->product->image_url ?? null;
                                     if (!$productImage) {
-                                        $productImage = app(\App\Services\DisplayImageService::class)->resolve(null, [
+                                        $productImage = app(\App\Services\DisplayImageService::class)->resolve($scan->product ?? null, [
                                             'name' => $scan->nama_produk,
                                             'barcode' => $scan->barcode,
                                             'category' => $scan->kategori ?? null,

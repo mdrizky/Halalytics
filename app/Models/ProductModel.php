@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\DisplayImageService;
+use Illuminate\Support\Str;
 
 class ProductModel extends Model
 {
@@ -98,8 +99,15 @@ class ProductModel extends Model
 
     public function getImageFallbackUrlAttribute(): string
     {
-        $name = urlencode(substr($this->nama_product ?? 'NA', 0, 2));
-        return "https://ui-avatars.com/api/?name={$name}&background=F1F5F9&color=475569&size=128&font-size=0.4";
+        $category = optional($this->kategori)->nama_kategori;
+        $searchTerm = match (Str::lower($category ?? '')) {
+            'makanan' => 'food',
+            'minuman' => 'beverage',
+            'kosmetik' => 'cosmetics',
+            'obat' => 'medicine',
+            default => blank($category) ? urlencode($this->nama_product ?? 'product') : Str::slug($category, '+'),
+        };
+        return "https://source.unsplash.com/400x400/?{$searchTerm}";
     }
 
     public function getSourceLabelAttribute(): string

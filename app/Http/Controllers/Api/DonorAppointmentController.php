@@ -130,4 +130,20 @@ class DonorAppointmentController extends Controller
             ]
         ]);
     }
+
+    public function voluntaryStatus(Request $request)
+    {
+        $validated = $request->validate([
+            'is_voluntary_donor' => 'required|boolean',
+        ]);
+
+        $user = $request->user();
+        $user->is_voluntary_donor = $validated['is_voluntary_donor'];
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Status donor sukarela berhasil diperbarui.',
+        ]);
+    }
 }

@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+    body {
+        @apply font-body text-slate-900 antialiased;
+    }
+}
+
+@layer components {
+    .btn-primary {
+        @apply inline-flex items-center justify-center px-4 py-2 bg-primary text-white font-medium rounded-xl hover:bg-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:ring-offset-2 transition-colors duration-200;
+    }
+    .btn-secondary {
+        @apply inline-flex items-center justify-center px-4 py-2 bg-secondary text-white font-medium rounded-xl hover:bg-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-300 focus:ring-offset-2 transition-colors duration-200;
+    }
+    .card {
+        @apply bg-white rounded-2xl border border-slate-200 shadow-sm p-6;
+    }
+    .badge-halal {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-halal-green/10 text-halal-green;
+    }
+    .badge-haram {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-halal-red/10 text-halal-red;
+    }
+    .badge-syubhat {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-halal-orange/10 text-halal-orange;
+    }
+}

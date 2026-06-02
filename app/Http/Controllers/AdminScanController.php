@@ -40,15 +40,15 @@ class AdminScanController extends Controller
         // Query with filters
         $query = ScanModel::with(['user', 'product']);
         
-         // Search
+        // Search
          if ($request->has('search') && $request->search) {
              $search = $request->search;
              $query->where(function($q) use ($search) {
-                 $searchPattern = "%{$search}%";
+                 $searchPattern = '%' . $search . '%';
                  $q->where('nama_produk', 'like', $searchPattern)
                    ->orWhere('barcode', 'like', $searchPattern)
-                   ->orWhereHas('user', function($userQuery) use ($search) {
-                       $userQuery->where('username', 'like', "%{$search}%");
+                   ->orWhereHas('user', function($userQuery) use ($searchPattern) {
+                       $userQuery->where('username', 'like', $searchPattern);
                    });
              });
          }

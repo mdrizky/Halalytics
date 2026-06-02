@@ -13,12 +13,12 @@
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
-                    Halalytics AI v2.0 - Kini Lebih Cerdas & Responsif
+                    Halalytics AI v4.0 - Ekosistem Halal & Kesehatan Terlengkap
                 </div>
                 
                 <h1 class="text-5xl lg:text-7xl font-black text-slate-900 leading-[1.1] tracking-tight">
                     Skrining Kesehatan <br>
-                    <span class="text-emerald-600">Dengan Kepastian Halal.</span>
+                    <span class="text-emerald-600">Dengan <span class="text-[#D4AF37]">Kepastian Halal.</span></span>
                 </h1>
                 
                 <p class="text-lg text-slate-500 font-medium max-w-xl leading-relaxed">
@@ -40,8 +40,8 @@
                     <div class="flex items-start gap-4">
                         <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-2xl shadow-sm">📱</div>
                         <div>
-                            <h4 class="font-black text-slate-900">Ekosistem Halal Terlengkap</h4>
-                            <p class="text-sm text-slate-500 mt-1">Satu aplikasi untuk semua kebutuhan gaya hidup halal & sehat Anda. Tersedia gratis di Play Store.</p>
+                            <h4 class="font-black text-slate-900">Ekosistem Halal & Kesehatan Terlengkap</h4>
+                             <p class="text-sm text-slate-500 mt-1">Scan barcode, cek kehalalan & nutrisi, interaksi obat, konsultasi AI (HILDA), donor darah, kesehatan keluarga — satu aplikasi gratis.</p>
                         </div>
                     </div>
                 </div>
@@ -141,10 +141,10 @@
             @foreach($latestBlogs as $blog)
             <div class="group bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-emerald-900/5 transition-all duration-500 transform hover:-translate-y-2">
                 <div class="aspect-[16/10] overflow-hidden relative bg-slate-100">
-                    <img src="{{ $blog->image_url }}" 
-                         alt="{{ $blog->title }}" 
-                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                         onerror="this.src='https://picsum.photos/seed/{{ $blog->id }}/800/500'">
+                     <img src="{{ $blog->image_url }}" 
+                          alt="{{ $blog->title }}" 
+                          class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($blog->title ?? 'Halalytics') }}&background=004D40&color=fff&size=400'">
                     <div class="absolute top-4 left-4">
                         <span class="bg-white/90 backdrop-blur-md text-emerald-600 text-[10px] font-black px-3 py-1.5 rounded-full shadow-sm">
                             {{ $blog->category ?? 'Edukasi' }}
@@ -220,10 +220,10 @@
 
             <div class="relative">
                 <div class="absolute -inset-4 bg-emerald-100/50 rounded-[3rem] blur-3xl -z-10"></div>
-                <div class="bg-white p-8 md:p-12 rounded-[3rem] border border-slate-100 shadow-2xl relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-8">
-                        <span class="material-icons-round text-slate-100 text-8xl">calculate</span>
-                    </div>
+        <div class="bg-white rounded-[2.5rem] p-8 md:p-12 border border-slate-100 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-8">
+                <span class="material-icons-round text-slate-100 text-8xl">calculate</span>
+            </div>
                     
                     <div id="bmi-calculator" class="relative z-10">
                         <h3 class="text-2xl font-black text-slate-900 mb-8 flex items-center gap-3">
@@ -293,20 +293,20 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             @php
             $mainServices = [
-                ['icon' => '🔍', 'name' => 'Unified Scanner', 'desc' => 'Scan barcode produk untuk cek halal & nutrisi instan.', 'color' => '#f0fdf4', 'link' => route('download')],
-                ['icon' => '🛡️', 'name' => 'AI Ingredients', 'desc' => 'Analisis komposisi bahan kimia (E-numbers) secara otomatis.', 'color' => '#eff6ff', 'link' => route('download')],
-                ['icon' => '📦', 'name' => 'Family Box', 'desc' => 'Satu scan untuk cek keamanan seluruh anggota keluarga.', 'color' => '#fff7ed', 'link' => route('download')],
-                ['icon' => '💊', 'name' => 'Medicine Reminder', 'desc' => 'Pengingat minum obat pintar dengan jadwal makan.', 'color' => '#fef2f2', 'link' => route('download')],
-                ['icon' => '🥗', 'name' => 'Recipe AI', 'desc' => 'Cari resep sehat & substitusi bahan halal otomatis.', 'color' => '#faf5ff', 'link' => route('download')],
-                ['icon' => '🩸', 'name' => 'Blood Donation', 'desc' => 'Pantau stok darah & daftar donor dengan mudah.', 'color' => '#fff1f2', 'link' => route('download')],
-                ['icon' => '📈', 'name' => 'Health Tracker', 'desc' => 'Monitoring asupan Gula, Natrium & Kalori harian.', 'color' => '#f0f9ff', 'link' => route('download')],
-                ['icon' => '🩺', 'name' => 'Chat Ahli Gizi', 'desc' => 'Konsultasi gizi & diet dengan pakar profesional.', 'color' => '#f5f3ff', 'link' => route('download')]
+                ['icon' => '🔍', 'name' => 'Scanner Cerdas', 'desc' => 'Scan barcode produk untuk cek status halal & nutrisi instan.', 'color' => '#f0fdf4', 'link' => route('download')],
+                ['icon' => '🤖', 'name' => 'HILDA AI Assistant', 'desc' => 'Tanya apa saja seputar kesehatan, gizi, obat, dan produk halal.', 'color' => '#e0f2f1', 'link' => route('download')],
+                ['icon' => '💊', 'name' => 'Drug Interaction Checker', 'desc' => 'Deteksi potensi konflik antar obat dengan kategori risiko.', 'color' => '#fef2f2', 'link' => route('download')],
+                ['icon' => '🧴', 'name' => 'Skincare Analyzer', 'desc' => 'Analisis keamanan & kehalalan produk kosmetik dan skincare.', 'color' => '#faf5ff', 'link' => route('download')],
+                ['icon' => '🥗', 'name' => 'AI Nutrition Tracker', 'desc' => 'Pantau asupan gula, kalori, dan nutrisi harian.', 'color' => '#f5f5dc', 'link' => route('download')],
+                ['icon' => '🩸', 'name' => 'Blood Donation', 'desc' => 'Cek stok darah, daftar donor, dan pantau jadwal donor.', 'color' => '#fff1f2', 'link' => route('download')],
+                ['icon' => '🩺', 'name' => 'Health Encyclopedia', 'desc' => 'Ensiklopedia penyakit & obat dengan tinjauan halal.', 'color' => '#f5f3ff', 'link' => route('download')],
+                ['icon' => '👨‍👩‍👧‍👦', 'name' => 'Family Health', 'desc' => 'Pantau profil kesehatan seluruh anggota keluarga.', 'color' => '#fff7ed', 'link' => route('download')]
             ];
             @endphp
 
             @foreach($mainServices as $service)
             <a href="{{ $service['link'] }}" 
-               class="block group p-8 rounded-[2.5rem] transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-900/5 hover:-translate-y-1" 
+               class="block group p-8 rounded-[2.5rem] transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-900/5 hover:-translate-y-1 border border-transparent hover:border-teal-200/50" 
                data-service-bg="{{ $service['color'] }}">
                 <div class="text-4xl mb-6 transform transition-transform group-hover:scale-110 duration-500">{{ $service['icon'] }}</div>
                 <h4 class="text-lg font-black text-slate-900 mb-2">{{ $service['name'] }}</h4>
@@ -328,14 +328,14 @@
                 </p>
             </div>
             
-            <div class="flex flex-wrap gap-2 justify-center lg:justify-end max-w-xl">
-                @foreach(range('A', 'Z') as $char)
-                <button onclick="filterAlphabet('{{ $char }}')" 
-                        class="char-btn w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-xs font-black text-slate-400 hover:border-emerald-300 hover:text-emerald-600 transition-all {{ $char === 'A' ? 'active bg-emerald-600 border-emerald-600 text-white' : '' }}">
-                    {{ $char }}
-                </button>
-                @endforeach
-            </div>
+                <div class="flex flex-wrap gap-2 justify-center lg:justify-end max-w-xl">
+                    @foreach(range('A', 'Z') as $char)
+                    <button onclick="filterAlphabet('{{ $char }}')" 
+                            class="char-btn w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-xs font-black text-slate-400 hover:border-emerald-300 hover:text-emerald-600 transition-all">
+                        {{ $char }}
+                    </button>
+                    @endforeach
+                </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="dictionary-grid">

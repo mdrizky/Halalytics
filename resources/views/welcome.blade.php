@@ -1,410 +1,206 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Halalytics | Intelligent Halal Verification Ecosystem</title>
+    <title>Halalytics | Super App Pintar Verifikasi Halal & Kesehatan</title>
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#059669',
+                        'primary-light': '#10B981',
+                        accent: '#F4A261',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/png" href="{{ asset('images/logo_halalytics.png') }}">
+    
     <style>
-        :root {
-            --primary: #059669;
-            --primary-light: #10B981;
-            --secondary: #FFFFFF;
-            --accent: #F4A261;
-            --text-main: #0F172A;
-            --text-muted: #64748B;
-            --bg-light: #F8FAF9;
-            --danger: #E74C3C;
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+        .hero-gradient {
+            background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.1) 0%, transparent 40%),
+                        radial-gradient(circle at bottom left, rgba(5, 150, 105, 0.05) 0%, transparent 40%);
         }
-
-        body {
-            background-color: var(--bg-light);
-            color: var(--text-main);
-            overflow-x: hidden;
+        .feature-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        /* Navbar */
-        nav {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            padding: 24px 80px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1000;
-            transition: 0.3s;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(5, 150, 105, 0.08);
+            border-color: #10B981;
         }
-
-        .logo {
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 40px;
-            list-style: none;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: var(--text-main);
-            font-weight: 600;
-            font-size: 14px;
-            transition: 0.3s;
-        }
-
-        .nav-links a:hover {
-            color: var(--primary);
-        }
-
-        .nav-actions {
-            display: flex;
-            gap: 16px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            transition: 0.3s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-outline {
-            border: 2px solid var(--primary);
-            color: var(--primary);
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-            border: none;
-            box-shadow: 0 10px 20px rgba(45, 106, 79, 0.2);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        /* Hero Section */
-        .hero {
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            padding: 0 80px;
-            position: relative;
-            background: radial-gradient(circle at 90% 10%, rgba(45, 106, 79, 0.05) 0%, transparent 40%);
-        }
-
-        .hero-content {
-            max-width: 600px;
-            z-index: 10;
-        }
-
-        .hero-tag {
-            background: rgba(45, 106, 79, 0.1);
-            color: var(--primary);
-            padding: 8px 16px;
-            border-radius: 100px;
-            font-size: 12px;
-            font-weight: 800;
-            display: inline-block;
-            margin-bottom: 24px;
-            letter-spacing: 1px;
-        }
-
-        .hero h1 {
-            font-size: 72px;
-            line-height: 1.05;
-            font-weight: 800;
-            margin-bottom: 24px;
-            color: #0F172A;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            letter-spacing: -0.04em;
-        }
-
-        .hero h1 span {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        .text-gradient {
+            background: linear-gradient(135deg, #059669, #10B981);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
-        .hero p {
-            font-size: 18px;
-            color: var(--text-muted);
-            margin-bottom: 40px;
-            line-height: 1.6;
-        }
-
-        .hero-image {
-            position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 50%;
-            height: 80vh;
-            z-index: 1;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-        }
-
-        .mockup-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .mockup-phone {
-            width: 320px;
-            height: 650px;
-            background: #111;
-            border-radius: 40px;
-            border: 8px solid #333;
-            box-shadow: 0 50px 100px rgba(0,0,0,0.2);
-            position: relative;
-            overflow: hidden;
-            z-index: 5;
-        }
-
-        .mockup-content {
-            width: 100%;
-            height: 100%;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-        }
-
-        .floating-card {
-            position: absolute;
-            background: white;
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            z-index: 10;
+        .animate-float {
             animation: float 6s ease-in-out infinite;
         }
-
         @keyframes float {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-20px); }
         }
-
-        /* Features */
-        .features {
-            padding: 120px 80px;
-            background: white;
+        .scan-line {
+            animation: scan 3s infinite linear;
         }
-
-        .section-header {
-            text-align: center;
-            max-width: 700px;
-            margin: 0 auto 80px;
-        }
-
-        .section-header h2 {
-            font-size: 40px;
-            margin-bottom: 16px;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 40px;
-        }
-
-        .feature-card {
-            padding: 40px;
-            border-radius: 32px;
-            background: var(--bg-light);
-            transition: 0.4s;
-            border: 1px solid transparent;
-        }
-
-        .feature-card:hover {
-            background: white;
-            border-color: var(--primary);
-            box-shadow: 0 20px 40px rgba(45, 106, 79, 0.05);
-            transform: translateY(-10px);
-        }
-
-        .feature-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 20px;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: var(--primary);
-            margin-bottom: 32px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-        }
-
-        /* Stats */
-        .stats {
-            padding: 80px;
-            background: var(--primary);
-            color: white;
-            display: flex;
-            justify-content: space-around;
-            text-align: center;
-        }
-
-        .stat-item h3 {
-            font-size: 48px;
-            font-weight: 800;
-            margin-bottom: 8px;
-        }
-
-        .stat-item p {
-            font-size: 14px;
-            opacity: 0.8;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        /* CTA */
-        .cta {
-            padding: 120px 80px;
-            text-align: center;
-            background: linear-gradient(135deg, #2D6A4F 0%, #1B4332 100%);
-            color: white;
-            margin: 80px;
-            border-radius: 48px;
-        }
-
-        .cta h2 {
-            font-size: 48px;
-            margin-bottom: 24px;
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            nav { padding: 20px 40px; }
-            .hero { padding: 0 40px; flex-direction: column; text-align: center; justify-content: center; }
-            .hero-image { display: none; }
-            .features-grid { grid-template-columns: 1fr; }
+        @keyframes scan {
+            0% { top: 0; }
+            50% { top: 100%; }
+            100% { top: 0; }
         }
     </style>
 </head>
-<body>
-    <nav>
-        <div class="logo">
-            <div style="background: white; border-radius: 8px; padding: 4px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-            <div style="background: white; padding: 4px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05);">
-                <img src="{{ asset('images/logo_halalytics.png') }}?v={{ time() }}" alt="Halalytics Logo" style="height: 36px; width: auto; object-fit: contain;">
+<body class="bg-gray-50 text-slate-800 antialiased overflow-x-hidden">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 glass-nav transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-white p-1.5 rounded-xl shadow-sm border border-gray-100">
+                        <img src="{{ asset('images/logo_halalytics.png') }}?v={{ time() }}" alt="Halalytics Logo" class="h-8 w-auto object-contain">
+                    </div>
+                    <span class="font-extrabold text-xl text-primary tracking-tight">Halalytics</span>
+                </div>
+                
+                <!-- Links (Desktop) -->
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="#features" class="text-sm font-semibold text-slate-600 hover:text-primary transition-colors">Fitur</a>
+                    <a href="#ecosystem" class="text-sm font-semibold text-slate-600 hover:text-primary transition-colors">Ekosistem</a>
+                    <a href="{{ route('blog.index') }}" class="text-sm font-semibold text-slate-600 hover:text-primary transition-colors">Blog</a>
+                </div>
+
+                <!-- CTA -->
+                <div class="flex items-center gap-4">
+                    @auth
+                        <a href="{{ url('/admin') }}" class="px-5 py-2.5 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/30 hover:-translate-y-0.5 transition-transform">
+                            Dashboard
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="px-5 py-2.5 rounded-xl border-2 border-primary text-primary font-bold text-sm hover:bg-primary/5 transition-colors">
+                            Admin Login
+                        </a>
+                    @endauth
+                </div>
             </div>
-            </div>
-            <span style="font-weight: 800; letter-spacing: -0.5px;">Halalytics</span>
-        </div>
-        <ul class="nav-links">
-            <li><a href="#features">Features</a></li>
-            <li><a href="#how-it-works">How it Works</a></li>
-            <li><a href="{{ route('blog.index') }}">Blog</a></li>
-            <li><a href="#about">About</a></li>
-        </ul>
-        <div class="nav-actions">
-            @auth
-                <a href="{{ url('/admin') }}" class="btn btn-primary">Admin Dashboard</a>
-            @else
-                <a href="{{ route('login') }}" class="btn btn-outline">Admin Login</a>
-            @endauth
         </div>
     </nav>
 
-    <section class="hero">
-        <div class="hero-content">
-            <div class="hero-tag">AI-POWERED HALAL INTELLIGENCE</div>
-            <h1>The Future of <span>Halal Verification</span> is Here.</h1>
-            <p>Scan, verifikasi, dan temukan produk halal dengan teknologi AI tercanggih. Database terintegrasi BPOM, LPPOM MUI, dan ribuan basis data internasional.</p>
-            <div style="display: flex; gap: 16px;">
-                <a href="#download" class="btn btn-primary" style="padding: 16px 32px; font-size: 16px;">
-                    <i class="fab fa-google-play"></i> Download Now
-                </a>
-                <a href="#demo" class="btn btn-outline" style="padding: 16px 32px; font-size: 16px;">
-                    Watch Demo
-                </a>
+    <!-- Hero Section -->
+    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 hero-gradient min-h-screen flex items-center">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-12">
+            
+            <!-- Text Content -->
+            <div class="lg:w-1/2 text-center lg:text-left z-10">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-bold text-xs tracking-wider mb-6">
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                    </span>
+                    SUPER APP HALAL & KESEHATAN
+                </div>
+                <h1 class="text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
+                    Masa Depan <br/> <span class="text-gradient">Gaya Hidup Halal</span> & Sehat Anda.
+                </h1>
+                <p class="text-lg text-slate-500 mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                    Scan bahan makanan dengan AI, cek skor kesehatan, konsultasi dengan pakar gizi, hingga donasi darah dalam satu Super App cerdas. Terintegrasi dengan BPOM dan LPPOM MUI.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                    <a href="#download" class="px-8 py-4 rounded-2xl bg-primary text-white font-bold shadow-xl shadow-primary/20 hover:-translate-y-1 transition-all flex items-center justify-center gap-3">
+                        <i class="fab fa-google-play text-xl"></i>
+                        Download App
+                    </a>
+                    <a href="#demo" class="px-8 py-4 rounded-2xl bg-white text-slate-700 font-bold border border-gray-200 hover:border-primary/50 hover:bg-gray-50 transition-all flex items-center justify-center gap-3">
+                        <i class="fas fa-play-circle text-primary text-xl"></i>
+                        Lihat Demo
+                    </a>
+                </div>
             </div>
-        </div>
-        <div class="hero-image">
-            <div class="mockup-container">
-                <div class="floating-card" style="top: 15%; left: 10%; border-left: 4px solid var(--primary);">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(45, 106, 79, 0.1); display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-check" style="color: var(--primary);"></i>
+
+            <!-- Hero Mockup -->
+            <div class="lg:w-1/2 relative flex justify-center mt-12 lg:mt-0">
+                <!-- Floating Badges -->
+                <div class="absolute top-10 -left-10 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 z-20 animate-float" style="animation-delay: 0s;">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                            <i class="fas fa-check-circle"></i>
                         </div>
                         <div>
-                            <div style="font-weight: 800; font-size: 14px;">100% Halal Verified</div>
-                            <div style="font-size: 11px; color: var(--text-muted);">Sync with LPPOM MUI</div>
+                            <p class="text-xs text-gray-500 font-semibold">Skor Kesehatan</p>
+                            <p class="text-sm font-extrabold text-slate-800">85/100 (SEHAT)</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="floating-card" style="bottom: 20%; right: 5%; border-left: 4px solid var(--danger);">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(231, 76, 60, 0.1); display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
+                <div class="absolute bottom-20 -right-10 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 z-20 animate-float" style="animation-delay: 2s;">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                            <i class="fas fa-exclamation-triangle"></i>
                         </div>
                         <div>
-                            <div style="font-weight: 800; font-size: 14px;">Forbidden Alert</div>
-                            <div style="font-size: 11px; color: var(--text-muted);">Contains E-120 Carmine</div>
+                            <p class="text-xs text-gray-500 font-semibold">Peringatan Bahan</p>
+                            <p class="text-sm font-extrabold text-slate-800">E-120 Karmin Terdeteksi</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="mockup-phone">
-                    <div class="mockup-content">
-                        <div style="height: 40px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-                            <div style="font-weight: 800; color: var(--primary);">Halalytics</div>
-                            <i class="fas fa-user-circle" style="font-size: 24px; color: #ddd;"></i>
+                <!-- Phone Mockup -->
+                <div class="relative w-[300px] h-[600px] bg-slate-900 rounded-[3rem] border-[8px] border-slate-800 shadow-2xl overflow-hidden z-10">
+                    <div class="absolute top-0 inset-x-0 h-6 bg-slate-800 rounded-b-3xl w-1/2 mx-auto z-30"></div>
+                    <!-- App UI Replica -->
+                    <div class="bg-gray-50 w-full h-full flex flex-col p-5 pt-12 relative">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-primary">Scan Produk</h3>
+                            <div class="w-8 h-8 rounded-full bg-slate-200"></div>
                         </div>
-                        <div style="background: #f3f4f6; height: 200px; border-radius: 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
-                             <img src="https://images.unsplash.com/photo-1615485290382-441e4d019cb0?auto=format&fit=crop&q=80&w=800" style="width: 100%; height: 100%; object-fit: cover;">
-                             <div style="position: absolute; width: 100%; height: 2px; background: rgba(45, 106, 79, 0.5); box-shadow: 0 0 10px var(--primary); animation: scanLine 3s infinite;"></div>
+                        
+                        <div class="relative w-full h-48 bg-gray-200 rounded-2xl overflow-hidden mb-6 shadow-inner">
+                            <img src="https://images.unsplash.com/photo-1621939514649-280e2ee25f60?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover">
+                            <!-- Scanning effect -->
+                            <div class="absolute w-full h-1 bg-primary/80 shadow-[0_0_15px_rgba(16,185,129,0.8)] scan-line z-10"></div>
                         </div>
-                        <style>
-                            @keyframes scanLine {
-                                0% { top: 0; }
-                                50% { top: 100%; }
-                                100% { top: 0; }
-                            }
-                        </style>
-                        <div style="font-weight: 800; margin-bottom: 8px;">Analyzing Ingredients...</div>
-                        <div style="height: 10px; background: #eee; border-radius: 5px; margin-bottom: 20px;">
-                            <div style="width: 75%; height: 100%; background: var(--primary); border-radius: 5px;"></div>
+
+                        <p class="font-extrabold text-sm mb-2 text-slate-800">Menganalisis Komposisi...</p>
+                        <div class="w-full h-2 bg-gray-200 rounded-full mb-6">
+                            <div class="w-3/4 h-full bg-primary rounded-full relative overflow-hidden">
+                                <div class="absolute inset-0 bg-white/20 -translate-x-full animate-[shimmer_1.5s_infinite]"></div>
+                            </div>
                         </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <div style="height: 60px; background: #f8faf9; border-radius: 12px; border: 1px solid #eee;"></div>
-                            <div style="height: 60px; background: #f8faf9; border-radius: 12px; border: 1px solid #eee;"></div>
+                        
+                        <div class="space-y-3 mt-auto">
+                            <div class="w-full h-16 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center p-3 gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center text-primary"><i class="fas fa-leaf"></i></div>
+                                <div class="flex-1">
+                                    <div class="h-3 w-20 bg-gray-200 rounded-full mb-2"></div>
+                                    <div class="h-2 w-32 bg-gray-100 rounded-full"></div>
+                                </div>
+                            </div>
+                            <div class="w-full h-16 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center p-3 gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500"><i class="fas fa-heartbeat"></i></div>
+                                <div class="flex-1">
+                                    <div class="h-3 w-16 bg-gray-200 rounded-full mb-2"></div>
+                                    <div class="h-2 w-24 bg-gray-100 rounded-full"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -412,81 +208,140 @@
         </div>
     </section>
 
-    <section class="stats">
-        <div class="stat-item">
-            <h3 id="stat-products">500k+</h3>
-            <p>Verified Products</p>
-        </div>
-        <div class="stat-item">
-            <h3 id="stat-users">1.2M+</h3>
-            <p>Happy Users</p>
-        </div>
-        <div class="stat-item">
-            <h3 id="stat-scans">10M+</h3>
-            <p>Total Scans</p>
-        </div>
-    </section>
-
-    <section id="features" class="features">
-        <div class="section-header">
-            <div class="hero-tag">OUR ECOSYSTEM</div>
-            <h2>Semua yang Anda butuhkan untuk gaya hidup halal.</h2>
-            <p>Platform terintegrasi yang menggabungkan kecerdasan buatan dengan data verifikasi otoritas resmi.</p>
-        </div>
-
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-qrcode"></i></div>
-                <h3>AI OCR Scanner</h3>
-                <p style="margin-top: 16px; color: var(--text-muted); line-height: 1.6;">Gunakan kamera ponsel untuk memindai komposisi bahan. AI kami akan mendeteksi titik kritis kehalalan dalam hitungan detik.</p>
+    <!-- Stats -->
+    <section class="bg-slate-900 text-white py-12 relative overflow-hidden">
+        <div class="absolute inset-0 bg-primary/20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/20 via-slate-900 to-slate-900"></div>
+        <div class="max-w-7xl mx-auto px-6 relative z-10 flex flex-wrap justify-around items-center gap-8 text-center">
+            <div>
+                <h3 class="text-4xl lg:text-5xl font-extrabold text-white mb-2">1M+</h3>
+                <p class="text-sm font-semibold text-primary-light uppercase tracking-widest">Produk Terverifikasi</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-ban"></i></div>
-                <h3>Forbidden Database</h3>
-                <p style="margin-top: 16px; color: var(--text-muted); line-height: 1.6;">Basis data komprehensif bahan haram, syubhat, dan berbahaya (E-Numbers) yang diperbarui secara real-time.</p>
+            <div class="hidden md:block w-px h-16 bg-slate-700"></div>
+            <div>
+                <h3 class="text-4xl lg:text-5xl font-extrabold text-white mb-2">10M+</h3>
+                <p class="text-sm font-semibold text-primary-light uppercase tracking-widest">Total Scan AI</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-sync"></i></div>
-                <h3>BPOM & MUI Sync</h3>
-                <p style="margin-top: 16px; color: var(--text-muted); line-height: 1.6;">Sinkronisasi langsung dengan data legal BPOM RI dan LPPOM MUI untuk akurasi data yang tidak terbantahkan.</p>
+            <div class="hidden md:block w-px h-16 bg-slate-700"></div>
+            <div>
+                <h3 class="text-4xl lg:text-5xl font-extrabold text-white mb-2">500+</h3>
+                <p class="text-sm font-semibold text-primary-light uppercase tracking-widest">Pakar Kesehatan</p>
             </div>
         </div>
     </section>
 
-    <section class="cta">
-        <h2>Siap Memulai Perjalanan Halal Anda?</h2>
-        <p style="margin-bottom: 40px; opacity: 0.8; max-width: 600px; margin-left: auto; margin-right: auto;">Bergabunglah dengan jutaan muslim lainnya yang telah mempercayakan keamanan konsumsi mereka pada Halalytics.</p>
-        <div style="display: flex; gap: 16px; justify-content: center;">
-            <a href="#" class="btn btn-primary" style="background: white; color: var(--primary);">
-                <i class="fab fa-apple"></i> App Store
-            </a>
-            <a href="#" class="btn btn-primary" style="background: white; color: var(--primary);">
-                <i class="fab fa-google-play"></i> Play Store
-            </a>
+    <!-- Features -->
+    <section id="features" class="py-24 bg-white relative">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <span class="text-primary font-bold tracking-wider text-sm uppercase mb-3 block">Fitur Unggulan</span>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-slate-800 mb-4">Ekosistem Super App Lengkap</h2>
+                <p class="text-slate-500 text-lg">Platform pertama di Indonesia yang menggabungkan verifikasi halal OCR, analisis kesehatan nutrisi, dan integrasi pakar medis.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="feature-card bg-gray-50 rounded-[2rem] p-8 border border-gray-100">
+                    <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-md text-2xl text-primary mb-6">
+                        <i class="fas fa-expand"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-3">AI OCR Scanner</h3>
+                    <p class="text-slate-500 leading-relaxed text-sm">Pindai label komposisi dengan kamera. AI kami (Llama-3 & Gemini) menganalisis E-Numbers, status syubhat, dan keamanan bahan secara real-time.</p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="feature-card bg-gray-50 rounded-[2rem] p-8 border border-gray-100">
+                    <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-md text-2xl text-blue-500 mb-6">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-3">Health Score Calculator</h3>
+                    <p class="text-slate-500 leading-relaxed text-sm">Hitung otomatis skor kesehatan produk (0-100) berdasarkan Nova Group, gula, lemak jenuh, dan garam. Dapatkan rekomendasi alternatif sehat.</p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="feature-card bg-gray-50 rounded-[2rem] p-8 border border-gray-100">
+                    <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-md text-2xl text-purple-500 mb-6">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-3">Halocode (Konsultasi Pakar)</h3>
+                    <p class="text-slate-500 leading-relaxed text-sm">Chat langsung dengan ahli gizi terverifikasi untuk perencanaan diet (Meal Plan) dan pengecekan rekam medis. Aman dan tersinkronisasi.</p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="feature-card bg-gray-50 rounded-[2rem] p-8 border border-gray-100">
+                    <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-md text-2xl text-red-500 mb-6">
+                        <i class="fas fa-hand-holding-medical"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-3">Donor Darah & Darurat</h3>
+                    <p class="text-slate-500 leading-relaxed text-sm">Pusat donor darah interaktif. Minta donor darurat, daftar event donor terdekat, dan lacak riwayat donor dengan QR Code digital.</p>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="feature-card bg-gray-50 rounded-[2rem] p-8 border border-gray-100">
+                    <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-md text-2xl text-amber-500 mb-6">
+                        <i class="fas fa-medal"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-3">Gamifikasi & Komunitas</h3>
+                    <p class="text-slate-500 leading-relaxed text-sm">Kumpulkan poin dari setiap scan dan aksi sehat Anda. Baca artikel kesehatan terbaru dan bagikan perjalanan diet Anda ke komunitas.</p>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="feature-card bg-gray-50 rounded-[2rem] p-8 border border-gray-100">
+                    <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-md text-2xl text-emerald-600 mb-6">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-3">BPOM & LPPOM MUI Sync</h3>
+                    <p class="text-slate-500 leading-relaxed text-sm">Validasi nomor registrasi sertifikat halal dan nomor registrasi BPOM seketika untuk menangkal produk ilegal atau kadaluarsa izin.</p>
+                </div>
+            </div>
         </div>
     </section>
 
-    <footer style="padding: 80px; text-align: center; border-top: 1px solid #eee;">
-        <div class="logo" style="justify-content: center; margin-bottom: 24px;">
-            <div style="background: white; border-radius: 12px; padding: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-right: 12px;">
-            <div style="background: white; padding: 6px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); display: inline-block;">
-                <img src="{{ asset('images/logo_halalytics.png') }}?v={{ time() }}" alt="Halalytics Logo" style="height: 44px; width: auto; object-fit: contain;">
+    <!-- CTA Section -->
+    <section class="py-20 px-6">
+        <div class="max-w-5xl mx-auto bg-primary rounded-[3rem] p-12 text-center text-white shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-black/10 rounded-full blur-3xl"></div>
+            
+            <h2 class="text-3xl md:text-5xl font-extrabold mb-6 relative z-10">Mulai Gaya Hidup Sehat & Halal Anda Hari Ini</h2>
+            <p class="text-primary-light text-lg mb-10 max-w-2xl mx-auto relative z-10">Aplikasi pendamping cerdas Anda untuk setiap makanan yang Anda beli dan konsumsi.</p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+                <a href="#" class="px-8 py-4 rounded-xl bg-white text-primary font-bold hover:scale-105 transition-transform flex items-center justify-center gap-3">
+                    <i class="fab fa-apple text-xl"></i> App Store
+                </a>
+                <a href="#" class="px-8 py-4 rounded-xl bg-slate-900 text-white font-bold hover:scale-105 transition-transform flex items-center justify-center gap-3">
+                    <i class="fab fa-google-play text-xl"></i> Play Store
+                </a>
             </div>
-            </div>
-            <span style="font-weight: 800; letter-spacing: -0.5px;">Halalytics</span>
         </div>
-        <p style="color: var(--text-muted); font-size: 14px;">© 2024 Halalytics Ecosystem. All rights reserved.</p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-100 py-12">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <div class="flex items-center justify-center gap-3 mb-6">
+                <img src="{{ asset('images/logo_halalytics.png') }}?v={{ time() }}" alt="Logo" class="h-8 w-auto">
+                <span class="font-extrabold text-lg text-slate-800">Halalytics Super App</span>
+            </div>
+            <p class="text-slate-500 text-sm mb-6">© {{ date('Y') }} Halalytics Ecosystem. All rights reserved.<br/>Built with Laravel 11 & Jetpack Compose.</p>
+            <div class="flex justify-center gap-6 text-gray-400">
+                <a href="#" class="hover:text-primary transition-colors"><i class="fab fa-instagram text-xl"></i></a>
+                <a href="#" class="hover:text-primary transition-colors"><i class="fab fa-twitter text-xl"></i></a>
+                <a href="#" class="hover:text-primary transition-colors"><i class="fab fa-github text-xl"></i></a>
+            </div>
+        </div>
     </footer>
 
     <script>
-        window.addEventListener('scroll', function() {
-            const nav = document.querySelector('nav');
-            if (window.scrollY > 50) {
-                nav.style.padding = '16px 80px';
-                nav.style.boxShadow = '0 10px 30px rgba(0,0,0,0.05)';
+        // Navbar shadow on scroll
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 10) {
+                nav.classList.add('shadow-sm');
+                nav.classList.replace('h-20', 'h-16');
             } else {
-                nav.style.padding = '24px 80px';
-                nav.style.boxShadow = 'none';
+                nav.classList.remove('shadow-sm');
+                nav.classList.replace('h-16', 'h-20');
             }
         });
     </script>

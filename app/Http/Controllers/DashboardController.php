@@ -35,8 +35,14 @@ class DashboardController extends Controller
         $periodDays = $this->parsePeriodInput(request()->get('period', 30));
 
         // 🚀 Use cached dashboard statistics
-        $stats = $this->cacheService->getDashboardStats();
+        $cachedStats = $this->cacheService->getDashboardStats();
         
+        $totalUsers = $cachedStats['total_users'] ?? User::count();
+        $totalProduk = $cachedStats['total_products'] ?? ProductModel::count();
+        $totalScan = $cachedStats['total_scans'] ?? ScanModel::count();
+        $scanToday = $cachedStats['scan_today'] ?? ScanModel::whereDate('tanggal_scan', today())->count();
+        $laporanMasuk = $cachedStats['pending_reports'] ?? ReportModel::where('status', 'pending')->count();
+
         // Additional detailed stats
         $localProduk = ProductModel::where('source', 'local')->count();
         $offProduk = ProductModel::whereIn('source', ['open_food_facts', 'openfoodfacts', 'off_api'])->count();

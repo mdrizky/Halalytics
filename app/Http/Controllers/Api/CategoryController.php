@@ -10,9 +10,8 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = KategoriModel::all();
+        $categories = KategoriModel::with('products')->get();
         
-        // Map category names to icons (placeholders/mapping)
         $mapped = $categories->map(function($cat) {
             $icon = match(strtolower($cat->nama_kategori)) {
                 'bumbu dapur' => 'kitchen',
@@ -37,6 +36,7 @@ class CategoryController extends Controller
                 'id' => $cat->id_kategori,
                 'name' => $cat->nama_kategori,
                 'icon' => $icon,
+                'image_url' => $cat->thumbnail_url,
                 'slug' => str_replace(' ', '-', strtolower($cat->nama_kategori))
             ];
         });

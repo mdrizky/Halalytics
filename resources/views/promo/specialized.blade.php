@@ -213,21 +213,24 @@ $spec = $specData[$data['slug'] ?? ''] ?? $specData['diabetes'];
         <h2 class="text-3xl font-black text-gray-900 mb-12">Artikel Terkait</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             @foreach($relatedArticles as $article)
-            <a href="{{ route('blog.show', $article->slug) }}" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 group block">
-                <div class="w-full h-48 bg-emerald-50 overflow-hidden">
-                    @php $imgId = $article->id; $imgCat = $article->category ?? 'health'; $imgTitle = $article->title; @endphp
-                    <img src="{{ $article->image_url }}"
-                         alt="{{ $article->title }}"
-                         loading="lazy"
-                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                         data-fallback="https://loremflickr.com/600/400/{{ urlencode($imgCat) }}?lock={{ $imgId }}"
-                         onerror="handleImgError(this, this.dataset.fallback)">
-                </div>
-                <div class="p-6">
-                    <h4 class="font-black text-gray-900 mb-2 leading-tight group-hover:text-emerald-600 transition-colors">{{ $article->title }}</h4>
-                    <p class="text-sm text-gray-500 line-clamp-2">{{ $article->excerpt }}</p>
-                </div>
-            </a>
+            <div class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 group cursor-pointer">
+                <a href="{{ route('blog.show', $article->slug) }}" class="block">
+                    <div class="w-full h-48 bg-{{ $data['color'] ?? 'emerald' }}-50 overflow-hidden">
+                        @php $imgId = $article->id; $imgCat = $article->category ?? 'health'; @endphp
+                        <img src="{{ $article->image_url }}"
+                             alt="{{ $article->title }}"
+                             loading="lazy"
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                             data-fallback="https://loremflickr.com/600/400/{{ urlencode($imgCat) }}?lock={{ $imgId }}"
+                             onerror="this.onerror=null;this.src=this.dataset.fallback;">
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-bold text-{{ $data['color'] ?? 'emerald' }}-600 uppercase tracking-wider mb-2 block">{{ $imgCat }}</span>
+                        <h4 class="font-black text-gray-900 mb-2 leading-tight group-hover:text-{{ $data['color'] ?? 'emerald' }}-600 transition-colors">{{ $article->title }}</h4>
+                        <p class="text-sm text-gray-500 line-clamp-2">{{ $article->excerpt }}</p>
+                    </div>
+                </a>
+            </div>
             @endforeach
         </div>
     </div>

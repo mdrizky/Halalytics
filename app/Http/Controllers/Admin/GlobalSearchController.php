@@ -84,8 +84,8 @@ class GlobalSearchController extends Controller
     
     private function searchScans($query)
     {
-        return ScanModel::where('nama_produk', 'LIKE', "%{$query}%")
-            ->orWhere('barcode', 'LIKE', "%{$query}%")
+        return ScanModel::where('nama_produk', 'LIKE', '%' . $query . '%')
+            ->orWhere('barcode', 'LIKE', '%' . $query . '%')
             ->select('id', 'nama_produk', 'barcode', 'status_halal', 'tanggal_scan')
             ->orderByDesc('tanggal_scan')
             ->limit(5)

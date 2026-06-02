@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\DisplayImageService;
+use Illuminate\Support\Str;
 
 class KategoriModel extends Model
 {
@@ -40,18 +41,15 @@ class KategoriModel extends Model
             );
         }
 
-        // Fallback to the latest product image
-        $product = $this->relationLoaded('products')
-            ? $this->products->first()
-            : $this->products()->latest('id_product')->first();
+        // Direct Unsplash URL based on category name
+        $searchTerm = match (Str::lower($this->nama_kategori ?? '')) {
+            'makanan' => 'food',
+            'minuman' => 'beverage',
+            'kosmetik' => 'cosmetics',
+            'obat' => 'medicine',
+            default => blank($this->nama_kategori) ? 'category' : Str::slug($this->nama_kategori, '+'),
+        };
 
-        return app(DisplayImageService::class)->resolve(
-            $product?->getRawOriginal('image') ?? $product?->image,
-            [
-                'name' => $this->nama_kategori,
-                'category' => $this->nama_kategori,
-            ],
-            'category'
-        );
+        return "https://source.unsplash.com/400x400/?{$searchTerm}";
     }
 }

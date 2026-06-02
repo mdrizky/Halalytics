@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PaginatedSearchRequest;
 use App\Models\ProductModel;
 use App\Services\ExternalProductService;
 use Illuminate\Http\JsonResponse;
@@ -67,6 +68,7 @@ class ProductController extends Controller
         }
 
         $local = ProductModel::query()
+            ->with(['kategori', 'forbiddenIngredients'])
             ->where('barcode', $barcode)
             ->first();
 
@@ -110,14 +112,8 @@ class ProductController extends Controller
     /**
      * GET /api/products/search?q=&page=&limit=
      */
-    public function search(Request $request): JsonResponse
+    public function search(PaginatedSearchRequest $request): JsonResponse
     {
-        $request->validate([
-            'q' => 'nullable|string|max:255',
-            'page' => 'sometimes|integer|min:1',
-            'limit' => 'sometimes|integer|min:1|max:100',
-        ]);
-
         $q = trim((string) $request->get('q', ''));
         $page = max(1, (int) $request->get('page', 1));
         $limit = min(50, max(1, (int) $request->get('limit', 20)));
@@ -188,7 +184,7 @@ class ProductController extends Controller
         $limit = min(50, max(1, (int) $request->get('limit', 10)));
 
         $items = ProductModel::query()
-            ->with('kategori')
+            ->with(['kategori', 'forbiddenIngredients'])
             ->where(function ($q) {
                 $q->whereNull('active')->orWhere('active', true);
             })

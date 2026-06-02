@@ -97,4 +97,97 @@ class NotificationController extends Controller
             'count' => $count
         ]);
     }
+
+    /**
+     * Delete a notification
+     */
+    public function destroy($id, Request $request)
+    {
+        $notification = Notification::where('user_id', $this->authUserId($request))
+            ->findOrFail($id);
+
+        $notification->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification deleted'
+        ]);
+    }
+
+    /**
+     * Mark notification as read (from POST body with notification_id or raw Int)
+     */
+    public function markReadFromBody(Request $request)
+    {
+        $id = $request->input('notification_id') ?? $request->input('id') ?? $request->getContent();
+        $notification = Notification::where('user_id', $this->authUserId($request))
+            ->findOrFail($id);
+
+        $notification->markAsRead();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification marked as read'
+        ]);
+    }
+
+    /**
+     * Get recently added products (for background notification polling)
+     */
+    public function newProducts(Request $request)
+    {
+        $lastCheck = $request->input('last_check');
+        $query = \App\Models\OCRProduct::orderBy('created_at', 'desc');
+
+        if ($lastCheck) {
+            $query->where('created_at', '>', date('Y-m-d H:i:s', $lastCheck / 1000));
+        }
+
+        $products = $query->take(10)->get()->map(function ($p) {
+            return [
+                'id' => $p->id,
+                'name' => $p->product_name,
+                'brand' => $p->brand,
+                'barcode' => $p->barcode ?? '',
+                'status' => $p->halal_status ?? 'unknown',
+                'created_at' => $p->created_at->toIso8601String(),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $products,
+        ]);
+    }
+
+    /**
+     * Get product status updates (for background notification polling)
+     */
+    public function statusUpdates(Request $request)
+    {
+        $lastCheck = $request->input('last_check');
+        $query = Notification::where('user_id', $this->authUserId($request))
+            ->where('type', 'status_update')
+            ->orderBy('created_at', 'desc');
+
+        if ($lastCheck) {
+            $query->where('created_at', '>', date('Y-m-d H:i:s', $lastCheck / 1000));
+        }
+
+        $updates = $query->take(10)->get()->map(function ($n) {
+            $payload = is_string($n->data) ? json_decode($n->data, true) : ($n->data ?? []);
+            return [
+                'productId' => $payload['product_id'] ?? '',
+                'productName' => $payload['product_name'] ?? $n->title,
+                'oldStatus' => $payload['old_status'] ?? '',
+                'newStatus' => $payload['new_status'] ?? '',
+                'updated_at' => $n->created_at->toIso8601String(),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $updates,
+        ]);
+    }
 }

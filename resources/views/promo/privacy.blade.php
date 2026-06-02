@@ -45,41 +45,55 @@
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <article class="privacy-card p-7 md:p-10 text-slate-700 leading-relaxed space-y-7">
             <p>
-                Di Halalytics, keamanan data Anda adalah prioritas. Dokumen ini menjelaskan bagaimana data dikumpulkan, digunakan, dan dilindungi selama Anda menggunakan layanan kami.
+                Di Halalytics, keamanan data Anda adalah prioritas. Dokumen ini menjelaskan bagaimana data dikumpulkan, digunakan, dan dilindungi selama Anda menggunakan layanan kami — termasuk fitur scanner, AI HILDA, konsultasi gizi, dan donor darah.
             </p>
 
             <div>
                 <h2 class="text-2xl font-extrabold text-slate-900">1. Pengumpulan Data</h2>
                 <p class="mt-2">
-                    Kami mengumpulkan data yang Anda berikan langsung (misalnya nama, email, preferensi kesehatan), serta data penggunaan aplikasi seperti riwayat scan produk untuk meningkatkan kualitas rekomendasi.
+                    Kami mengumpulkan data yang Anda berikan langsung (nama, email, nomor telepon, preferensi diet, riwayat kesehatan, alergi, golongan darah, data keluarga), data penggunaan fitur (riwayat scan barcode, analisis bahan, konsultasi gizi, donor darah, pencarian obat), serta data perangkat dan log aktivitas untuk meningkatkan pengalaman dan akurasi layanan.
                 </p>
             </div>
 
             <div>
                 <h2 class="text-2xl font-extrabold text-slate-900">2. Penggunaan Data</h2>
                 <p class="mt-2">
-                    Data digunakan untuk mempersonalisasi analisis halal, peringatan interaksi obat, dan insight kesehatan. Kami tidak menggunakan data pribadi untuk tujuan yang tidak relevan dengan layanan inti tanpa persetujuan.
+                    Data digunakan untuk memberikan layanan inti Halalytics: analisis kehalalan produk via Unified Scanner, deteksi interaksi obat & identifikasi pil, skor kesehatan & tracking nutrisi, pencocokan donor darah, konsultasi dengan ahli gizi, rekomendasi resep & substitusi bahan, serta personalisasi insight AI Assistant Hilda. Kami tidak menggunakan data untuk tujuan di luar layanan tanpa persetujuan eksplisit.
                 </p>
             </div>
 
             <div>
                 <h2 class="text-2xl font-extrabold text-slate-900">3. Penyimpanan & Proteksi</h2>
                 <p class="mt-2">
-                    Kami menerapkan kontrol keamanan teknis dan operasional untuk melindungi data dari akses tidak sah, perubahan, atau kehilangan.
+                    Data disimpan di server terenkripsi dengan akses terbatas. Kami menerapkan kontrol keamanan teknis (enkripsi SSL/TLS, hashing password bcrypt, token autentikasi Sanctum) dan operasional untuk melindungi data dari akses tidak sah, perubahan, kebocoran, atau kehilangan. Data scan dan chat AI Anda bersifat privat dan tidak dibagikan ke pihak ketiga tanpa izin.
                 </p>
             </div>
 
             <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
                 <h3 class="text-lg font-extrabold text-amber-800">Disclaimer Penting</h3>
                 <p class="text-amber-800/90 text-sm mt-2">
-                    Halalytics adalah alat bantu informasi. Aplikasi ini tidak menggantikan diagnosis dokter, apoteker, ahli gizi, ataupun sertifikasi halal resmi lembaga berwenang.
+                    Halalytics adalah alat bantu informasi berbasis AI. Aplikasi ini tidak menggantikan diagnosis dokter, resep apoteker, konseling gizi langsung, ataupun sertifikasi halal resmi dari BPJPH/MUI atau lembaga berwenang lainnya. Selalu verifikasi informasi kritis melalui tenaga medis profesional dan otoritas sertifikasi resmi.
                 </p>
             </div>
 
             <div>
-                <h2 class="text-2xl font-extrabold text-slate-900">4. Hak Pengguna</h2>
+                <h2 class="text-2xl font-extrabold text-slate-900">4. Fitur Berbagi & Komunitas</h2>
                 <p class="mt-2">
-                    Anda dapat meminta pembaruan atau penghapusan data akun sesuai kebijakan yang berlaku. Hubungi tim kami jika membutuhkan bantuan lebih lanjut.
+                    Fitur komunitas, pelaporan produk, dan donor darah memungkinkan interaksi antar pengguna. Data yang Anda bagikan di area publik (nama tampilan, postingan, komentar) dapat dilihat oleh pengguna lain. Kontrol visibilitas profil tersedia di pengaturan akun. Kami tidak bertanggung jawab atas konten yang dibagikan pengguna di luar kendali kami.
+                </p>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-extrabold text-slate-900">5. AI & Gemini Integration</h2>
+                <p class="mt-2">
+                    Fitur AI Assistant Hilda menggunakan Google Gemini API untuk memproses pertanyaan Anda. Data pertanyaan dikirim ke Google untuk diproses dan tidak disimpan secara permanen oleh Google untuk pelatihan model. Jangan membagikan informasi medis pribadi yang sensitif (seperti nomor BPJS, NIK, atau detail rekam medis lengkap) melalui chat AI.
+                </p>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-extrabold text-slate-900">6. Hak Pengguna</h2>
+                <p class="mt-2">
+                    Anda berhak mengakses, memperbarui, mengekspor, atau menghapus data akun kapan saja melalui pengaturan profil. Permintaan penghapusan data diproses dalam 14 hari kerja. Hubungi tim dukungan kami jika membutuhkan bantuan terkait data pribadi Anda.
                 </p>
             </div>
         </article>

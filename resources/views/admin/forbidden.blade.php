@@ -69,7 +69,7 @@
                                     <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
                                         @if($ing->code) <span style="font-family: monospace; background: #eee; padding: 1px 4px; border-radius: 3px;">{{ $ing->code }}</span> @endif
                                         @if($ing->aliases && count($ing->aliases) > 0)
-                                            • {{ implode(', ', array_slice($ing->aliases, 0, 2)) }}
+                                            @if($ing->code) • @endif{{ implode(', ', array_slice($ing->aliases, 0, 2)) }}{{ count($ing->aliases) > 2 ? '...' : '' }}
                                         @endif
                                     </div>
                                 </div>
@@ -105,7 +105,7 @@
                         </td>
                         <td style="padding: 16px 24px; text-align: right;">
                             <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                                <button onclick="openEditModal({{ $ing->id }}, '{{ addslashes($ing->name) }}', '{{ $ing->code }}', '{{ $ing->type }}', '{{ $ing->risk_level }}', '{{ addslashes($ing->reason) }}', '{{ addslashes($ing->description) }}', '{{ $ing->aliases ? implode(', ', $ing->aliases) : '' }}')" class="btn btn-outline" style="padding: 8px; color: var(--primary-color); border-color: var(--border-color);"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-outline btn-edit" data-id="{{ $ing->id }}" data-name="{{ $ing->name }}" data-code="{{ $ing->code }}" data-type="{{ $ing->type }}" data-risk="{{ $ing->risk_level }}" data-reason="{{ $ing->reason }}" data-description="{{ $ing->description }}" data-aliases="{{ $ing->aliases ? implode(', ', $ing->aliases) : '' }}" style="padding: 8px; color: var(--primary-color); border-color: var(--border-color);"><i class="fas fa-edit"></i></button>
                                 <form action="{{ route('admin.forbidden.destroy', $ing->id) }}" method="POST" onsubmit="return confirm('Hapus item ini dari database forbidden?');" style="display: inline;">
                                     @csrf
                                     @method('DELETE')
@@ -253,6 +253,24 @@
         }
     });
     
+    // Handle Edit Button Clicks
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-edit');
+        if (btn) {
+            const d = btn.dataset;
+            openEditModal(
+                d.id, 
+                d.name, 
+                d.code, 
+                d.type, 
+                d.risk, 
+                d.reason, 
+                d.description, 
+                d.aliases
+            );
+        }
+    });
+
     window.onclick = function(event) {
         if (event.target == modal) closeModal();
     }

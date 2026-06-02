@@ -407,6 +407,37 @@ class OCRController extends Controller
         ]);
     }
 
+    public function statistics()
+    {
+        $userId = Auth::user()->id_user;
+
+        $totalScans = OCRProduct::where('user_id', $userId)->count();
+        $pendingReview = OCRProduct::where('user_id', $userId)->where('status', 'pending')->count();
+        $approvedToday = OCRProduct::where('user_id', $userId)
+            ->whereDate('created_at', today())
+            ->where('status', 'approved')
+            ->count();
+        $rejectedToday = OCRProduct::where('user_id', $userId)
+            ->whereDate('created_at', today())
+            ->where('status', 'rejected')
+            ->count();
+        $processingAccuracy = $totalScans > 0
+            ? round(($approvedToday / $totalScans) * 100, 2)
+            : 0.0;
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total_scans' => $totalScans,
+                'pending_review' => $pendingReview,
+                'approved_today' => $approvedToday,
+                'rejected_today' => $rejectedToday,
+                'processing_accuracy' => $processingAccuracy,
+            ],
+            'message' => 'Statistik OCR berhasil diambil.',
+        ]);
+    }
+
     private function determineHalalStatus($ingredients)
     {
         $hasHaram = false;

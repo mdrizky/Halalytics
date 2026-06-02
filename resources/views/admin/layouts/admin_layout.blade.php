@@ -405,6 +405,11 @@
 </div>
 
 <script>
+    // Legacy admin view warning
+    if (document.querySelector('.legacy-admin-shell')) {
+        console.warn('[Halalytics Admin] This page extends admin.master (legacy shell). Consider migrating to the new admin_layout directly for better Tailwind integration.');
+    }
+
     // CSRF token for AJAX requests
     window.csrfToken = document.querySelector('meta[name="csrf-token"]').content;
     

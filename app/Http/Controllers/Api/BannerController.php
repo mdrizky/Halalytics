@@ -19,9 +19,9 @@ class BannerController extends Controller
                 ->get(['id', 'title', 'description', 'image', 'position']);
 
             $fallbackImages = [
-                1 => 'https://via.placeholder.com/1200x500/16a34a/ffffff?text=Halalytics+Promo',
-                2 => 'https://via.placeholder.com/1200x500/2563eb/ffffff?text=Edukasi+Halal',
-                3 => 'https://via.placeholder.com/1200x500/f59e0b/ffffff?text=Tips+Sehat',
+                1 => 'https://picsum.photos/seed/halalytics-promo/1200/500',
+                2 => 'https://picsum.photos/seed/halalytics-edukasi/1200/500',
+                3 => 'https://picsum.photos/seed/halalytics-tips/1200/500',
             ];
 
             $banners = $banners->map(function ($banner) use ($fallbackImages) {

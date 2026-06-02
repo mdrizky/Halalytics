@@ -43,7 +43,7 @@
     .step-number {
         width: 32px;
         height: 32px;
-        background: var(--brand-secondary);
+        background: #004D40;
         color: white;
         border-radius: 10px;
         display: flex;
@@ -62,13 +62,13 @@
         <div>
             <div class="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-bold border border-emerald-100 mb-8">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                Versi {{ $settings['app_version'] ?? '2.0.4' }} Kini Tersedia
+                Versi {{ $settings['app_version'] ?? '4.0.0' }} Kini Tersedia
             </div>
             <h1 class="text-5xl md:text-6xl font-black text-gray-900 leading-tight mb-8">
                 Kesehatan Halal <br> Dalam <span class="text-emerald-600">Genggaman.</span>
             </h1>
             <p class="text-xl text-gray-500 mb-10 leading-relaxed max-w-xl">
-                Nikmati kemudahan scan produk, cek interaksi obat, dan konsultasi AI kapan saja. Download aplikasi resmi Halalytics sekarang.
+                Scan barcode, cek status halal & nutrisi, deteksi interaksi obat, konsultasi dengan AI HILDA, dan pantau kesehatan keluarga. Download aplikasi resmi Halalytics sekarang.
             </p>
             <div class="flex flex-col sm:flex-row gap-4">
                 <a href="{{ $settings['playstore_url'] ?? '#' }}" target="_blank"
@@ -135,9 +135,9 @@
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
             @foreach([
-                ['ss-home-1.png', 'Dashboard Utama', 'Pantau metrik kesehatan harian Anda.'],
-                ['ss-home-2.png', 'Hasil Scan AI', 'Analisis bahan produk secara mendalam.'],
-                ['ss-home-3.png', 'Wawasan Produk', 'Informasi gizi dan sertifikasi lengkap.']
+                ['ss-home-1.png', 'Dashboard Utama', 'Pantau skor kesehatan, streak harian, dan riwayat scan.'],
+                ['ss-home-2.png', 'AI Scanner', 'Scan barcode untuk analisis halal, gizi & interaksi obat.'],
+                ['ss-home-3.png', 'Health Insights', 'Wawasan personal dari AI — diet, risiko, dan rekomendasi.']
             ] as $img)
             <div class="group">
                 <div class="device-shell w-full aspect-[9/18] mb-8 group-hover:-translate-y-4 transition-transform duration-500">
