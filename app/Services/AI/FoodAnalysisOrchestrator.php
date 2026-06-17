@@ -50,6 +50,35 @@ class FoodAnalysisOrchestrator
         $personal = $this->healthRiskAnalyzer->personalize($userContext, $nutrition, $halal);
         $behavior = $userId > 0 ? $this->behaviorAnalyzer->weeklySummary($userId) : [];
 
+        // NEW: Database Haram Match
+        $adminHaramMatches = [];
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('forbidden_ingredients')) {
+                $forbidden = \App\Models\ForbiddenIngredient::where('is_active', true)->get();
+                $lowerIngredients = strtolower($ingredientsText);
+                foreach ($forbidden as $item) {
+                    $matched = false;
+                    if (str_contains($lowerIngredients, strtolower($item->name))) {
+                        $matched = true;
+                    } else if (is_array($item->aliases)) {
+                        foreach ($item->aliases as $alias) {
+                            if (str_contains($lowerIngredients, strtolower($alias))) {
+                                $matched = true;
+                                break;
+                            }
+                        }
+                    }
+                    if ($matched) {
+                        $adminHaramMatches[] = $item->name . ($item->reason ? ' (' . $item->reason . ')' : '');
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // silent
+        }
+        $adminHaramStr = empty($adminHaramMatches) ? 'Tidak ditemukan di database admin.' : implode(', ', $adminHaramMatches);
+        $userContext['admin_haram_matches'] = $adminHaramStr;
+
         // 2. OPEN ROUTER AI ANALYSIS (The Core Reasoning Engine)
         $aiResult = [];
         try {
@@ -100,16 +129,16 @@ class FoodAnalysisOrchestrator
             'product'         => $productName,
             'image_url'       => $imageUrl,
 
-            // Halal — rule engine always overrides AI for basic status if AI is doubtful
-            'status'          => $halal['halal_status'] ?? ($aiResult['status'] ?? 'unknown'),
-            'status_halal'    => $halal['halal_status'] ?? ($aiResult['status'] ?? 'unknown'),
-            'halal_score'     => $aiResult['score'] ?? $halal['halal_score'] ?? 70,
+            // Halal — AI holds the definitive decision now due to strict prompt
+            'status'          => $aiResult['halal_status'] ?? $halal['halal_status'] ?? 'unknown',
+            'status_halal'    => $aiResult['halal_status'] ?? $halal['halal_status'] ?? 'unknown',
+            'halal_score'     => $aiResult['halal_score'] ?? $halal['halal_score'] ?? 70,
             'reason'          => $aiResult['reason'] ?? $halal['summary'] ?? '',
             'risky_ingredients'=> $aiResult['risky_ingredients'] ?? $halal['flags'] ?? [],
             
             // Nutrisi
-            'health_score'       => $nutrition['health_score'] ?? 70,
-            'health_status'      => $nutrition['health_status'] ?? null,
+            'health_score'       => $aiResult['health_score'] ?? $nutrition['health_score'] ?? 70,
+            'health_status'      => $aiResult['health_status'] ?? $nutrition['health_status'] ?? null,
             'sugar_risk'         => $nutrition['sugar_risk'] ?? 'rendah',
             'sodium_risk'        => $nutrition['sodium_risk'] ?? 'rendah',
             'fat_risk'           => $nutrition['fat_risk'] ?? 'rendah',
@@ -117,11 +146,11 @@ class FoodAnalysisOrchestrator
             'is_ultra_processed' => $nutrition['is_ultra_processed'] ?? false,
             'nutrition_flags'    => $nutrition['nutrition_flags'] ?? [],
             'nutrition_values'   => $nutrition['nutrition_values'] ?? [],
-            'nutrition_estimate' => $nutrition['nutrition_estimate'] ?? [],
+            'nutrition_estimate' => $aiResult['nutrition_estimate'] ?? $nutrition['nutrition_estimate'] ?? [],
 
             // Peringatan gabungan
             'watchouts' => array_values(array_unique(array_merge(
-                $aiResult['watchouts'] ?? [],
+                $aiResult['health_warning'] ?? [],
                 $personal['personal_warnings'] ?? [],
                 $nutrition['nutrition_flags'] ?? [],
                 $halal['health_warnings'] ?? [],
@@ -129,9 +158,16 @@ class FoodAnalysisOrchestrator
             ))),
 
             // Pesan personal
-            'personalized_message' => !empty($personal['personal_warnings'])
-                ? implode("\n", $personal['personal_warnings'])
-                : ($aiResult['personalized_message'] ?? ''),
+            'personalized_message' => $aiResult['personalized_message'] ?? (!empty($personal['personal_warnings']) ? implode("\n", $personal['personal_warnings']) : ''),
+            
+            // Per-ingredient analysis from AI
+            'ingredients'              => $aiResult['ingredients'] ?? $halal['ingredients_analysis'] ?? [],
+
+            // Advanced AI Outputs
+            'short_term_effects'       => $aiResult['short_term_effects'] ?? [],
+            'long_term_effects'        => $aiResult['long_term_effects'] ?? [],
+            'chemical_translation'     => $aiResult['chemical_translation'] ?? [],
+            'ai_alternatives'          => $aiResult['alternatives'] ?? [],
 
             // Rekomendasi
             'recommendations'          => $this->recommendationService->suggest($nutrition, $halal, $personal),

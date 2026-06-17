@@ -722,13 +722,14 @@
                     <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
                         @php
                             $imgSrc = optional($product)->image;
-                            if (empty($imgSrc) || $imgSrc == 'default.png') {
+                            $defaultImages = ['default.png', '/images/default/general.svg', '/images/default/product.svg'];
+                            if (empty($imgSrc) || in_array($imgSrc, $defaultImages)) {
                                 $nameParts = explode(' ', optional($product)->product_name ?? 'P');
                                 $initials = substr($nameParts[0], 0, 1) . (isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : '');
                                 $imgSrc = 'https://ui-avatars.com/api/?name=' . urlencode(strtoupper($initials)) . '&background=random&color=fff&size=128&font-size=0.4';
                             }
                         @endphp
-                        <img src="{{ $imgSrc }}" alt="{{ optional($product)->product_name }}" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=NA&background=e2e8f0&color=64748b';">
+                        <img src="{{ $imgSrc }}" alt="{{ optional($product)->product_name }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/product-placeholder.svg'">
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-bold text-slate-800 dark:text-white truncate">{{ Str::limit(optional($product)->product_name, 18) }}</p>
@@ -946,7 +947,7 @@
         });
     }
 
-    // Realtime polling stub
+    <script src="{{ asset('js/dashboard-realtime.js') }}"></script>
     const feedList = document.getElementById('realtime-feed-list');
     if (feedList) {
         setInterval(() => {}, 30000);

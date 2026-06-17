@@ -132,29 +132,52 @@ class HalalDatabaseSeeder extends Seeder
             ['name' => 'Ikan', 'code' => 'fish', 'severity' => 'medium'],
         ];
 
-        DB::table('allergens')->insert($allergens);
+        foreach ($allergens as $allergen) {
+            DB::table('allergens')->updateOrInsert(['code' => $allergen['code']], $allergen);
+        }
 
-        // 7. Link Products to Halal Status
-        $productHalalStatus = [
-            ['product_id' => 1, 'halal_status' => 'halal', 'certificate_id' => 1, 'verified_by' => 1, 'verified_at' => now()],
-            ['product_id' => 2, 'halal_status' => 'syubhat', 'certificate_id' => null, 'verified_by' => 1, 'verified_at' => now()],
-            ['product_id' => 3, 'halal_status' => 'halal', 'certificate_id' => 2, 'verified_by' => 1, 'verified_at' => now()],
-            ['product_id' => 4, 'halal_status' => 'halal', 'certificate_id' => null, 'verified_by' => 1, 'verified_at' => now()],
-            ['product_id' => 5, 'halal_status' => 'halal', 'certificate_id' => null, 'verified_by' => 1, 'verified_at' => now()],
-        ];
+        // 7. Link Products to Halal Status (lookup IDs dynamically)
+        $productMap = [];
+        $barcodes = ['0896860100101', '5449000000996', '0896888810018', '0896860110263', '0896860111006'];
+        foreach ($barcodes as $barcode) {
+            $product = DB::table('products')->where('barcode', $barcode)->first(['id_product']);
+            if ($product) {
+                $productMap[] = $product->id_product;
+            }
+        }
 
-        DB::table('product_halal_status')->insert($productHalalStatus);
+        if (count($productMap) === 5) {
+            $productHalalStatus = [
+                ['product_id' => $productMap[0], 'halal_status' => 'halal', 'certificate_id' => 1, 'verified_by' => 1, 'verified_at' => now()],
+                ['product_id' => $productMap[1], 'halal_status' => 'syubhat', 'certificate_id' => null, 'verified_by' => 1, 'verified_at' => now()],
+                ['product_id' => $productMap[2], 'halal_status' => 'halal', 'certificate_id' => 2, 'verified_by' => 1, 'verified_at' => now()],
+                ['product_id' => $productMap[3], 'halal_status' => 'halal', 'certificate_id' => null, 'verified_by' => 1, 'verified_at' => now()],
+                ['product_id' => $productMap[4], 'halal_status' => 'halal', 'certificate_id' => null, 'verified_by' => 1, 'verified_at' => now()],
+            ];
 
-        // 8. Create Health Scores
-        $healthScores = [
-            ['product_id' => 1, 'overall_score' => 65, 'sugar_score' => 40, 'fat_score' => 60, 'salt_score' => 80, 'additive_score' => 70, 'grade' => 'C'],
-            ['product_id' => 2, 'overall_score' => 25, 'sugar_score' => 10, 'fat_score' => 80, 'salt_score' => 90, 'additive_score' => 50, 'grade' => 'E'],
-            ['product_id' => 3, 'overall_score' => 85, 'sugar_score' => 80, 'fat_score' => 70, 'salt_score' => 90, 'additive_score' => 95, 'grade' => 'B'],
-            ['product_id' => 4, 'overall_score' => 45, 'sugar_score' => 60, 'fat_score' => 30, 'salt_score' => 70, 'additive_score' => 40, 'grade' => 'D'],
-            ['product_id' => 5, 'overall_score' => 70, 'sugar_score' => 30, 'fat_score' => 80, 'salt_score' => 60, 'additive_score' => 85, 'grade' => 'C'],
-        ];
+            foreach ($productHalalStatus as $status) {
+                DB::table('product_halal_status')->updateOrInsert(
+                    ['product_id' => $status['product_id']],
+                    $status
+                );
+            }
 
-        DB::table('health_scores')->insert($healthScores);
+            // 8. Create Health Scores
+            $healthScores = [
+                ['product_id' => $productMap[0], 'overall_score' => 65, 'sugar_score' => 40, 'fat_score' => 60, 'salt_score' => 80, 'additive_score' => 70, 'grade' => 'C'],
+                ['product_id' => $productMap[1], 'overall_score' => 25, 'sugar_score' => 10, 'fat_score' => 80, 'salt_score' => 90, 'additive_score' => 50, 'grade' => 'E'],
+                ['product_id' => $productMap[2], 'overall_score' => 85, 'sugar_score' => 80, 'fat_score' => 70, 'salt_score' => 90, 'additive_score' => 95, 'grade' => 'B'],
+                ['product_id' => $productMap[3], 'overall_score' => 45, 'sugar_score' => 60, 'fat_score' => 30, 'salt_score' => 70, 'additive_score' => 40, 'grade' => 'D'],
+                ['product_id' => $productMap[4], 'overall_score' => 70, 'sugar_score' => 30, 'fat_score' => 80, 'salt_score' => 60, 'additive_score' => 85, 'grade' => 'C'],
+            ];
+
+            foreach ($healthScores as $score) {
+                DB::table('health_scores')->updateOrInsert(
+                    ['product_id' => $score['product_id']],
+                    $score
+                );
+            }
+        }
 
         $this->command->info('✅ Halal database seeded successfully!');
         $this->command->info('👤 Admin login: admin@halalytics.com / admin123');

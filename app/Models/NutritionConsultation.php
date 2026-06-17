@@ -9,8 +9,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class NutritionConsultation extends Model
 {
     protected $fillable = [
+        'type',
         'user_id',
         'nutritionist_id',
+        'admin_id',
         'status',
         'subject',
     ];
@@ -23,6 +25,11 @@ class NutritionConsultation extends Model
     public function nutritionist(): BelongsTo
     {
         return $this->belongsTo(User::class, 'nutritionist_id', 'id_user');
+    }
+
+    public function admin(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'admin_id', 'id_user');
     }
 
     public function messages(): HasMany

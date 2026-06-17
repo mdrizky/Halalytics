@@ -66,28 +66,11 @@ class ApiController extends Controller
         }
 
         return response()->json([
-            'success' => true,
-            'response_code' => 200,
-            'message' => 'Produk belum ditemukan. Menampilkan data placeholder agar aplikasi tetap stabil.',
-            'data' => [
-                'product' => $this->normalizeLegacyProductPayload([
-                    'barcode' => $barcode,
-                    'name' => 'Produk belum ditemukan',
-                    'brand' => 'Merek belum tersedia',
-                    'ingredients_text' => 'Komposisi belum tersedia',
-                    'category' => 'Produk Umum',
-                    'status_halal' => 'unknown',
-                ]),
-                'halal_info' => $this->normalizeLegacyHalalInfo([
-                    'status_halal' => 'unknown',
-                ], 'fallback'),
-                'halal_source' => 'fallback',
-            ],
-            'content' => null,
-            'meta' => [
-                'fallback_mode' => true,
-            ],
-        ], 200);
+            'success' => false,
+            'response_code' => 404,
+            'message' => 'Produk tidak ditemukan.',
+            'data' => null,
+        ], 404);
     }
 
     private function normalizeLegacyProductPayload(array $productData, $model = null): array

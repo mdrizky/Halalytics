@@ -8,14 +8,17 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-/**
- * Dashboard ringkas untuk role nutritionist (data agregat non-diagnosis).
- */
 class NutritionistDashboardController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $nutritionistId = $request->user()->id_user;
+        $user = $request->user();
+        
+        if ($user->role !== 'ahli_gizi') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $nutritionistId = $user->id_user;
 
         $activeConsultations = NutritionConsultation::query()
             ->where('nutritionist_id', $nutritionistId)
@@ -27,7 +30,13 @@ class NutritionistDashboardController extends Controller
             ->distinct()
             ->count('user_id');
 
+        $assignedPatientIds = NutritionConsultation::query()
+            ->where('nutritionist_id', $nutritionistId)
+            ->distinct()
+            ->pluck('user_id');
+
         $bmiStats = User::query()
+            ->whereIn('id_user', $assignedPatientIds)
             ->whereNotNull('bmi')
             ->selectRaw(
                 'SUM(CASE WHEN bmi >= 30 THEN 1 ELSE 0 END) as obesity,'.

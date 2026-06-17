@@ -307,7 +307,11 @@
             @auth
             <div class="flex items-center p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50">
                 <div class="w-10 h-10 rounded-lg overflow-hidden bg-primary flex items-center justify-center text-white font-bold">
-                    {{ strtoupper(substr(Auth::user()?->username ?? 'A', 0, 1)) }}
+                    @if(Auth::user()?->image)
+                        <img src="{{ Auth::user()->image }}" alt="{{ Auth::user()->full_name }}" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr(Auth::user()?->username ?? 'A', 0, 1)) }}
+                    @endif
                 </div>
                 <div class="ml-3 flex-1 min-w-0">
                     <p class="text-sm font-bold text-slate-800 dark:text-white truncate">{{ Auth::user()?->full_name ?? Auth::user()?->username ?? 'Admin' }}</p>

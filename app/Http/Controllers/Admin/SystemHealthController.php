@@ -3,160 +3,181 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class SystemHealthController extends Controller
 {
-    /**
-     * 🏥 Get system health status
-     */
-    public function systemHealth()
+    public function systemHealth(Request $request): JsonResponse
     {
-        // Storage info
-        $diskTotal = @disk_total_space('/');
-        $diskFree = @disk_free_space('/');
-        $diskUsedPercent = $diskTotal > 0 ? round((($diskTotal - $diskFree) / $diskTotal) * 100, 1) : 0;
-        $diskFreePercent = 100 - $diskUsedPercent;
-        
-        // Memory info (PHP process)
-        $memoryUsage = memory_get_usage(true);
-        $memoryPeak = memory_get_peak_usage(true);
-        $memoryLimit = $this->parseMemoryLimit(ini_get('memory_limit'));
-        $memoryPercent = $memoryLimit > 0 ? round(($memoryUsage / $memoryLimit) * 100, 1) : 0;
-        
-        // CPU Load (Linux only)
-        $cpuLoad = function_exists('sys_getloadavg') ? sys_getloadavg() : [0, 0, 0];
-        
-        // Uptime
-        $uptime = 'N/A';
-        if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
-            $uptimeOutput = @shell_exec('uptime -p 2>/dev/null');
-            if ($uptimeOutput) {
-                $uptime = trim($uptimeOutput);
-            }
-        }
-        
-        // Database connection check
-        $dbStatus = 'Online';
+        $checks = [
+            'database' => $this->checkDatabase(),
+            'cache' => $this->checkCache(),
+            'storage' => $this->checkStorage(),
+            'gemini_api' => $this->checkGeminiApi(),
+            'fcm' => $this->checkFCM(),
+        ];
+
+        $allHealthy = collect($checks)->every(fn($check) => $check['status'] === 'healthy');
+
+        return response()->json([
+            'success' => true,
+            'overall_status' => $allHealthy ? 'healthy' : 'warning',
+            'checks' => $checks,
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    }
+
+    public function getPerformanceMetrics(Request $request): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'metrics' => [
+                'memory_usage' => round(memory_get_usage() / 1024 / 1024, 2) . ' MB',
+                'peak_memory' => round(memory_get_peak_usage() / 1024 / 1024, 2) . ' MB',
+                'uptime' => $this->getServerUptime(),
+                'database_connections' => $this->getDatabaseConnectionCount(),
+                'cache_hit_rate' => $this->getCacheHitRate(),
+            ],
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    }
+
+    private function checkDatabase(): array
+    {
         try {
-            DB::connection()->getPdo();
-        } catch (\Exception $e) {
-            $dbStatus = 'Offline';
-        }
-        
-        return response()->json([
-            'success' => true,
-            'data' => [
+            \DB::connection()->getPdo();
+            return [
                 'status' => 'healthy',
-                'uptime' => $uptime,
-                'server' => gethostname() ?: 'Halalytics-Server',
-                'php_version' => PHP_VERSION,
-                'storage' => [
-                    'total' => $this->formatBytes($diskTotal),
-                    'free' => $this->formatBytes($diskFree),
-                    'used_percent' => $diskUsedPercent,
-                    'free_percent' => $diskFreePercent,
-                    'status' => $diskFreePercent > 20 ? 'healthy' : ($diskFreePercent > 10 ? 'warning' : 'critical')
-                ],
-                'memory' => [
-                    'usage' => $this->formatBytes($memoryUsage),
-                    'peak' => $this->formatBytes($memoryPeak),
-                    'limit' => $this->formatBytes($memoryLimit),
-                    'usage_percent' => $memoryPercent,
-                    'status' => $memoryPercent < 80 ? 'healthy' : ($memoryPercent < 95 ? 'warning' : 'critical')
-                ],
-                'cpu' => [
-                    'load_1min' => round($cpuLoad[0], 2),
-                    'load_5min' => round($cpuLoad[1], 2),
-                    'load_15min' => round($cpuLoad[2], 2),
-                    'status' => $cpuLoad[0] < 2 ? 'healthy' : ($cpuLoad[0] < 4 ? 'warning' : 'critical')
-                ],
-                'database' => [
-                    'status' => $dbStatus,
-                    'driver' => config('database.default'),
-                    'connection' => config('database.connections.' . config('database.default') . '.host', 'N/A')
-                ],
-                'timestamp' => now()->toISOString(),
-            ]
-        ]);
-    }
-
-    /**
-     * 🧮 Parse memory limit string
-     */
-    private function parseMemoryLimit($limit): int
-    {
-        $limit = strtolower(trim($limit));
-        
-        if ($limit === '-1') {
-            return -1; // Unlimited
-        }
-        
-        $unit = preg_replace('/[^a-z]/', '', $limit);
-        $value = (int) preg_replace('/[^0-9]/', '', $limit);
-        
-        switch ($unit) {
-            case 'g':
-                return $value * 1024 * 1024 * 1024;
-            case 'm':
-                return $value * 1024 * 1024;
-            case 'k':
-                return $value * 1024;
-            default:
-                return (int) $limit;
+                'message' => 'Database connection OK',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => 'unhealthy',
+                'message' => 'Database connection failed: ' . $e->getMessage(),
+            ];
         }
     }
 
-    /**
-     * 💾 Format bytes to human readable
-     */
-    private function formatBytes($bytes, $precision = 2): string
+    private function checkCache(): array
     {
-        if ($bytes <= 0) {
-            return '0 B';
+        try {
+            \Cache::put('health_check', true, 60);
+            $value = \Cache::get('health_check');
+            \Cache::forget('health_check');
+            
+            return [
+                'status' => $value ? 'healthy' : 'unhealthy',
+                'message' => $value ? 'Cache OK' : 'Cache write/read failed',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => 'unhealthy',
+                'message' => 'Cache error: ' . $e->getMessage(),
+            ];
         }
-        
-        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        $bytes = max($bytes, 0);
-        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
-        $pow = min($pow, count($units) - 1);
-        
-        $bytes /= (1 << (10 * $pow));
-        
-        return round($bytes, $precision) . ' ' . $units[$pow];
     }
 
-    /**
-     * 📊 Get detailed performance metrics
-     */
-    public function getPerformanceMetrics()
+    private function checkStorage(): array
     {
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'php_info' => [
-                    'version' => PHP_VERSION,
-                    'memory_limit' => ini_get('memory_limit'),
-                    'max_execution_time' => ini_get('max_execution_time'),
-                    'upload_max_filesize' => ini_get('upload_max_filesize'),
-                    'post_max_size' => ini_get('post_max_size'),
-                ],
-                'laravel_info' => [
-                    'version' => app()->version(),
-                    'environment' => config('app.env'),
-                    'debug_mode' => config('app.debug'),
-                    'cache_driver' => config('cache.default'),
-                    'session_driver' => config('session.driver'),
-                    'queue_driver' => config('queue.default'),
-                ],
-                'database_info' => [
-                    'driver' => config('database.default'),
-                    'host' => config('database.connections.' . config('database.default') . '.host'),
-                    'database' => config('database.connections.' . config('database.default') . '.database'),
-                    'charset' => config('database.connections.' . config('database.default') . '.charset'),
-                ],
-            ]
-        ]);
+        try {
+            $path = storage_path('health_check.txt');
+            file_put_contents($path, 'ok');
+            $content = file_get_contents($path);
+            unlink($path);
+            
+            return [
+                'status' => $content === 'ok' ? 'healthy' : 'unhealthy',
+                'message' => 'Storage OK',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => 'unhealthy',
+                'message' => 'Storage error: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    private function checkGeminiApi(): array
+    {
+        $apiKey = config('services.gemini.api_key') ?? env('GEMINI_API_KEY');
+        
+        if (empty($apiKey)) {
+            return [
+                'status' => 'warning',
+                'message' => 'GEMINI_API_KEY not configured',
+                'configured' => false,
+            ];
+        }
+
+        if (!preg_match('/^AIza[0-9a-zA-Z_-]*$/', $apiKey)) {
+            return [
+                'status' => 'warning',
+                'message' => 'GEMINI_API_KEY format invalid',
+                'configured' => false,
+            ];
+        }
+
+        return [
+            'status' => 'healthy',
+            'message' => 'GEMINI_API_KEY configured',
+            'configured' => true,
+            'key_preview' => substr($apiKey, 0, 10) . '...' . substr($apiKey, -4),
+        ];
+    }
+
+    private function checkFCM(): array
+    {
+        $configPath = config_path('firebase.php');
+        
+        if (!file_exists($configPath)) {
+            return [
+                'status' => 'warning',
+                'message' => 'Firebase config not found',
+            ];
+        }
+
+        return [
+            'status' => 'healthy',
+            'message' => 'Firebase configured',
+        ];
+    }
+
+    private function getServerUptime(): string
+    {
+        try {
+            if (php_uname('s') === 'Linux') {
+                $uptime = shell_exec('uptime -p');
+                return trim($uptime) ?: 'unknown';
+            }
+            return 'N/A';
+        } catch (\Exception $e) {
+            return 'unknown';
+        }
+    }
+
+    private function getDatabaseConnectionCount(): int
+    {
+        try {
+            $result = \DB::select("SHOW PROCESSLIST");
+            return count($result);
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    private function getCacheHitRate(): string
+    {
+        try {
+            $stats = \Cache::getStore()->getRedis()->info('stats');
+            if (isset($stats['hits']) && isset($stats['misses'])) {
+                $total = $stats['hits'] + $stats['misses'];
+                $rate = $total > 0 ? round(($stats['hits'] / $total) * 100, 2) : 0;
+                return $rate . '%';
+            }
+            return 'N/A';
+        } catch (\Exception $e) {
+            return 'N/A';
+        }
     }
 }

@@ -9,7 +9,7 @@ Berikut ini adalah penjelasan detail mengenai 5 fitur baru yang dikembangkan di 
 
 ---
 
-## 2. ⚖️ Comparison (Perbandingan Produk Cerdas) [IN PROGRESS]
+## 2. ⚖️ Comparison (Perbandingan Produk Cerdas) [IMPLEMENTED]
 **Konteks Dasar:** Saat berada di lorong supermarket, pengguna sering bingung memilih antara 2 produk sejenis (Misal: Kecap A vs Kecap B). Mana yang lebih sehat? Mana yang titik kritis halalnya lebih sedikit?
 
 ---

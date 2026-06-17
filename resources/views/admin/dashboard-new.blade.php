@@ -40,12 +40,12 @@
         </div>
     </div>
     
-    <!-- Card 2: New Users Today -->
+    <!-- Card 2: Health Profile Growth -->
     <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm border-l-4 border-l-emerald-500">
-        <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">New Today</p>
+        <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Health Profiles</p>
         <div class="flex items-end justify-between mt-1">
-            <h3 class="text-2xl font-extrabold text-emerald-600">{{ number_format($analytics['overview']['new_users_today'] ?? 0) }}</h3>
-            <div class="text-emerald-500"><span class="material-icons-round text-lg">person_add</span></div>
+            <h3 class="text-2xl font-extrabold text-emerald-600">{{ number_format($stats['health_profiles'] ?? 0) }}</h3>
+            <div class="text-emerald-500"><span class="material-icons-round text-lg">medical_services</span></div>
         </div>
     </div>
 
@@ -58,12 +58,12 @@
         </div>
     </div>
 
-    <!-- Card 4: Campaigns -->
+    <!-- Card 4: AI Consulations -->
     <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">FCM Sent</p>
+        <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">AI Chats</p>
         <div class="flex items-end justify-between mt-1">
-            <h3 class="text-2xl font-extrabold text-slate-800 dark:text-white">{{ number_format($analytics['overview']['campaigns_sent'] ?? 0) }}</h3>
-            <div class="text-primary"><span class="material-icons-round text-lg">campaign</span></div>
+            <h3 class="text-2xl font-extrabold text-slate-800 dark:text-white">{{ number_format($analytics['overview']['ai_chats_total'] ?? 0) }}</h3>
+            <div class="text-primary"><span class="material-icons-round text-lg">psychology</span></div>
         </div>
     </div>
 
@@ -316,14 +316,14 @@
                     <div class="relative w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center transition-colors group-hover:bg-primary/10">
                         @php
                             $imgSrc = optional($product)->image;
-                            if (empty($imgSrc) || $imgSrc == 'default.png') {
-                                // Generate placeholder image from product name
+                            $defaultImages = ['default.png', '/images/default/general.svg', '/images/default/product.svg'];
+                            if (empty($imgSrc) || in_array($imgSrc, $defaultImages)) {
                                 $nameParts = explode(' ', optional($product)->product_name ?? 'Product');
                                 $initials = substr($nameParts[0], 0, 1) . (isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : '');
                                 $imgSrc = 'https://ui-avatars.com/api/?name=' . urlencode(strtoupper($initials)) . '&background=random&color=fff&size=128&font-size=0.4';
                             }
                         @endphp
-                        <img src="{{ $imgSrc }}" alt="{{ optional($product)->product_name }}" class="w-10 h-10 object-cover rounded-lg shadow-sm border border-slate-200 dark:border-slate-700" onerror="this.src='https://ui-avatars.com/api/?name=NA&background=e2e8f0&color=64748b';">
+                        <img src="{{ $imgSrc }}" alt="{{ optional($product)->product_name }}" class="w-10 h-10 object-cover rounded-lg shadow-sm border border-slate-200 dark:border-slate-700" onerror="this.onerror=null;this.src='/images/placeholders/product-placeholder.svg'">
                         <div class="absolute -top-2 -left-2 w-6 h-6 {{ $index === 0 ? 'bg-primary text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400' }} text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">#{{ $index + 1 }}</div>
                     </div>
                     <div class="ml-4 flex-1">
@@ -417,14 +417,23 @@
 @endsection
 
 @push('scripts')
+<script type="application/json" id="chart-data">
+    {
+        "userGrowth": @json($analytics['user_growth'] ?? []),
+        "scanActivity": @json($analytics['scan_activity'] ?? []),
+        "halalStats": @json($analytics['halal_stats_detailed'] ?? []),
+        "healthTrends": @json($analytics['health_trends'] ?? [])
+    }
+</script>
 <script>
-    // Unified Data from Controller
-    const userGrowthRaw = @json($analytics['user_growth'] ?? []);
-    const scanActivityRaw = @json($analytics['scan_activity'] ?? []);
-    const halalStatsDetailed = @json($analytics['halal_stats_detailed'] ?? []);
-    const healthTrendsRaw = @json($analytics['health_trends'] ?? []);
+    document.addEventListener('DOMContentLoaded', function() {
+        const rawData = JSON.parse(document.getElementById('chart-data').textContent);
+        const userGrowthRaw = rawData.userGrowth;
+        const scanActivityRaw = rawData.scanActivity;
+        const halalStatsDetailed = rawData.halalStats;
+        const healthTrendsRaw = rawData.healthTrends;
 
-    const renderUnifiedCharts = () => {
+        const renderUnifiedCharts = () => {
         // 1. User Growth Chart (Line)
         const growthCtx = document.getElementById('userGrowthChart')?.getContext('2d');
         if (growthCtx) {
@@ -509,13 +518,37 @@
 
     renderUnifiedCharts();
     
+    // Track latest activity timestamp for polling
+    let lastActivityTime = '{{ $feedActivities->first()->created_at ?? '' }}';
+    
     // Auto-scroll activity feed to top when new items arrive if needed
     const feedList = document.getElementById('realtime-feed-list');
     if (feedList) {
-        // Simple polling for demo/fallback - usually handled via Pusher/Reverb
+        // Simple polling — fetch new activities from API
         setInterval(() => {
-            // Logic to fetch new feed if any
+            fetch('/admin/monitor/feed?since=' + encodeURIComponent(lastActivityTime))
+                .then(r => r.json())
+                .then(data => {
+                    if (data.activities && data.activities.length) {
+                        const list = document.getElementById('realtime-feed-list');
+                        if (list) {
+                            data.activities.forEach(act => {
+                                const div = document.createElement('div');
+                                div.className = 'flex items-start gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors';
+                                div.innerHTML = '<div class="w-2 h-2 rounded-full bg-emerald-400 mt-2 shrink-0"></div>' +
+                                    '<div class="min-w-0 flex-1"><p class="text-sm font-medium text-slate-800 dark:text-white truncate">' +
+                                    (act.summary || act.event_type || 'Activity') + '</p>' +
+                                    '<p class="text-xs text-slate-400 mt-0.5">' + (act.created_at || '') + '</p></div>';
+                                list.prepend(div);
+                                if (list.children.length > 50) list.lastChild.remove();
+                            });
+                            lastActivityTime = data.activities[0].created_at;
+                        }
+                    }
+                })
+                .catch(() => {});
         }, 30000);
     }
+    });
 </script>
 @endpush

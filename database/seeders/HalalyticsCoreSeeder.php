@@ -78,7 +78,10 @@ class HalalyticsCoreSeeder extends Seeder
         ];
 
         foreach ($items as $item) {
-            Ingredient::updateOrCreate(
+            if (!empty($item['e_number']) && Ingredient::where('e_number', $item['e_number'])->exists()) {
+                continue;
+            }
+            Ingredient::firstOrCreate(
                 ['name' => $item['name']],
                 array_merge($item, ['active' => true])
             );

@@ -101,4 +101,27 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    setInterval(function() {
+        fetch(window.location.href, {
+            headers: { 'Accept': 'text/html', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const oldStats = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-4');
+            const newStats = doc.querySelector('.grid.grid-cols-1.md\\:grid-cols-4');
+            if (oldStats && newStats) {
+                oldStats.innerHTML = newStats.innerHTML;
+            }
+        })
+        .catch(() => {});
+    }, 30000);
+});
+</script>
+@endpush
 @endsection

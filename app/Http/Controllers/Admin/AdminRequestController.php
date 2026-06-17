@@ -9,6 +9,7 @@ use App\Models\BpomData;
 use App\Models\Notification;
 use App\Models\ProductModel;
 use App\Models\User;
+use App\Jobs\AnalyzeProductJob;
 use Illuminate\Support\Facades\Auth;
 
 class AdminRequestController extends Controller
@@ -44,7 +45,7 @@ class AdminRequestController extends Controller
         $adminId = Auth::user()?->id_user;
 
         // Create BPOM Data entry
-        BpomData::create([
+        $bpom = BpomData::create([
             'nama_produk' => $request->product_name,
             'kategori' => 'umum', // Default, admin can edit later
             'ingredients_text' => $request->ocr_text,
@@ -58,22 +59,40 @@ class AdminRequestController extends Controller
             'sumber_data' => 'user_contribution'
         ]);
 
+        // Create ProductModel entry for AI analysis
+        $product = ProductModel::create([
+            'nama_product' => $request->product_name,
+            'barcode' => $request->barcode,
+            'komposisi' => json_encode(['text' => $request->ocr_text]),
+            'image' => $request->getRawOriginal('image_front') ?: $request->image_front,
+            'source' => 'user_request',
+            'verification_status' => 'verified',
+            'approval_status' => 'approved',
+            'approved_by' => (int) $adminId ?: null,
+            'approved_at' => now(),
+            'active' => true,
+        ]);
+
         $request->update(['status' => 'approved']);
+
+        // Dispatch AI analysis job
+        AnalyzeProductJob::dispatch($product->id_product, $request->user_id);
 
         Notification::create([
             'user_id' => $request->user_id,
             'title' => 'Permintaan Produk Disetujui',
-            'message' => "Produk '{$request->product_name}' telah disetujui dan ditambahkan ke database.",
+            'message' => "Produk '{$request->product_name}' telah disetujui dan sedang dianalisis AI.",
             'type' => 'request',
             'action_type' => 'open_search',
             'action_value' => $request->product_name,
             'extra_data' => [
                 'request_id' => $request->id,
+                'product_id' => $product->id_product,
                 'status' => 'approved',
             ],
         ]);
 
-        return redirect()->back()->with('success', 'Product approved and added to database!');
+        return redirect()->back()->with('success', 'Product approved and AI analysis queued!');
     }
 
     public function reject(Request $request, $id)

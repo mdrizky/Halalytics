@@ -7,12 +7,21 @@ use App\Models\Notification;
 use App\Models\ScanModel;
 use App\Models\ReportModel;
 use App\Models\OCRProduct;
+use App\Services\FirebaseService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\DB;
 
 class NotificationService
 {
+    protected $firebaseService;
+
+    public function __construct(FirebaseService $firebaseService)
+    {
+        $this->firebaseService = $firebaseService;
+    }
+
     /**
      * 📢 Send real-time notification
      */
@@ -27,21 +36,46 @@ class NotificationService
             'is_read' => false,
         ]);
 
-        // Broadcast to user's private channel
+        // 1. Broadcast WebSockets
         try {
             broadcast(new \App\Events\NotificationSent($notification))->toOthers();
         } catch (\Exception $e) {
-            Log::error('Failed to broadcast notification', [
-                'notification_id' => $notification->id,
-                'user_id' => $user->id_user,
-                'error' => $e->getMessage()
-            ]);
+            Log::error('Failed to broadcast notification', ['error' => $e->getMessage()]);
+        }
+
+        // 2. Send Push Notification via FCM
+        try {
+            $this->firebaseService->sendToUser(
+                $user->id_user,
+                $title,
+                $message,
+                array_merge(['type' => $type, 'id' => $notification->id], $data)
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to send FCM notification', ['error' => $e->getMessage()]);
         }
 
         // Update user notification count in cache
         $this->updateNotificationCount($user->id_user);
 
         return $notification;
+    }
+
+    /**
+     * 💬 Send chat notification
+     */
+    public function sendChatNotification(User $recipient, string $senderName, string $message, int $consultationId): void
+    {
+        $this->sendNotification(
+            $recipient,
+            'new_chat',
+            "Pesan baru dari {$senderName}",
+            $message,
+            [
+                'consultation_id' => $consultationId,
+                'sender_name' => $senderName,
+            ]
+        );
     }
 
     /**
@@ -321,7 +355,7 @@ class NotificationService
                 now()->startOfWeek(),
                 now()->endOfWeek()
             ])->count(),
-            'by_type' => Notification::select('type', \DB::raw('count(*) as count'))
+            'by_type' => Notification::select('type', DB::raw('count(*) as count'))
                 ->groupBy('type')
                 ->orderByDesc('count')
                 ->get()

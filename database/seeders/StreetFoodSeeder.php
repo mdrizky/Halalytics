@@ -212,13 +212,18 @@ class StreetFoodSeeder extends Seeder
 
             FoodVariant::create([
                 'street_food_id' => $streetFood->id,
+                'variant_name' => $variantName,
+                'variant_type' => 'size',
                 'name' => $variantName,
                 'description' => "Varian {$variantName} untuk {$streetFood->name}",
                 'ingredients' => json_encode($ingredients),
                 'calories' => (int)($streetFood->calories_typical * $variantData['multiplier']),
+                'calories_modifier' => (int)($streetFood->calories_typical * $variantData['multiplier']),
                 'price_adjustment' => $variantData['price_adjustment'],
+                'price_modifier' => $variantData['price_adjustment'],
                 'serving_size_grams' => (int)($streetFood->serving_size_grams * $variantData['multiplier']),
-                'is_available' => true
+                'is_available' => true,
+                'is_default' => $variantName === 'Sedang',
             ]);
         }
     }

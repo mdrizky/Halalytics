@@ -38,8 +38,12 @@
     <!-- User Profile Card -->
     <div class="lg:col-span-1">
         <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 text-center">
-            <div class="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary text-3xl font-bold mx-auto mb-4">
-                {{ strtoupper(substr($user->username ?? 'U', 0, 1)) }}
+            <div class="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary text-3xl font-bold mx-auto mb-4 overflow-hidden">
+                @if($user->image)
+                    <img src="{{ $user->image }}" alt="{{ $user->full_name }}" class="w-full h-full object-cover">
+                @else
+                    {{ strtoupper(substr($user->username ?? 'U', 0, 1)) }}
+                @endif
             </div>
             <h3 class="text-lg font-bold text-slate-800 dark:text-white">{{ $user->full_name ?? $user->username }}</h3>
             <p class="text-sm text-slate-500">{{ $user->email }}</p>
@@ -85,7 +89,7 @@
     <!-- Edit Form -->
     <div class="lg:col-span-2">
         <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            <form action="{{ route('admin.user.update', $user->id_user) }}" method="POST">
+            <form action="{{ route('admin.user.update', $user->id_user) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 
@@ -255,6 +259,18 @@
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Bio / Deskripsi (Ahli Gizi/Pakar)</label>
                         <textarea name="bio" rows="3" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Deskripsi singkat, spesialisasi, atau background profesional">{{ old('bio', $user->bio) }}</textarea>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Foto Profil</label>
+                        @if($user->image)
+                        <div class="mb-3">
+                            <img src="{{ $user->image }}" alt="Current profile photo" class="w-24 h-24 rounded-full object-cover border border-slate-200">
+                            <p class="mt-1 text-xs text-slate-400">Foto saat ini</p>
+                        </div>
+                        @endif
+                        <input type="file" name="image" accept="image/jpeg,image/png,image/webp" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <p class="mt-1 text-xs text-slate-400">Maksimal 10MB. Format: JPG, PNG, WebP. Biarkan kosong jika tidak ingin mengganti.</p>
                     </div>
                 </div>
                 

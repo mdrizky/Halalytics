@@ -68,7 +68,7 @@ class ProductController extends Controller
         }
 
         $local = ProductModel::query()
-            ->with(['kategori', 'forbiddenIngredients'])
+            ->with(['kategori'])
             ->where('barcode', $barcode)
             ->first();
 
@@ -184,7 +184,7 @@ class ProductController extends Controller
         $limit = min(50, max(1, (int) $request->get('limit', 10)));
 
         $items = ProductModel::query()
-            ->with(['kategori', 'forbiddenIngredients'])
+            ->with(['kategori'])
             ->where(function ($q) {
                 $q->whereNull('active')->orWhere('active', true);
             })
@@ -207,6 +207,7 @@ class ProductController extends Controller
 
     private function mapProductModel(ProductModel $p): array
     {
+        $imageUrl = $p->image;
         return [
             'id' => (int) $p->id_product,
             'barcode' => (string) ($p->barcode ?? ''),
@@ -217,7 +218,8 @@ class ProductController extends Controller
             'halal_info' => null,
             'ingredients' => $p->komposisi,
             'nutrition_facts' => null,
-            'image_url' => $p->image,
+            'image_url' => $imageUrl,
+            'image' => $imageUrl,
             'source' => (string) ($p->source ?? 'local'),
             'created_at' => optional($p->created_at)?->toIso8601String() ?? now()->toIso8601String(),
             'updated_at' => optional($p->updated_at)?->toIso8601String() ?? now()->toIso8601String(),

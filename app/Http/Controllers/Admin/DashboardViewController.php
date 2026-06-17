@@ -28,28 +28,21 @@ class DashboardViewController extends Controller
         $this->cacheService = $cacheService;
     }
 
-    /**
-     * 🏠 Main dashboard view
-     */
     public function index()
     {
         $periodDays = $this->parsePeriodInput(request()->get('period', 30));
 
-        // 🚀 Fetch stats from CacheService
         $cachedStats = $this->cacheService->getDashboardStats();
         
-        // Detailed counts for specific sources
         $localProduk = ProductModel::where('source', 'local')->count();
         $offProduk = ProductModel::whereIn('source', ['open_food_facts', 'openfoodfacts', 'off_api'])->count();
         $obfProduk = ProductModel::whereIn('source', ['open_beauty_facts', 'openbeautyfacts', 'obf_api'])->count();
         $openFdaMedicines = Medicine::whereIn('source', ['openfda', 'open_fda'])->count();
 
-        // Trend Calculation
         $scanLast30 = ScanModel::where('tanggal_scan', '>=', Carbon::now()->subDays(30))->count();
         $scanPrev30 = ScanModel::whereBetween('tanggal_scan', [Carbon::now()->subDays(60), Carbon::now()->subDays(30)])->count();
         $scanChange = $scanPrev30 > 0 ? round((($scanLast30 - $scanPrev30) / $scanPrev30) * 100, 1) : 0;
 
-        // Top Scanned Products
         $topScannedProducts = collect($this->cacheService->getTopScannedProducts(5))
             ->map(function ($product) {
                 $imageService = app(\App\Services\DisplayImageService::class);
@@ -73,7 +66,6 @@ class DashboardViewController extends Controller
                 ];
             });
 
-        // Recent Scans
         $recentScans = ScanModel::with(['user', 'product'])
             ->orderByDesc('tanggal_scan')
             ->limit(5)
@@ -99,14 +91,12 @@ class DashboardViewController extends Controller
                 ];
             });
 
-        // Expiring Certificates
         $expiring_certificates = HalalProduct::whereNotNull('certificate_valid_until')
             ->where('certificate_valid_until', '<=', Carbon::now()->addDays(30))
             ->orderBy('certificate_valid_until')
             ->take(5)
             ->get();
 
-        // 📦 Stats Array mapped to view expectations
         $stats = [
             'users' => $cachedStats['total_users'],
             'local_products' => $localProduk,
@@ -114,10 +104,9 @@ class DashboardViewController extends Controller
             'open_beauty_facts_products' => $obfProduk,
             'openfda_medicines' => $openFdaMedicines,
             'total_kategori' => KategoriModel::count(),
-            'api_latency' => rand(38, 52), // Sample metric
+            'api_latency' => 0,
         ];
 
-        // 📈 Analytics Array mapped to view expectations
         $analytics = [
             'overview' => [
                 'total_scans' => $cachedStats['total_scans'],
@@ -142,25 +131,23 @@ class DashboardViewController extends Controller
                 'syubhat' => $cachedStats['syubhat_count'] ?? 0,
             ],
             'health_trends' => [
-                ['metric_type' => 'Calorie Check', 'count' => rand(100, 500)],
-                ['metric_type' => 'Allergen Scan', 'count' => rand(100, 500)],
-                ['metric_type' => 'Sugar Level', 'count' => rand(100, 500)],
-                ['metric_type' => 'Fat Content', 'count' => rand(100, 500)],
-                ['metric_type' => 'Sodium Check', 'count' => rand(100, 500)],
+                ['metric_type' => 'Calorie Check', 'count' => 0],
+                ['metric_type' => 'Allergen Scan', 'count' => 0],
+                ['metric_type' => 'Sugar Level', 'count' => 0],
+                ['metric_type' => 'Fat Content', 'count' => 0],
+                ['metric_type' => 'Sodium Check', 'count' => 0],
             ]
         ];
 
-        // Monitor Stats
         $monitorStats = [
             'total_external_scans' => ScanModel::whereNotNull('barcode')->count(),
             'total_skincare_analyses' => ProductModel::where('kategori_id', KategoriModel::where('nama_kategori', 'Kosmetik')->value('id_kategori'))->count(),
-            'total_interaction_checks' => rand(120, 450), // Mocked for now until interaction tracking is built
-            'major_or_contra_count' => rand(5, 25),      // Mocked
+            'total_interaction_checks' => 0,
+            'major_or_contra_count' => 0,
             'total_risk_checks' => ScanModel::count(),
-            'total_drug_food_conflicts' => rand(2, 10),  // Mocked
+            'total_drug_food_conflicts' => 0,
         ];
 
-        // Activity Feed
         $activityFeed = ScanModel::query()
             ->with('user')
             ->latest('tanggal_scan')
@@ -178,6 +165,8 @@ class DashboardViewController extends Controller
                 ];
             });
 
+        $apiKeyStatus = $this->checkApiKeyStatus();
+
         return view('admin.dashboard', [
             'stats' => $stats,
             'analytics' => $analytics,
@@ -186,8 +175,36 @@ class DashboardViewController extends Controller
             'expiring_certificates' => $expiring_certificates,
             'monitor_stats' => $monitorStats,
             'activity_feed' => $activityFeed,
-            'period_days' => $periodDays
+            'period_days' => $periodDays,
+            'api_key_status' => $apiKeyStatus,
         ]);
+    }
+
+    private function checkApiKeyStatus(): array
+    {
+        $apiKey = config('services.gemini.api_key') ?? env('GEMINI_API_KEY');
+        
+        if (empty($apiKey)) {
+            return [
+                'is_valid' => false,
+                'message' => 'GEMINI_API_KEY is not configured',
+                'severity' => 'error',
+            ];
+        }
+
+        if (!preg_match('/^AIza[0-9a-zA-Z_-]*$/', $apiKey)) {
+            return [
+                'is_valid' => false,
+                'message' => 'GEMINI_API_KEY format appears invalid',
+                'severity' => 'warning',
+            ];
+        }
+
+        return [
+            'is_valid' => true,
+            'message' => 'GEMINI_API_KEY is configured',
+            'severity' => 'success',
+        ];
     }
 
     private function parsePeriodInput($period): int

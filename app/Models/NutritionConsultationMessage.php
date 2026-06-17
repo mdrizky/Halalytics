@@ -12,6 +12,7 @@ class NutritionConsultationMessage extends Model
         'sender_role',
         'sender_user_id',
         'body',
+        'attachment_path',
         'metadata',
         'read_at',
     ];

@@ -164,12 +164,12 @@ class DashboardController extends Controller
         $hasActivityEvents = Schema::hasTable('activity_events');
         
         $monitorStats = [
-            'total_external_scans' => ScanModel::count() ?: 87,
-            'total_skincare_analyses' => 12,
-            'total_interaction_checks' => 45,
-            'major_or_contra_count' => 3,
-            'total_risk_checks' => 28,
-            'total_drug_food_conflicts' => 5,
+            'total_external_scans' => ScanModel::count() ?: 0,
+            'total_skincare_analyses' => 0,
+            'total_interaction_checks' => 0,
+            'major_or_contra_count' => 0,
+            'total_risk_checks' => 0,
+            'total_drug_food_conflicts' => 0,
         ];
         
         $activityFeed = collect();
@@ -317,12 +317,11 @@ class DashboardController extends Controller
             })
             ->toArray();
 
-        // Fallback: If empty, generate mock data for the last 30 days
         if (empty($results)) {
             for ($i = 29; $i >= 0; $i--) {
                 $results[] = [
                     'date' => now()->subDays($i)->toDateString(),
-                    'count' => rand(1, 8)
+                    'count' => 0,
                 ];
             }
         }
@@ -354,15 +353,14 @@ class DashboardController extends Controller
             })
             ->toArray();
 
-        // Fallback: If empty, generate mock data for the last 7 days
         if (empty($results)) {
             for ($i = 6; $i >= 0; $i--) {
                 $results[] = [
                     'date' => now()->subDays($i)->toDateString(),
-                    'total' => rand(5, 15),
-                    'halal' => rand(3, 7),
-                    'haram' => rand(0, 3),
-                    'syubhat' => rand(1, 5),
+                    'total' => 0,
+                    'halal' => 0,
+                    'haram' => 0,
+                    'syubhat' => 0,
                 ];
             }
         }
@@ -390,7 +388,7 @@ class DashboardController extends Controller
 
         // Fallback: If everyone is 0, give some default distribution
         if ($halalCount == 0 && $haramCount == 0 && $syubhatCount == 0) {
-            return ['halal' => 75.0, 'haram' => 10.0, 'syubhat' => 15.0];
+            return ['halal' => 0, 'haram' => 0, 'syubhat' => 0];
         }
 
         return [
@@ -419,13 +417,12 @@ class DashboardController extends Controller
                 ->toArray();
         }
 
-        // Fallback: Common health metrics
         if (empty($results)) {
             $types = ['Blood Sugar', 'Cholesterol', 'Uric Acid', 'Blood Pressure', 'BMI'];
             foreach ($types as $type) {
                 $results[] = [
                     'metric_type' => $type,
-                    'count' => rand(10, 50)
+                    'count' => 0,
                 ];
             }
         }
@@ -542,9 +539,17 @@ class DashboardController extends Controller
         // Uptime
         $uptime = 'N/A';
         if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
-            $uptimeOutput = @shell_exec('uptime -p 2>/dev/null');
-            if ($uptimeOutput) {
-                $uptime = trim($uptimeOutput);
+            $uptimeContent = @file_get_contents('/proc/uptime');
+            if ($uptimeContent !== false) {
+                $uptimeSeconds = (float) explode(' ', $uptimeContent)[0];
+                $days = floor($uptimeSeconds / 86400);
+                $hours = floor(($uptimeSeconds % 86400) / 3600);
+                $minutes = floor(($uptimeSeconds % 3600) / 60);
+                $parts = [];
+                if ($days > 0) $parts[] = "{$days} day" . ($days > 1 ? 's' : '');
+                if ($hours > 0) $parts[] = "{$hours} hour" . ($hours > 1 ? 's' : '');
+                if ($minutes > 0) $parts[] = "{$minutes} minute" . ($minutes > 1 ? 's' : '');
+                $uptime = implode(', ', $parts) ?: '< 1 minute';
             }
         }
         
@@ -710,12 +715,12 @@ class DashboardController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'total_external_scans' => ScanModel::count() ?: 87,
-                    'total_skincare_analyses' => 12,
-                    'total_interaction_checks' => 45,
-                    'major_or_contra_count' => 3,
-                    'total_risk_checks' => 28,
-                    'total_drug_food_conflicts' => 5,
+                    'total_external_scans' => ScanModel::count() ?: 0,
+                    'total_skincare_analyses' => 0,
+                    'total_interaction_checks' => 0,
+                    'major_or_contra_count' => 0,
+                    'total_risk_checks' => 0,
+                    'total_drug_food_conflicts' => 0,
                 ],
             ]);
         }

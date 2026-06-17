@@ -469,36 +469,86 @@ class AIAssistantController extends Controller
         $user = Auth::user();
         $message = trim($request->input('message'));
 
-        $userContext = [
-            'user_name' => $user->full_name ?? $user->username ?? 'Pengguna',
-            'user_age' => $user->age ?? '-',
-            'user_diseases' => $user->medical_history ?? '-',
-            'user_allergies' => $user->allergy ?? '-',
-            'user_message' => $message,
-        ];
+        // Handle anonymous users (promo page visitors)
+        if (!$user) {
+            $userContext = [
+                'user_name' => 'Pengunjung',
+                'user_age' => '-',
+                'user_gender' => '-',
+                'user_weight' => '-',
+                'user_height' => '-',
+                'user_bmi' => '-',
+                'user_diseases' => '-',
+                'user_allergies' => '-',
+                'user_diet_preference' => '-',
+                'user_activity_level' => '-',
+                'user_blood_type' => '-',
+                'user_message' => $message,
+                'is_guest' => true,
+                'recent_scans' => 'Belum ada data scan.',
+                'recent_intakes' => 'Belum ada log nutrisi.',
+            ];
+        } else {
+            $userContext = [
+                'user_name' => $user->full_name ?? $user->username ?? 'Pengguna',
+                'user_age' => $user->age ?? '-',
+                'user_gender' => $user->gender ?? '-',
+                'user_weight' => $user->weight ?? '-',
+                'user_height' => $user->height ?? '-',
+                'user_bmi' => $user->bmi ?? '-',
+                'user_diseases' => $user->medical_history ?? '-',
+                'user_allergies' => $user->allergy ?? '-',
+                'user_diet_preference' => $user->diet_preference ?? '-',
+                'user_activity_level' => $user->activity_level ?? '-',
+                'user_blood_type' => $user->blood_type ?? '-',
+                'user_message' => $message,
+                'is_guest' => false,
+            ];
 
-        // Fetch Recent Scans & Intake History for AI Context
-        try {
-            $recentScans = \App\Models\ScanHistory::where('user_id', $user->id_user)
-                ->orderBy('created_at', 'desc')
-                ->limit(5)
-                ->pluck('product_name')
-                ->toArray();
-                
-            $recentIntakes = IntakeLog::where('user_id', $user->id_user)
-                ->orderBy('logged_at', 'desc')
-                ->limit(5)
-                ->get(['product_name', 'sugar_g', 'sodium_mg', 'calories'])
-                ->toArray();
-                
-            $userContext['recent_scans'] = !empty($recentScans) ? implode(", ", $recentScans) : 'Belum ada data scan.';
-            $userContext['recent_intakes'] = !empty($recentIntakes) ? json_encode($recentIntakes) : 'Belum ada log nutrisi.';
-        } catch (\Exception $e) {
-            Log::warning("Failed to fetch AI memory context: " . $e->getMessage());
+            // Fetch Recent Scans & Intake History for AI Context
+            try {
+                $recentScans = \App\Models\ScanHistory::where('user_id', $user->id_user)
+                    ->orderBy('created_at', 'desc')
+                    ->limit(5)
+                    ->get(['product_name', 'halal_status', 'barcode', 'nutrition_snapshot'])
+                    ->toArray();
+
+                $scanDetail = [];
+                foreach ($recentScans as $scan) {
+                    $detail = $scan['product_name'] ?? 'Unknown';
+                    if (!empty($scan['halal_status'])) {
+                        $detail .= ' (' . $scan['halal_status'] . ')';
+                    }
+                    if (!empty($scan['nutrition_snapshot'])) {
+                        $nutri = is_string($scan['nutrition_snapshot'])
+                            ? $scan['nutrition_snapshot']
+                            : json_encode($scan['nutrition_snapshot']);
+                        $detail .= ' - Gizi: ' . $nutri;
+                    }
+                    $scanDetail[] = $detail;
+                }
+
+                $userContext['recent_scans'] = !empty($scanDetail) ? implode("; ", $scanDetail) : 'Belum ada data scan.';
+
+                $recentIntakes = IntakeLog::where('user_id', $user->id_user)
+                    ->orderBy('logged_at', 'desc')
+                    ->limit(5)
+                    ->get(['product_name', 'sugar_g', 'sodium_mg', 'calories'])
+                    ->toArray();
+
+                $userContext['recent_intakes'] = !empty($recentIntakes) ? json_encode($recentIntakes) : 'Belum ada log nutrisi.';
+            } catch (\Exception $e) {
+                Log::warning("Failed to fetch AI memory context: " . $e->getMessage());
+            }
         }
 
         try {
-            $userContext['user_id'] = $user->id_user;
+            if (!$user) {
+                $userContext['user_id'] = 'guest_' . uniqid();
+            } else {
+                $userContext['user_id'] = $user->id_user;
+            }
+            
             $reply = $this->foodAnalysisOrchestrator->chat($message, $userContext);
 
             if ($reply === '') {

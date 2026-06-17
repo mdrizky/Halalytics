@@ -52,6 +52,14 @@
                     <span class="material-icons-round">people</span>
                     <span class="text-sm">Daftar Pasien</span>
                 </a>
+                <a href="{{ route('expert.verifications') }}" class="flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('expert.verifications*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-500 hover:bg-slate-50 transition-all' }}">
+                    <span class="material-icons-round">fact_check</span>
+                    <span class="text-sm">Verifikasi AI</span>
+                    @php $pendingCount = \App\Models\ProductAnalysisResult::where('is_verified_by_expert', false)->count(); @endphp
+                    @if($pendingCount > 0)
+                    <span class="ml-auto bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">{{ $pendingCount }}</span>
+                    @endif
+                </a>
                 <a href="{{ route('expert.consultations') }}" class="flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('expert.consultations') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-500 hover:bg-slate-50 transition-all' }}">
                     <span class="material-icons-round">chat</span>
                     <span class="text-sm">Konsultasi</span>

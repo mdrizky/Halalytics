@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\OtpMail;
+use App\Models\PasswordResetOtp;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -10,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\RateLimiter;
@@ -57,46 +59,42 @@ class AuthController extends Controller
         }
 
         try {
-            [$user, $token] = DB::transaction(function () use ($payload, $request) {
-                $user = User::create([
-                    'full_name' => $payload['name'],
-                    'username' => $payload['username'],
-                    'email' => $payload['email'],
-                    'password' => Hash::make($payload['password']),
-                    'role' => 'user',
-                    'phone' => $payload['phone'],
-                    'allergy' => $payload['allergy'],
-                    'medical_history' => $payload['medical_history'],
-                    'weight_kg' => $payload['weight_kg'],
-                    'blood_type' => $payload['blood_type'],
-                    'active' => true,
-                ]);
+            $user = User::create([
+                'full_name' => $payload['name'],
+                'username' => $payload['username'],
+                'email' => $payload['email'],
+                'password' => Hash::make($payload['password']),
+                'role' => 'user',
+                'phone' => $payload['phone'],
+                'allergy' => $payload['allergy'],
+                'medical_history' => $payload['medical_history'],
+                'weight_kg' => $payload['weight_kg'],
+                'blood_type' => $payload['blood_type'],
+                'active' => true,
+            ]);
 
-                if ($request->filled('fcm_token')) {
-                    $user->fcm_token = $request->string('fcm_token')->toString();
-                    $user->save();
-                }
+            if ($request->filled('fcm_token')) {
+                $user->fcm_token = $request->string('fcm_token')->toString();
+                $user->save();
+            }
 
-                if (method_exists($user, 'assignRole')) {
-                    try {
-                        $user->assignRole('user');
-                    } catch (\Throwable $e) {
-                        Log::warning('Register role assignment skipped', [
-                            'user_id' => $user->id_user,
-                            'message' => $e->getMessage(),
-                        ]);
-                    }
-                }
+            $token = $this->issueAuthToken($user);
 
-                $token = $this->issueAuthToken($user);
+            return response()->json([
+                'success' => true,
+                'status' => 'success',
+                'message' => 'Akun berhasil dibuat! Silakan login.',
+                'user' => $user->fresh(),
+                'role' => 'user',
+                'token' => $token,
+            ], 201);
 
-                return [$user->fresh(), $token];
-            });
         } catch (\Throwable $e) {
             Log::error('Register error', [
                 'email' => $payload['email'] ?? null,
                 'username' => $payload['username'] ?? null,
                 'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
@@ -105,15 +103,6 @@ class AuthController extends Controller
                 'message' => 'Terjadi kesalahan server saat membuat akun. Silakan coba lagi.',
             ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'status' => 'success',
-            'message' => 'Akun berhasil dibuat! Silakan login.',
-            'user' => $user,
-            'role' => $user->getRoleNames()->first() ?? $user->role,
-            'token' => $token,
-        ], 201);
     }
 
     // LOGIN
@@ -182,13 +171,14 @@ class AuthController extends Controller
                 ], 403);
             }
 
-            // Restrict Android app login to only 'user' and 'ahli_gizi' roles
+            // Only allow 'user' and 'ahli_gizi' roles on API (mobile/Android)
+            // Admin must use website directly
             $userRole = strtolower($user->role ?? $user->getRoleNames()->first() ?? '');
             if (!in_array($userRole, ['user', 'ahli_gizi'], true)) {
                 return response()->json([
                     'success' => false,
                     'status' => 'error',
-                    'message' => 'Aplikasi Android hanya dapat diakses oleh role User dan Ahli Gizi.',
+                    'message' => 'Role ini tidak dapat login melalui API. Gunakan website untuk admin.',
                 ], 403);
             }
 
@@ -203,12 +193,19 @@ class AuthController extends Controller
 
             $user->save();
 
+            $role = $user->role;
+            try {
+                $role = $user->getRoleNames()->first() ?? $role;
+            } catch (\Throwable $e) {
+                Log::warning('getRoleNames failed in login', ['message' => $e->getMessage()]);
+            }
+
             return response()->json([
                 'success' => true,
                 'status' => 'success',
                 'message' => 'Login berhasil.',
                 'user' => $user->fresh(),
-                'role' => $user->getRoleNames()->first() ?? $user->role,
+                'role' => $role,
                 'token' => $token,
                 'streak' => [
                     'current' => (int) ($user->current_streak ?? 0),
@@ -276,13 +273,21 @@ class AuthController extends Controller
                 }
             }
 
-            // Restrict Android app login to only 'user' and 'ahli_gizi' roles
-            $userRole = strtolower($user->role ?? $user->getRoleNames()->first() ?? '');
+            $userRole = strtolower($user->role ?? '');
+            try {
+                $spatieRole = $user->getRoleNames()->first();
+                if ($spatieRole) {
+                    $userRole = strtolower($spatieRole);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('getRoleNames failed in googleLogin', ['message' => $e->getMessage()]);
+            }
+
             if (!in_array($userRole, ['user', 'ahli_gizi'], true)) {
                 return response()->json([
                     'success' => false,
                     'status' => 'error',
-                    'message' => 'Aplikasi Android hanya dapat diakses oleh role User dan Ahli Gizi.',
+                    'message' => 'Role ini tidak dapat login melalui API. Gunakan website untuk admin.',
                 ], 403);
             }
 
@@ -360,13 +365,21 @@ class AuthController extends Controller
                 }
             }
 
-            // Restrict Android app login to only 'user' and 'ahli_gizi' roles
-            $userRole = strtolower($user->role ?? $user->getRoleNames()->first() ?? '');
+            $userRole = strtolower($user->role ?? '');
+            try {
+                $spatieRole = $user->getRoleNames()->first();
+                if ($spatieRole) {
+                    $userRole = strtolower($spatieRole);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('getRoleNames failed in facebookLogin', ['message' => $e->getMessage()]);
+            }
+
             if (!in_array($userRole, ['user', 'ahli_gizi'], true)) {
                 return response()->json([
                     'success' => false,
                     'status' => 'error',
-                    'message' => 'Aplikasi Android hanya dapat diakses oleh role User dan Ahli Gizi.',
+                    'message' => 'Role ini tidak dapat login melalui API. Gunakan website untuk admin.',
                 ], 403);
             }
 
@@ -403,50 +416,106 @@ class AuthController extends Controller
         ]);
     }
 
-    // FORGOT PASSWORD
     public function forgotPassword(Request $request)
     {
-        $throttleKey = 'forgot_password_attempts|' . $request->ip();
-        if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
-            $seconds = RateLimiter::availableIn($throttleKey);
+        $request->validate(['email' => 'required|email']);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
             return response()->json([
-                'success' => false,
-                'status' => 'error',
-                'message' => "Terlalu banyak permintaan. Silakan coba lagi dalam {$seconds} detik.",
-            ], 429);
+                'success' => true,
+                'message' => 'Jika email terdaftar, kode OTP akan dikirimkan.'
+            ]);
         }
 
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email|exists:users,email',
+        PasswordResetOtp::where('email', $request->email)->delete();
+
+        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        PasswordResetOtp::create([
+            'email' => $request->email,
+            'otp' => bcrypt($otp),
+            'expires_at' => now()->addMinutes(10),
         ]);
 
-        if ($validator->fails()) {
+        try {
+            Mail::to($request->email)->send(new OtpMail($otp, $user->full_name ?? $user->username));
+        } catch (\Throwable $e) {
+            Log::error('Failed to send OTP email: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kode OTP telah dikirim ke email Anda.'
+        ]);
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'otp' => 'required|digits:6',
+        ]);
+
+        $record = PasswordResetOtp::where('email', $request->email)
+            ->where('is_used', false)
+            ->where('expires_at', '>', now())
+            ->latest()
+            ->first();
+
+        if (!$record || !Hash::check($request->otp, $record->otp)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Email tidak terdaftar atau format tidak valid.',
-                'errors' => $validator->errors()
+                'message' => 'Kode OTP tidak valid atau sudah kadaluarsa.'
             ], 422);
         }
 
-        $status = Password::sendResetLink([
-            'email' => (string) $request->email,
+        $resetToken = Str::uuid()->toString();
+
+        $record->update([
+            'reset_token' => $resetToken,
+            'expires_at' => now()->addMinutes(15),
         ]);
 
-        if ($status === Password::RESET_LINK_SENT) {
-            RateLimiter::hit($throttleKey, 900); // Lock for 15 minutes to prevent spamming reset link
-            return response()->json([
-                'success' => true,
-                'message' => 'Instruksi reset password telah dikirim ke email Anda.'
-            ]);
-        }
-        
-        RateLimiter::hit($throttleKey, 60); // 1 minute penalty for failed sends
         return response()->json([
-            'success' => false,
-            'message' => __($status),
-        ], 500);
+            'success' => true,
+            'message' => 'OTP valid.',
+            'reset_token' => $resetToken,
+        ]);
     }
-    
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'reset_token' => 'required|string',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        $record = PasswordResetOtp::where('reset_token', $request->reset_token)
+            ->where('is_used', false)
+            ->where('expires_at', '>', now())
+            ->first();
+
+        if (!$record) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token tidak valid atau sudah kadaluarsa.'
+            ], 422);
+        }
+
+        $user = User::where('email', $record->email)->first();
+        $user->update(['password' => Hash::make($request->password)]);
+
+        $record->update(['is_used' => true]);
+
+        $user->tokens()->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password berhasil direset. Silakan login.'
+        ]);
+    }
     // SYNC USER (FROM FIREBASE)
     public function syncUser(Request $request)
     {

@@ -32,8 +32,18 @@ class RoleMiddleware
 
         $user = Auth::user();
 
-        $hasRole = method_exists($user, 'hasRole') && $user->hasRole($role);
-        $legacyRoleMatch = ($user->role ?? null) === $role;
+        // Map role aliases so ahli_gizi / expert / nutritionist all pass each other
+        $allowedRoles = match ($role) {
+            'ahli_gizi' => ['ahli_gizi', 'ahli gizi', 'expert', 'nutritionist'],
+            'expert' => ['ahli_gizi', 'ahli gizi', 'expert', 'nutritionist'],
+            'nutritionist' => ['ahli_gizi', 'ahli gizi', 'expert', 'nutritionist'],
+            'admin' => ['admin', 'superadmin'],
+            'superadmin' => ['admin', 'superadmin'],
+            default => [$role],
+        };
+
+        $hasRole = method_exists($user, 'hasRole') && collect($allowedRoles)->contains(fn($r) => $user->hasRole($r));
+        $legacyRoleMatch = in_array($user->role ?? null, $allowedRoles);
 
         if (! $hasRole && ! $legacyRoleMatch) {
             if ($request->expectsJson() || $request->is('api/*')) {

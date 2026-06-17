@@ -25,7 +25,7 @@ class HealthFeatureController extends Controller
                 'color' => '#FF6D00',
                 'status' => 'active',
                 'enabled' => $toggles['calorie_counter'] ?? true,
-                'usage_count' => rand(120, 340),
+                'usage_count' => 0,
             ],
             [
                 'key' => 'water_tracker',
@@ -35,7 +35,7 @@ class HealthFeatureController extends Controller
                 'color' => '#00B0FF',
                 'status' => 'active',
                 'enabled' => $toggles['water_tracker'] ?? true,
-                'usage_count' => rand(200, 500),
+                'usage_count' => 0,
             ],
             [
                 'key' => 'food_scanner',
@@ -45,7 +45,7 @@ class HealthFeatureController extends Controller
                 'color' => '#00C853',
                 'status' => 'active',
                 'enabled' => $toggles['food_scanner'] ?? true,
-                'usage_count' => rand(80, 250),
+                'usage_count' => 0,
             ],
             [
                 'key' => 'voice_logging',
@@ -55,7 +55,7 @@ class HealthFeatureController extends Controller
                 'color' => '#7C4DFF',
                 'status' => 'active',
                 'enabled' => $toggles['voice_logging'] ?? true,
-                'usage_count' => rand(50, 150),
+                'usage_count' => 0,
             ],
             [
                 'key' => 'nutrition_ocr',
@@ -65,7 +65,7 @@ class HealthFeatureController extends Controller
                 'color' => '#0288D1',
                 'status' => 'active',
                 'enabled' => $toggles['nutrition_ocr'] ?? true,
-                'usage_count' => rand(60, 200),
+                'usage_count' => 0,
             ],
             [
                 'key' => 'ai_health_assistant',
@@ -75,7 +75,7 @@ class HealthFeatureController extends Controller
                 'color' => '#00897B',
                 'status' => 'active',
                 'enabled' => $toggles['ai_health_assistant'] ?? true,
-                'usage_count' => rand(150, 400),
+                'usage_count' => 0,
             ],
             [
                 'key' => 'recipe_engine',
@@ -85,7 +85,7 @@ class HealthFeatureController extends Controller
                 'color' => '#FF9800',
                 'status' => 'active',
                 'enabled' => $toggles['recipe_engine'] ?? true,
-                'usage_count' => rand(100, 300),
+                'usage_count' => 0,
             ],
             [
                 'key' => 'bmi_calculator',
@@ -95,7 +95,7 @@ class HealthFeatureController extends Controller
                 'color' => '#546E7A',
                 'status' => 'active',
                 'enabled' => $toggles['bmi_calculator'] ?? true,
-                'usage_count' => rand(180, 450),
+                'usage_count' => 0,
             ],
             [
                 'key' => 'gamification',
@@ -105,7 +105,7 @@ class HealthFeatureController extends Controller
                 'color' => '#FFB300',
                 'status' => 'active',
                 'enabled' => $toggles['gamification'] ?? true,
-                'usage_count' => rand(200, 600),
+                'usage_count' => 0,
             ],
             [
                 'key' => 'drug_interaction',
@@ -115,7 +115,7 @@ class HealthFeatureController extends Controller
                 'color' => '#8E24AA',
                 'status' => 'active',
                 'enabled' => $toggles['drug_interaction'] ?? true,
-                'usage_count' => rand(30, 100),
+                'usage_count' => 0,
             ],
             [
                 'key' => 'mental_health',
@@ -125,7 +125,7 @@ class HealthFeatureController extends Controller
                 'color' => '#FF7043',
                 'status' => 'active',
                 'enabled' => $toggles['mental_health'] ?? true,
-                'usage_count' => rand(40, 120),
+                'usage_count' => 0,
             ],
             [
                 'key' => 'sleep_tracker',
@@ -182,7 +182,7 @@ class HealthFeatureController extends Controller
                     'feature' => str_replace('_', ' ', ucwords($a->event_type)),
                     'detail' => $a->summary,
                     'time' => \Carbon\Carbon::parse($a->created_at)->diffForHumans(),
-                    'consistency' => rand(60, 95) // Simulated for UI
+                    'consistency' => 0 // Real data from DB
                 ];
             });
 

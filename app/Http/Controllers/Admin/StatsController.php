@@ -3,16 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Services\CacheService;
+use App\Models\ProductAnalysisResult;
+use App\Models\ScanModel;
 use App\Models\User;
 use App\Models\ProductModel;
-use App\Models\ScanModel;
-use App\Models\ReportModel;
-use App\Models\KategoriModel;
+use App\Services\CacheService;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class StatsController extends Controller
 {
@@ -23,137 +22,114 @@ class StatsController extends Controller
         $this->cacheService = $cacheService;
     }
 
-    /**
-     * 📊 Get comprehensive dashboard statistics
-     */
-    public function getStats(Request $request)
+    public function getStats(Request $request): JsonResponse
     {
-        // 🚀 Use cached dashboard statistics
-        $stats = $this->cacheService->getDashboardStats();
-        $days = $this->parsePeriodInput($request->get('period', 30));
-        
-        [$labels, $data] = $this->buildScanChartData($days);
+        $cachedStats = $this->cacheService->getDashboardStats();
 
-        // Halal distribution (cached separately)
-        $cacheKey = "halal_distribution";
-        $halalStatus = Cache::remember($cacheKey, CacheService::DEFAULT_TTL, function () {
-            return ProductModel::select('status', DB::raw('count(*) as count'))
-                ->groupBy('status')
-                ->get()
-                ->pluck('count', 'status');
-        });
+        $recentScans = ScanModel::with(['user', 'product'])
+            ->orderByDesc('tanggal_scan')
+            ->limit(5)
+            ->get()
+            ->map(function ($scan) {
+                return [
+                    'id' => $scan->id,
+                    'product_name' => $scan->nama_produk ?? $scan->product?->nama_product ?? 'Unknown',
+                    'barcode' => $scan->barcode,
+                    'status_halal' => $scan->product?->status ?? $scan->status_halal ?? 'unknown',
+                    'created_at' => $scan->tanggal_scan->toIso8601String(),
+                    'user_name' => $scan->user?->username ?? 'Anonymous',
+                ];
+            });
+
+        $topProducts = collect($this->cacheService->getTopScannedProducts(5))
+            ->map(function ($product, $index) {
+                return [
+                    'index' => $index,
+                    'product_name' => $product['product_name'],
+                    'barcode' => $product['barcode'],
+                    'scan_count' => $product['scan_count'],
+                ];
+            });
 
         return response()->json([
             'success' => true,
-            'stats' => [
-                'totalKategori' => KategoriModel::count(),
-                'totalUsers' => $stats['total_users'],
-                'totalProduk' => $stats['total_products'],
-                'totalScan' => ScanModel::where('tanggal_scan', '>=', Carbon::now()->subDays($days))->count(),
-                'scanToday' => $stats['scan_today'],
-                'laporanMasuk' => $stats['pending_reports'],
+            'data' => [
+                'total_users' => $cachedStats['total_users'] ?? 0,
+                'total_products' => ProductModel::count(),
+                'total_scans' => $cachedStats['total_scans'] ?? 0,
+                'online_users' => $this->getOnlineUsers(),
+                'recent_scans' => $recentScans->toArray(),
+                'top_products' => $topProducts->toArray(),
             ],
-            'chart' => [
-                'labels' => $labels,
-                'data' => $data
-            ],
-            'distribution' => [
-                'halal' => $halalStatus['halal'] ?? 0,
-                'diragukan' => $halalStatus['diragukan'] ?? 0,
-                'haram' => $halalStatus['tidak halal'] ?? 0,
-            ]
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 
-    /**
-     * 📈 Build scan chart data
-     */
-    private function buildScanChartData(int $days): array
+    public function clearCache(Request $request): JsonResponse
     {
-        $cacheKey = "scan_chart_data:{$days}";
-        
-        return Cache::remember($cacheKey, CacheService::SHORT_TTL, function () use ($days) {
-            $data = ScanModel::select(
-                    DB::raw('DATE(tanggal_scan) as date'),
-                    DB::raw('COUNT(*) as count')
-                )
-                ->where('tanggal_scan', '>=', Carbon::now()->subDays($days))
-                ->groupBy('date')
-                ->orderBy('date')
-                ->get();
-
-            $labels = [];
-            $counts = [];
-
-            // Fill missing dates with 0
-            for ($i = $days - 1; $i >= 0; $i--) {
-                $date = Carbon::now()->subDays($i)->format('Y-m-d');
-                $labels[] = Carbon::now()->subDays($i)->format('M j');
-                
-                $count = $data->where('date', $date)->first();
-                $counts[] = $count ? $count->count : 0;
-            }
-
-            return [$labels, $counts];
-        });
+        Cache::flush();
+        return response()->json(['success' => true, 'message' => 'Cache cleared successfully']);
     }
 
-    /**
-     * 🗄️ Clear cache endpoint
-     */
-    public function clearCache(Request $request)
+    public function getCacheStats(Request $request): JsonResponse
     {
-        $pattern = $request->get('pattern');
-        $cleared = $this->cacheService->clearCache($pattern);
-        
-        return response()->json([
-            'success' => true,
-            'message' => "Cleared {$cleared} cache entries",
-            'cleared_count' => $cleared,
-        ]);
+        try {
+            $redis = Cache::getStore()->getRedis();
+            $info = $redis->info('stats');
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'hits' => $info['hits'] ?? 0,
+                    'misses' => $info['misses'] ?? 0,
+                    'evictions' => $info['evicted_keys'] ?? 0,
+                    'memory_used' => $info['used_memory_human'] ?? 'N/A',
+                    'connected_clients' => $info['connected_clients'] ?? 0,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to fetch cache stats: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
-    /**
-     * 📊 Get cache statistics
-     */
-    public function getCacheStats()
+    public function warmUpCache(Request $request): JsonResponse
     {
-        return response()->json([
-            'success' => true,
-            'data' => $this->cacheService->getCacheStats(),
-        ]);
+        try {
+            $this->cacheService->getDashboardStats();
+            $this->cacheService->getTopScannedProducts(10);
+            
+            return response()->json(['success' => true, 'message' => 'Cache warmed up successfully']);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cache warm-up failed: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
-    /**
-     * 🔄 Warm up cache
-     */
-    public function warmUpCache()
+    public function analysisResults()
     {
-        $results = $this->cacheService->warmUpCache();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Cache warmed up successfully',
-            'data' => array_keys($results),
-        ]);
-    }
+        $results = ProductAnalysisResult::with(['product', 'user', 'expert'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
 
-    /**
-     * 🔧 Parse period input
-     */
-    private function parsePeriodInput($period): int
-    {
-        $periodMap = [
-            '7' => 7,
-            '30' => 30,
-            '90' => 90,
-            '365' => 365,
-            'week' => 7,
-            'month' => 30,
-            'quarter' => 90,
-            'year' => 365,
+        $stats = [
+            'total' => ProductAnalysisResult::count(),
+            'verified' => ProductAnalysisResult::where('is_verified_by_expert', true)->count(),
+            'pending' => ProductAnalysisResult::where('is_verified_by_expert', false)->count(),
+            'halal_count' => ProductAnalysisResult::where('halal_verdict', 'HALAL')->count(),
+            'haram_count' => ProductAnalysisResult::where('halal_verdict', 'HARAM')->count(),
+            'syubhat_count' => ProductAnalysisResult::where('halal_verdict', 'SYUBHAT')->count(),
         ];
 
-        return $periodMap[$period] ?? 30;
+        return view('admin.analysis', compact('results', 'stats'));
+    }
+
+    private function getOnlineUsers(): int
+    {
+        return User::where('last_activity_at', '>=', Carbon::now()->subMinutes(15))->count();
     }
 }

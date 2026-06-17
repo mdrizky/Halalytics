@@ -4,6 +4,8 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class CacheService
@@ -47,7 +49,8 @@ class CacheService
         $cacheKey = 'dashboard_stats';
         
         return Cache::remember($cacheKey, self::SHORT_TTL, function () {
-            return [
+            // Overall Stats
+            $stats = [
                 'total_users' => \App\Models\User::count(),
                 'total_products' => \App\Models\ProductModel::count(),
                 'total_scans' => \App\Models\ScanModel::count(),
@@ -59,7 +62,39 @@ class CacheService
                 'pending_reports' => \App\Models\ReportModel::where('status', 'pending')->count(),
                 'ocr_pending' => \App\Models\OCRProduct::where('status', 'pending_admin_review')->count(),
                 'active_users_today' => \App\Models\User::whereDate('last_login', Carbon::today())->count(),
+                'new_users_today' => \App\Models\User::whereDate('created_at', Carbon::today())->count(),
             ];
+
+            // User Growth (Last 30 Days)
+            $stats['user_growth'] = \App\Models\User::select([
+                    DB::raw('DATE(created_at) as date'),
+                    DB::raw('COUNT(*) as count')
+                ])
+                ->where('created_at', '>=', Carbon::now()->subDays(30))
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get()
+                ->toArray();
+
+            // Scan Activity (Last 14 Days)
+            $stats['scan_activity'] = \App\Models\ScanModel::select([
+                    DB::raw('DATE(tanggal_scan) as date'),
+                    DB::raw("SUM(CASE WHEN status_halal = 'halal' THEN 1 ELSE 0 END) as halal"),
+                    DB::raw("SUM(CASE WHEN status_halal = 'syubhat' THEN 1 ELSE 0 END) as syubhat"),
+                    DB::raw("SUM(CASE WHEN status_halal = 'haram' THEN 1 ELSE 0 END) as haram")
+                ])
+                ->where('tanggal_scan', '>=', Carbon::now()->subDays(14))
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get()
+                ->toArray();
+
+            // Halal Stats Detailed (Overall)
+            $stats['halal_count'] = \App\Models\ScanModel::where('status_halal', 'halal')->count();
+            $stats['haram_count'] = \App\Models\ScanModel::where('status_halal', 'haram')->count();
+            $stats['syubhat_count'] = \App\Models\ScanModel::where('status_halal', 'syubhat')->count();
+
+            return $stats;
         });
     }
 
@@ -287,7 +322,7 @@ class CacheService
             $results['forbidden_ingredients'] = $this->getForbiddenIngredients();
             
         } catch (\Exception $e) {
-            \Log::error('Cache warm-up failed', ['error' => $e->getMessage()]);
+            Log::error('Cache warm-up failed', ['error' => $e->getMessage()]);
         }
         
         return $results;

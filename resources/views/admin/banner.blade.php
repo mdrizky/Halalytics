@@ -19,6 +19,22 @@
         </button>
     </div>
 
+    @if($errors->any())
+        <div class="rounded-2xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 p-4">
+            <div class="flex items-center gap-3">
+                <span class="material-icons-round text-rose-500">error_outline</span>
+                <div>
+                    <p class="text-sm font-bold text-rose-700 dark:text-rose-300">Terjadi kesalahan</p>
+                    <ul class="mt-1 text-sm text-rose-600 dark:text-rose-400 list-disc list-inside">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="surface-card rounded-2xl p-5">
             <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Total Banner</p>
@@ -89,7 +105,8 @@
                                 data-desc="{{ $banner->description }}"
                                 data-pos="{{ (int) $banner->position }}"
                                 data-active="{{ $banner->is_active ? 'true' : 'false' }}"
-                                onclick="openEditModal(this.dataset.id, this.dataset.title, this.dataset.desc, this.dataset.pos, this.dataset.active)" 
+                                data-image="{{ $banner->image }}"
+                                onclick="openEditModal(this.dataset.id, this.dataset.title, this.dataset.desc, this.dataset.pos, this.dataset.active, this.dataset.image)" 
                                 class="inline-flex items-center rounded-full border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary transition">
                                 Edit
                             </button>
@@ -145,6 +162,7 @@
                 <div>
                     <label class="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Gambar banner</label>
                     <input type="file" name="image" class="w-full rounded-2xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm">
+                    <p class="mt-1 text-xs text-slate-400">Maksimal 10MB. Format: JPG, PNG, WebP.</p>
                 </div>
             </div>
             <label class="flex items-center gap-3 rounded-2xl bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
@@ -194,6 +212,11 @@
                 <div>
                     <label class="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Ganti gambar</label>
                     <input type="file" name="image" class="w-full rounded-2xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm">
+                    <p class="mt-1 text-xs text-slate-400">Maksimal 10MB. Format: JPG, PNG, WebP. Biarkan kosong jika tidak ingin mengganti.</p>
+                    <div id="edit_image_preview" class="mt-3 hidden">
+                        <img id="edit_image_preview_img" src="" alt="Preview" class="h-32 w-full rounded-xl object-cover border border-slate-200 dark:border-slate-700">
+                        <p class="mt-1 text-xs text-slate-400">Gambar saat ini</p>
+                    </div>
                 </div>
             </div>
             <label class="flex items-center gap-3 rounded-2xl bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
@@ -225,14 +248,23 @@ function closeCreateModal() {
     document.getElementById('createModal').classList.remove('flex');
 }
 
-function openEditModal(id, title, desc, pos, active) {
+function openEditModal(id, title, desc, pos, active, image) {
     document.getElementById('edit_title').value = title || '';
     document.getElementById('edit_desc').value = desc || '';
     document.getElementById('edit_pos').value = pos || 1;
-    document.getElementById('edit_active').checked = !!active;
+    document.getElementById('edit_active').checked = active === 'true';
     document.getElementById('editForm').action = `/admin/banner/${id}`;
     document.getElementById('editModal').classList.remove('hidden');
     document.getElementById('editModal').classList.add('flex');
+
+    let preview = document.getElementById('edit_image_preview');
+    let previewImg = document.getElementById('edit_image_preview_img');
+    if (image) {
+        preview.classList.remove('hidden');
+        previewImg.src = '{{ asset("") }}' + image;
+    } else {
+        preview.classList.add('hidden');
+    }
 }
 
 function closeEditModal() {

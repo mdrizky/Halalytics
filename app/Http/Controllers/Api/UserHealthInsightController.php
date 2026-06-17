@@ -21,8 +21,9 @@ class UserHealthInsightController extends Controller
         // Try to get from cache first (expires at midnight)
         $insight = Cache::remember($cacheKey, now()->endOfDay(), function () use ($user) {
             // Get user data (allergies, health targets if available)
-            $allergies = $user->allergies ?? 'Tidak ada';
-            $name = $user->name ?? 'Pengguna';
+            $allergiesRaw = $user->allergies;
+            $allergies = is_array($allergiesRaw) && !empty($allergiesRaw) ? implode(', ', $allergiesRaw) : ($allergiesRaw ?: 'Tidak ada');
+            $name = $user->full_name ?? $user->username ?? 'Pengguna';
             
             // Build prompt for Gemini
             $prompt = "Tuliskan satu paragraf pendek (maksimal 3 kalimat) berisi saran atau wawasan kesehatan harian yang menyegarkan dan memotivasi untuk pengguna bernama $name. Bahas tentang menjaga gaya hidup halal dan sehat. Jika ada alergi: $allergies, berikan sedikit peringatan yang elegan. Buat nadanya positif, bersahabat, dan profesional bak konsultan kesehatan tingkat atas.";

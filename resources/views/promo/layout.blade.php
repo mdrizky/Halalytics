@@ -379,6 +379,9 @@
 {!! trim($__env->yieldContent('schema')) !!}
     </script>
     @endif
+    <!-- Font Awesome for icons (optional - replace your-font-awesome-kit-id with actual kit ID) -->
+    <script src="https://kit.fontawesome.com/your-font-awesome-kit-id.js" crossorigin="anonymous"></script>
+
     <!-- Swiper.js JS -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
@@ -386,5 +389,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     @yield('scripts')
+    @include("components.ai-chat-widget")
 </body>
 </html>

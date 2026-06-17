@@ -35,6 +35,18 @@ class HalalyticsStatsOverview extends StatsOverviewWidget
                 ->description('Total pemrosesan AI')
                 ->descriptionIcon('heroicon-m-cpu-chip')
                 ->color('info'),
+            Stat::make('Donasi Terkumpul', 'Rp ' . number_format(\App\Models\Donation::where('status', 'success')->sum('amount'), 0, ',', '.'))
+                ->description('Total donasi dari seluruh kampanye')
+                ->descriptionIcon('heroicon-m-banknotes')
+                ->color('success'),
+            Stat::make('Sesi Konsultasi', \App\Models\NutritionConsultation::count())
+                ->description('Total konsultasi ahli gizi & admin')
+                ->descriptionIcon('heroicon-m-chat-bubble-left-right')
+                ->color('info'),
+            Stat::make('Request Produk', \App\Models\ProductRequest::where('status', 'pending')->count())
+                ->description('Request produk masuk yang belum diproses')
+                ->descriptionIcon('heroicon-m-exclamation-triangle')
+                ->color('warning'),
         ];
     }
 }

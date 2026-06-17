@@ -11,6 +11,12 @@ class ScanHistory extends Model
         'user_id',
         'scannable_type', 'scannable_id',
         'product_name', 'product_image', 'barcode', 'halal_status',
+        'health_score',
+        'calories', 'protein', 'carbs', 'fat', 'fiber', 'sugar', 'sodium',
+        'nova_group', 'nutri_score',
+        'ai_recommendation',
+        'short_term_effects', 'long_term_effects',
+        'scan_date',
         'scan_method', 'source',
         'latitude', 'longitude',
         'confidence_score', 'nutrition_snapshot',
@@ -19,10 +25,12 @@ class ScanHistory extends Model
 
     protected $casts = [
         'nutrition_snapshot' => 'array',
+        'short_term_effects' => 'array',
+        'long_term_effects' => 'array',
         'is_synced' => 'boolean',
+        'scan_date' => 'date',
     ];
 
-    // Polymorphic relation
     public function scannable()
     {
         return $this->morphTo();
@@ -33,13 +41,16 @@ class ScanHistory extends Model
         return $this->belongsTo(User::class, 'user_id', 'id_user');
     }
 
-    // Scope by user
+    public function ingredients()
+    {
+        return $this->hasMany(ScanIngredient::class);
+    }
+
     public function scopeByUser($query, $userId)
     {
         return $query->where('user_id', $userId);
     }
 
-    // Scope by date
     public function scopeToday($query)
     {
         return $query->whereDate('created_at', today());

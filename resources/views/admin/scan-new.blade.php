@@ -139,14 +139,10 @@
                         <div class="flex items-center gap-3">
                             <div class="h-10 w-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
                                 @php
-                                    $productImage = $scan->product->image ?? $scan->product->image_url ?? null;
-                                    if (!$productImage) {
-                                        $productImage = app(\App\Services\DisplayImageService::class)->resolve($scan->product ?? null, [
-                                            'name' => $scan->nama_produk,
-                                            'barcode' => $scan->barcode,
-                                            'category' => $scan->kategori ?? null,
-                                        ], 'product');
-                                    }
+                                    $productImage = $scan->product->image
+                                        ?? $scan->product->image_url
+                                        ?? $scan->product_image
+                                        ?? '/images/placeholders/product-placeholder.svg';
                                 @endphp
                                 <img src="{{ $productImage }}" alt="Product" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='/images/placeholders/product-placeholder.svg'">
                             </div>

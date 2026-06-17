@@ -19,8 +19,12 @@ class ExpertMiddleware
         }
 
         $user = Auth::user();
-        $isExpert = (method_exists($user, 'hasRole') && $user->hasRole('expert'))
-            || ($user->role ?? null) === 'expert';
+        $role = $user->role ?? null;
+        $isExpert = (method_exists($user, 'hasRole') && (
+            $user->hasRole('expert') ||
+            $user->hasRole('ahli_gizi') ||
+            $user->hasRole('nutritionist')
+        )) || in_array($role, ['expert', 'ahli_gizi', 'nutritionist', 'ahli gizi']);
 
         if (! $isExpert) {
             return response()->json([

@@ -38,6 +38,7 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\SyncController;
 use App\Http\Controllers\Api\NutritionistDashboardController;
 use App\Http\Controllers\Api\NutritionConsultationController;
+use App\Http\Controllers\Api\HealthTodayController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,6 +51,8 @@ Route::post('/payment/webhook/midtrans', [\App\Http\Controllers\Api\PaymentWebho
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::post('/auth/google', [AuthController::class, 'googleLogin']);
 Route::post('/auth/facebook', [AuthController::class, 'facebookLogin']);
 Route::post('/auth/sync', [AuthController::class, 'syncUser']);
@@ -60,9 +63,6 @@ Route::get('/categories', [App\Http\Controllers\Api\CategoryController::class, '
 Route::get('/articles', [HealthArticleController::class, 'index']);
 Route::get('/articles/recommended', [HealthArticleController::class, 'recommended']);
 Route::get('/articles/{slug}', [HealthArticleController::class, 'show']);
-Route::get('/encyclopedia', [EncyclopediaController::class, 'index']);
-Route::get('/encyclopedia/{id}', [EncyclopediaController::class, 'show']);
-Route::get('/encyclopedia/e-number/{eNumber}', [EncyclopediaController::class, 'searchByENumber']);
 Route::prefix('local')->group(function () {
     Route::get('/encyclopedia', [EncyclopediaController::class, 'index']);
     Route::get('/encyclopedia/{id}', [EncyclopediaController::class, 'show']);
@@ -102,9 +102,7 @@ Route::prefix('external')->group(function () {
     Route::get('/brand/{brand}', [ProductExternalController::class, 'brand']);
     Route::get('/category/{category}', [ProductExternalController::class, 'category']);
 });
-Route::prefix('v1/products')->group(function () {
-    Route::get('/popular', [ProductController::class, 'popular']);
-});
+// /api/v1/products/popular removed (duplicate of /api/products/popular)
 
 // Product Comparison
 Route::middleware('auth:sanctum')->post('/products/compare', [\App\Http\Controllers\Api\ProductComparisonController::class, 'compare']);
@@ -132,6 +130,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [ScanHistoryController::class, 'destroy']);
     });
 
+    // HEALTH TODAY
+    Route::get('/health-today', [HealthTodayController::class, 'index']);
+
     // OCR & INGREDIENTS (Consolidated)
     Route::prefix('ocr')->group(function () {
         Route::post('/submit', [OCRController::class, 'submitOCR']);
@@ -146,14 +147,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/history', [OCRController::class, 'history']);
         Route::get('/sync', [OCRController::class, 'syncIngredients']);
         Route::get('/statistics', [OCRController::class, 'statistics']);
-        Route::post('/scan-result', [OCRController::class, 'scanResult']);
         Route::post('/save', [OCRController::class, 'scanResult']);
     });
 
     // MEDICINES & REMINDERS
     Route::prefix('medicines')->group(function () {
         Route::get('/', [MedicineController::class, 'index']);
-        Route::post('/search', [MedicineController::class, 'searchMedicine']);
         Route::get('/search', [MedicineController::class, 'searchMedicine']);
         Route::post('/analyze-symptoms', [MedicineController::class, 'analyzeSymptoms']);
         Route::post('/schedule', [MedicineController::class, 'generateSafeSchedule']);
@@ -178,7 +177,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // BPOM & SKINCARE
     Route::prefix('bpom')->group(function () {
         Route::get('/search', [BpomController::class, 'search']);
-        Route::post('/check', [BpomController::class, 'check']);
         Route::get('/check', [BpomController::class, 'check']);
         Route::post('/analyze', [BpomController::class, 'analyze']);
     });
@@ -200,8 +198,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/posts/{id}/comment', [CommunityController::class, 'comment']);
     });
 
-    // HALOCODE (Expert Consultations) - REMOVED FOR PRODUCTION CLEANUP
-
     // ═══════════════════════════════════════════════════════════
     // 📱 MOBILE APP ROUTES (Previously missing — causing APK 404s)
     // ═══════════════════════════════════════════════════════════
@@ -216,14 +212,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
         Route::post('/mark-read', [\App\Http\Controllers\Api\NotificationController::class, 'markReadFromBody']);
         Route::delete('/{id}', [\App\Http\Controllers\Api\NotificationController::class, 'destroy']);
-    });
-
-    // SCAN HISTORY (Realtime)
-    Route::prefix('scan-history')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Api\ScanHistoryController::class, 'index']);
-        Route::post('/', [\App\Http\Controllers\Api\ScanHistoryController::class, 'recordScan']);
-        Route::get('/{id}', [\App\Http\Controllers\Api\ScanHistoryController::class, 'show']);
-        Route::delete('/{id}', [\App\Http\Controllers\Api\ScanHistoryController::class, 'destroy']);
     });
 
     // FAVORITES
@@ -241,6 +229,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // User ↔ ahli gizi (konsultasi dasar, siap dikembangkan ke realtime)
     Route::prefix('nutrition')->group(function () {
         Route::get('/consultations/mine', [NutritionConsultationController::class, 'mine']);
+        Route::get('/consultations/admin', [NutritionConsultationController::class, 'indexAdmin']);
+        Route::get('/consultations/{id}', [NutritionConsultationController::class, 'show'])->whereNumber('id');
         Route::post('/consultations', [NutritionConsultationController::class, 'store']);
         Route::post('/consultations/{id}/messages', [NutritionConsultationController::class, 'storeMessage'])->whereNumber('id');
     });
@@ -249,8 +239,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard', [NutritionistDashboardController::class, 'index']);
         Route::get('/consultations', [NutritionConsultationController::class, 'indexNutritionist']);
     });
-
-    Route::get('/user/stats/weekly', [\App\Http\Controllers\Api\AIAssistantController::class, 'generateWeeklyReport']);
 
     // FOOD & RECOGNITION
     Route::prefix('food')->group(function () {
@@ -270,8 +258,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // PRODUCT REQUESTS (Crowdsourcing)
     Route::post('/product-requests', [\App\Http\Controllers\Api\ProductRequestController::class, 'store']);
-    Route::post('/products/request-verification', [\App\Http\Controllers\Api\ProductRequestController::class, 'store']);
-
     // CONTRIBUTIONS
     Route::post('/contributions/submit', [\App\Http\Controllers\Api\ContributionController::class, 'submit']);
     Route::get('/contributions/my', [\App\Http\Controllers\Api\ContributionController::class, 'myContributions']);
@@ -295,20 +281,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('ai')->group(function () {
         Route::post('/chat', [\App\Http\Controllers\Api\AIAssistantController::class, 'chat']);
         Route::post('/feedback', [\App\Http\Controllers\Api\AdminAiLogController::class, 'feedback']);
-        Route::post('/analyze', [\App\Http\Controllers\Api\AIAssistantController::class, 'analyzeIngredients']);
         Route::post('/analyze-ingredients', [\App\Http\Controllers\Api\AIAssistantController::class, 'analyzeIngredients']);
         Route::get('/weekly-report', [\App\Http\Controllers\Api\AIAssistantController::class, 'generateWeeklyReport']);
         Route::get('/personal-risk-score', [\App\Http\Controllers\Api\AIAssistantController::class, 'getPersonalRiskScore']);
         Route::get('/daily-intake', [\App\Http\Controllers\Api\AIAssistantController::class, 'getDailyIntake']);
-        Route::get('/daily-insight', [\App\Http\Controllers\Api\AIAssistantController::class, 'getPersonalHealthAdvice']);
+        Route::get('/daily-insight', [\App\Http\Controllers\Api\UserHealthInsightController::class, 'getDailyInsight']);
         Route::post('/interactions', [\App\Http\Controllers\Api\DrugInteractionController::class, 'check']);
         Route::get('/drugs/search', [\App\Http\Controllers\Api\DrugInteractionController::class, 'search']);
         Route::post('/pill-identify', [\App\Http\Controllers\Api\PillIdentificationController::class, 'identify']);
-        Route::get('/reminders', [\App\Http\Controllers\Api\MedicationReminderController::class, 'index']);
-        Route::post('/reminders', [\App\Http\Controllers\Api\MedicationReminderController::class, 'store']);
-        Route::post('/reminders/log', [\App\Http\Controllers\Api\MedicationReminderController::class, 'log']);
         Route::get('/halal-alternatives', [\App\Http\Controllers\Api\HalalAlternativeController::class, 'getAlternatives']);
-        Route::post('/compare', [\App\Http\Controllers\Api\ComparisonController::class, 'compare']);
         Route::post('/bmi-advice', [\App\Http\Controllers\Api\MedicalProfileController::class, 'getAiBmiAdvice']);
     });
 
@@ -322,7 +303,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // MEAL AI
     Route::post('/meal/analyze', [\App\Http\Controllers\Api\MealAiController::class, 'analyzeMeal']);
 
-    // HEALTH REMINDERS
+    // DRUG-FOOD CONFLICT (Android compatibility)
+    Route::post('/medicines/drug-food-conflict', [\App\Http\Controllers\Api\DrugInteractionController::class, 'check']);
+
+    // HEALTH REMINDERS ADVANCED (Android compatibility)
     Route::post('/health/reminders/advanced', [\App\Http\Controllers\Api\MedicationReminderController::class, 'store']);
 
     // HALAL CHECK
@@ -350,14 +334,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // EMERGENCY
     Route::post('/emergency/trigger', [\App\Http\Controllers\Api\EmergencyController::class, 'triggerEmergency']);
 
-    // EXTRA MEDICINE ROUTES
-    Route::post('/medicines/drug-food-conflict', [\App\Http\Controllers\Api\DrugInteractionController::class, 'check']);
     Route::post('/medicines/safe-schedule', [MedicineController::class, 'generateSafeSchedule']);
-    Route::get('/medicines/my', [\App\Http\Controllers\Api\MedicationReminderController::class, 'index']);
-
-    // DAILY MISSIONS
-
-    // GAMIFICATION
 
     // ACHIEVEMENTS & EXPORT
     Route::get('/user/achievements', [\App\Http\Controllers\Api\ProfileFeatureController::class, 'getAchievements']);
@@ -366,15 +343,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         Route::get('/stats', [MobileSyncController::class, 'getScanStats']);
         Route::get('/users', [MobileSyncController::class, 'getUserStats']);
+        Route::get('/users/{id}', [AdminController::class, 'getUserDetail']);
         Route::put('/users/{id}', [AdminController::class, 'updateUser']);
         Route::get('/dashboard/stats', [\App\Http\Controllers\Api\AdminMonitorController::class, 'getDashboardStats']);
-        Route::get('/monitor/stats', [\App\Http\Controllers\Api\AdminMonitorController::class, 'getDashboardStats']);
         Route::get('/monitor/feed', [\App\Http\Controllers\Api\AdminMonitorController::class, 'getActivityFeed']);
         Route::get('/products/pending', [\App\Http\Controllers\Api\ContributionController::class, 'pending']);
         Route::put('/products/{id}/approve', [AdminController::class, 'approveProduct']);
         Route::put('/products/{id}/reject', [AdminController::class, 'rejectProduct']);
         Route::get('/ai/logs', [\App\Http\Controllers\Api\AdminAiLogController::class, 'index']);
         Route::get('/ai/stats', [\App\Http\Controllers\Api\AdminAiLogController::class, 'stats']);
+
+        // Ingredient management CRUD (from mobile admin)
+        Route::prefix('ingredients')->group(function () {
+            Route::post('/', [\App\Http\Controllers\Api\EncyclopediaController::class, 'store']);
+            Route::put('/{id}', [\App\Http\Controllers\Api\EncyclopediaController::class, 'update']);
+            Route::delete('/{id}', [\App\Http\Controllers\Api\EncyclopediaController::class, 'destroy']);
+        });
     });
 });
 
@@ -421,3 +405,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/events/my-tickets', [\App\Http\Controllers\Api\EventController::class, 'myTickets']);
 });
 
+
+    // Meal Plans
+    Route::prefix('nutrition/meal-plans')->middleware('auth:sanctum')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\MealPlanController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Api\MealPlanController::class, 'store']);
+        Route::get('/{id}', [\App\Http\Controllers\Api\MealPlanController::class, 'show'])->whereNumber('id');
+        Route::put('/{id}', [\App\Http\Controllers\Api\MealPlanController::class, 'update'])->whereNumber('id');
+        Route::delete('/{id}', [\App\Http\Controllers\Api\MealPlanController::class, 'destroy'])->whereNumber('id');
+        Route::post('/{id}/activate', [\App\Http\Controllers\Api\MealPlanController::class, 'activate'])->whereNumber('id');
+    });

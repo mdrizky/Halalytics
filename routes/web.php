@@ -56,14 +56,6 @@ Route::get('/medicine/{id}', [App\Http\Controllers\Promo\PageController::class, 
 
 // Login
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::get('/test-login', function () {
-    $credentials = ['username' => 'admin', 'password' => 'password123'];
-    $attempt = Auth::attempt($credentials);
-    return response()->json([
-        'attempt' => $attempt,
-        'user' => App\Models\User::where('username', 'admin')->first()
-    ]);
-});
 
 Route::post('/actionLogin', [LoginController::class, 'login'])->name('actionLogin');
 
@@ -443,6 +435,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/patients', [ExpertDashboardController::class, 'patients'])->name('patients');
         Route::get('/consultations', [ExpertDashboardController::class, 'consultations'])->name('consultations');
         Route::get('/meal-plans', [ExpertDashboardController::class, 'mealPlans'])->name('meal-plans');
+        Route::get('/verifications', [ExpertDashboardController::class, 'verifications'])->name('verifications');
+        Route::post('/verifications/{id}/verify', [ExpertDashboardController::class, 'verify'])->name('verifications.verify');
     });
 
     // 👤 USER DASHBOARD
@@ -454,3 +448,15 @@ Route::middleware('auth')->group(function () {
 
 // NOTE: API routes are already loaded via RouteServiceProvider with 'api' middleware
 // Do NOT require api.php here as it will duplicate routes under 'web' middleware
+
+// AI Analysis Results (admin only)
+Route::prefix('admin/analysis')->middleware(['auth', 'role:admin'])->name('admin.analysis.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Admin\StatsController::class, 'analysisResults'])->name('index');
+});
+
+// Access Logs (admin only)
+Route::prefix('admin/access-logs')->middleware(['auth', 'role:admin'])->name('admin.access-logs.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Admin\AccessLogController::class, 'index'])->name('index');
+    Route::get('/{id}', [\App\Http\Controllers\Admin\AccessLogController::class, 'show'])->name('show');
+    Route::get('/statistics/overview', [\App\Http\Controllers\Admin\AccessLogController::class, 'statistics'])->name('statistics');
+});

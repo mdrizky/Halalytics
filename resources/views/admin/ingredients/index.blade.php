@@ -1,73 +1,76 @@
 @extends('admin.layouts.admin_layout')
 
-@section('title', 'Ingredient Encyclopedia')
+@section('title', 'Database Bahan - Halalytics Admin')
+@section('breadcrumb-parent', 'Master Data')
+@section('breadcrumb-current', 'Database Bahan')
 
 @section('content')
 <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Ingredient Encyclopedia</h2>
-            <p class="text-slate-500 dark:text-slate-400 text-sm">Kelola basis data bahan untuk analisis kehalalan otomatis.</p>
+            <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Database Bahan</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-2xl">
+                Kelola basis data bahan untuk analisis kehalalan otomatis.
+            </p>
         </div>
-        <div class="flex items-center gap-3">
-            <a href="{{ route('admin.ingredients.create') }}" class="flex items-center space-x-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors shadow-sm shadow-primary/20 text-sm font-medium">
-                <span class="material-icons-round text-sm">add</span>
-                <span>Tambah Bahan</span>
-            </a>
-        </div>
+        <a href="{{ route('admin.ingredients.create') }}" class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:bg-primary-dark transition">
+            <span class="material-icons-round text-lg">add</span>
+            Tambah Bahan
+        </a>
     </div>
 
-    <!-- Stats Overview -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div class="flex items-start justify-between">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="surface-card rounded-2xl p-5">
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Total Bahan</p>
+            <div class="mt-3 flex items-end justify-between">
                 <div>
-                    <p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Total Bahan</p>
-                    <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1">{{ number_format($stats['total']) }}</h3>
+                    <p class="text-3xl font-extrabold text-slate-900 dark:text-white">{{ number_format($stats['total']) }}</p>
+                    <p class="text-sm text-slate-500">Seluruh entri</p>
                 </div>
-                <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                <div class="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
                     <span class="material-icons-round">science</span>
                 </div>
             </div>
         </div>
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div class="flex items-start justify-between">
+        <div class="surface-card rounded-2xl p-5">
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Bahan Halal</p>
+            <div class="mt-3 flex items-end justify-between">
                 <div>
-                    <p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Bahan Halal</p>
-                    <h3 class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{{ number_format($stats['halal']) }}</h3>
+                    <p class="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">{{ number_format($stats['halal']) }}</p>
+                    <p class="text-sm text-slate-500">Terverifikasi</p>
                 </div>
-                <div class="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl flex items-center justify-center text-emerald-500">
+                <div class="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                     <span class="material-icons-round">check_circle</span>
                 </div>
             </div>
         </div>
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div class="flex items-start justify-between">
+        <div class="surface-card rounded-2xl p-5">
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Bahan Haram</p>
+            <div class="mt-3 flex items-end justify-between">
                 <div>
-                    <p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Bahan Haram</p>
-                    <h3 class="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-1">{{ number_format($stats['haram']) }}</h3>
+                    <p class="text-3xl font-extrabold text-red-600 dark:text-red-400">{{ number_format($stats['haram']) }}</p>
+                    <p class="text-sm text-slate-500">Dihindari</p>
                 </div>
-                <div class="w-10 h-10 bg-rose-50 dark:bg-rose-900/20 rounded-xl flex items-center justify-center text-rose-500">
+                <div class="h-12 w-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
                     <span class="material-icons-round">cancel</span>
                 </div>
             </div>
         </div>
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div class="flex items-start justify-between">
+        <div class="surface-card rounded-2xl p-5">
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Bahan Syubhat</p>
+            <div class="mt-3 flex items-end justify-between">
                 <div>
-                    <p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Bahan Syubhat</p>
-                    <h3 class="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{{ number_format($stats['syubhat']) }}</h3>
+                    <p class="text-3xl font-extrabold text-amber-600 dark:text-amber-400">{{ number_format($stats['syubhat']) }}</p>
+                    <p class="text-sm text-slate-500">Perlu verifikasi</p>
                 </div>
-                <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 rounded-xl flex items-center justify-center text-amber-500">
+                <div class="h-12 w-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
                     <span class="material-icons-round">help</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Filters & Table -->
-    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div class="surface-card rounded-2xl overflow-hidden">
         <div class="p-6 border-b border-slate-100 dark:border-slate-800">
             <form action="{{ route('admin.ingredients.index') }}" method="GET" class="flex flex-col md:flex-row gap-4">
                 <div class="flex-1 relative">
@@ -93,75 +96,63 @@
             <table class="w-full text-left">
                 <thead>
                     <tr class="bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider">
-                        <th class="px-6 py-4">Nama Bahan / E-Number</th>
+                        <th class="px-6 py-4 w-12">#</th>
+                        <th class="px-6 py-4">Nama Bahan</th>
+                        <th class="px-6 py-4">E-Number</th>
                         <th class="px-6 py-4">Status Halal</th>
-                        <th class="px-6 py-4">Risiko Kesehatan</th>
-                        <th class="px-6 py-4">Sumber</th>
-                        <th class="px-6 py-4">Status</th>
+                        <th class="px-6 py-4">Health Risk</th>
                         <th class="px-6 py-4 text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @forelse($ingredients as $ingredient)
+                    @forelse($ingredients as $index => $ingredient)
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
+                        <td class="px-6 py-4 text-sm text-slate-400">{{ $ingredients->firstItem() + $index }}</td>
                         <td class="px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                    <img src="{{ $ingredient->image_url }}" alt="{{ $ingredient->name }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://loremflickr.com/100/100/{{ urlencode($ingredient->name) }},chemical,science?lock={{ $ingredient->id_ingredient }}'">
-                                </div>
-                                <div class="flex flex-col">
-                                    <span class="text-sm font-bold text-slate-800 dark:text-white">{{ $ingredient->name }}</span>
-                                    <span class="text-xs text-slate-400 font-medium">{{ $ingredient->e_number ?: 'Tanpa E-Number' }}</span>
-                                </div>
-                            </div>
+                            <a href="{{ route('admin.ingredients.show', $ingredient->id_ingredient) }}" class="text-sm font-bold text-slate-800 dark:text-white hover:text-primary transition-colors">{{ $ingredient->name }}</a>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="text-sm text-slate-600 dark:text-slate-400 font-mono">{{ $ingredient->e_number ?: '-' }}</span>
                         </td>
                         <td class="px-6 py-4">
                             @php
-                                $statusClasses = [
-                                    'halal' => 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20',
-                                    'haram' => 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20',
-                                    'syubhat' => 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20',
-                                    'unknown' => 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-500/10 dark:text-slate-400 dark:border-slate-500/20',
+                                $halalBadge = [
+                                    'halal' => 'inline-flex rounded-full px-3 py-1 text-[11px] font-bold bg-emerald-50 text-emerald-700',
+                                    'haram' => 'inline-flex rounded-full px-3 py-1 text-[11px] font-bold bg-red-50 text-red-700',
+                                    'syubhat' => 'inline-flex rounded-full px-3 py-1 text-[11px] font-bold bg-amber-50 text-amber-700',
+                                    'unknown' => 'inline-flex rounded-full px-3 py-1 text-[11px] font-bold bg-slate-100 text-slate-600',
                                 ];
-                                $class = $statusClasses[$ingredient->halal_status] ?? $statusClasses['unknown'];
                             @endphp
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $class }} uppercase">
+                            <span class="{{ $halalBadge[$ingredient->halal_status] ?? $halalBadge['unknown'] }} uppercase">
                                 {{ $ingredient->halal_status }}
                             </span>
                         </td>
                         <td class="px-6 py-4">
                             @php
-                                $riskClasses = [
-                                    'safe' => 'text-emerald-600 dark:text-emerald-400',
-                                    'low_risk' => 'text-teal-600 dark:text-teal-400',
-                                    'high_risk' => 'text-amber-600 dark:text-amber-400 font-bold',
-                                    'dangerous' => 'text-rose-600 dark:text-rose-400 font-bold animate-pulse',
+                                $riskBadge = [
+                                    'safe' => 'text-emerald-600 bg-emerald-50',
+                                    'low_risk' => 'text-blue-600 bg-blue-50',
+                                    'high_risk' => 'text-orange-600 bg-orange-50',
+                                    'dangerous' => 'text-red-600 bg-red-50',
                                 ];
-                                $riskClass = $riskClasses[$ingredient->health_risk] ?? 'text-slate-500';
+                                $rClass = $riskBadge[$ingredient->health_risk] ?? 'text-slate-600 bg-slate-50';
                             @endphp
-                            <span class="text-xs {{ $riskClass }}">{{ str_replace('_', ' ', strtoupper($ingredient->health_risk)) }}</span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="text-xs text-slate-500 dark:text-slate-400 italic">{{ $ingredient->sources ?: '-' }}</span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full {{ $ingredient->active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
-                                <span class="text-xs {{ $ingredient->active ? 'text-slate-700 dark:text-slate-300' : 'text-slate-400' }}">
-                                    {{ $ingredient->active ? 'Aktif' : 'Non-aktif' }}
-                                </span>
+                            <span class="inline-flex rounded-full px-3 py-1 text-[11px] font-bold {{ $rClass }}">
+                                {{ str_replace('_', ' ', $ingredient->health_risk) }}
                             </span>
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center justify-center space-x-2">
-                                <a href="{{ route('admin.ingredients.edit', $ingredient->id_ingredient) }}" class="p-1.5 text-slate-400 hover:text-primary transition-colors">
-                                    <span class="material-icons-round text-sm">edit</span>
+                                <a href="{{ route('admin.ingredients.edit', $ingredient->id_ingredient) }}" class="inline-flex items-center rounded-full border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary transition">
+                                    <span class="material-icons-round text-sm mr-1">edit</span>
+                                    Edit
                                 </a>
-                                <form action="{{ route('admin.ingredients.destroy', $ingredient->id_ingredient) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus bahan ini?')">
+                                <form action="{{ route('admin.ingredients.destroy', $ingredient->id_ingredient) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus bahan ini?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="p-1.5 text-slate-400 hover:text-rose-500 transition-colors">
-                                        <span class="material-icons-round text-sm">delete</span>
+                                    <button type="submit" class="inline-flex items-center rounded-full border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition">
+                                        <span class="material-icons-round text-sm mr-1">delete</span>
+                                        Hapus
                                     </button>
                                 </form>
                             </div>

@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\ProductModel;
+use App\Models\ProductAnalysisResult;
 use App\Models\ActivityEvent;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ExpertDashboardController extends Controller
@@ -18,27 +20,26 @@ class ExpertDashboardController extends Controller
 
     public function index()
     {
-        // Data statistik spesifik Ahli Gizi
         $stats = [
             'total_patients' => User::where('role', 'user')->count(),
             'active_consultations' => ActivityEvent::where('event_type', 'ai_health_assistant')->count(),
-            'pending_verifications' => ProductModel::where('verification_status', 'needs_review')->count(),
-            'avg_rating' => 4.8,
-            'completed_consultations' => rand(15, 45),
+            'pending_verifications' => ProductAnalysisResult::where('is_verified_by_expert', false)->count(),
+            'avg_rating' => 0,
+            'completed_consultations' => ActivityEvent::where('event_type', 'ai_health_assistant')
+                ->whereNotNull('completed_at')
+                ->count(),
         ];
 
-        // Aktivitas pasien terbaru (Health Activities) menggunakan Eloquent untuk relasi yang lebih bersih
         $patientActivities = ActivityEvent::with('user')
             ->whereIn('event_type', ['external_scan', 'skincare_analysis', 'health_risk_score'])
             ->latest()
             ->limit(10)
             ->get()
             ->map(function ($activity) {
-                // Pastikan user_full_name tersedia untuk view
                 $activity->user_full_name = $activity->user ? $activity->user->full_name : 'Guest';
                 return $activity;
             });
-        
+
         return view('expert.dashboard', compact('stats', 'patientActivities'));
     }
 
@@ -64,5 +65,45 @@ class ExpertDashboardController extends Controller
     public function mealPlans()
     {
         return view('expert.meal-plans');
+    }
+
+    public function verifications()
+    {
+        $results = ProductAnalysisResult::with(['product', 'user', 'expert'])
+            ->orderBy('is_verified_by_expert', 'asc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        $stats = [
+            'pending' => ProductAnalysisResult::where('is_verified_by_expert', false)->count(),
+            'verified' => ProductAnalysisResult::where('is_verified_by_expert', true)->count(),
+            'total' => ProductAnalysisResult::count(),
+            'unique_products' => ProductAnalysisResult::distinct('product_id')->count('product_id'),
+        ];
+
+        return view('expert.verifications', compact('results', 'stats'));
+    }
+
+    public function verify(Request $request, $id)
+    {
+        $request->validate([
+            'halal_verdict' => 'required|string',
+            'health_verdict' => 'nullable|string',
+            'nutri_score' => 'nullable|string',
+            'expert_notes' => 'nullable|string|max:1000',
+        ]);
+
+        $result = ProductAnalysisResult::findOrFail($id);
+
+        $result->update([
+            'halal_verdict' => $request->halal_verdict,
+            'health_verdict' => $request->health_verdict ?: $result->health_verdict,
+            'nutri_score' => $request->nutri_score ?: $result->nutri_score,
+            'expert_notes' => $request->expert_notes,
+            'is_verified_by_expert' => true,
+            'expert_id' => Auth::user()->id_user,
+        ]);
+
+        return redirect()->back()->with('success', 'Analisis berhasil diverifikasi!');
     }
 }

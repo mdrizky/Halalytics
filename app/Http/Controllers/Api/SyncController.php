@@ -7,6 +7,7 @@ use App\Models\HealthTracking;
 use App\Models\ProductModel;
 use App\Models\ScanHistory;
 use App\Models\ScanModel;
+use App\Models\SyncConflict;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -27,8 +28,9 @@ class SyncController extends Controller
 
         $userId = $request->user()->id_user;
         $createdCount = 0;
+        $conflicts = [];
 
-        if (! Schema::hasTable('scan_histories')) {
+        if (!Schema::hasTable('scan_histories')) {
             DB::transaction(function () use ($request, $userId, &$createdCount) {
                 foreach ($request->input('logs', []) as $log) {
                     $recordedAt = Carbon::createFromTimestampMs((int) $log['scanned_at']);
@@ -53,8 +55,10 @@ class SyncController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($request, $userId, &$createdCount) {
+        DB::transaction(function () use ($request, $userId, &$createdCount, &$conflicts) {
             foreach ($request->input('logs', []) as $log) {
+                $recordedAt = Carbon::createFromTimestampMs((int) $log['scanned_at']);
+                
                 $product = ProductModel::firstOrCreate(
                     ['barcode' => $log['barcode']],
                     [
@@ -65,31 +69,45 @@ class SyncController extends Controller
                     ]
                 );
 
-                $recordedAt = Carbon::createFromTimestampMs((int) $log['scanned_at']);
+                $existingScan = ScanHistory::where('user_id', $userId)
+                    ->where('barcode', $log['barcode'])
+                    ->where('created_at', '>=', $recordedAt->subMinutes(10))
+                    ->where('created_at', '<=', $recordedAt->addMinutes(10))
+                    ->first();
 
-                $scanHistory = new ScanHistory([
-                    'user_id' => $userId,
-                    'scannable_type' => ProductModel::class,
-                    'scannable_id' => $product->getKey(),
-                    'product_name' => $log['product_name'] ?? $product->nama_product,
-                    'product_image' => $product->image ?? null,
-                    'barcode' => $log['barcode'],
-                    'halal_status' => $log['halal_status'],
-                    'scan_method' => 'barcode',
-                    'source' => 'local',
-                    'confidence_score' => null,
-                    'nutrition_snapshot' => [
-                        'ai_analysis' => $log['ai_analysis'] ?? null,
-                        'synced_from' => 'offline_batch',
-                    ],
-                    'is_synced' => true,
-                ]);
+                if ($existingScan) {
+                    $conflict = $this->handleDuplicateScanConflict(
+                        $userId,
+                        $existingScan,
+                        $log,
+                        $recordedAt
+                    );
+                    $conflicts[] = $conflict;
+                } else {
+                    $scanHistory = new ScanHistory([
+                        'user_id' => $userId,
+                        'scannable_type' => ProductModel::class,
+                        'scannable_id' => $product->getKey(),
+                        'product_name' => $log['product_name'] ?? $product->nama_product,
+                        'product_image' => $product->image ?? null,
+                        'barcode' => $log['barcode'],
+                        'halal_status' => $log['halal_status'],
+                        'scan_method' => 'barcode',
+                        'source' => 'local',
+                        'confidence_score' => null,
+                        'nutrition_snapshot' => [
+                            'ai_analysis' => $log['ai_analysis'] ?? null,
+                            'synced_from' => 'offline_batch',
+                        ],
+                        'is_synced' => true,
+                    ]);
 
-                $scanHistory->created_at = $recordedAt;
-                $scanHistory->updated_at = $recordedAt;
-                $scanHistory->save();
+                    $scanHistory->created_at = $recordedAt;
+                    $scanHistory->updated_at = $recordedAt;
+                    $scanHistory->save();
 
-                $createdCount++;
+                    $createdCount++;
+                }
             }
         });
 
@@ -97,6 +115,7 @@ class SyncController extends Controller
             'success' => true,
             'message' => 'Sync berhasil',
             'count' => $createdCount,
+            'conflicts' => $conflicts,
         ]);
     }
 
@@ -114,29 +133,46 @@ class SyncController extends Controller
 
         $userId = $request->user()->id_user;
         $createdCount = 0;
+        $conflicts = [];
 
-        DB::transaction(function () use ($request, $userId, &$createdCount) {
+        DB::transaction(function () use ($request, $userId, &$createdCount, &$conflicts) {
             foreach ($request->input('logs', []) as $log) {
                 $metricType = $this->mapMetricType($log['log_type']);
                 $recordedAt = Carbon::createFromTimestampMs($log['recorded_at']);
 
-                $value = $metricType === 'blood_pressure'
-                    ? $log['value1'] . '/' . ($log['value2'] ?? '')
-                    : ((string) $log['value1']) . ' ' . $log['unit'];
+                $existingMetric = HealthTracking::where('id_user', $userId)
+                    ->where('metric_type', $metricType)
+                    ->where('created_at', '>=', $recordedAt->subMinutes(5))
+                    ->where('created_at', '<=', $recordedAt->addMinutes(5))
+                    ->first();
 
-                $healthTracking = new HealthTracking([
-                    'id_user' => $userId,
-                    'metric_type' => $metricType,
-                    'value' => trim($value),
-                    'notes' => $log['notes'] ?? null,
-                ]);
+                if ($existingMetric) {
+                    $conflict = $this->handleHealthConflict(
+                        $userId,
+                        $existingMetric,
+                        $log,
+                        $recordedAt
+                    );
+                    $conflicts[] = $conflict;
+                } else {
+                    $value = $metricType === 'blood_pressure'
+                        ? $log['value1'] . '/' . ($log['value2'] ?? '')
+                        : ((string) $log['value1']) . ' ' . $log['unit'];
 
-                $healthTracking->recorded_at = $recordedAt;
-                $healthTracking->created_at = $recordedAt;
-                $healthTracking->updated_at = $recordedAt;
-                $healthTracking->save();
+                    $healthTracking = new HealthTracking([
+                        'id_user' => $userId,
+                        'metric_type' => $metricType,
+                        'value' => trim($value),
+                        'notes' => $log['notes'] ?? null,
+                    ]);
 
-                $createdCount++;
+                    $healthTracking->recorded_at = $recordedAt;
+                    $healthTracking->created_at = $recordedAt;
+                    $healthTracking->updated_at = $recordedAt;
+                    $healthTracking->save();
+
+                    $createdCount++;
+                }
             }
         });
 
@@ -144,7 +180,87 @@ class SyncController extends Controller
             'success' => true,
             'message' => 'Health logs sync berhasil',
             'count' => $createdCount,
+            'conflicts' => $conflicts,
         ]);
+    }
+
+    private function handleDuplicateScanConflict($userId, $existing, $mobileData, $mobileTimestamp)
+    {
+        $serverData = $existing->toArray();
+        $serverTimestamp = $existing->created_at;
+
+        if ($mobileTimestamp->greaterThan($serverTimestamp)) {
+            $existing->update([
+                'halal_status' => $mobileData['halal_status'],
+                'product_name' => $mobileData['product_name'] ?? $existing->product_name,
+            ]);
+            $winnerSource = 'mobile';
+        } else {
+            $winnerSource = 'server';
+        }
+
+        $conflict = SyncConflict::create([
+            'user_id' => $userId,
+            'resource_type' => 'scan_history',
+            'resource_id' => $existing->id,
+            'mobile_data' => $mobileData,
+            'server_data' => $serverData,
+            'mobile_timestamp' => $mobileTimestamp,
+            'server_timestamp' => $serverTimestamp,
+            'resolution_strategy' => 'last-write-wins',
+            'resolution_result' => [
+                'winner' => $winnerSource,
+                'action' => 'merged',
+            ],
+            'resolved_at' => now(),
+        ]);
+
+        return [
+            'conflict_id' => $conflict->id,
+            'resource_type' => 'scan_history',
+            'resolution' => $winnerSource === 'mobile' ? 'server_updated' : 'mobile_rejected',
+            'server_version' => $serverData,
+        ];
+    }
+
+    private function handleHealthConflict($userId, $existing, $mobileData, $mobileTimestamp)
+    {
+        $serverData = $existing->toArray();
+        $serverTimestamp = $existing->created_at;
+
+        if ($mobileTimestamp->greaterThan($serverTimestamp)) {
+            $mobileValue = $mobileData['value1'] . ' ' . $mobileData['unit'];
+            $existing->update([
+                'value' => $mobileValue,
+                'notes' => $mobileData['notes'] ?? $existing->notes,
+            ]);
+            $winnerSource = 'mobile';
+        } else {
+            $winnerSource = 'server';
+        }
+
+        $conflict = SyncConflict::create([
+            'user_id' => $userId,
+            'resource_type' => 'health_tracking',
+            'resource_id' => $existing->id,
+            'mobile_data' => $mobileData,
+            'server_data' => $serverData,
+            'mobile_timestamp' => $mobileTimestamp,
+            'server_timestamp' => $serverTimestamp,
+            'resolution_strategy' => 'last-write-wins',
+            'resolution_result' => [
+                'winner' => $winnerSource,
+                'action' => 'merged',
+            ],
+            'resolved_at' => now(),
+        ]);
+
+        return [
+            'conflict_id' => $conflict->id,
+            'resource_type' => 'health_tracking',
+            'resolution' => $winnerSource === 'mobile' ? 'server_updated' : 'mobile_rejected',
+            'server_version' => $serverData,
+        ];
     }
 
     private function mapMetricType(string $logType): string

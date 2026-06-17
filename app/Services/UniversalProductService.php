@@ -98,7 +98,11 @@ class UniversalProductService
                     'fields' => 'product_name,code,image_url,image_front_url,ingredients_list,nutriments,_id,completeness,brands,quantity,packaging,labels,nutriscore_grade,nova_group,stores,countries'
                 ]);
                 if ($offResponse->successful() && $offResponse->json('status') === 'success') {
-                    return $offResponse->json('product');
+                    $product = $offResponse->json('product');
+                    $returnedBarcode = $product['code'] ?? '';
+                    if (ltrim($returnedBarcode, '0') === ltrim($barcode, '0') || $returnedBarcode === $barcode) {
+                        return $product;
+                    }
                 }
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::warning("OFF request failed for {$barcode}: " . $e->getMessage());
@@ -126,7 +130,11 @@ class UniversalProductService
                     'fields' => 'product_name,code,image_url,image_front_url,ingredients_list,nutriments,_id,completeness,brands,quantity,packaging,labels,nutriscore_grade,nova_group,stores,countries'
                 ]);
                 if ($obfResponse->successful() && $obfResponse->json('status') === 'success') {
-                    return $obfResponse->json('product');
+                    $product = $obfResponse->json('product');
+                    $returnedBarcode = $product['code'] ?? '';
+                    if (ltrim($returnedBarcode, '0') === ltrim($barcode, '0') || $returnedBarcode === $barcode) {
+                        return $product;
+                    }
                 }
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::warning("OBF request failed for {$barcode}: " . $e->getMessage());
@@ -194,69 +202,47 @@ class UniversalProductService
             
             // Default Fallback values
             $kategoriId = 24; // Default: Makanan
-            $status = 'syubhat';
-            $summary = "Analisis awal selesai. Silakan periksa label komposisi produk untuk memverifikasi bahan kritis.";
+            $status = 'unknown'; // Level 3 default
+            $summary = "Data tidak lengkap — menunggu verifikasi admin.";
 
             // 1. Check for Haram ingredients first
             $hasHaram = false;
             $haramKeywords = ['babi', 'pork', 'lard', 'gelatin babi', 'bacon', 'ham', 'wine', 'rum', 'sake', 'mirin', 'alcohol', 'ethanol', 'carmine', 'cochineal'];
             foreach ($haramKeywords as $kw) {
                 if (str_contains($pNameLower, $kw) || str_contains($pIngLower, $kw)) {
-                    $status = 'tidak halal';
+                    $status = 'tidak halal'; // Level 1
                     $hasHaram = true;
                     $summary = "Peringatan: Terdeteksi bahan kritis/non-halal ({$kw}) dalam produk ini. Tidak disarankan untuk dikonsumsi.";
                     break;
                 }
             }
 
-            // 2. Check category based on keywords
+            // 2. Determine category
             if (preg_match('/milk|lactose|cheese|keju|susu|yogurt|butter|mentega|whey/i', $productName . $ingredientsList)) {
                 $kategoriId = 6; // Dairy
-                if (!$hasHaram) {
-                    $status = 'halal';
-                    $summary = "Produk olahan susu terdeteksi. Kaya akan kalsium dan nutrisi harian. Status halal aman selama diproses secara higienis.";
-                }
             } elseif (preg_match('/noodle|mie|ramen|udon|spaghetti|pasta/i', $productName . $ingredientsList)) {
                 $kategoriId = 15; // Mie Instan
-                if (!$hasHaram) {
-                    $status = 'halal';
-                    $summary = "Produk olahan mi terdeteksi. Batasi konsumsi karena kadar natrium bumbu instan cukup tinggi.";
-                }
             } elseif (preg_match('/teh|tea|kopi|coffee|espresso|cappuccino|latte/i', $productName . $ingredientsList)) {
                 $kategoriId = 20; // Kopi & Teh
-                if (!$hasHaram) {
-                    $status = 'halal';
-                    $summary = "Produk teh/kopi segar terdeteksi. Alami dan kaya akan antioksidan penangkal radikal bebas.";
-                }
             } elseif (preg_match('/skincare|cream|serum|toner|moisturizer|facial|sunscreen|sabun wajah/i', $productName . $ingredientsList)) {
                 $kategoriId = 22; // Skincare
-                if (!$hasHaram) {
-                    $status = 'halal';
-                    $summary = "Produk perawatan wajah luar terdeteksi. Aman digunakan untuk menjaga hidrasi kulit harian.";
-                }
             } elseif (preg_match('/lip|lipstick|eye|shadow|blush|foundation|bedak|makeup|maskara/i', $productName . $ingredientsList)) {
                 $kategoriId = 5; // Kosmetik
-                if (!$hasHaram) {
-                    $status = 'halal';
-                    $summary = "Produk kosmetik rias luar terdeteksi. Membantu menunjang penampilan wajah dengan formula kosmetik aman.";
-                }
             } elseif (preg_match('/paracetamol|ibuprofen|tablet|sirup|kapsul|obat|medicine|drug/i', $productName . $ingredientsList)) {
                 $kategoriId = 25; // Obat
-                if (!$hasHaram) {
-                    $status = 'syubhat';
-                    $summary = "Obat-obatan medis terdeteksi. Waspadai cangkang kapsul gelatin jika belum tersertifikasi halal resmi.";
-                }
             } elseif (preg_match('/juice|jus|soda|cola|drink|water|air|beverage|sirup/i', $productName . $ingredientsList)) {
                 $kategoriId = 2; // Minuman
-                if (!$hasHaram) {
-                    $status = 'halal';
-                    $summary = "Minuman penyegar terdeteksi. Membantu menghidrasi tubuh secara instan dengan rasa menyegarkan.";
-                }
             } elseif (preg_match('/snack|camilan|keripik|chips|biskuit|cookie|wafer|permen|candy/i', $productName . $ingredientsList)) {
                 $kategoriId = 1; // Makanan Ringan
-                if (!$hasHaram) {
-                    $status = 'halal';
-                    $summary = "Makanan ringan selingan terdeteksi. Praktis dikonsumsi, namun batasi karena tinggi garam/gula.";
+            }
+            
+            if (!$hasHaram) {
+                if (empty(trim($ingredientsList))) {
+                    $status = 'unknown'; // Level 3
+                    $summary = "Data tidak lengkap — menunggu verifikasi admin.";
+                } else {
+                    $status = 'halal'; // Level 2
+                    $summary = "Berdasarkan komposisi yang terbaca, tidak ditemukan bahan non-halal.";
                 }
             }
 
